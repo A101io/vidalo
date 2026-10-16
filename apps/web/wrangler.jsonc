@@ -33,9 +33,10 @@
   // preview only opens with VIDALO_PREVIEW_KEY (a secret, `wrangler secret put`).
   "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.io", "VIDALO_COMING_SOON": "1", "VIDALO_PREVIEW_BUTTON": "1" },
   // Hyperdrive pools the Supabase connections (one handle per request,
-  // worker.ts). Create it once with the pooler URL, then put its id here:
-  //   wrangler hyperdrive create vidalo-db --connection-string="postgres://..."
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<id>" }],
+  // worker.ts). `vidalo-db`, created in the dashboard 16 Oct 2026: Supabase
+  // session pooler aws-0-eu-west-1.pooler.supabase.com:5432, user
+  // postgres.bbynmqvaxpjdnkaasutd. The preview env has no database.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "8095400e14134f9391067cbf78416cd6" }],
   // Free scans go to the background worker through this queue.
   "queues": { "producers": [{ "binding": "SCAN_QUEUE", "queue": "vidalo-scans" }] },
   "env": {
@@ -47,6 +48,7 @@
       // would try to claim vidalo.io.
       "routes": [],
       "vars": { "VIDALO_MOCK": "1", "PUBLIC_BASE_URL": "https://vidalo-web-preview.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "0", "VIDALO_PREVIEW_BUTTON": "0" },
+      "hyperdrive": [],
       "queues": { "producers": [] }
     }
   }
