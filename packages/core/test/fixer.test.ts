@@ -260,7 +260,11 @@ describe("runRecheck", () => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
-    const out = await runRecheck(opened.fix.id, { runScan, now: () => new Date("2026-12-01T10:00:00Z") });
+    // The seed stamps firstSeenAt with the real clock, so "after the window"
+    // is counted from that, not from a fixed date (a fixed 2026-12-01 started
+    // failing on 18 Oct 2026, once the gap fell under the window).
+    const later = addDays(finding.firstSeenAt, 120);
+    const out = await runRecheck(opened.fix.id, { runScan, now: () => later });
     expect(out.result).toBe("unfixable");
     expect((await db.getFinding(finding.id))!.status).toBe("unfixable");
     const mail = [...db.jobs.values()].find((j) => j.kind === "email")!;
