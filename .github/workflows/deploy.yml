@@ -51,22 +51,21 @@ jobs:
 
       # A secret that is missing or misnamed expands to "" and every later
       # step fails somewhere unhelpful. Sitty lost 17 runs to
-      # CLOUDFLARE_API_SECRET vs CLOUDFLARE_API_TOKEN; what ended it was
-      # printing the NAMES the job can see. Names only, never values.
+      # CLOUDFLARE_API_SECRET vs CLOUDFLARE_API_TOKEN; so the two names are
+      # checked first and a miss says which one. (An earlier version printed
+      # every secret NAME from the secrets context; GitHub's scanner flags that
+      # pattern as malicious and blocks the run, 16 Oct 2026.)
       - name: Require the Cloudflare credentials
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ALL_SECRETS: ${{ toJSON(secrets) }}
         run: |
           missing=""
           [ -n "$TOKEN" ]   || missing="$missing CLOUDFLARE_API_TOKEN"
           [ -n "$ACCOUNT" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
           if [ -n "$missing" ]; then
             echo "::error::Missing in the '${{ inputs.target }}' environment:$missing"
-            echo "Secret names this job can see:"
-            echo "$ALL_SECRETS" | jq -r 'keys[]' | sed 's/^/  - /'
-            echo "Set them under Settings → Environments → ${{ inputs.target }} → Environment secrets."
+            echo "Set them under Settings → Environments → ${{ inputs.target }} → Environment secrets, with exactly these names."
             exit 1
           fi
           echo "Cloudflare credentials present."

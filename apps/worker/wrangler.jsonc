@@ -20,7 +20,7 @@
   },
   "queues": {
     "consumers": [{ "queue": "vidalo-scans", "max_batch_size": 1, "max_retries": 2 }]
-  }
-  // Same Hyperdrive as apps/web/wrangler.jsonc, once it exists:
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<id>" }]
+  },
+  // Same Hyperdrive as apps/web/wrangler.jsonc (vidalo-db, 16 Oct 2026).
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "8095400e14134f9391067cbf78416cd6" }]
 }
