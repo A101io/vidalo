@@ -71,3 +71,9 @@
   .li-ready .li-name { max-width: 0; animation: li-name 10s cubic-bezier(.22, .7, .2, 1) infinite; }
   .li-ready .li-caret2 { display: inline-block; animation: li-caret2-on 10s steps(1, end) infinite, li-blink .9s steps(1, end) infinite; }
 }
+
+/* On /binnenkort the animation sits in a card and is sized to the card's width
+   (container query units): its widest moment, the first question, is about
+   3.7em, so 17cqi keeps it at roughly two thirds of the card. */
+.cs-visual { container-type: inline-size; }
+.cs-visual .li-stage { font-size: clamp(40px, 17cqi, 104px); }

@@ -31,79 +31,84 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
   const error = state === "fout" ? l.invalid : state === "druk" ? l.busy : state === "mislukt" ? l.failed : null;
   return (
     <>
-      <header className="site-header">
-        <div className="wrap flex items-center justify-between py-4 sm:py-5">
+      {/* One screen: header, then text + list on the left and the animation on the right (stacked on a phone). The footer sits just below. */}
+      <div className="flex min-h-svh flex-col">
+        <header className="wrap flex shrink-0 items-center justify-between py-4 sm:py-5">
           <Logo size={24} />
           <LangSwitch />
-        </div>
-      </header>
-      <main data-coming-soon className="wrap flex min-h-[70vh] max-w-[720px] flex-col justify-center py-16 sm:py-24">
-        <div className="mb-10 sm:mb-12">
-          <LogoIntro questions={c.intro.questions as unknown as readonly [string, string, string]} name={copy.nav.wordmark} label={c.intro.label} />
-        </div>
-        <p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-muted">{c.kicker}</p>
-        <h1 className="h2 mt-3">{c.h1}</h1>
-        <p className="lead mt-5">{c.body}</p>
-        <p className="mt-4 text-[16px] text-ink-2">
-          {c.contact}{" "}
-          <a href="mailto:hello@vidalo.io" className="font-semibold underline underline-offset-2">
-            hello@vidalo.io
-          </a>
-        </p>
-        <section id="lijst" aria-labelledby="lijst-h" className="mt-12 max-w-[520px]">
-          <h2 id="lijst-h" className="text-[18px] font-bold">
-            {l.h2}
-          </h2>
-          {state === "ok" ? (
-            <p role="status" className="mt-3 text-[16px] text-ink-2">
-              {l.thanks}
-            </p>
-          ) : (
-            <form action="/api/waitlist" method="post" className="mt-4">
-              <input type="hidden" name="lang" value={c.lang} />
-              {/* A field people never see; a bot that fills it is thanked and nothing is stored. */}
-              <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
-                <label htmlFor="website">Website</label>
-                <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
-              </div>
-              <label htmlFor="lijst-email" className="sr-only">
-                {l.label}
-              </label>
-              <div className="flex overflow-hidden rounded-btn border-[1.5px] border-ink bg-white">
-                <input
-                  id="lijst-email"
-                  name="email"
-                  type="email"
-                  required
-                  maxLength={254}
-                  autoComplete="email"
-                  placeholder={l.placeholder}
-                  aria-invalid={state === "fout" || undefined}
-                  aria-describedby={error ? "lijst-error" : undefined}
-                  className="h-[52px] min-w-0 flex-1 border-0 bg-white px-4 text-[15px] placeholder:text-muted focus:outline-none"
-                />
-                <button type="submit" className="h-[52px] shrink-0 bg-ink px-5 text-[14px] font-extrabold text-white hover:bg-[#1f2937]">
-                  {l.button}
-                </button>
-              </div>
-              <label className="mt-3 flex items-start gap-2.5 text-[14px] text-ink-2">
-                <input type="checkbox" name="consent" value="ja" required className="mt-[3px] h-4 w-4 shrink-0 accent-[#111827]" />
-                <span>
-                  {l.consent}{" "}
-                  <Link href={href("/privacy")} className="underline underline-offset-2">
-                    {copy.legal.privacy.title}
-                  </Link>
-                </span>
-              </label>
-              {error && (
-                <p id="lijst-error" role="alert" className="mt-2 text-[14px] text-rood">
-                  {error}
-                </p>
-              )}
-            </form>
-          )}
-        </section>
-      </main>
+        </header>
+        <main data-coming-soon className="wrap flex flex-1 items-center pb-4 pt-1 sm:pb-6 lg:pb-12">
+          <div className="grid w-full items-center gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
+            <div className="cs-visual order-first flex h-[clamp(96px,18svh,150px)] items-center justify-center overflow-hidden rounded-card border-[1.5px] border-line bg-[#F8FAFC] lg:order-last lg:h-[min(440px,58svh)]">
+              <LogoIntro questions={c.intro.questions as unknown as readonly [string, string, string]} name={copy.nav.wordmark} label={c.intro.label} />
+            </div>
+            <div className="max-w-[560px]">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted sm:text-[14px]">{c.kicker}</p>
+              <h1 className="h2 mt-2 sm:mt-3">{c.h1}</h1>
+              <p className="mt-3 text-[16px] leading-[1.5] text-ink-2 sm:mt-4 sm:text-[18px] sm:leading-[1.55]">{c.body}</p>
+              <section id="lijst" aria-labelledby="lijst-h" className="mt-6 sm:mt-8">
+                <h2 id="lijst-h" className="text-[16px] font-bold sm:text-[17px]">
+                  {l.h2}
+                </h2>
+                {state === "ok" ? (
+                  <p role="status" className="mt-3 rounded-btn border-[1.5px] border-line px-4 py-3.5 text-[15px] text-ink-2">
+                    {l.thanks}
+                  </p>
+                ) : (
+                  <form action="/api/waitlist" method="post" className="mt-3">
+                    <input type="hidden" name="lang" value={c.lang} />
+                    {/* A field people never see; a bot that fills it is thanked and nothing is stored. */}
+                    <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
+                      <label htmlFor="website">Website</label>
+                      <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+                    </div>
+                    <label htmlFor="lijst-email" className="sr-only">
+                      {l.label}
+                    </label>
+                    <div className="flex overflow-hidden rounded-btn border-[1.5px] border-ink bg-white">
+                      <input
+                        id="lijst-email"
+                        name="email"
+                        type="email"
+                        required
+                        maxLength={254}
+                        autoComplete="email"
+                        placeholder={l.placeholder}
+                        aria-invalid={state === "fout" || undefined}
+                        aria-describedby={error ? "lijst-error" : undefined}
+                        className="h-[50px] min-w-0 flex-1 border-0 bg-white px-4 text-[16px] placeholder:text-muted focus:outline-none"
+                      />
+                      <button type="submit" className="h-[50px] shrink-0 bg-ink px-4 text-[14px] font-extrabold text-white hover:bg-[#1f2937] sm:px-5">
+                        {l.button}
+                      </button>
+                    </div>
+                    <label className="mt-2.5 flex items-start gap-2.5 text-[13px] leading-[1.45] text-ink-2 sm:text-[14px]">
+                      <input type="checkbox" name="consent" value="ja" required className="mt-[2px] h-4 w-4 shrink-0 accent-[#111827]" />
+                      <span>
+                        {l.consent}{" "}
+                        <Link href={href("/privacy")} className="underline underline-offset-2">
+                          {copy.legal.privacy.title}
+                        </Link>
+                      </span>
+                    </label>
+                    {error && (
+                      <p id="lijst-error" role="alert" className="mt-2 text-[14px] text-rood">
+                        {error}
+                      </p>
+                    )}
+                  </form>
+                )}
+              </section>
+              <p className="mt-5 text-[14px] text-muted sm:mt-6">
+                {c.contact}{" "}
+                <a href="mailto:hello@vidalo.io" className="font-semibold text-ink underline underline-offset-2">
+                  hello@vidalo.io
+                </a>
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
       <footer className="border-t-[1.5px] border-line">
         <div className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-8 text-[13px] text-muted">
           <span>{copy.landing.footer.legal}</span>
