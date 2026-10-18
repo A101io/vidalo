@@ -26,10 +26,6 @@ export const env = {
   get comingSoon(): boolean {
     return read("VIDALO_COMING_SOON") === "1";
   },
-  /** Temporary: the button on /binnenkort that lets anyone walk the site. Off = only the key opens it. */
-  get previewButton(): boolean {
-    return read("VIDALO_PREVIEW_BUTTON") === "1";
-  },
   get previewKey() {
     return read("VIDALO_PREVIEW_KEY");
   },

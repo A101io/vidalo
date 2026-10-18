@@ -17,7 +17,6 @@
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "VIDALO_COMING_SOON=1",
-        "VIDALO_PREVIEW_BUTTON=1",
         "corepack",
         "pnpm",
         "--filter",
@@ -33,7 +32,6 @@
         "SUPABASE_URL=",
         "SUPABASE_ANON_KEY=",
         "VIDALO_COMING_SOON=1",
-        "VIDALO_PREVIEW_BUTTON=1",
         "corepack",
         "pnpm",
         "--filter",
