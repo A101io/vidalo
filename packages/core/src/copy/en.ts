@@ -720,6 +720,10 @@ export const en: CopyShape = {
     kicker: "Coming soon",
     h1: "Vidalo is on its way.",
     body: "Your customers ask ChatGPT. We make sure the answer is right. Soon you can check here, for free, what AI assistants say about your business, and have every error fixed at its source.",
+    intro: {
+      label: "A chat field in which customer questions are typed, and which becomes the Vidalo logo",
+      questions: ["Is the baker open on Sunday?", "How much for a haircut?", "Do they deliver in Haarlem?"],
+    },
     contact: "Questions? Email us at",
     list: {
       h2: "Hear when we open",

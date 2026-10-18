@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCopy, getI18n } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import { LangSwitch } from "@/components/LangSwitch";
+import { LogoIntro } from "@/components/LogoIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,9 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
         </div>
       </header>
       <main data-coming-soon className="wrap flex min-h-[70vh] max-w-[720px] flex-col justify-center py-16 sm:py-24">
+        <div className="mb-10 sm:mb-12">
+          <LogoIntro questions={c.intro.questions as unknown as readonly [string, string, string]} name={copy.nav.wordmark} label={c.intro.label} />
+        </div>
         <p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-muted">{c.kicker}</p>
         <h1 className="h2 mt-3">{c.h1}</h1>
         <p className="lead mt-5">{c.body}</p>

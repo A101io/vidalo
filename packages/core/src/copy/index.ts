@@ -735,6 +735,11 @@ export const copy = {
     kicker: "Binnenkort",
     h1: "Vidalo komt eraan.",
     body: "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt. Binnenkort controleer je hier gratis wat AI-assistenten over je bedrijf zeggen, en laat je elke fout bij de bron herstellen.",
+    /** The logo animation (components/LogoIntro.tsx): three questions typed into the chat field. Keep 28, 23 and 27 characters; the typing steps are fixed. */
+    intro: {
+      label: "Een chatveld waarin klantvragen worden getypt, en dat het Vidalo-logo wordt",
+      questions: ["Is de bakker op zondag open?", "Wat kost een knipbeurt?", "Bezorgen ze ook in Haarlem?"],
+    },
     contact: "Vragen? Mail ons op",
     list: {
       h2: "Hoor het als we opengaan",

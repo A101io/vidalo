@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./scenes.css";
+import "./logo-intro.css";
 import { getCopy, getLang, getRoute, localizeHref } from "@/lib/i18n";
 import { CookieConsent } from "@/components/CookieConsent";
 import { PreviewBar } from "@/components/PreviewBar";
