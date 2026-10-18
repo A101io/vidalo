@@ -1,6 +1,6 @@
 # Records of processing (GDPR art. 30, baseline P2)
 
-Controller: A101 B.V. (trading as Vidalo), Factorij 80, 3071 AV Rotterdam, KvK 42057858. Contact: support@vidalo.io. Not legal advice; retention periods marked *(counsel)* are not fixed until counsel says so.
+Controller: A101 B.V. (trading as Vidalo), Factorij 80, 3071 AV Rotterdam, KvK 42057858. Contact: hello@vidalo.io. Not legal advice; retention periods marked *(counsel)* are not fixed until counsel says so.
 
 | Activity | Purpose | Data subjects | Data categories | Legal basis | Recipients | Retention | Security |
 |---|---|---|---|---|---|---|---|

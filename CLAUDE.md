@@ -3,7 +3,7 @@
 Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, publishes a facts page on the owner's domain, syncs directories, and fixes errors at the source with proof. Tagline: *Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.*
 
 ## Renamed from Maicro (13 Oct 2026)
-The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`support@vidalo.io`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
+The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`hallo@vidalo.io`; since 19 Oct `hello@vidalo.io` for contact and `support@vidalo.io` for support, see `docs/mail.md`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
 
 | Thing | Status |
 |---|---|
@@ -11,7 +11,7 @@ The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), pac
 | Supabase project name `maicro` (ref `bbynmqvaxpjdnkaasutd`) | display name only, Julian renames in the dashboard; the ref never changes |
 | Committed migrations | keep the word Maicro in two comments; migrations are never edited |
 | `docs/design-g/*.html` | the original design boards, kept as they were |
-| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails (`support@vidalo.io`) and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
+| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
 | Stripe, Cloudflare Workers, Google OAuth app, Resend | none exist yet; create them as Vidalo |
 
 ## Resuming work — read this first

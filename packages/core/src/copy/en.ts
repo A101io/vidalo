@@ -609,7 +609,7 @@ export const en: CopyShape = {
       lang: "EN",
       columns: [
         { title: "Product", links: [{ label: "How it works", href: "/hoe-het-werkt" }, { label: "Why", href: "/waarom" }, { label: "AI agents and OKF", href: "/straks" }, { label: "Example report", href: "/#rapport" }, { label: "Pricing", href: "/prijzen" }, { label: "By trade", href: "/#vak" }] },
-        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:support@vidalo.io" }] },
+        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · Prices excl. VAT",
@@ -663,7 +663,7 @@ export const en: CopyShape = {
     draft: true,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
     updated: "Last updated: 9 October 2026",
-    contact: "Questions? Email us at support@vidalo.io.",
+    contact: "Questions? Email us at hello@vidalo.io.",
     terms: {
       title: "Terms and conditions",
       intro: "These terms apply to every check and every subscription from Vidalo, a trade name of A101 B.V. This is a translation; the Dutch text is the binding version.",

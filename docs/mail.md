@@ -12,8 +12,8 @@ alias on that user. No second licence.
 
 | Address | Role | Sonable twin |
 |---|---|---|
-| `support@vidalo.io` | **Customer-facing support.** Goes in the footer, legal pages, the assistant and every e-mail template (80 places in the code since 19 Oct 2026). Customer-initiated only; never an outbound cold sender. | `support@sonable.io` |
-| `hello@vidalo.io` | **General contact.** Press, partners, "I have a question before I buy". Shown on the site next to support@. | — |
+| `support@vidalo.io` | **Customer-facing support.** Where the product sends people when something goes wrong: the assistant's fallback and errors, checkout failures, a broken unsubscribe link, Google connect help, the "Support" footer link, security.txt. Customer-initiated only; never an outbound cold sender. | `support@sonable.io` |
+| `hello@vidalo.io` | **General contact.** The footer "Contact" link, the legal pages' "Vragen?", the coming-soon page, llms.txt, the Organization markup, Vidalo's own facts record, the assistant's knowledge. Was `hallo@` until 19 Oct 2026. | — |
 | `julian@vidalo.io` | **Outbound sending identity.** From and Reply-To for outreach; the address Julian replies from. Needs the alias *and* "Send mail as", or replies go out as a101.io and the thread changes identity halfway. | `julian@sonable.io` |
 | `controle@vidalo.io` | Resend sender for reports and notifications (`EMAIL_FROM`, `packages/core/src/reporter/mail.ts`). Alias so that replies land instead of bouncing. | — |
 | `inloggen@vidalo.io` | Resend/Supabase SMTP sender for magic links (`docs/setup/stripe-and-resend.md`). Alias for the same reason. | — |
@@ -114,6 +114,5 @@ Then flip `SETUP_STATUS.md` G1 to done and record the date in `A101/_OS/VIDALO.m
 - Resend (`send.vidalo.io`, `resend._domainkey`): `docs/setup/stripe-and-resend.md`.
   Resend signs `d=vidalo.io`, so it aligns strictly, same as Sonable.
 - Supabase custom SMTP for `inloggen@vidalo.io`: go-live A2, after Resend.
-- **Code:** `hello@vidalo.io` is not in the copy yet; add it to the footer and contact copy when the wording is decided.
 - An auto-reply on `support@`: Sonable has one (`sonable/docs/support-autoreply.md`); decide
   after the first real support mail, not before.

@@ -44,7 +44,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   const notPromised = copy.legal.terms.sections.find((s) => /beloven|promise/i.test(s.h));
   if (notPromised) lines.push(`${notPromised.h}: ${notPromised.p.join(" ")}`);
   lines.push(nl ? "Wat de klant zelf doet: " + (L.vragen.items.find((i) => /zelf/i.test(i.q))?.a ?? "") : "");
-  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: support@vidalo.io.`);
+  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: hello@vidalo.io. Support: support@vidalo.io.`);
   return lines.filter(Boolean).join("\n");
 }
 
