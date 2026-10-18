@@ -3,7 +3,7 @@
 Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, publishes a facts page on the owner's domain, syncs directories, and fixes errors at the source with proof. Tagline: *Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.*
 
 ## Renamed from Maicro (13 Oct 2026)
-The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`hallo@vidalo.io`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
+The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`support@vidalo.io`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
 
 | Thing | Status |
 |---|---|
@@ -11,7 +11,7 @@ The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), pac
 | Supabase project name `maicro` (ref `bbynmqvaxpjdnkaasutd`) | display name only, Julian renames in the dashboard; the ref never changes |
 | Committed migrations | keep the word Maicro in two comments; migrations are never edited |
 | `docs/design-g/*.html` | the original design boards, kept as they were |
-| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails (`hallo@vidalo.io`) and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
+| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails (`support@vidalo.io`) and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
 | Stripe, Cloudflare Workers, Google OAuth app, Resend | none exist yet; create them as Vidalo |
 
 ## Resuming work — read this first
@@ -94,6 +94,6 @@ Not done yet: `DATABASE_URL` / service-role key in a secret store, and a run of 
 ## Conventions
 - Customer-facing text: Dutch, informal "je", calm verbs, no exclamation marks, never GEO/AEO/LLM/prompt/credits/zichtbaarheid/platform/agent in UI. One exception, asked for by Julian: the "Straks" section (`copy.landing.agents`, `components/AgentsSection.tsx`) names AI-agent, OKF, schema.org, llms.txt, MCP, A2A, each explained in plain words with who published it and when. Claims there must match what the code does (the facts page publishes HTML, schema.org JSON-LD and llms.txt; OKF is followed, not yet published).
 - Facts are versioned; a new version only via the owner's confirmation. Samples are evidence; findings are the diff.
-- **Ownership is proven, never claimed.** An e-mail address (report capture, magic link) only says who asked. `business.owner_verified_at` is set by `/api/google/callback` when the signed-in Google account holds a Business Profile location whose place id equals `google_place_id` (`packages/core/src/shared/ownership.ts`); proof replaces any earlier claim. Saving facts, the domain, on-demand scans (`requireVerifiedOwner`) and every setup/publish/sync/fix/recheck job (`apps/worker/src/jobs/paid.ts`: paying AND verified) wait for it. A business without a place id cannot be verified automatically; that goes to hallo@vidalo.io.
+- **Ownership is proven, never claimed.** An e-mail address (report capture, magic link) only says who asked. `business.owner_verified_at` is set by `/api/google/callback` when the signed-in Google account holds a Business Profile location whose place id equals `google_place_id` (`packages/core/src/shared/ownership.ts`); proof replaces any earlier claim. Saving facts, the domain, on-demand scans (`requireVerifiedOwner`) and every setup/publish/sync/fix/recheck job (`apps/worker/src/jobs/paid.ts`: paying AND verified) wait for it. A business without a place id cannot be verified automatically; that goes to support@vidalo.io.
 - Keep `pnpm -r typecheck`, `pnpm -r test` and `pnpm e2e:mock` green before committing.
 - One primary (blue) button per view. No dark mode. No emoji. Never show a score; only counts and the colour of the dot.

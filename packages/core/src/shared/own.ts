@@ -27,7 +27,7 @@ export const OWN_BUSINESS: Business = {
   sector: null,
   plan: "monitor",
   status: "active",
-  ownerEmail: "hallo@vidalo.io",
+  ownerEmail: "support@vidalo.io",
   createdAt: "2026-10-13T00:00:00.000Z",
 };
 
@@ -44,7 +44,7 @@ export const OWN_FACTS: Facts = {
   address: "Factorij 80",
   postcode: "3071 AV",
   phone: null,
-  email: "hallo@vidalo.io",
+  email: "support@vidalo.io",
   website: "https://vidalo.io",
   openStatus: "open",
   hours: [

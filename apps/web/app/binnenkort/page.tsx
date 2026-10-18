@@ -35,8 +35,8 @@ export default async function ComingSoonPage() {
         <p className="lead mt-5">{c.body}</p>
         <p className="mt-4 text-[16px] text-ink-2">
           {c.contact}{" "}
-          <a href="mailto:hallo@vidalo.io" className="font-semibold underline underline-offset-2">
-            hallo@vidalo.io
+          <a href="mailto:support@vidalo.io" className="font-semibold underline underline-offset-2">
+            support@vidalo.io
           </a>
         </p>
         {env.previewButton && (
