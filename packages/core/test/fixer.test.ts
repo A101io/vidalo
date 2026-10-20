@@ -212,7 +212,9 @@ describe("runRecheck", () => {
 
   it("resolves the finding when the recheck no longer shows the wrong value and queues the resolution mail", async () => {
     const { finding, prompts, business } = await seed(db, "third_party");
-    const opened = await openFixForFinding(finding);
+    // firstSeenAt is set by the db clock; every "now" below is relative to it so the test never drifts.
+    const firstSeen = finding.firstSeenAt;
+    const opened = await openFixForFinding(finding, { now: () => new Date(firstSeen) });
     db.jobs.clear();
 
     const runScan = vi.fn(async (opts: { businessId: string; kind: string; promptIds?: string[]; engines?: string[]; samplesPerPrompt?: number }) => {
@@ -221,7 +223,7 @@ describe("runRecheck", () => {
       return report(db, opts.businessId, [], run.id);
     });
 
-    const out = await runRecheck(opened.fix.id, { runScan, now: () => new Date("2026-11-07T10:00:00Z") });
+    const out = await runRecheck(opened.fix.id, { runScan, now: () => addDays(firstSeen, 30) });
     expect(runScan).toHaveBeenCalledWith(expect.objectContaining({ kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, promptIds: [prompts[0]!.id] }));
     expect(out.result).toBe("resolved");
     const f = (await db.getFinding(finding.id))!;
@@ -236,31 +238,35 @@ describe("runRecheck", () => {
 
   it("still wrong after 14 days → follow-up email, recheck rescheduled", async () => {
     const { finding } = await seed(db, "third_party");
-    const opened = await openFixForFinding(finding, { now: () => new Date("2026-10-07T10:00:00Z") });
+    const firstSeen = finding.firstSeenAt;
+    const opened = await openFixForFinding(finding, { now: () => new Date(firstSeen) });
     db.jobs.clear();
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
-    const out = await runRecheck(opened.fix.id, { runScan, now: () => new Date("2026-10-22T10:00:00Z") });
+    const day15 = addDays(firstSeen, 15);
+    const out = await runRecheck(opened.fix.id, { runScan, now: () => day15 });
     expect(out.result).toBe("still_wrong");
     expect(out.step).toBe("followup_email_14");
     expect((await db.getFinding(finding.id))!.status).toBe("recheck");
     const mail = [...db.jobs.values()].find((j) => j.kind === "email")!;
     expect(mail.payload.kind).toBe("correction_followup");
     expect(String(mail.payload.subject)).toContain("Herinnering");
-    expect(out.nextRecheckAt).toBe(addDays("2026-10-22T10:00:00Z", 30).toISOString());
+    expect(out.nextRecheckAt).toBe(addDays(day15, 30).toISOString());
   });
 
   it("still wrong after the window → unfixable with honest note", async () => {
     const { finding } = await seed(db, "none", { sourceUrl: null });
-    const opened = await openFixForFinding(finding, { now: () => new Date("2026-10-07T10:00:00Z") });
+    const firstSeen = finding.firstSeenAt;
+    const opened = await openFixForFinding(finding, { now: () => new Date(firstSeen) });
     db.jobs.clear();
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
-    const out = await runRecheck(opened.fix.id, { runScan, now: () => new Date("2026-12-01T10:00:00Z") });
+    // The window counts from the finding's first sighting (docs/CRITERIA.md), not from the fix: 45 days for "none".
+    const out = await runRecheck(opened.fix.id, { runScan, now: () => addDays(firstSeen, FIX_PATHS.none.unfixableAfterDays! + 1) });
     expect(out.result).toBe("unfixable");
     expect((await db.getFinding(finding.id))!.status).toBe("unfixable");
     const mail = [...db.jobs.values()].find((j) => j.kind === "email")!;
