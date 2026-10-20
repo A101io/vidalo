@@ -79,7 +79,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | H2 | Error monitoring | open | | |
 | H3 | Uptime | open | `/api/health` ready for it. | |
 | H4 | Rate limiting | written | `FREE_SCANS_PER_DAY` caps live scans site-wide; per-IP limits open. | |
-| H5 | Staging | open | | |
+| H5 | Staging | written | 18 Oct 2026: `deploy.yml` target `staging`, `env.staging` in both wrangler.jsonc (own queue, own database slot, workers.dev only). Waits for its own database (Julian: $10/month) and the GitHub environment secrets. Meanwhile `scripts/local-prod.sh` runs the production build locally against the real database (go-live X7, verified). | 18 Oct |
 | H6 | Rollback plan | open | In go-live X5. | |
 | H7 | Dependency updates | ✓verified | `.github/dependabot.yml` weekly, grouped; it opened PRs #10–#15 on 13 Oct. Majors ignored (Julian): #12–#15 closed; security updates still open regardless. | 13 Oct |
 | H8 | Operator 2FA | blocked | Julian. | |
@@ -93,7 +93,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | P1 | Processors | written | `docs/processors.md`; DPAs not yet accepted; hosting missing from the privacy text. | 13 Oct |
 | P2 | Records of processing | written | `docs/records-of-processing.md` | 13 Oct |
 | P3 | DPIA screening | written | Not indicated (guidelines doc). | 13 Oct |
-| P4 | Proof of consent | n/a for now | No consent-based processing yet (no non-essential cookies). Terms version accepted at checkout: open. | |
+| P4 | Proof of consent | written | Coming-soon list: each row stores the exact consent sentence shown, in its language, with the time (`waitlist.consent_text`, `created_at`; migration 0009). Terms version accepted at checkout: open. | 18 Oct |
 | P5 | Retention runs | open | Retention periods await counsel. | |
 
 ## C. Conditional

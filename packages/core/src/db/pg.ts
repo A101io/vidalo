@@ -23,6 +23,7 @@ import type {
   SampleInput,
   ScanRunCreate,
   ScanRunUpdate,
+  WaitlistInput,
 } from "./types";
 
 type Row = Record<string, unknown>;
@@ -518,6 +519,21 @@ export class PgDb implements Db {
 
   async countEventsSince(type: string, since: Date): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from event where type = ${type} and at >= ${since}`;
+    return Number(row?.n ?? 0);
+  }
+
+  // --- coming-soon list ---
+  async joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }> {
+    const rows = await this.sql`
+      insert into waitlist (email, language, source, consent_text)
+      values (${input.email}, ${input.language}, ${input.source}, ${input.consentText})
+      on conflict (email) do nothing
+      returning id`;
+    return { created: rows.length > 0 };
+  }
+
+  async countWaitlist(): Promise<number> {
+    const [row] = await this.sql`select count(*)::int as n from waitlist where unsubscribed_at is null`;
     return Number(row?.n ?? 0);
   }
 

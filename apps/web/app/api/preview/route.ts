@@ -13,10 +13,20 @@ export async function GET(req: Request) {
   return NextResponse.json({ comingSoon: env.comingSoon, preview }, { headers: { "cache-control": "no-store" } });
 }
 
+/** Same length and same bytes, compared without stopping at the first difference. */
+function sameKey(given: string, expected: string): boolean {
+  const a = new TextEncoder().encode(given);
+  const b = new TextEncoder().encode(expected);
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i]! ^ b[i]!;
+  return diff === 0;
+}
+
 /**
  * POST → set or clear the preview cookie, then go to the site or back to
- * /binnenkort. Setting it needs either the temporary button (VIDALO_PREVIEW_BUTTON=1)
- * or the key (VIDALO_PREVIEW_KEY), so the gate stays a gate once the button is gone.
+ * /binnenkort. Setting it needs the key (VIDALO_PREVIEW_KEY, a Worker secret);
+ * there is no public button any more (removed 18 Oct 2026), so the gate is a gate.
  */
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -28,7 +38,8 @@ export async function POST(req: Request) {
     return res;
   }
   const key = String(form.get("key") ?? "");
-  const allowed = env.previewButton || (env.previewKey !== undefined && key === env.previewKey);
+  const expected = env.previewKey;
+  const allowed = !!expected && key.length > 0 && sameKey(key, expected);
   if (!allowed) return NextResponse.redirect(page(COMING_SOON_ROUTE), 303);
   const res = NextResponse.redirect(page("/"), 303);
   // A session cookie: closing the browser ends the preview (copy.legal.cookies says so).
