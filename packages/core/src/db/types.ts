@@ -14,6 +14,7 @@ import type {
   FindingStatus,
   Fix,
   Prompt,
+  PromptPool,
   Sample,
   ScanKind,
   ScanRun,
@@ -33,6 +34,38 @@ export interface BusinessRecord extends Business {
   /** The owner's language ("nl" | "en"); the dashboard and the report follow it; e-mails are still Dutch. */
   language: "nl" | "en";
 }
+
+/** What Google's URL Inspection API last said about the facts page. */
+export interface GoogleInspection {
+  at: string;
+  /** PASS = indexed; NEUTRAL / FAIL / PARTIAL / VERDICT_UNSPECIFIED otherwise */
+  verdict: string;
+  coverageState: string | null;
+  indexingState: string | null;
+  pageFetchState: string | null;
+  robotsTxtState: string | null;
+  lastCrawlTime: string | null;
+  googleCanonical: string | null;
+}
+
+/** Search Console state of one business's facts page (table google_index). */
+export interface GoogleIndexState {
+  businessId: string;
+  host: string;
+  /** content of the google-site-verification meta tag served on the facts page */
+  token: string | null;
+  verifiedAt: string | null;
+  addedAt: string | null;
+  sitemapAt: string | null;
+  lastAttemptAt: string | null;
+  lastError: string | null;
+  inspection: GoogleInspection | null;
+  /** first time the inspection said PASS */
+  indexedAt: string | null;
+  updatedAt: string;
+}
+
+export type GoogleIndexUpsert = Partial<Omit<GoogleIndexState, "businessId" | "updatedAt">> & { businessId: string; host: string };
 
 export type BusinessUpsert = Partial<Omit<BusinessRecord, "createdAt">> & { name: string; place: string };
 
@@ -121,6 +154,8 @@ export interface Db {
   // --- prompts ---
   listPrompts(businessId: string, opts?: { activeOnly?: boolean }): Promise<Prompt[]>;
   insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]>;
+  /** Move a prompt between the fixed set and the rotating bank. */
+  setPromptPool(id: string, pool: PromptPool): Promise<void>;
 
   // --- scan runs, samples, claims ---
   createScanRun(input: ScanRunCreate): Promise<ScanRun>;
@@ -177,6 +212,11 @@ export interface Db {
   updateFix(id: string, patch: Partial<Omit<Fix, "id" | "findingId">>): Promise<Fix>;
   /** Fixes whose recheck_at has passed and that are not resolved. */
   listDueRechecks(now?: Date): Promise<Fix[]>;
+
+  // --- Google Search Console state of the facts page ---
+  getGoogleIndex(businessId: string): Promise<GoogleIndexState | null>;
+  /** Insert or merge: fields left out keep their value; pass null to clear one. */
+  upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
 
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;

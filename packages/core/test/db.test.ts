@@ -9,7 +9,7 @@ import { sampleFacts } from "./scanner-fixtures";
  * behave identically; MemDb alone proves nothing about the SQL.
  */
 const PG_URL = process.env.TEST_DATABASE_URL;
-const TABLES = "claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business, waitlist";
+const TABLES = "google_index, claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business, waitlist";
 
 let pg: Db | undefined;
 const backends: [string, () => Promise<Db>][] = [["MemDb", async () => withMockDb()]];
@@ -143,11 +143,28 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.countEventsSince("nothing", hourAgo)).toBe(0);
   });
 
+  it("google index state: insert, merge, clear", async () => {
+    const b = await db.upsertBusiness({ name: "X", place: "Y" });
+    expect(await db.getGoogleIndex(b.id)).toBeNull();
+    const first = await db.upsertGoogleIndex({ businessId: b.id, host: "feiten.x.nl", token: "T1", lastAttemptAt: "2026-10-15T08:00:00.000Z" });
+    expect(first).toMatchObject({ businessId: b.id, host: "feiten.x.nl", token: "T1", verifiedAt: null, inspection: null, lastAttemptAt: "2026-10-15T08:00:00.000Z" });
+    const inspection = { at: "2026-10-16T08:00:00.000Z", verdict: "PASS", coverageState: "Submitted and indexed", indexingState: null, pageFetchState: "SUCCESSFUL", robotsTxtState: null, lastCrawlTime: null, googleCanonical: "https://feiten.x.nl/" };
+    await db.upsertGoogleIndex({ businessId: b.id, host: "feiten.x.nl", verifiedAt: "2026-10-15T08:01:00.000Z", inspection, lastError: "add: boom" });
+    const merged = await db.getGoogleIndex(b.id);
+    expect(merged).toMatchObject({ token: "T1", verifiedAt: "2026-10-15T08:01:00.000Z", inspection, lastError: "add: boom" });
+    await db.upsertGoogleIndex({ businessId: b.id, host: "feiten.x.nl", lastError: null, inspection: null });
+    expect(await db.getGoogleIndex(b.id)).toMatchObject({ token: "T1", lastError: null, inspection: null });
+  });
+
   it("keeps sector, prompt kind/criterium and separates recommendation findings from about findings", async () => {
     const b = await db.upsertBusiness({ name: "Loodgieter Bos", place: "Zwolle", sector: "loodgieters-installateurs" });
     expect((await db.getBusiness(b.id))?.sector).toBe("loodgieters-installateurs");
     const [p] = await db.insertPrompts(b.id, [{ category: "service", textNl: "Wie installeert warmtepompen in Zwolle?", probes: ["service:warmtepompen"], active: true, kind: "recommendation", criterium: 6 }]);
-    expect(p).toMatchObject({ kind: "recommendation", criterium: 6 });
+    expect(p).toMatchObject({ kind: "recommendation", criterium: 6, intent: null, pool: "core", season: null });
+    const [banked] = await db.insertPrompts(b.id, [{ category: "service", textNl: "Verwarming doet het niet, wie helpt in Zwolle?", probes: ["service:warmtepompen"], active: true, kind: "recommendation", criterium: 6, intent: "specialty", pool: "bank", season: "winter" }]);
+    expect(banked).toMatchObject({ intent: "specialty", pool: "bank", season: "winter" });
+    await db.setPromptPool(banked!.id, "core");
+    expect((await db.listPrompts(b.id)).find((x) => x.id === banked!.id)?.pool).toBe("core");
     const run = await db.createScanRun({ businessId: b.id, kind: "baseline", engines: ["chatgpt"], samplesPerPrompt: 3 });
     const base = { businessId: b.id, scanRunId: run.id, factKey: "service" as const, subject: "warmtepompen", engine: "chatgpt" as const, correctValue: "yes", frequency: 2, sampleCount: 3, sourceUrl: null, sourceType: "none" as const, evidenceBefore: null };
     const [about] = await db.upsertFindings([{ ...base, wrongValue: "no", criterium: 6 }]);

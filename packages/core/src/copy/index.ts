@@ -905,6 +905,15 @@ export const copy = {
       instableTitle: "Af en toe fout",
       recommendationTitle: "Aanbevelingsvragen",
     },
+    named: {
+      h2: "Wie AI wel noemt",
+      body: "Een klant vraagt niet naar jou, maar naar de beste in je vak. Dit noemde AI in plaats van jou, en hier haalde het dat vandaan.",
+      you: (named: number, total: number) => (named === 0 ? `Jij: in geen van de ${total} antwoorden` : `Jij: in ${named} van de ${total} antwoorden`),
+      others: "Wel genoemd",
+      sources: "Haalt het uit",
+      times: (n: number) => `${n}×`,
+      note: "We tellen alleen of je genoemd wordt, nooit op welke plek. Reviews en lijstjes van anderen maken we niet; we laten zien welke het zijn.",
+    },
     sources: {
       h2: "Waar het vandaan komt",
       h2Grey: "Waarom de AI niets vindt",
@@ -1539,6 +1548,13 @@ export const copy = {
       credential: (subject: string, place: string) => `Welk bedrijf in ${place} is erkend voor ${subject}?`,
       policy: (subject: string, place: string) => `Welk bedrijf in ${place} werkt met: ${subject}?`,
       other: (place: string) => `Welk bedrijf in ${place} kun je aanraden?`,
+      /** existence:beste / betrouwbaar / betaalbaar / dichtbij, when the stored question text is not at hand */
+      intent: {
+        beste: (place: string) => `Wie is de beste in ${place}?`,
+        betrouwbaar: (place: string) => `Wie is betrouwbaar in ${place}?`,
+        betaalbaar: (place: string) => `Wie is betaalbaar in ${place}?`,
+        dichtbij: (place: string) => `Wie zit bij mij in de buurt in ${place}?`,
+      } as Record<string, (place: string) => string>,
     },
   },
 

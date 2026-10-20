@@ -26,14 +26,25 @@ describe("runScan (mock pipeline)", () => {
   it("returns findings with sources and a correct list, and persists everything", async () => {
     const db = withMockDb();
     const prepared = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
-    // 20 base prompts + the "winkels" sector pack (inferred from the name).
+    // 20 base prompts + the "winkels" sector pack (inferred from the name): its core and its bank.
     expect(prepared.business.sector).toBe("winkels");
-    expect(prepared.prompts.length).toBeGreaterThanOrEqual(26);
-    expect(prepared.prompts.length).toBeLessThanOrEqual(30);
-    expect(prepared.prompts.filter((p) => p.kind === "recommendation").length).toBeGreaterThanOrEqual(2);
+    const core = prepared.prompts.filter((p) => p.pool !== "bank");
+    const bank = prepared.prompts.filter((p) => p.pool === "bank");
+    expect(core.length).toBeGreaterThanOrEqual(26);
+    expect(core.length).toBeLessThanOrEqual(32);
+    expect(core.filter((p) => p.kind === "recommendation").length).toBe(6);
+    expect(bank.length).toBeGreaterThanOrEqual(6);
 
     const report = await runScan({ businessId: prepared.business.id, kind: "baseline", samplesPerPrompt: 3, db });
-    expect(report.totalAnswers).toBe(prepared.prompts.length * 5 * 3);
+    // A full scan asks the core and six questions from the bank.
+    expect(report.totalAnswers).toBe((core.length + 6) * 5 * 3);
+    const recs = report.recommendations ?? [];
+    expect(recs.filter((r) => r.pool === "core")).toHaveLength(6);
+    expect(recs.filter((r) => r.pool === "bank").length).toBeLessThanOrEqual(6);
+    // The mock leaves the business out of part of the lists and names three others.
+    expect(recs.some((r) => r.named < r.answers)).toBe(true);
+    expect(recs.every((r) => r.others.every((o) => !o.name.includes("De Vries")))).toBe(true);
+    expect(recs.some((r) => r.others.length > 0)).toBe(true);
     expect(["rood", "oranje", "groen", "grijs"]).toContain(report.stip);
     expect(report.engineStips).toHaveLength(5);
     expect(report.findingsBySeverity.afhaker.length + report.findingsBySeverity.misleider.length + report.findingsBySeverity.verwarring.length).toBe(report.findings.length);

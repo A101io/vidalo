@@ -12,7 +12,7 @@ import type { JobKind } from "./types.js";
  * could push their own "facts" to the facts page, the directories and
  * third-party sites in Vidalo's name.
  */
-export const PAID_ONLY: ReadonlySet<JobKind> = new Set<JobKind>(["setup", "publish", "sync", "fixes", "fix", "recheck"]);
+export const PAID_ONLY: ReadonlySet<JobKind> = new Set<JobKind>(["setup", "publish", "sync", "fixes", "fix", "recheck", "sitecheck", "index_check"]);
 const PAYING: ReadonlySet<BusinessStatus> = new Set<BusinessStatus>(["trial", "active"]);
 
 /** The business a paid-only job acts for, or null when it does not exist. */

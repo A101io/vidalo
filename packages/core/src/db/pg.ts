@@ -5,7 +5,7 @@
  * (`transform: postgres.camel`), Dates are converted to ISO strings here.
  */
 import postgres, { type Sql } from "postgres";
-import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, Sample, ScanRun } from "../types";
+import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import type {
@@ -17,6 +17,8 @@ import type {
   EventRow,
   FindingInput,
   FixInput,
+  GoogleIndexState,
+  GoogleIndexUpsert,
   Job,
   JobKind,
   PromptInput,
@@ -82,6 +84,9 @@ const mapPrompt = (r: Row): Prompt => ({
   active: r.active as boolean,
   criterium: (r.criterium as Prompt["criterium"]) ?? null,
   kind: ((r.kind as string | null) ?? "about") as Prompt["kind"],
+  intent: (r.intent as Prompt["intent"]) ?? null,
+  pool: ((r.pool as string | null) ?? "core") as Prompt["pool"],
+  season: (r.season as Prompt["season"]) ?? null,
 });
 
 const mapScanRun = (row: Row): ScanRun => {
@@ -202,6 +207,23 @@ const mapFix = (row: Row): Fix => {
 const OPEN_STATUSES: FindingStatus[] = ["open", "fixing", "recheck"];
 const toDate = (v: string | null | undefined) => (v ? new Date(v) : null);
 
+function mapGoogleIndex(row: Row): GoogleIndexState {
+  const r = iso(row);
+  return {
+    businessId: String(r.businessId),
+    host: String(r.host),
+    token: (r.token as string | null) ?? null,
+    verifiedAt: (r.verifiedAt as string | null) ?? null,
+    addedAt: (r.addedAt as string | null) ?? null,
+    sitemapAt: (r.sitemapAt as string | null) ?? null,
+    lastAttemptAt: (r.lastAttemptAt as string | null) ?? null,
+    lastError: (r.lastError as string | null) ?? null,
+    inspection: (r.inspection as GoogleIndexState["inspection"]) ?? null,
+    indexedAt: (r.indexedAt as string | null) ?? null,
+    updatedAt: String(r.updatedAt),
+  };
+}
+
 export class PgDb implements Db {
   readonly kind = "pg" as const;
   readonly sql: Sql;
@@ -317,9 +339,13 @@ export class PgDb implements Db {
 
   async insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]> {
     if (!prompts.length) return [];
-    const rows = prompts.map((p) => ({ businessId, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about" }));
+    const rows = prompts.map((p) => ({ businessId, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null }));
     const out = await this.sql`insert into prompt ${this.sql(rows)} returning *`;
     return out.map(mapPrompt);
+  }
+
+  async setPromptPool(id: string, pool: PromptPool): Promise<void> {
+    await this.sql`update prompt set pool = ${pool} where id = ${id}`;
   }
 
   // --- scan runs ---
@@ -598,6 +624,28 @@ export class PgDb implements Db {
   async listDueRechecks(now: Date = new Date()): Promise<Fix[]> {
     const rows = await this.sql`select * from fix where resolved_at is null and recheck_at is not null and recheck_at <= ${now} order by recheck_at`;
     return rows.map(mapFix);
+  }
+
+  // --- Google Search Console state ---
+  async getGoogleIndex(businessId: string): Promise<GoogleIndexState | null> {
+    const rows = await this.sql`select * from google_index where business_id = ${businessId}`;
+    return rows[0] ? mapGoogleIndex(rows[0]) : null;
+  }
+
+  async upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState> {
+    const cols: Row = { businessId: input.businessId, host: input.host, updatedAt: new Date() };
+    if (input.token !== undefined) cols.token = input.token;
+    if (input.lastError !== undefined) cols.lastError = input.lastError;
+    if (input.inspection !== undefined) cols.inspection = input.inspection === null ? null : this.sql.json(input.inspection as never);
+    for (const k of ["verifiedAt", "addedAt", "sitemapAt", "lastAttemptAt", "indexedAt"] as const) {
+      if (input[k] !== undefined) cols[k] = toDate(input[k]);
+    }
+    const { businessId: _id, ...update } = cols;
+    const rows = await this.sql`
+      insert into google_index ${this.sql(cols)}
+      on conflict (business_id) do update set ${this.sql(update)}
+      returning *`;
+    return mapGoogleIndex(rows[0]!);
   }
 
   async close(): Promise<void> {

@@ -182,6 +182,16 @@ export function summarizeNl(report: ScanReport): string {
     lines.push("Niet gevonden per criterium:");
     for (const c of report.criteriaNotFound) lines.push(`- ${c.criterium}. ${criterium(c.criterium).labelNl}: ${ENGINE_LABEL[c.engine]} weet het niet (${c.frequency} van ${c.sampleCount} keer).`);
   }
+  const recs = report.recommendations ?? [];
+  if (recs.length) {
+    lines.push("");
+    lines.push("Aanbevelingsvragen (wie AI noemt):");
+    for (const r of recs) {
+      const others = r.others.map((o) => `${o.name} (${o.answers}×)`).join(", ") || "geen namen";
+      const sources = r.sources.map((x) => `${x.host} (${x.answers}×)`).join(", ");
+      lines.push(`- ${r.pool === "bank" ? "[wisselend] " : ""}${r.prompt} Jij: ${r.named} van ${r.answers}. Wel genoemd: ${others}.${sources ? ` Bronnen: ${sources}.` : ""}`);
+    }
+  }
   if (report.instable?.length) {
     lines.push("");
     lines.push(`${copy.instable} (${report.instable.length}): ${copy.instableLine}`);

@@ -53,7 +53,7 @@ export function sectorQuestions(slug: SectorSlug, copy: CopyShape): SectorQuesti
   const pack = SECTORS[slug];
   const facts = placeholderFacts(slug, copy);
   const xInPlace = `${facts.name} in ${facts.place}`;
-  return pack.prompts(facts).map((p) => {
+  return pack.prompts(facts).filter((p) => p.pool === "core").map((p) => {
     const c = criterium(p.criterium);
     // "Komt X in [plaats] ook in Z?" reads better as "Komt X ook in Z?" on the page.
     return { text: p.textNl.split(xInPlace).join(facts.name), criterium: c, severity: c.severity, kind: p.kind };

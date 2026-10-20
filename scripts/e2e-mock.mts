@@ -20,6 +20,7 @@ const { prepareBusiness, runScan } = await import("@vidalo/core/scanner");
 const { setBusinessStatus } = await import("@vidalo/core/shared");
 const { handlerFor, validatePayload, JOB_KINDS } = await import("@vidalo/worker/src/jobs/index.ts");
 const { copy } = await import("@vidalo/core/copy");
+const { pollFactsHost, handleFactsRequest } = await import("@vidalo/core/publisher");
 
 const out = process.env.VIDALO_OUT_DIR!;
 const step = (s: string) => console.log(`\n== ${s}`);
@@ -82,7 +83,22 @@ for (let i = 0; i < 200; i++) {
   processed++;
 }
 console.log(`processed ${processed} jobs: ${seen.join(", ")}`);
-for (const k of ["email", "setup", "publish", "sync", "scan", "fixes"]) assert.ok(seen.includes(k), `ran ${k} job`);
+for (const k of ["email", "setup", "publish", "sync", "scan", "fixes", "sitecheck"]) assert.ok(seen.includes(k), `ran ${k} job`);
+
+// 4b. The custom facts host verifies (what the cron's DNS poll does), then the Google index check
+// verifies the host with a meta tag on the facts page, adds it, submits the sitemap and inspects it.
+step("facts host verified → Google index check");
+await pollFactsHost(business.id);
+const verifiedHost = (await db.getBusiness(business.id))!.factsHost!;
+assert.ok((await db.getBusiness(business.id))?.factsHostVerifiedAt, "facts host verified");
+const indexJob = await db.enqueueJob("index_check", { businessId: business.id });
+const indexResult = await handlerFor("index_check")!(indexJob.payload, indexJob);
+console.log(`job ${indexJob.id} index_check`, JSON.stringify(indexResult));
+assert.deepEqual(indexResult, { skipped: null, failedAt: null, indexed: true, verdict: "PASS" }, "index check ran in mock mode");
+const google = await db.getGoogleIndex(business.id);
+assert.ok(google?.token && google.verifiedAt && google.addedAt && google.sitemapAt && google.indexedAt, "google index state walked every step");
+const served = await (await handleFactsRequest(new Request(`https://${verifiedHost}/`, { headers: { host: verifiedHost } }))).text();
+assert.ok(served.includes(`<meta name="google-site-verification" content="${google!.token}">`), "facts page serves the verification tag");
 
 // 5. Assertions.
 step("assertions");

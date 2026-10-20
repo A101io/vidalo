@@ -888,6 +888,15 @@ export const en: CopyShape = {
       instableTitle: "Wrong now and then",
       recommendationTitle: "Recommendation questions",
     },
+    named: {
+      h2: "Who AI names instead",
+      body: "A customer does not ask for you, they ask for the best in your trade. This is who AI named instead of you, and where it got that.",
+      you: (named: number, total: number) => (named === 0 ? `You: in none of the ${total} answers` : `You: in ${named} of the ${total} answers`),
+      others: "Named instead",
+      sources: "Taken from",
+      times: (n: number) => `${n}×`,
+      note: "We only count whether you are named, never in which place. We do not write reviews or lists for others; we show which ones they are.",
+    },
     sources: {
       h2: "Where it comes from",
       h2Grey: "Why the AI finds nothing",
@@ -1516,6 +1525,12 @@ export const en: CopyShape = {
       credential: (subject: string, place: string) => `Which business in ${place} is accredited for ${subject}?`,
       policy: (subject: string, place: string) => `Which business in ${place} works with: ${subject}?`,
       other: (place: string) => `Which business in ${place} would you recommend?`,
+      intent: {
+        beste: (place: string) => `Who is the best in ${place}?`,
+        betrouwbaar: (place: string) => `Who is reliable in ${place}?`,
+        betaalbaar: (place: string) => `Who is affordable in ${place}?`,
+        dichtbij: (place: string) => `Who is near me in ${place}?`,
+      } as Record<string, (place: string) => string>,
     },
   },
 

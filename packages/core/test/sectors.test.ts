@@ -63,12 +63,20 @@ describe("sector packs", () => {
     }
   });
 
-  it.each(SECTOR_SLUGS)("%s produces 6 to 10 valid prompts with at least two recommendation questions", (slug) => {
+  it.each(SECTOR_SLUGS)("%s: core of up to 6 questions about the business + one recommendation per intent, and a bank of 20 or more", (slug) => {
     const facts = fullFacts();
     const prompts = sectorPrompts(facts, slug);
-    expect(prompts.length).toBeGreaterThanOrEqual(6);
-    expect(prompts.length).toBeLessThanOrEqual(10);
-    expect(prompts.filter((p) => p.kind === "recommendation").length).toBeGreaterThanOrEqual(2);
+    const core = prompts.filter((p) => p.pool === "core");
+    const bank = prompts.filter((p) => p.pool === "bank");
+    expect(core.filter((p) => p.kind === "about").length).toBeLessThanOrEqual(6);
+    const coreRecs = core.filter((p) => p.kind === "recommendation");
+    expect(coreRecs).toHaveLength(6);
+    // Every intent that applies has its own question; care asks no price question.
+    const intents = new Set(coreRecs.map((p) => p.intent));
+    for (const i of ["quality", "trust", "now", "specialty", "place"]) expect(intents.has(i as never), `${slug} ${i}`).toBe(true);
+    if (slug !== "zorg-praktijken") expect(intents.has("price")).toBe(true);
+    expect(bank.length).toBeGreaterThanOrEqual(20);
+    expect(bank.every((p) => p.kind === "recommendation" && p.intent)).toBe(true);
     const texts = new Set<string>();
     for (const p of prompts) {
       expect(FACT_KEYS).toContain(p.category);
@@ -80,28 +88,47 @@ describe("sector packs", () => {
       // Named for the business place, or (area questions) a place in its werkgebied.
       expect(p.textNl.includes(facts.place) || facts.serviceArea!.places.some((pl) => p.textNl.includes(pl))).toBe(true);
       if (p.kind === "about") expect(p.textNl).toContain(facts.name);
+      if (p.kind === "recommendation") expect(p.textNl).not.toContain(facts.name);
       expect(p.textNl).not.toMatch(BANNED);
+      expect(p.textNl).not.toMatch(/\bWelke (restaurant|café)\b/);
       expect(texts.has(p.textNl)).toBe(false);
       texts.add(p.textNl);
     }
   });
 
   it("phrases recommendations the way customers do", () => {
-    const plumber = sectorPrompts(fullFacts(), "loodgieters-installateurs").map((p) => p.textNl);
-    expect(plumber).toContain("Lekkage, wie kan vandaag komen in Zwolle?");
-    expect(plumber).toContain("Wie installeert warmtepompen in Zwolle?");
+    const plumber = sectorPrompts(fullFacts({ place: "Utrecht" }), "loodgieters-installateurs").map((p) => p.textNl);
+    expect(plumber).toContain("Wat is de beste installateur in Utrecht?");
+    expect(plumber).toContain("Betrouwbare installateur in Utrecht, wie raad je aan?");
+    expect(plumber).toContain("Lekkage, wie kan vandaag komen in Utrecht?");
+    expect(plumber).toContain("Wie installeert warmtepompen in Utrecht?");
+    const chinees = sectorPrompts(fullFacts({ name: "Golden Dragon", place: "Rotterdam", servicesYes: ["dim sum", "terras"] }), "horeca");
+    const texts = chinees.map((p) => p.textNl);
+    expect(texts).toContain("Wat is het beste restaurant in Rotterdam?");
+    expect(texts).toContain("Welk restaurant in Rotterdam heeft de beste reviews?");
+    expect(texts).toContain("Welk restaurant in Rotterdam heeft dim sum?");
+    expect(chinees.find((p) => p.textNl.includes("terras in de zon"))).toMatchObject({ pool: "bank", season: "zomer" });
     const vve = sectorPrompts(fullFacts({ name: "Stadsbeheer VvE", place: "Utrecht" }), "vve-beheer").map((p) => p.textNl);
     expect(vve).toContain("VvE-beheerder voor 12 appartementen in Utrecht, wie kan dat doen?");
     const fysio = sectorPrompts(fullFacts({ name: "Fysio Van Dijk", place: "Amersfoort" }), "zorg-praktijken").map((p) => p.textNl);
     expect(fysio).toContain("Fysio zonder verwijzing in Amersfoort?");
   });
 
-  it("still gives at least two recommendation questions when the facts are sparse", () => {
+  it("judges the open-ended intents on being open, and keeps them out of the afhaker class", () => {
+    const prompts = sectorPrompts(fullFacts(), "winkels");
+    const byIntent = (i: string) => prompts.filter((p) => p.intent === i && p.category === "existence");
+    expect(byIntent("quality").every((p) => p.probes[0] === "existence:beste" && p.criterium === 6)).toBe(true);
+    expect(byIntent("trust").every((p) => p.probes[0] === "existence:betrouwbaar" && p.criterium === 6)).toBe(true);
+    expect(byIntent("price").every((p) => p.probes[0] === "existence:betaalbaar" && p.criterium === 9)).toBe(true);
+    expect(byIntent("place").every((p) => p.probes[0] === "existence:dichtbij" && p.criterium === 6)).toBe(true);
+  });
+
+  it("still asks six recommendation questions when the facts are sparse", () => {
     const sparse = sampleFacts({ servicesYes: [], servicesNo: [], prices: [], policies: [], serviceArea: undefined, urgency: undefined, credentials: [] });
     for (const slug of SECTOR_SLUGS) {
-      const prompts = sectorPrompts(sparse, slug);
-      expect(prompts.filter((p) => p.kind === "recommendation").length).toBeGreaterThanOrEqual(2);
-      expect(prompts.length).toBeLessThanOrEqual(10);
+      const core = sectorPrompts(sparse, slug).filter((p) => p.pool === "core");
+      expect(core.filter((p) => p.kind === "recommendation").length, slug).toBe(6);
+      expect(core.length).toBeLessThanOrEqual(12);
     }
   });
 });
@@ -148,7 +175,7 @@ describe("generatePrompts with a sector", () => {
       expect(p.kind === "about" || p.kind === "recommendation").toBe(true);
       expect(CRITERIUM_IDS).toContain(p.criterium);
     }
-    expect(all.filter((p) => p.kind === "recommendation").length).toBeGreaterThanOrEqual(2);
+    expect(all.filter((p) => p.kind === "recommendation" && p.pool === "core")).toHaveLength(6);
     // The servicesNo base prompts carry criterium 7.
     expect(all.find((p) => p.probes[0] === "service:zonnepanelen")?.criterium).toBe(7);
   });
@@ -159,13 +186,14 @@ describe("generatePrompts with a sector", () => {
     expect(generatePrompts(facts, { sector: "horeca" }).length).toBeGreaterThan(basePrompts(facts).length);
   });
 
-  it("free scan stays at 6: existence, phone, Sunday hours + 3 sector prompts of which 1 recommendation", () => {
+  it("free scan stays at 6: existence, phone, Sunday hours + recommendations for kwaliteit, vertrouwen and nu", () => {
     const facts = fullFacts({ sector: "loodgieters-installateurs" });
     const free = freeScanPrompts(facts);
     expect(free).toHaveLength(6);
     expect(free.slice(0, 3).map((p) => p.category)).toEqual(["existence", "phone", "hours"]);
     expect(free[2]!.probes).toEqual(["hours.6"]);
-    expect(free.filter((p) => p.kind === "recommendation")).toHaveLength(1);
+    expect(free.slice(3).map((p) => p.intent)).toEqual(["quality", "trust", "now"]);
+    expect(free[3]!.textNl).toBe("Wat is de beste installateur in Zwolle?");
     // Every free prompt exists in the stored set so it can be selected by text.
     const stored = generatePrompts(facts).map((p, i) => ({ ...p, id: String(i) }));
     expect(selectFreeScanPrompts(stored, facts)).toHaveLength(6);
