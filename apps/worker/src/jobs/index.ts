@@ -1,5 +1,5 @@
 import type { Job } from "@vidalo/core/db";
-import { email, fixes, followup, operatorTask, publish, recheck, report, sync } from "./misc.js";
+import { email, fixes, followup, indexCheck, operatorTask, publish, recheck, report, sitecheck, sync } from "./misc.js";
 import { scan } from "./scan.js";
 import { setup } from "./setup.js";
 import { paidOnlyBlock } from "./paid.js";
@@ -21,6 +21,8 @@ const handlers: { [K in JobKind]: Handler<K> } = {
   report,
   followup,
   operator_task: operatorTask,
+  sitecheck,
+  index_check: indexCheck,
 };
 
 export function handlerFor(kind: string): AnyHandler | null {
@@ -43,6 +45,8 @@ export function validatePayload(kind: JobKind, payload: Record<string, unknown>)
       case "publish":
       case "sync":
       case "report":
+      case "sitecheck":
+      case "index_check":
         return need(["businessId"]);
       case "fixes":
       case "fix":

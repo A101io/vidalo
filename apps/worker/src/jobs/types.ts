@@ -73,6 +73,16 @@ export interface FollowUpJob {
   day: 7 | 21;
 }
 
+/** Check the owner's own website (robots.txt, noindex, business data); mails the owner on a new problem. */
+export interface SiteCheckJob {
+  businessId: string;
+}
+
+/** Search Console: verify the facts host, add it, submit the sitemap, inspect the page. */
+export interface IndexCheckJob {
+  businessId: string;
+}
+
 export interface OperatorTaskJob {
   reason: string;
   businessId?: string | null;
@@ -91,9 +101,11 @@ export type JobPayloads = {
   report: ReportJob;
   followup: FollowUpJob;
   operator_task: OperatorTaskJob;
+  sitecheck: SiteCheckJob;
+  index_check: IndexCheckJob;
 };
 
 export type JobKind = keyof JobPayloads;
-export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task"];
+export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task", "sitecheck", "index_check"];
 
 export type Handler<K extends JobKind> = (payload: JobPayloads[K], job: Job) => Promise<Record<string, unknown> | void>;

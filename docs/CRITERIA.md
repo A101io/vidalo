@@ -72,9 +72,22 @@ Klanten stellen AI twee soorten vragen, en de scan doet ze allebei.
 
 **Vragen over jou** ("Is De Vries zondag open?"). Hier controleren we of het antwoord klopt met je opgave. Dit zijn de twaalf criteria hierboven.
 
-**Vragen om een aanbeveling** ("Welke bakker in Haarlem is zondag open?", "Wie installeert warmtepompen in Breda?"). Hier controleren we niet of je op nummer één staat, dat is marketing. We controleren één ding: of je *ten onrechte ontbreekt* omdat de AI een feit verkeerd heeft. Word je niet genoemd voor warmtepompen terwijl je ze installeert, dan is dat een bevinding bij criterium 6 (diensten: wel) met als bewijs de aanbevelingsvraag. Word je niet genoemd voor zondag terwijl je open bent: criterium 3.
+**Vragen om een aanbeveling** ("Wat is de beste Chinees in Rotterdam?", "Lekkage, wie kan vandaag nog komen in Utrecht?", "Wie installeert warmtepompen in Breda?"). Dit is de vraag die een klant echt stelt, en hier valt de beslissing. Hier controleren we niet of je op nummer één staat, dat is marketing. We controleren één ding: word je genoemd. Per sector stellen we bij elke volledige controle zes aanbevelingsvragen, één per bedoeling van de klant:
 
-Dit onderscheid houdt de scan eerlijk. We beloven niet dat je genoemd wordt; we beloven dat je niet buiten de boot valt door een fout die wij kunnen herstellen. Per sector krijgen de aanbevelingsvragen de vorm die klanten echt gebruiken: "loodgieter met spoed in Zwolle", "VvE-beheerder voor 12 appartementen in Utrecht", "fysio zonder verwijzing in Amersfoort".
+| Bedoeling | Voorbeeld | Gekoppeld aan | Criterium |
+|---|---|---|---|
+| Kwaliteit | Wat is de beste loodgieter in Utrecht? | je bent open | 6, misleider |
+| Vertrouwen | Betrouwbare loodgieter in Utrecht, wie raad je aan? | je bent open | 6, misleider |
+| Nu | Lekkage, wie kan vandaag nog komen? / Welke bakker is op zondag open? | spoed of openingstijden | 5 of 3 |
+| Specialisme | Wie installeert warmtepompen in Utrecht? | een dienst of erkenning die je hebt | 6 of 12 |
+| Prijs | Betaalbare loodgieter in Utrecht? (niet in de zorg) | je bent open | 9, misleider |
+| Plek | Welke loodgieter komt ook in Nieuwegein? / Loodgieter bij mij in de buurt? | je werkgebied, of je bent open | 4 of 6 |
+
+Er zijn dus twee soorten. Bij de vragen die aan een feit hangen (spoed, zondag, een dienst, een plaats in je werkgebied) betekent niet genoemd worden dat de AI een feit mist: word je niet genoemd voor warmtepompen terwijl je ze installeert, dan is dat een bevinding bij criterium 6. Bij de open vragen (kwaliteit, vertrouwen, prijs, in de buurt) hangt het ook af van reviews en lijstjes van anderen. Niet genoemd worden telt daar als misleider (oranje, nooit rood), en we laten zien wie de AI wel noemt en van welke sites het dat haalt. Reviews en lijstjes maken we niet; we zorgen dat je feiten overal kloppen en vindbaar zijn, en we wijzen de bronnen aan.
+
+Dit onderscheid houdt de scan eerlijk. We beloven niet dat je genoemd wordt; we beloven dat je niet buiten de boot valt door een fout die wij kunnen herstellen, en dat je ziet waarom een ander wel genoemd wordt. Per sector krijgen de aanbevelingsvragen de vorm die klanten echt gebruiken: "loodgieter met spoed in Zwolle", "VvE-beheerder voor 12 appartementen in Utrecht", "fysio zonder verwijzing in Amersfoort".
+
+**Vragenbank.** Naast de vaste zes heeft elke sector een bank van 20 tot 30 aanbevelingsvragen: andere bewoordingen (AI noemt op "beste Chinees" andere namen dan op "waar eet ik lekker Chinees"), de andere plaatsen in je werkgebied, je andere diensten en het seizoen ("terras in de zon" in de zomer, "verwarming doet het niet" in de winter). Bij elke volledige controle draaien er zes mee, elke maand andere, seizoensvragen alleen in hun seizoen. Zo is na een paar maanden alles gevraagd terwijl de kosten per controle gelijk blijven. Een vraag uit de bank waarbij je in minder dan de helft van de antwoorden genoemd wordt, schuift door naar de vaste set (hoogstens twee per controle).
 
 ## Sectoren: wat klanten vragen en wat er misgaat
 
@@ -216,7 +229,7 @@ De twaalf criteria gelden overal, maar per vak verschilt welke vraag de klant st
 
 Drie dingen moeten in de scanner veranderen om deze criteria te dragen.
 
-**1. Sectorvragensets.** Nu genereert de scanner 20 algemene vragen uit het feitenrecord. Daar komt een sectorlaag bovenop: per sector 6 tot 10 extra vragen, waaronder altijd minstens twee aanbevelingsvragen. De sector wordt afgeleid uit de Google-categorie of de KvK SBI-code van het bedrijf, met een handmatige keuze als terugvaloptie. Het feitenrecord krijgt drie velden erbij die nu ontbreken: **werkgebied** (lijst van plaatsen of straal in km), **spoed/beschikbaarheid** (ja/nee plus tijden) en **erkenningen** (vrije lijst). Zonder die velden kunnen criteria 4, 5 en 12 niet worden beoordeeld.
+**1. Sectorvragensets.** Nu genereert de scanner 20 algemene vragen uit het feitenrecord. Daar komt een sectorlaag bovenop: per sector tot 6 extra vragen over het bedrijf en zes aanbevelingsvragen, één per bedoeling (kwaliteit, vertrouwen, nu, specialisme, prijs, plek), plus een wisselende vragenbank. De sector wordt afgeleid uit de Google-categorie of de KvK SBI-code van het bedrijf, met een handmatige keuze als terugvaloptie. Het feitenrecord krijgt drie velden erbij die nu ontbreken: **werkgebied** (lijst van plaatsen of straal in km), **spoed/beschikbaarheid** (ja/nee plus tijden) en **erkenningen** (vrije lijst). Zonder die velden kunnen criteria 4, 5 en 12 niet worden beoordeeld.
 
 **2. Ernstgewichten en de stipregel.** Elk criterium krijgt een ernstklasse (afhaker, misleider, verwarring) en een eigen drempel (1 van N of 30%). De stipkleur wordt berekend per AI-systeem en samengevat volgens de regel in dit document. Rapport, e-mails en dashboard tonen kleur plus bevindingen, nooit een score.
 

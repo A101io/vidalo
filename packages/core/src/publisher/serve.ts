@@ -9,6 +9,7 @@
 import type { Facts } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getBusinessByFactsHost, getDb } from "../shared/db.js";
+import { googleVerificationToken } from "./google-index.js";
 import { indexNowKey, isIndexNowKeyPath } from "./indexnow.js";
 import { renderFactsPage, type RenderedFactsPage } from "./render.js";
 
@@ -31,17 +32,17 @@ export function clearServeCache(host?: string): void {
 
 export interface ServeOptions {
   /** Override lookup (tests / Cloudflare Worker with a KV). */
-  resolve?: (host: string) => Promise<{ business: BusinessRecord; facts: Facts } | null>;
+  resolve?: (host: string) => Promise<{ business: BusinessRecord; facts: Facts; googleSiteVerification?: string | null } | null>;
   /** Where churned businesses redirect (default: their own website). */
   now?: () => Date;
 }
 
-async function defaultResolve(host: string): Promise<{ business: BusinessRecord; facts: Facts } | null> {
+async function defaultResolve(host: string): Promise<{ business: BusinessRecord; facts: Facts; googleSiteVerification: string | null } | null> {
   const business = await getBusinessByFactsHost(host);
   if (!business) return null;
   const facts = await getDb().latestFacts(business.id);
   if (!facts) return null;
-  return { business, facts };
+  return { business, facts, googleSiteVerification: await googleVerificationToken(business.id, host) };
 }
 
 function hostOf(req: Request): string {
@@ -84,7 +85,7 @@ export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => P
         cache.delete(host);
         return text("Geen feitenpagina op dit adres.", "text/plain; charset=utf-8", { "cache-control": "no-store" }, 404);
       }
-      const { business, facts } = found;
+      const { business, facts, googleSiteVerification } = found;
       if (business.status === "churned") {
         const site = facts.website ?? business.domain;
         const target = site ? `https://${site.replace(/^https?:\/\//, "")}` : null;
@@ -92,7 +93,7 @@ export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => P
         return text("Deze feitenpagina is niet meer actief.", "text/plain; charset=utf-8", { "cache-control": "no-store" }, 410);
       }
       const lastModified = new Date(facts.verifiedAt ?? business.createdAt);
-      const page = renderFactsPage(facts, business, { host, verifiedAt: lastModified.toISOString() });
+      const page = renderFactsPage(facts, business, { host, verifiedAt: lastModified.toISOString(), googleSiteVerification });
       entry = { page, lastModified, business, facts, cachedAt: now().getTime() };
       cache.set(host, entry);
     }

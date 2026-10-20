@@ -5,7 +5,8 @@ import { log } from "../log.js";
 import type { Handler } from "./types.js";
 
 /**
- * Workflow B after checkout: prompts → host → facts page → channels → baseline scan → welcome.
+ * Workflow B after checkout: prompts → host → facts page → channels → baseline scan →
+ * own-website check + Google index check → welcome.
  * Idempotent: safe to re-run after the owner confirms facts or connects Google.
  */
 export const setup: Handler<"setup"> = async (p) => {
@@ -34,7 +35,16 @@ export const setup: Handler<"setup"> = async (p) => {
   const scanJob = await db.enqueueJob("scan", { businessId: business.id, kind: "baseline" });
   await db.logEvent(business.id, "scan.enqueued", { kind: "baseline", jobId: scanJob.id });
 
-  // 5. welcome (4 steps)
+  // 5. the owner's own website, and whether Google has read the facts page
+  //    (cron repeats both: site monthly, Google weekly; see cron.ts)
+  await db.enqueueJob("sitecheck", { businessId: business.id });
+  await db.logEvent(business.id, "sitecheck.enqueued", { reason: "setup" });
+  if (pub.verified) {
+    await db.enqueueJob("index_check", { businessId: business.id });
+    await db.logEvent(business.id, "google_index.enqueued", { reason: "setup" });
+  }
+
+  // 6. welcome (4 steps)
   if (!p.skipWelcome) await sendWelcome(business.id);
 
   // anniversary day for the monthly scan = day of setup

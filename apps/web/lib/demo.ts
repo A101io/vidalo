@@ -78,6 +78,26 @@ export function demoReport(): ScanReport {
     findingsBySeverity: groupBySeverity(findings),
     instable: [],
     criteriaNotFound: [{ criterium: 6, engine: "google_ai", frequency: 3, sampleCount: 3 }],
+    recommendations: [
+      {
+        promptId: "demo-rec-1",
+        prompt: "Wat is de beste bakker in Haarlem?",
+        intent: "quality",
+        pool: "core",
+        probe: "existence:beste",
+        answers: 9,
+        named: 1,
+        others: [
+          { name: "Bakkerij Van der Berg", answers: 7 },
+          { name: "Brood & Zo", answers: 5 },
+          { name: "Bakker Smit", answers: 3 },
+        ],
+        sources: [
+          { host: "tripadvisor.nl", url: "https://www.tripadvisor.nl/", answers: 6 },
+          { host: "telefoonboek.nl", url: "https://www.telefoonboek.nl/", answers: 2 },
+        ],
+      },
+    ],
   };
 }
 

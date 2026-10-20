@@ -609,7 +609,7 @@ export const en: CopyShape = {
       lang: "EN",
       columns: [
         { title: "Product", links: [{ label: "How it works", href: "/hoe-het-werkt" }, { label: "Why", href: "/waarom" }, { label: "AI agents and OKF", href: "/straks" }, { label: "Example report", href: "/#rapport" }, { label: "Pricing", href: "/prijzen" }, { label: "By trade", href: "/#vak" }] },
-        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hallo@vidalo.io" }] },
+        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · Prices excl. VAT",
@@ -663,7 +663,7 @@ export const en: CopyShape = {
     draft: true,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
     updated: "Last updated: 9 October 2026",
-    contact: "Questions? Email us at hallo@vidalo.io.",
+    contact: "Questions? Email us at hello@vidalo.io.",
     terms: {
       title: "Terms and conditions",
       intro: "These terms apply to every check and every subscription from Vidalo, a trade name of A101 B.V. This is a translation; the Dutch text is the binding version.",
@@ -681,10 +681,10 @@ export const en: CopyShape = {
       title: "Privacy policy",
       intro: "Vidalo is a trade name of A101 B.V. This page sets out which data we use, why, and with whom we share it. This is a translation; the Dutch text is the binding version.",
       sections: [
-        { h: "Which data", p: ["About your business: name, town, address, phone number, website, opening hours, services and other details you confirm. These are usually not personal data, unless your business carries your own name.", "About you: your email address, to log in and to send your reports. When you pay, Stripe processes your payment details; we do not see them.", "About the check: the questions we ask, the answers of AI assistants and the sources they mention."] },
-        { h: "Why", p: ["To carry out the check, fix errors, email you about your report and invoice your subscription. After a free check we send you a reminder after 7 and after 21 days. Every email has an unsubscribe link; after that we send nothing more. The legal basis is the agreement with you, and for a free check our legitimate interest in being able to give you a report."] },
+        { h: "Which data", p: ["About your business: name, town, address, phone number, website, opening hours, services and other details you confirm. These are usually not personal data, unless your business carries your own name.", "About you: your email address, to log in and to send your reports. When you pay, Stripe processes your payment details; we do not see them.", "About the check: the questions we ask, the answers of AI assistants and the sources they mention.", "On the coming-soon list: your email address, the language of the page, when you signed up and the sentence with which you gave consent."] },
+        { h: "Why", p: ["To carry out the check, fix errors, email you about your report and invoice your subscription. After a free check we send you a reminder after 7 and after 21 days. Every email has an unsubscribe link; after that we send nothing more. The legal basis is the agreement with you, and for a free check our legitimate interest in being able to give you a report.", "If you put yourself on the coming-soon list, we email you when Vidalo opens. No newsletter and no advertising for anything else. The basis is your consent; you withdraw it by emailing hello@vidalo.io, and we then take your address off the list."] },
         { h: "With whom we share data", p: ["Supabase (database and login, storage in the EU). OpenAI, Google, Perplexity and SerpAPI to ask the questions; we only send business details, no email addresses. Google and the KvK to find your business. Stripe for payments. Resend for email. Cloudflare for your facts page.", "Some of these parties process data outside the EU. That happens on the basis of the European Commission's standard contractual clauses or the EU-US Data Privacy Framework."] },
-        { h: "How long", p: ["A report from a free check can be seen through the link for 30 days. We keep the data of a paid plan for as long as you are a customer. 90 days after your subscription ends we do one more free check; after that we only keep what the law requires for invoices."] },
+        { h: "How long", p: ["A report from a free check can be seen through the link for 30 days. We keep the data of a paid plan for as long as you are a customer. 90 days after your subscription ends we do one more free check; after that we only keep what the law requires for invoices.", "We keep the coming-soon list until we have emailed everyone about the opening; then we delete it. If you unsubscribe earlier, we take you off at once."] },
         { h: "Your rights", p: ["You may access your data, have it corrected or deleted, and object. Email us; we respond within a month. If you disagree with us, you can file a complaint with the Autoriteit Persoonsgegevens (the Dutch Data Protection Authority)."] },
       ],
     },
@@ -720,9 +720,22 @@ export const en: CopyShape = {
     kicker: "Coming soon",
     h1: "Vidalo is on its way.",
     body: "Your customers ask ChatGPT. We make sure the answer is right. Soon you can check here, for free, what AI assistants say about your business, and have every error fixed at its source.",
-    contact: "Questions, or want in early? Email us at",
-    previewButton: "Have a look at the site already",
-    previewNote: "Temporary, while we build. The site is not finished.",
+    intro: {
+      label: "A chat field in which customer questions are typed, and which becomes the Vidalo logo",
+      questions: ["Is the baker open on Sunday?", "How much for a haircut?", "Do they deliver in Haarlem?"],
+    },
+    contact: "Questions? Email us at",
+    list: {
+      h2: "Hear when we open",
+      label: "Your email address",
+      placeholder: "name@company.com",
+      button: "Put me on the list",
+      consent: "Yes, email me once when Vidalo opens. You can unsubscribe at any time via hello@vidalo.io.",
+      thanks: "Thank you. You are on the list; we will email you as soon as Vidalo opens.",
+      invalid: "That email address does not look right. Please check it.",
+      busy: "It is busy right now. Please try again in a few minutes.",
+      failed: "That did not work. Please try again later, or email us.",
+    },
     barTitle: "Preview",
     barLinks: [
       { label: "Home", href: "/" },
@@ -749,9 +762,9 @@ export const en: CopyShape = {
     send: "Send",
     thinking: "One moment.",
     faqNote: "Answer from our frequently asked questions.",
-    fallback: "I am not sure about that. Email us at hallo@vidalo.io and a person will answer.",
-    error: "Answering is not working right now. Email us at hallo@vidalo.io.",
-    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email hallo@vidalo.io.",
+    fallback: "I am not sure about that. Email us at support@vidalo.io and a person will answer.",
+    error: "Answering is not working right now. Email us at support@vidalo.io.",
+    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email support@vidalo.io.",
   },
 
   consent: {
@@ -779,7 +792,7 @@ export const en: CopyShape = {
     button: "Unsubscribe",
     doneH1: "You have been unsubscribed",
     doneBody: "We will no longer send you emails about this.",
-    invalid: "This unsubscribe link is not valid or has expired. Email us at hallo@vidalo.io and we will sort it out.",
+    invalid: "This unsubscribe link is not valid or has expired. Email us at support@vidalo.io and we will sort it out.",
   },
 
   scanBusy: {
@@ -874,6 +887,15 @@ export const en: CopyShape = {
       allTitle: "All answers",
       instableTitle: "Wrong now and then",
       recommendationTitle: "Recommendation questions",
+    },
+    named: {
+      h2: "Who AI names instead",
+      body: "A customer does not ask for you, they ask for the best in your trade. This is who AI named instead of you, and where it got that.",
+      you: (named: number, total: number) => (named === 0 ? `You: in none of the ${total} answers` : `You: in ${named} of the ${total} answers`),
+      others: "Named instead",
+      sources: "Taken from",
+      times: (n: number) => `${n}×`,
+      note: "We only count whether you are named, never in which place. We do not write reviews or lists for others; we show which ones they are.",
     },
     sources: {
       h2: "Where it comes from",
@@ -1503,6 +1525,12 @@ export const en: CopyShape = {
       credential: (subject: string, place: string) => `Which business in ${place} is accredited for ${subject}?`,
       policy: (subject: string, place: string) => `Which business in ${place} works with: ${subject}?`,
       other: (place: string) => `Which business in ${place} would you recommend?`,
+      intent: {
+        beste: (place: string) => `Who is the best in ${place}?`,
+        betrouwbaar: (place: string) => `Who is reliable in ${place}?`,
+        betaalbaar: (place: string) => `Who is affordable in ${place}?`,
+        dichtbij: (place: string) => `Who is near me in ${place}?`,
+      } as Record<string, (place: string) => string>,
     },
   },
 
@@ -1548,7 +1576,7 @@ export const en: CopyShape = {
   checkout: {
     mockNotice: "Payment simulated (no Stripe key set).",
     cancelled: "Your payment was not completed. Nothing has been charged. You can try again below.",
-    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at hallo@vidalo.io.",
+    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.io.",
     productSetup: "Vidalo Set it right (one-off)",
     productMonitor: "Vidalo Keep it right (per month)",
     consentSubmit: (terms: string, privacy: string) => `Vidalo is a service for businesses, not consumers. By paying you confirm you are buying on behalf of a business and agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
@@ -1594,7 +1622,7 @@ export const en: CopyShape = {
     processingH1: "Thank you, your payment is being processed",
     processingBody: "With a direct debit it takes a few working days for the money to arrive. You can already do the steps below; we start as soon as the payment is complete.",
     failedH1: "Your payment did not go through",
-    failedBody: "Nothing has been charged. Try again from your report, or email us at hallo@vidalo.io.",
+    failedBody: "Nothing has been charged. Try again from your report, or email us at support@vidalo.io.",
     receipt: (amount: string, email: string | null) => `You paid ${amount} incl. VAT.${email ? ` The invoice is in your inbox (${email}).` : ""}`,
     steps: [
       { title: "Log in to Google once", body: "With the account of your Google Business Profile. That is how we know you are the owner.", href: "/app/google", cta: "Log in to Google" },
@@ -1831,7 +1859,7 @@ export const en: CopyShape = {
       error: "Something went wrong at Google. Please try again.",
     },
     retry: "Try again",
-    contact: "Not working? Email us at hallo@vidalo.io and we will connect it together.",
+    contact: "Not working? Email us at support@vidalo.io and we will connect it together.",
   },
 
   factsPage: {

@@ -1,6 +1,6 @@
 import { mkdir, appendFile } from "node:fs/promises";
 import path from "node:path";
-import { publishFactsPage, syncAllChannels } from "@vidalo/core/publisher";
+import { checkGoogleIndex, publishFactsPage, runSiteCheck, syncAllChannels } from "@vidalo/core/publisher";
 import { openFixesForScan, runRecheck, directoryCorrectionEmail } from "@vidalo/core/fixer";
 import {
   sendMail,
@@ -24,6 +24,16 @@ export const publish: Handler<"publish"> = async (p) => {
 export const sync: Handler<"sync"> = async (p) => {
   const r = await syncAllChannels(p.businessId, { channelIds: p.channelIds });
   return { channels: r.results.map((x) => ({ id: x.channelId, type: x.channelType, status: x.status, diff: x.diff.length })) };
+};
+
+export const sitecheck: Handler<"sitecheck"> = async (p) => {
+  const r = await runSiteCheck(p.businessId);
+  return { skipped: r.skipped ?? null, issues: r.result?.issues.map((i) => i.kind) ?? [], newIssues: r.newIssues, notified: r.notified };
+};
+
+export const indexCheck: Handler<"index_check"> = async (p) => {
+  const r = await checkGoogleIndex(p.businessId);
+  return { skipped: r.skipped ?? null, failedAt: r.failedAt ?? null, indexed: r.indexed, verdict: r.state?.inspection?.verdict ?? null };
 };
 
 export const fixes: Handler<"fixes"> = async (p) => {

@@ -14,6 +14,7 @@ import type {
   FindingStatus,
   Fix,
   Prompt,
+  PromptPool,
   Sample,
   ScanKind,
   ScanRun,
@@ -33,6 +34,38 @@ export interface BusinessRecord extends Business {
   /** The owner's language ("nl" | "en"); the dashboard and the report follow it; e-mails are still Dutch. */
   language: "nl" | "en";
 }
+
+/** What Google's URL Inspection API last said about the facts page. */
+export interface GoogleInspection {
+  at: string;
+  /** PASS = indexed; NEUTRAL / FAIL / PARTIAL / VERDICT_UNSPECIFIED otherwise */
+  verdict: string;
+  coverageState: string | null;
+  indexingState: string | null;
+  pageFetchState: string | null;
+  robotsTxtState: string | null;
+  lastCrawlTime: string | null;
+  googleCanonical: string | null;
+}
+
+/** Search Console state of one business's facts page (table google_index). */
+export interface GoogleIndexState {
+  businessId: string;
+  host: string;
+  /** content of the google-site-verification meta tag served on the facts page */
+  token: string | null;
+  verifiedAt: string | null;
+  addedAt: string | null;
+  sitemapAt: string | null;
+  lastAttemptAt: string | null;
+  lastError: string | null;
+  inspection: GoogleInspection | null;
+  /** first time the inspection said PASS */
+  indexedAt: string | null;
+  updatedAt: string;
+}
+
+export type GoogleIndexUpsert = Partial<Omit<GoogleIndexState, "businessId" | "updatedAt">> & { businessId: string; host: string };
 
 export type BusinessUpsert = Partial<Omit<BusinessRecord, "createdAt">> & { name: string; place: string };
 
@@ -57,6 +90,17 @@ export interface EventRow {
   type: string;
   payload: Record<string, unknown>;
   at: string;
+}
+
+/** One address on the coming-soon list (migration 0009). */
+export interface WaitlistInput {
+  /** Lower-cased, trimmed, validated by the caller. */
+  email: string;
+  language: "nl" | "en";
+  /** Where it was left, e.g. "coming_soon". */
+  source: string;
+  /** The exact consent sentence shown next to the field, in that language. */
+  consentText: string;
 }
 
 export type PromptInput = Omit<Prompt, "id" | "businessId"> & { businessId?: string };
@@ -110,6 +154,8 @@ export interface Db {
   // --- prompts ---
   listPrompts(businessId: string, opts?: { activeOnly?: boolean }): Promise<Prompt[]>;
   insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]>;
+  /** Move a prompt between the fixed set and the rotating bank. */
+  setPromptPool(id: string, pool: PromptPool): Promise<void>;
 
   // --- scan runs, samples, claims ---
   createScanRun(input: ScanRunCreate): Promise<ScanRun>;
@@ -145,6 +191,16 @@ export interface Db {
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
 
+  // --- coming-soon list ---
+  /**
+   * Adds an address once. `created` is false when it was already on the list
+   * (the row is left as it was, so a second sign-up cannot change the consent
+   * on record or undo an unsubscribe).
+   */
+  joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }>;
+  /** Addresses on the list that have not unsubscribed. */
+  countWaitlist(): Promise<number>;
+
   // --- channels ---
   listChannels(businessId: string): Promise<Channel[]>;
   upsertChannel(input: ChannelUpsert): Promise<Channel>;
@@ -156,6 +212,11 @@ export interface Db {
   updateFix(id: string, patch: Partial<Omit<Fix, "id" | "findingId">>): Promise<Fix>;
   /** Fixes whose recheck_at has passed and that are not resolved. */
   listDueRechecks(now?: Date): Promise<Fix[]>;
+
+  // --- Google Search Console state of the facts page ---
+  getGoogleIndex(businessId: string): Promise<GoogleIndexState | null>;
+  /** Insert or merge: fields left out keep their value; pass null to clear one. */
+  upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
 
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;

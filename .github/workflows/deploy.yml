@@ -5,6 +5,9 @@ name: Deploy to Cloudflare
 # Sonable. main can therefore be ahead of what is live.
 #
 #   preview     vidalo-web-preview: the site on mock data (no database, no keys)
+#   staging     vidalo-worker-staging + vidalo-web-staging: the production
+#               build and settings on workers.dev, with their own database
+#               and queue (vidalo-scans-staging); never vidalo.io
 #   production  vidalo-worker (jobs, cron, scan queue, facts pages) and
 #               vidalo-web; refuses to serve without its database (worker.ts)
 #
@@ -16,7 +19,7 @@ on:
       target:
         description: "What to deploy"
         type: choice
-        options: [preview, production]
+        options: [preview, staging, production]
         default: preview
 
 jobs:
@@ -28,13 +31,16 @@ jobs:
       name: ${{ inputs.target }}
       # Literals, not a repository variable: a variable outside the repo can
       # name a dead host for weeks (Sitty's DEPLOY_URL did).
-      url: ${{ inputs.target == 'production' && 'https://vidalo.io' || 'https://vidalo-web-preview.julian-devriend.workers.dev' }}
+      url: ${{ inputs.target == 'production' && 'https://vidalo.io' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
     permissions:
       contents: read
       deployments: write
     env:
-      SITE: ${{ inputs.target == 'production' && 'https://vidalo.io' || 'https://vidalo-web-preview.julian-devriend.workers.dev' }}
-      WRANGLER_ENV: ${{ inputs.target == 'production' && '' || 'preview' }}
+      SITE: ${{ inputs.target == 'production' && 'https://vidalo.io' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
+      # wrangler's --env: none for production, otherwise the target's name.
+      WRANGLER_ENV: ${{ inputs.target != 'production' && inputs.target || '' }}
+      # Staging and production run the background worker and the scan queue.
+      QUEUE: ${{ inputs.target == 'staging' && 'vidalo-scans-staging' || 'vidalo-scans' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -77,27 +83,27 @@ jobs:
         working-directory: apps/web
         env:
           PUBLIC_BASE_URL: ${{ env.SITE }}
-          VIDALO_MOCK: ${{ inputs.target == 'production' && '0' || '1' }}
+          VIDALO_MOCK: ${{ inputs.target == 'preview' && '1' || '0' }}
         run: pnpm cf:build
 
-      # Production only: the queue the website sends free scans to, then the
-      # worker that consumes it. Creating a queue that exists is an error, so
-      # it is looked up first.
+      # Staging and production: the queue the website sends free scans to,
+      # then the worker that consumes it. Creating a queue that exists is an
+      # error, so it is looked up first.
       - name: Scan queue
-        if: inputs.target == 'production'
+        if: inputs.target != 'preview'
         working-directory: apps/web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm exec wrangler queues info vidalo-scans >/dev/null 2>&1 || pnpm exec wrangler queues create vidalo-scans
+        run: pnpm exec wrangler queues info "$QUEUE" >/dev/null 2>&1 || pnpm exec wrangler queues create "$QUEUE"
 
       - name: Deploy the background worker
-        if: inputs.target == 'production'
+        if: inputs.target != 'preview'
         working-directory: apps/worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: ../web/node_modules/.bin/wrangler deploy
+        run: ../web/node_modules/.bin/wrangler deploy --env "$WRANGLER_ENV"
 
       - name: Deploy the web Worker
         working-directory: apps/web

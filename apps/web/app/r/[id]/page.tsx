@@ -135,6 +135,43 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
           </details>
         </section>
 
+        {/* Who AI names instead */}
+        {v.named.length > 0 && (
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
+            <div className="flex flex-col gap-3.5 lg:col-span-5">
+              <h2 className="h2-sm">{R.named.h2}</h2>
+              <p className="max-w-[48ch] text-[16px] leading-[1.55] text-ink-2">{R.named.body}</p>
+              <p className="max-w-[48ch] text-[13px] text-muted">{R.named.note}</p>
+            </div>
+            <div className="flex flex-col gap-3 lg:col-span-7">
+              {v.named.map((n) => (
+                <div key={n.question} className="flex flex-col gap-2 rounded-2xl border-[1.5px] border-line p-4 text-[14px]">
+                  <span className="font-semibold">{n.question}</span>
+                  <span className="text-muted">{n.you}</span>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-muted">{R.named.others}:</span>
+                    {n.others.map((o) => (
+                      <span key={o.name}>
+                        <span className="font-semibold">{o.name}</span> <span className="text-muted">{o.times}</span>
+                      </span>
+                    ))}
+                  </div>
+                  {n.sources.length > 0 && (
+                    <div className="flex flex-wrap gap-x-2 gap-y-1">
+                      <span className="text-muted">{R.named.sources}:</span>
+                      {n.sources.map((s) => (
+                        <a key={s.host} href={s.href} rel="nofollow noopener" target="_blank" className="btn-link">
+                          {s.host}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Where it comes from */}
         {v.sources.length > 0 && (
           <section className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-12">

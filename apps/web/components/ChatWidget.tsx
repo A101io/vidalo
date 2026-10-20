@@ -66,8 +66,8 @@ export function ChatWidget({ copy, lang }: { copy: CopyShape["chat"]; lang: Lang
             <p className="text-[15px] font-bold">{copy.title}</p>
             <p className="mt-0.5 text-[12px] leading-[1.4] text-muted">
               {copy.aiNotice}{" "}
-              <a href="mailto:hallo@vidalo.io" className="underline underline-offset-2">
-                hallo@vidalo.io
+              <a href="mailto:support@vidalo.io" className="underline underline-offset-2">
+                support@vidalo.io
               </a>
             </p>
           </header>

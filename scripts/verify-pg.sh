@@ -19,7 +19,7 @@ done
 
 (cd packages/core && TEST_DATABASE_URL="$URL" npx vitest run test/db.test.ts)
 
-psql "$URL" -qX -c "truncate claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business restart identity cascade"
+psql "$URL" -qX -c "truncate claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business, waitlist restart identity cascade"
 VIDALO_DB=pg DATABASE_URL="$URL" pnpm e2e:mock | grep -E '^(==|OK|free scan|latest scan|findings:)'
 
 rows=$(psql "$URL" -tAX -c "select count(*) from sample")

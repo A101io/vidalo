@@ -8,7 +8,7 @@
  * Rules the assistant carries (docs/MESSAGING.md, docs/CONTRACT.md,
  * playbook/LEGAL-NL.md §7): it is an AI and says so; it answers about Vidalo
  * only; it never claims control over what an AI assistant answers; it uses
- * none of the banned jargon; it points to hallo@vidalo.io for anything it
+ * none of the banned jargon; it points to support@vidalo.io for anything it
  * cannot answer, and never asks for personal data.
  */
 import type { CopyShape } from "../copy/index.js";
@@ -44,7 +44,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   const notPromised = copy.legal.terms.sections.find((s) => /beloven|promise/i.test(s.h));
   if (notPromised) lines.push(`${notPromised.h}: ${notPromised.p.join(" ")}`);
   lines.push(nl ? "Wat de klant zelf doet: " + (L.vragen.items.find((i) => /zelf/i.test(i.q))?.a ?? "") : "");
-  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: hallo@vidalo.io.`);
+  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: hello@vidalo.io. Support: support@vidalo.io.`);
   return lines.filter(Boolean).join("\n");
 }
 
@@ -53,7 +53,7 @@ export function systemPrompt(copy: CopyShape, lang: Lang): string {
   const rules = nl
     ? [
         "Je bent de assistent op de website van Vidalo. Je bent een AI en zegt dat als iemand het vraagt.",
-        "Je beantwoordt alleen vragen over Vidalo, met de kennis hieronder. Weet je iets niet, zeg dat dan en verwijs naar hallo@vidalo.io.",
+        "Je beantwoordt alleen vragen over Vidalo, met de kennis hieronder. Weet je iets niet, zeg dat dan en verwijs naar support@vidalo.io.",
         "Beloof nooit dat Vidalo bepaalt of verandert wat ChatGPT, Google AI, Copilot of een andere AI-assistent antwoordt. Vidalo herstelt bronnen; de assistenten beslissen zelf.",
         `Gebruik deze woorden nooit: ${BANNED.join(", ")}. Geen vakjargon, geen uitroeptekens, geen emoji.`,
         "Schrijf Nederlands, informeel (je), kort: hooguit negentig woorden, meestal minder. Noem bedragen altijd met 'excl. btw'.",
@@ -61,7 +61,7 @@ export function systemPrompt(copy: CopyShape, lang: Lang): string {
       ]
     : [
         "You are the assistant on Vidalo's website. You are an AI and say so when asked.",
-        "You only answer questions about Vidalo, using the knowledge below. If you do not know, say so and point to hallo@vidalo.io.",
+        "You only answer questions about Vidalo, using the knowledge below. If you do not know, say so and point to support@vidalo.io.",
         "Never promise that Vidalo decides or changes what ChatGPT, Google AI, Copilot or any other AI assistant answers. Vidalo fixes sources; the assistants decide for themselves.",
         `Never use these words: ${BANNED.join(", ")}. No jargon, no exclamation marks, no emoji.`,
         "Write English, informal, short: at most ninety words, usually fewer. Always state amounts as 'excl. VAT'.",

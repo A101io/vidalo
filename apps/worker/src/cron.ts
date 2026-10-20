@@ -7,9 +7,11 @@
  *   3. DNS / Cloudflare polls for unverified custom facts hosts
  *   4. lifecycle: paused → churned after 60 days; churned → free re-scan after 90 days
  *   5. follow-ups for scanned-but-not-purchased businesses at day 7 / day 21
+ *   6. own-website check every 30 days for paying businesses
+ *   7. Google index check of the facts page: daily until Google has it, then weekly
  */
 import { pollFactsHost } from "@vidalo/core/publisher";
-import { listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
+import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
@@ -161,6 +163,45 @@ export async function enqueueFollowUps(now = new Date()): Promise<number> {
   return n;
 }
 
+/** Days between checks of the owner's own website. */
+export const SITECHECK_EVERY_DAYS = 30;
+
+// These two read and write through the shared handle, the one the publisher
+// and the paid-only guard use, so a test (or a script) that injects a Db sees
+// one consistent store. In the worker both handles are the same object.
+export async function enqueueSiteChecks(now = new Date()): Promise<number> {
+  const db = sharedDb();
+  let n = 0;
+  for (const b of await listBusinessesByStatus(["trial", "active"])) {
+    if (!b.ownerVerifiedAt) continue; // paid-only job; it would only be skipped
+    const last = lastEvent(await db.listEvents(b.id, 500), (e) => e.type === "sitecheck.enqueued");
+    if (last && daysSince(last.at, now) < SITECHECK_EVERY_DAYS) continue;
+    await db.enqueueJob("sitecheck", { businessId: b.id });
+    await db.logEvent(b.id, "sitecheck.enqueued", { reason: "cron" });
+    n++;
+  }
+  if (n) log.info("cron.sitechecks.enqueued", { count: n });
+  return n;
+}
+
+export async function enqueueIndexChecks(now = new Date()): Promise<number> {
+  const db = sharedDb();
+  let n = 0;
+  for (const b of await listBusinessesByStatus(["trial", "active"])) {
+    if (!b.ownerVerifiedAt || !b.factsHost || !b.factsHostVerifiedAt) continue;
+    const state = await db.getGoogleIndex(b.id);
+    const indexed = state?.host === b.factsHost && state.inspection?.verdict === "PASS";
+    const every = indexed ? 7 : 1;
+    const last = lastEvent(await db.listEvents(b.id, 500), (e) => e.type === "google_index.enqueued");
+    if (last && daysSince(last.at, now) < every) continue;
+    await db.enqueueJob("index_check", { businessId: b.id });
+    await db.logEvent(b.id, "google_index.enqueued", { reason: "cron" });
+    n++;
+  }
+  if (n) log.info("cron.index_checks.enqueued", { count: n });
+  return n;
+}
+
 export async function cronTick(now = new Date()): Promise<void> {
   const started = Date.now();
   const out: Record<string, unknown> = {};
@@ -170,6 +211,8 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["hosts", () => pollUnverifiedHosts()],
     ["lifecycle", () => lifecycleTransitions(now)],
     ["followups", () => enqueueFollowUps(now)],
+    ["sitechecks", () => enqueueSiteChecks(now)],
+    ["indexChecks", () => enqueueIndexChecks(now)],
   ];
   for (const [name, fn] of steps) {
     try {

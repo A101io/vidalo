@@ -5,7 +5,7 @@
  * zien), one number per claim, no exclamation marks, no countdowns, no jargon
  * (no GEO/AEO/LLM/prompt/credits/garantie). Every mail is pure data in → text out.
  */
-import type { Business, Engine, EngineStip, Finding, InstableFinding, Severity, Stip, Visibility } from "../types.js";
+import type { Business, Engine, EngineStip, Finding, InstableFinding, RecommendationSummary, Severity, Stip, Visibility } from "../types.js";
 import { ENGINE_LABEL } from "../types.js";
 import { copy } from "../copy/index.js";
 import { criteriumFor, severityOf } from "../criteria.js";
@@ -85,6 +85,22 @@ function sourceLine(f: Finding): string {
     default:
       return host ?? "onbekende bron";
   }
+}
+
+/**
+ * "Wie AI wel noemt": up to three fixed recommendation questions where the
+ * business was left out, with the names given instead and the sites cited.
+ */
+export function namedParagraph(recs: RecommendationSummary[] | undefined): string {
+  const N = copy.result.named;
+  const left = (recs ?? []).filter((r) => r.pool === "core" && r.named < r.answers && r.others.length > 0).slice(0, 3);
+  if (!left.length) return "";
+  const blocks = left.map((r) => {
+    const lines = [`Vraag: ${r.prompt}`, N.you(r.named, r.answers), `${N.others}: ${r.others.slice(0, 3).map((o) => `${o.name} (${N.times(o.answers)})`).join(", ")}`];
+    if (r.sources.length) lines.push(`${N.sources}: ${r.sources.slice(0, 3).map((x) => x.host).join(", ")}`);
+    return lines.join("\n");
+  });
+  return `${N.h2}\n\n${blocks.join("\n\n")}\n\n${N.note}`;
 }
 
 /** One finding as a short block: Vraag / Engine zei / Klopt niet / Bron / Wat we doen. */
@@ -248,6 +264,8 @@ export interface BaselineData {
   stip?: Stip;
   engineStips?: EngineStip[];
   instable?: InstableFinding[];
+  /** recommendation questions: who AI named instead of the business */
+  recommendations?: RecommendationSummary[];
 }
 
 export function baselineSummaryEmail(d: BaselineData): Mail {
@@ -266,6 +284,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
   const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility, notFoundFindings });
   const stip = stipParagraph(d);
   const instable = instableText(d.instable);
+  const named = namedParagraph(d.recommendations);
   const text = `Hoi,
 
 Op ${formatDateNl(d.checkedAt)} stelden we ${d.totalAnswers} vragen over ${d.business.name} aan ${engines}. ${
@@ -275,7 +294,7 @@ Op ${formatDateNl(d.checkedAt)} stelden we ${d.totalAnswers} vragen over ${d.bus
         ? "Geen verkeerde antwoorden."
         : `${d.wrongAnswers} ${d.wrongAnswers === 1 ? "antwoord klopte" : "antwoorden klopten"} niet. Dit is wat we vonden en wat we eraan doen.`
   }
-${stip ? `\n${stip}\n` : ""}${nf ? `\n${nf}\n` : ""}${blocks ? `\n${blocks}\n` : ""}${d.findings.length > 8 ? `\nEn nog ${d.findings.length - 8} ${d.findings.length - 8 === 1 ? "fout" : "fouten"}, zie je overzicht.\n` : ""}${instable ? `\n${instable}\n` : ""}
+${stip ? `\n${stip}\n` : ""}${nf ? `\n${nf}\n` : ""}${blocks ? `\n${blocks}\n` : ""}${d.findings.length > 8 ? `\nEn nog ${d.findings.length - 8} ${d.findings.length - 8 === 1 ? "fout" : "fouten"}, zie je overzicht.\n` : ""}${named ? `\n${named}\n` : ""}${instable ? `\n${instable}\n` : ""}
 Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
 
 Je overzicht: ${d.links.dashboardUrl}
@@ -367,6 +386,8 @@ export interface MonthlyReportData {
   stip?: Stip;
   engineStips?: EngineStip[];
   instable?: InstableFinding[];
+  /** recommendation questions: who AI named instead of the business */
+  recommendations?: RecommendationSummary[];
 }
 
 export function monthlyReportEmail(d: MonthlyReportData): Mail {
@@ -385,6 +406,7 @@ export function monthlyReportEmail(d: MonthlyReportData): Mail {
   const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility: d.visibility, notFoundFindings: d.notFound });
   const stip = stipParagraph(d);
   const instable = instableText(d.instable);
+  const named = namedParagraph(d.recommendations);
   const text = `Hoi,
 
 Controle van ${formatDateNl(d.checkedAt)}: ${line}.
@@ -392,7 +414,7 @@ Controle van ${formatDateNl(d.checkedAt)}: ${line}.
 We stelden ${d.totalAnswers} vragen over ${d.business.name} aan ${d.engines.map(engineName).join(", ")}.
 ${stip ? `\n${stip}\n` : ""}${nf ? `\n${nf}\n` : ""}${proofs ? `\nHersteld deze maand\n\n${proofs}\n` : ""}${open ? `\nNog open\n\n${open}\n` : ""}${
     !proofs && !open ? "\nEr is niets te herstellen. Fijn.\n" : ""
-  }${instable ? `\n${instable}\n` : ""}
+  }${named ? `\n${named}\n` : ""}${instable ? `\n${instable}\n` : ""}
 Alle antwoorden, met datum en bron: ${d.links.dashboardUrl}
 
 Groet,
