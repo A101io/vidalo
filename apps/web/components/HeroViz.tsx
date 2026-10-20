@@ -28,8 +28,8 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 const line = (y: number) => `M${SOURCE_RIGHT} ${y} C ${SOURCE_RIGHT + 30} ${y}, ${CARD.x - 30} ${CARD.y}, ${CARD.x} ${CARD.y}`;
 const REPAIR = `M262 418 C 228 418, 236 ${SOURCE_Y[BAD]}, ${SOURCE_RIGHT} ${SOURCE_Y[BAD]}`;
 
-const RED = "#E11D48";
-const GREEN = "#2F855A";
+const RED = "#D41B44";
+const GREEN = "#2B7A53";
 const GREY = "#9CA3AF";
 
 export async function HeroViz() {

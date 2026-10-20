@@ -63,6 +63,10 @@ export const env = {
   get stripeTaxRateId() {
     return read("STRIPE_TAX_RATE_ID");
   },
+  /** The customer portal configuration (scripts/stripe-setup.mjs); without it Stripe uses the account default. */
+  get stripePortalConfiguration() {
+    return read("STRIPE_PORTAL_CONFIGURATION");
+  },
   get hasStripe(): boolean {
     return Boolean(this.stripeSecretKey);
   },

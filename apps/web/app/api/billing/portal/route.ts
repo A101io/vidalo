@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { safeOrigin } from "@/lib/origin";
 import { localizeHref } from "@/lib/lang-paths";
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
   if (!business) return NextResponse.redirect(page("/inloggen?next=/app"), 303);
   const stripe = await getStripe();
   if (!stripe || !business.stripeCustomerId) return NextResponse.redirect(page("/app?facturen=mock"), 303);
-  const portal = await stripe.billingPortal.sessions.create({ customer: business.stripeCustomerId, return_url: page("/app/abonnement"), locale: lang });
+  const configuration = env.stripePortalConfiguration;
+  const portal = await stripe.billingPortal.sessions.create({ customer: business.stripeCustomerId, return_url: page("/app/abonnement"), locale: lang, ...(configuration ? { configuration } : {}) });
   return NextResponse.redirect(portal.url, 303);
 }

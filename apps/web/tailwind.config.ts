@@ -21,7 +21,7 @@ export default {
         groen: { DEFAULT: "var(--green)", bg: "var(--green-bg)", ink: "var(--green-ink)" },
         grijs: "var(--grey)",
         oranje: "var(--amber)",
-        blue: { DEFAULT: "var(--blue)", light: "#BFDBFE" },
+        blue: { DEFAULT: "var(--blue)", light: "#EFF6FF" },
         dark: { DEFAULT: "#0F172A", panel: "#1E293B", text: "#CBD5E1", line: "#334155" },
       },
       fontFamily: {

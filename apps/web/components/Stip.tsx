@@ -11,6 +11,16 @@ export const stipBg: Record<Tone, string> = {
   ink: "bg-ink",
 };
 
+/** Text on a filled status circle: white where it reads (4.5:1), ink on the light orange and grey so they keep their colour. */
+export const stipText: Record<Tone, string> = {
+  rood: "text-white",
+  oranje: "text-ink",
+  groen: "text-white",
+  grijs: "text-ink",
+  blue: "text-white",
+  ink: "text-white",
+};
+
 /** The status dot: 10px inline, 12/14px in lists, 22px in plan steps. Grey is its own state, never "no errors". */
 export function Stip({ tone, size = 10, className = "" }: { tone: Tone; size?: 10 | 12 | 14 | 22; className?: string }) {
   const px = { 10: "h-2.5 w-2.5", 12: "h-3 w-3", 14: "h-3.5 w-3.5", 22: "h-[22px] w-[22px]" }[size];
@@ -25,7 +35,7 @@ export function StipHero({ tone, number, label, size = 220 }: { tone: StipColour
   // real number is the text underneath, so it is what screen readers get.
   const to = typeof number === "number" ? number : /^\d+$/.test(number.trim()) ? Number(number) : null;
   return (
-    <div className={`stip-hero flex shrink-0 flex-col items-center justify-center rounded-full text-center text-white ${dim} ${stipBg[tone]}`}>
+    <div className={`stip-hero flex shrink-0 flex-col items-center justify-center rounded-full text-center ${stipText[tone]} ${dim} ${stipBg[tone]}`}>
       <div
         className={`font-extrabold leading-none ${num} ${to ? "stip-num" : ""}`}
         style={{ letterSpacing: "-2px", ...(to ? ({ "--to": to } as React.CSSProperties) : {}) }}

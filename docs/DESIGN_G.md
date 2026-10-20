@@ -17,12 +17,12 @@ Open them in a browser (they are self-contained HTML; ignore the `support.js`/`x
 --bg        #FFFFFF
 --ink       #111827
 --ink-2     #374151   (body on white)
---muted     #6B7280   (labels, captions)
+--muted     #666D7B   (labels, captions; was #6B7280, darkened 17 Oct 2026 for WCAG AA, docs/e2e.md)
 --line      #E5E7EB   (1.5px borders)
 --panel     #F3F4F6   (grey panels, rows)
 --panel-2   #F9FAFB   (footer)
---red       #E11D48   (klopt niet; also tinted bg #FDECEA)
---green     #2F855A   (klopt)
+--red       #D41B44   (klopt niet; also tinted bg #FDECEA; was #E11D48)
+--green     #2B7A53   (klopt; was #2F855A)
 --grey      #9CA3AF   (niet gevonden)
 --amber     #F59E0B   (bezig / herstel loopt)
 --blue      #2563EB   (one accent: primary button, links on hover)

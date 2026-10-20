@@ -6,7 +6,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OpengraphImage() {
-  const dots = ["#E11D48", "#F59E0B", "#9CA3AF", "#2F855A"];
+  const dots = ["#D41B44", "#F59E0B", "#9CA3AF", "#2B7A53"];
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: "linear-gradient(135deg, #FBF6EE 0%, #EEF4FF 60%, #EDF7F1 100%)", color: "#111827" }}>

@@ -1,6 +1,6 @@
 /**
- * Sets up Vidalo's Stripe account: the two prices, the 21% BTW tax rate and
- * the webhook endpoint. Checks by default; changes nothing without --apply.
+ * Sets up Vidalo's Stripe account: the two prices, the 21% BTW tax rate, the
+ * customer portal configuration and the webhook endpoint. Checks by default; changes nothing without --apply.
  *
  *   STRIPE_SECRET_KEY=sk_test_... VIDALO_STRIPE_ACCOUNT=acct_... \
  *   PUBLIC_BASE_URL=https://vidalo.io pnpm stripe:setup [--apply] [--live]
@@ -12,7 +12,7 @@
  * - The accounts of A101's other products are refused outright.
  * - A live key needs --live as well as --apply.
  * - Idempotent: prices are found by lookup key, the tax rate by metadata,
- *   the webhook by URL. Running it twice creates nothing twice.
+ *   the portal configuration by name, the webhook by URL. Running it twice creates nothing twice.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -128,13 +128,44 @@ async function main() {
       }
       say(`✓ webhook ${url} → ${hook.id} (its signing secret is in the dashboard; it is shown only once, at creation)`);
     } else if (apply) {
-      hook = await stripe.webhookEndpoints.create({ url, enabled_events: events, description: "Vidalo" });
+      // Pinned to the SDK's API version, so the events have the shape the
+      // billing module reads; otherwise they follow the account's default.
+      hook = await stripe.webhookEndpoints.create({ url, enabled_events: events, description: "Vidalo", api_version: stripe.getApiField("version") });
       say(`+ created webhook ${hook.id} for ${url}`);
       env.STRIPE_WEBHOOK_SECRET = hook.secret;
     } else {
       say(`· missing: webhook ${url}`);
       missing++;
     }
+  }
+
+  // 5. Customer portal: invoices, payment method, cancel at period end. Stripe
+  // does not make an API-created configuration the default, so the portal
+  // route passes this id (STRIPE_PORTAL_CONFIGURATION).
+  const site = base || "https://vidalo.io";
+  const portals = await stripe.billingPortal.configurations.list({ active: true, limit: 100 });
+  let portal = portals.data.find((c) => c.name === "Vidalo");
+  if (!portal && apply) {
+    portal = await stripe.billingPortal.configurations.create({
+      name: "Vidalo",
+      business_profile: { headline: "Vidalo: je facturen, betaalmethode en abonnement", terms_of_service_url: `${site}/voorwaarden`, privacy_policy_url: `${site}/privacy` },
+      default_return_url: `${site}/app/abonnement`,
+      features: {
+        invoice_history: { enabled: true },
+        payment_method_update: { enabled: true },
+        customer_update: { enabled: true, allowed_updates: ["email", "address", "name", "tax_id"] },
+        subscription_cancel: { enabled: true, mode: "at_period_end", proration_behavior: "none", cancellation_reason: { enabled: true, options: ["too_expensive", "unused", "switched_service", "missing_features", "other"] } },
+        subscription_update: { enabled: false },
+      },
+    });
+    say(`+ created portal configuration ${portal.id}`);
+  }
+  if (portal) {
+    say(`✓ portal configuration → ${portal.id}`);
+    env.STRIPE_PORTAL_CONFIGURATION = portal.id;
+  } else {
+    say("· missing: portal configuration Vidalo");
+    missing++;
   }
 
   say("\nFor the web app's environment:");

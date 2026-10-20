@@ -71,6 +71,14 @@ describe("subscription life", () => {
     expect((await db.getBusiness(b.id))?.status).toBe("active");
   });
 
+  it("an invoice is placed by the subscription's metadata in the newer API shape, before the customer is stored", async () => {
+    const b = await business("trial");
+    const invoice = { id: "in_new", customer: "cus_unknown", billing_reason: "subscription_cycle", parent: { type: "subscription_details", subscription_details: { metadata: { businessId: b.id } } } };
+    expect(await handleStripeEvent(evt("invoice.paid", invoice))).toBe("now_active");
+    // Control: without the metadata and with an unknown customer, nobody is guessed.
+    expect(await handleStripeEvent(evt("invoice.paid", { ...invoice, id: "in_new2", parent: null }))).toBe("no_business");
+  });
+
   it("a failed invoice is logged on the business found by its customer", async () => {
     const b = await business("active");
     expect(await handleStripeEvent(evt("invoice.payment_failed", { id: "in_3", customer: "cus_1", attempt_count: 1 }))).toBe("invoice_failed_logged");

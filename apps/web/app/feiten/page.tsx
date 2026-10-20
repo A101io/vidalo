@@ -7,8 +7,6 @@ import { JsonLd, OWN_FACTS_URL, breadcrumbLd, organizationLd, pageMetadata } fro
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
-export const dynamic = "force-static";
-
 export async function generateMetadata(): Promise<Metadata> {
   const { copy, lang } = await getI18n();
   return pageMetadata({ title: copy.pages.ownFacts.title, description: copy.pages.ownFacts.description, route: "/feiten", lang });
@@ -25,6 +23,8 @@ export default async function OwnFactsPage() {
   const P = copy.pages.ownFacts;
   const { html } = renderFactsPage(OWN_FACTS, OWN_BUSINESS, { canonicalUrl: OWN_FACTS_URL });
   const body = html.match(/<body[^>]*>([\s\S]*)<\/body>/)?.[1] ?? html;
+  // The publisher's page is a whole document with its own <main>; inside ours it is a section, not a second main landmark.
+  const content = body.replace(/<main\b/g, "<div").replace(/<\/main>/g, "</div>");
   return (
     <>
       <JsonLd data={[organizationLd(copy), breadcrumbLd(copy, lang, [{ name: P.crumb, route: "/feiten" }])]} />
@@ -47,7 +47,7 @@ export default async function OwnFactsPage() {
           <div
             data-static
             className="card max-w-[40rem] bg-white px-6 py-8 sm:px-8 [&_a]:text-blue [&_dd]:mb-2 [&_dt]:font-semibold [&_h1]:text-[28px] [&_h1]:font-extrabold [&_h2]:mt-7 [&_h2]:border-t-[1.5px] [&_h2]:border-line [&_h2]:pt-4 [&_h2]:text-[16px] [&_h2]:font-bold [&_th]:pr-6 [&_th]:text-left [&_th]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_.meta]:text-[14px] [&_.meta]:text-muted"
-            dangerouslySetInnerHTML={{ __html: body }}
+            dangerouslySetInnerHTML={{ __html: content }}
           />
         </section>
       </main>

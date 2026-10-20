@@ -141,7 +141,7 @@ export default async function SectorPage({ params }: { params: Promise<{ slug: s
                     {s.n}
                   </div>
                   <div className="mt-1.5 text-[14px] leading-[1.5] text-dark-text">{s.body}</div>
-                  <div className="mt-1.5 text-[11px] text-muted">{s.source}</div>
+                  <div className="mt-1.5 text-[11px] text-grijs">{s.source}</div>
                 </div>
               ))}
               <div className="rounded-2xl bg-blue p-[22px]">

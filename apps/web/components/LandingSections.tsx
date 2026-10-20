@@ -10,7 +10,7 @@ import { getI18n } from "@/lib/i18n";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ScanField } from "@/components/ScanField";
-import { Stip, StipHero, StipRow, stipBg, type Tone } from "@/components/Stip";
+import { Stip, StipHero, StipRow, stipBg, stipText, type Tone } from "@/components/Stip";
 import { CriteriumCard } from "@/components/CriteriumCard";
 import { SectorCard } from "@/components/SectorCard";
 import { PriceBlock } from "@/components/PriceBlock";
@@ -293,7 +293,7 @@ export async function Werkt({ scenes = true, more }: { scenes?: boolean; more?: 
         <ol data-motion="stagger" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {L.werkt.steps.map((s) => (
             <li key={s.n} className="card flex flex-col gap-3.5 rounded-[20px] p-6">
-              <span data-pop className={`flex h-11 w-11 items-center justify-center rounded-full font-extrabold text-white ${stipBg[s.tone as Tone]}`}>{s.n}</span>
+              <span data-pop className={`flex h-11 w-11 items-center justify-center rounded-full font-extrabold ${stipText[s.tone as Tone]} ${stipBg[s.tone as Tone]}`}>{s.n}</span>
               <span className="text-[20px] font-extrabold">{s.title}</span>
               <span className="text-[15px] leading-[1.55] text-ink-2">{s.body}</span>
               <span className="mt-auto rounded-[10px] bg-panel px-3 py-2 text-[13px] text-muted">{s.meta}</span>

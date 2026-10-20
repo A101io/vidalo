@@ -7,7 +7,8 @@
   --bg: #ffffff;
   --ink: #111827;
   --ink-2: #374151;
-  --muted: #6b7280;
+  /* Contrast pass (17 Oct 2026, docs/e2e.md): muted, red and green darkened just enough for WCAG AA 4.5:1 on white, cream and panel. */
+  --muted: #666d7b;
   --line: #e7e3dc;
   --panel: #f4f1ec;
   --panel-2: #fbf8f3;
@@ -15,9 +16,9 @@
   --cream: #fbf6ee;
   --sky: #eef4ff;
   --mint: #edf7f1;
-  --red: #e11d48;
+  --red: #d41b44;
   --red-bg: #fdecea;
-  --green: #2f855a;
+  --green: #2b7a53;
   --green-bg: #dcfce7;
   --green-ink: #166534;
   --grey: #9ca3af;
@@ -69,7 +70,7 @@
   .lead { @apply text-[17px] leading-[1.55] text-ink-2 sm:text-[18px]; }
   .label { @apply text-[12px] font-bold text-muted; }
   .caption { @apply text-[13px] text-muted; }
-  .fine { @apply text-[12px] text-grijs; }
+  .fine { @apply text-[12px] text-muted; }
 
   .btn { @apply inline-flex h-14 items-center justify-center whitespace-nowrap rounded-btn px-5 text-[16px] font-extrabold transition-colors; }
   .btn-primary { @apply btn bg-blue text-white hover:bg-[#1d4ed8] hover:text-white; }
