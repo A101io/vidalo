@@ -49,7 +49,8 @@ ${facts}
 ${faq}
 
 ## Contact
-hallo@vidalo.io
+hello@vidalo.io
+Support: support@vidalo.io
 `;
   return new Response(body, { headers: { "content-type": "text/markdown; charset=utf-8" } });
 }

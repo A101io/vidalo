@@ -28,14 +28,15 @@
     { "pattern": "www.vidalo.io", "custom_domain": true }
   ],
   // VIDALO_COMING_SOON=1 is the launch gate (go-live J4): marketing pages show
-  // /binnenkort. VIDALO_PREVIEW_BUTTON=1 is the temporary button on that page
-  // that lets anyone walk the site; set it to "0" before launch, then the
-  // preview only opens with VIDALO_PREVIEW_KEY (a secret, `wrangler secret put`).
-  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.io", "VIDALO_COMING_SOON": "1", "VIDALO_PREVIEW_BUTTON": "1" },
+  // /binnenkort, which collects the coming-soon list. The full site opens only
+  // with VIDALO_PREVIEW_KEY (a secret, `wrangler secret put`) via /api/preview;
+  // the public "have a look" button was removed 18 Oct 2026.
+  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.io", "VIDALO_COMING_SOON": "1" },
   // Hyperdrive pools the Supabase connections (one handle per request,
-  // worker.ts). Create it once with the pooler URL, then put its id here:
-  //   wrangler hyperdrive create vidalo-db --connection-string="postgres://..."
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<id>" }],
+  // worker.ts). `vidalo-db`, created in the dashboard 16 Oct 2026: Supabase
+  // session pooler aws-0-eu-west-1.pooler.supabase.com:5432, user
+  // postgres.bbynmqvaxpjdnkaasutd. The preview env has no database.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "8095400e14134f9391067cbf78416cd6" }],
   // Free scans go to the background worker through this queue.
   "queues": { "producers": [{ "binding": "SCAN_QUEUE", "queue": "vidalo-scans" }] },
   "env": {
@@ -46,8 +47,22 @@
       // routes are inherited by an environment: without this the preview
       // would try to claim vidalo.io.
       "routes": [],
-      "vars": { "VIDALO_MOCK": "1", "PUBLIC_BASE_URL": "https://vidalo-web-preview.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "0", "VIDALO_PREVIEW_BUTTON": "0" },
+      "vars": { "VIDALO_MOCK": "1", "PUBLIC_BASE_URL": "https://vidalo-web-preview.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "0" },
+      "hyperdrive": [],
       "queues": { "producers": [] }
+    },
+    // Staging: the production build and settings on a workers.dev address,
+    // never vidalo.io, with its OWN database and queue so a test never
+    // touches customers. Deployed with deploy.yml target `staging`.
+    // Until the staging database exists `hyperdrive` stays empty, and the
+    // Worker answers 503 instead of falling back to mock data (worker.ts).
+    "staging": {
+      "name": "vidalo-web-staging",
+      "workers_dev": true,
+      "routes": [],
+      "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo-web-staging.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "1" },
+      "hyperdrive": [],
+      "queues": { "producers": [{ "binding": "SCAN_QUEUE", "queue": "vidalo-scans-staging" }] }
     }
   }
 }

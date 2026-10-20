@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { copyFor } from "@vidalo/core/copy";
 import { mockAnswer, modelAnswer, systemPrompt, validMessages } from "@vidalo/core/chat";
 import { env } from "@/lib/env";
+import { requestBehindGate } from "@/lib/gate-state";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,8 @@ function limited(ip: string): boolean {
  * conversation lives in the visitor's tab only (the cookie statement says so).
  */
 export async function POST(req: Request) {
+  // Behind the launch gate the assistant is off: no widget, and no model calls for anyone without the preview cookie.
+  if (requestBehindGate(req)) return NextResponse.json({ reply: "", provider: "off" }, { status: 404 });
   const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   const body = (await req.json().catch(() => null)) as { messages?: unknown; lang?: unknown } | null;
   const lang = body?.lang === "en" ? "en" : "nl";

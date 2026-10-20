@@ -92,6 +92,17 @@ export interface EventRow {
   at: string;
 }
 
+/** One address on the coming-soon list (migration 0009). */
+export interface WaitlistInput {
+  /** Lower-cased, trimmed, validated by the caller. */
+  email: string;
+  language: "nl" | "en";
+  /** Where it was left, e.g. "coming_soon". */
+  source: string;
+  /** The exact consent sentence shown next to the field, in that language. */
+  consentText: string;
+}
+
 export type PromptInput = Omit<Prompt, "id" | "businessId"> & { businessId?: string };
 export type SampleInput = Omit<Sample, "id" | "capturedAt"> & { capturedAt?: string };
 export type ClaimInput = Claim;
@@ -179,6 +190,16 @@ export interface Db {
   listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
+
+  // --- coming-soon list ---
+  /**
+   * Adds an address once. `created` is false when it was already on the list
+   * (the row is left as it was, so a second sign-up cannot change the consent
+   * on record or undo an unsubscribe).
+   */
+  joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }>;
+  /** Addresses on the list that have not unsubscribed. */
+  countWaitlist(): Promise<number>;
 
   // --- channels ---
   listChannels(businessId: string): Promise<Channel[]>;

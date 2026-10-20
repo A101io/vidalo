@@ -20,7 +20,24 @@
   },
   "queues": {
     "consumers": [{ "queue": "vidalo-scans", "max_batch_size": 1, "max_retries": 2 }]
+  },
+  // Same Hyperdrive as apps/web/wrangler.jsonc (vidalo-db, 16 Oct 2026).
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "8095400e14134f9391067cbf78416cd6" }],
+  "env": {
+    // Staging: same code, crons and settings as production, its own queue and
+    // database (apps/web/wrangler.jsonc, env.staging). Give it no RESEND_API_KEY
+    // and no CLOUDFLARE_API_TOKEN: without them it sends no mail and creates
+    // no facts hosts. Hyperdrive stays empty until the staging database exists;
+    // the worker then refuses to run rather than use mock data.
+    "staging": {
+      "name": "vidalo-worker-staging",
+      "workers_dev": true,
+      "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io" },
+      "triggers": { "crons": ["* * * * *", "*/10 * * * *"] },
+      "queues": {
+        "consumers": [{ "queue": "vidalo-scans-staging", "max_batch_size": 1, "max_retries": 2 }]
+      },
+      "hyperdrive": []
+    }
   }
-  // Same Hyperdrive as apps/web/wrangler.jsonc, once it exists:
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<id>" }]
 }

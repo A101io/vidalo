@@ -23,6 +23,7 @@ import type {
   SampleInput,
   ScanRunCreate,
   ScanRunUpdate,
+  WaitlistInput,
 } from "./types";
 
 const nowIso = () => new Date().toISOString();
@@ -42,6 +43,7 @@ export class MemDb implements Db {
   channels = new Map<string, Channel>();
   fixes = new Map<string, Fix>();
   googleIndex = new Map<string, GoogleIndexState>();
+  waitlist = new Map<string, WaitlistInput & { createdAt: string; unsubscribedAt: string | null }>();
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -59,6 +61,7 @@ export class MemDb implements Db {
     this.channels.clear();
     this.fixes.clear();
     this.googleIndex.clear();
+    this.waitlist.clear();
   }
 
   // --- business ---
@@ -384,6 +387,17 @@ export class MemDb implements Db {
 
   async countEventsSince(type: string, since: Date): Promise<number> {
     return this.events.filter((e) => e.type === type && new Date(e.at).getTime() >= since.getTime()).length;
+  }
+
+  // --- coming-soon list ---
+  async joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }> {
+    if (this.waitlist.has(input.email)) return { created: false };
+    this.waitlist.set(input.email, { ...input, createdAt: nowIso(), unsubscribedAt: null });
+    return { created: true };
+  }
+
+  async countWaitlist(): Promise<number> {
+    return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).length;
   }
 
   // --- channels ---

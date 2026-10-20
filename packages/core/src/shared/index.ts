@@ -6,5 +6,6 @@ export * from "./unsubscribe.js";
 export * from "./own.js";
 export * from "./canonical.js";
 export * from "./origin.js";
+export * from "./waitlist.js";
 // Also exported on its own as "@vidalo/core/shared/gate": the edge middleware must not pull db.js in.
 export * from "./gate.js";

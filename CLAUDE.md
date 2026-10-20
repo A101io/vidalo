@@ -3,7 +3,7 @@
 Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, publishes a facts page on the owner's domain, syncs directories, and fixes errors at the source with proof. Tagline: *Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.*
 
 ## Renamed from Maicro (13 Oct 2026)
-The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`hallo@vidalo.io`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
+The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), package names (`@vidalo/*`), env vars (`VIDALO_*`), Worker names (`vidalo-web`, `vidalo-worker`, queue `vidalo-scans`), cookies, emails (`hallo@vidalo.nl`) and domains (`vidalo.nl`) were renamed in one commit; on 14 Oct the domain became `vidalo.io` (`hallo@vidalo.io`; since 19 Oct `hello@vidalo.io` for contact and `support@vidalo.io` for support, see `docs/mail.md`), because `.nl` and `.com` are held by others. A rename of the product is not a rename of what is provisioned; these stay by hand:
 
 | Thing | Status |
 |---|---|
@@ -11,7 +11,7 @@ The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), pac
 | Supabase project name `maicro` (ref `bbynmqvaxpjdnkaasutd`) | display name only, Julian renames in the dashboard; the ref never changes |
 | Committed migrations | keep the word Maicro in two comments; migrations are never edited |
 | `docs/design-g/*.html` | the original design boards, kept as they were |
-| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails (`hallo@vidalo.io`) and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
+| Domain | **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others). Code, copy, emails and `wrangler.jsonc` renamed the same day. Only `www.vidalo.io` redirects. Zone on Cloudflare: Julian |
 | Stripe, Cloudflare Workers, Google OAuth app, Resend | none exist yet; create them as Vidalo |
 
 ## Resuming work — read this first
@@ -46,13 +46,18 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 - Two other Stripe accounts sit in the same company (Sitty `acct_1UA8rHEGTq7D30VV`, Sonable `acct_1TyIM8EQK4LIWEDd`); `pnpm stripe:setup` refuses both and pins Vidalo's.
 
 ## Added 14 Oct 2026 (local session)
-- **Launch gate**: `core/shared/gate.ts` + `apps/web/middleware.ts`; env `VIDALO_COMING_SOON`, `VIDALO_PREVIEW_BUTTON`, `VIDALO_PREVIEW_KEY`; page `/binnenkort` (EN `/coming-soon`), `/api/preview`, `components/PreviewBar.tsx`. `.claude/launch.json` has `vidalo-dev` (real auth), `vidalo-dev-gate` and `vidalo-dev-mock` (no Supabase keys → mock sign-in as `eigenaar@bakkerijdevries.nl`, gate on).
+- **Launch gate**: `core/shared/gate.ts` + `apps/web/middleware.ts`; env `VIDALO_COMING_SOON`, `VIDALO_PREVIEW_KEY` (the public preview button was removed 18 Oct 2026; only the key opens the full site); page `/binnenkort` (EN `/coming-soon`), `/api/preview`, `components/PreviewBar.tsx`. `.claude/launch.json` has `vidalo-dev` (real auth), `vidalo-dev-gate` and `vidalo-dev-mock` (no Supabase keys → mock sign-in as `eigenaar@bakkerijdevries.nl`, gate on).
 - **Cookies**: `/cookies` statement (inventory in `copy.legal.cookies`), `lib/consent.ts`, `components/CookieConsent.tsx`; add a category to `OPTIONAL_CATEGORIES` and the statement's table in the same change.
 - **Account**: `/app/account`. **Checkout**: terms consent, B2B custom text, btw-nummer, return URLs from `lib/origin.ts` (`core/shared/origin.ts`); needs the Terms and Privacy URLs on the Stripe account. **Assistant**: `core/chat` (knowledge from the copy, rules, FAQ fallback, `modelAnswer`), `/api/chat`, `components/ChatWidget.tsx`.
 - **Language preference** (15 Oct 2026): `business.language` (`0006_language.sql`, applied on the hosted project). Set on `/app/account` or by the NL · EN switch while signed in (`/api/lang`). `lib/preferred-lang.ts` sends a signed-in owner to their language on every `/app` page and on their own report. The report itself is fully bilingual: question lines and value wording come from `copy.report`; `ScanReport.correct[].raw` carries the normalised value so the page words it (older reports fall back to the stored Dutch). E-mails are still Dutch-only.
 - **Progress view** (15 Oct 2026): `/app/voortgang`, built on `packages/core/src/progress.ts` and `buildSnapshot` (scanner). Each finished full scan becomes per (question, AI system) the verdict most samples carried, so a free and a monthly check compare; rechecks are left out. Filters by period, AI system and bundle (afhakers, misleiders, verwarring, aanbevelingen); counts and dots only. "Ranking" is answered with "genoemd als aanrader", never a position (`docs/CRITERIA.md`). Mock mode seeds eight months of improving checks (`apps/web/lib/demo.ts`).
 - **Scan history comes from samples, not findings**: `upsertFindings` moves a finding's `scan_run_id` to the latest scan that saw it, so `listFindingsByScanRun` on an old run returns too little. Rebuild an old run from its samples (`buildSnapshot`); for repairs use the finding's own `first_seen_at` / `resolved_at`. The scan itself resolves findings it now sees answered right.
 - **Content**: `docs/content-check.md` is the fact-check; every number on the site carries a verified source as of 14 Oct. Free reports expire after 30 days (`app/r/[id]/page.tsx`). Copilot is a stub (`scanner/engines/copilot.ts`): keep it out of free-check copy until the adapter ships.
+
+## Added 18 Oct 2026
+- **Address**: `hello@vidalo.io` in both languages (was `hallo@`), in copy, chat, security.txt, llms.txt and docs. The mailbox itself is Julian's to create.
+- **Coming-soon list**: form on `/binnenkort` (EN `/coming-soon`) → `POST /api/waitlist` → table `waitlist` (`0009_waitlist.sql`, applied on the hosted project 18 Oct; its ledger row there is still named `0007_waitlist`, version `20261018192302`, because it was applied before the file was renumbered after #23's 0007/0008). RLS on, no policies, no grants for anon/authenticated (proven with a rolled-back DO block: anon and authenticated denied read and write, owner inserts). Checks live in `core/shared/waitlist.ts` (tested): hidden `website` trap field (bot gets "ok", nothing stored), required consent box, address normalised and validated, 5 posts per IP per 10 min, 300 per hour site-wide, foreign `Origin` refused. Same "ok" for new and existing addresses (no enumeration). The stored consent is the server's sentence in the page's language; events carry only language and `created`, never the address. Nobody gets mailed yet: sending the launch mail and deleting the list afterwards is a launch-day task (go-live P8).
+- **Staging + local production run**: see go-live X6/X7; `scripts/local-prod.sh`, launch entry `vidalo-prod-local`.
 
 ## Read first
 - `docs/CONTRACT.md` — module layout and rules (facts are owner-asserted; never claim "control"; no jargon).
@@ -80,7 +85,7 @@ Not built: Bing/Apple/form-directory adapters (fall to operator queue), Copilot 
 
 ## Supabase
 Project `maicro`, ref **`bbynmqvaxpjdnkaasutd`**, eu-west-1 (Ireland), org A101BV — https://bbynmqvaxpjdnkaasutd.supabase.co.
-Migrations 0001–0008 are applied (ledger: `supabase_migrations.schema_migrations`); `0006_language.sql` lives on `main`, this branch adds `0007_google_index.sql` and `0008_question_bank.sql` (applied 15 Oct 2026). Every public table has RLS; the internal tables (`prompt`, `sample`, `claim`, `job`, `google_index`) have no policies, so only the service role / table owner reach them.
+Migrations 0001–0009 are applied (ledger: `supabase_migrations.schema_migrations`): 0007 `google_index` and 0008 `question_bank` applied 15 Oct 2026; 0009 `waitlist` applied 18 Oct 2026, its ledger row named `0007_waitlist` from before the renumber. Every public table has RLS; the internal tables (`prompt`, `sample`, `claim`, `job`, `google_index`, `waitlist`) have no policies, so only the service role / table owner reach them.
 The same org holds **`hlelpndtejajipqwjwrf` (Sitty)** and **`muuijbupsnhascqzfbin` (Sonable)** — check the ref on every call; the names give no warning.
 Not done yet: `DATABASE_URL` / service-role key in a secret store, and a run of the pipeline against this project.
 
@@ -94,6 +99,6 @@ Not done yet: `DATABASE_URL` / service-role key in a secret store, and a run of 
 ## Conventions
 - Customer-facing text: Dutch, informal "je", calm verbs, no exclamation marks, never GEO/AEO/LLM/prompt/credits/zichtbaarheid/platform/agent in UI. One exception, asked for by Julian: the "Straks" section (`copy.landing.agents`, `components/AgentsSection.tsx`) names AI-agent, OKF, schema.org, llms.txt, MCP, A2A, each explained in plain words with who published it and when. Claims there must match what the code does (the facts page publishes HTML, schema.org JSON-LD and llms.txt; OKF is followed, not yet published).
 - Facts are versioned; a new version only via the owner's confirmation. Samples are evidence; findings are the diff.
-- **Ownership is proven, never claimed.** An e-mail address (report capture, magic link) only says who asked. `business.owner_verified_at` is set by `/api/google/callback` when the signed-in Google account holds a Business Profile location whose place id equals `google_place_id` (`packages/core/src/shared/ownership.ts`); proof replaces any earlier claim. Saving facts, the domain, on-demand scans (`requireVerifiedOwner`) and every setup/publish/sync/fix/recheck job (`apps/worker/src/jobs/paid.ts`: paying AND verified) wait for it. A business without a place id cannot be verified automatically; that goes to hallo@vidalo.io.
+- **Ownership is proven, never claimed.** An e-mail address (report capture, magic link) only says who asked. `business.owner_verified_at` is set by `/api/google/callback` when the signed-in Google account holds a Business Profile location whose place id equals `google_place_id` (`packages/core/src/shared/ownership.ts`); proof replaces any earlier claim. Saving facts, the domain, on-demand scans (`requireVerifiedOwner`) and every setup/publish/sync/fix/recheck job (`apps/worker/src/jobs/paid.ts`: paying AND verified) wait for it. A business without a place id cannot be verified automatically; that goes to support@vidalo.io.
 - Keep `pnpm -r typecheck`, `pnpm -r test` and `pnpm e2e:mock` green before committing.
 - One primary (blue) button per view. No dark mode. No emoji. Never show a score; only counts and the colour of the dot.
