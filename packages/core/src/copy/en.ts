@@ -609,7 +609,7 @@ export const en: CopyShape = {
       lang: "EN",
       columns: [
         { title: "Product", links: [{ label: "How it works", href: "/hoe-het-werkt" }, { label: "Why", href: "/waarom" }, { label: "AI agents and OKF", href: "/straks" }, { label: "Example report", href: "/#rapport" }, { label: "Pricing", href: "/prijzen" }, { label: "By trade", href: "/#vak" }] },
-        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }] },
+        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · Prices excl. VAT",
@@ -762,9 +762,9 @@ export const en: CopyShape = {
     send: "Send",
     thinking: "One moment.",
     faqNote: "Answer from our frequently asked questions.",
-    fallback: "I am not sure about that. Email us at hello@vidalo.io and a person will answer.",
-    error: "Answering is not working right now. Email us at hello@vidalo.io.",
-    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email hello@vidalo.io.",
+    fallback: "I am not sure about that. Email us at support@vidalo.io and a person will answer.",
+    error: "Answering is not working right now. Email us at support@vidalo.io.",
+    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email support@vidalo.io.",
   },
 
   consent: {
@@ -792,7 +792,7 @@ export const en: CopyShape = {
     button: "Unsubscribe",
     doneH1: "You have been unsubscribed",
     doneBody: "We will no longer send you emails about this.",
-    invalid: "This unsubscribe link is not valid or has expired. Email us at hello@vidalo.io and we will sort it out.",
+    invalid: "This unsubscribe link is not valid or has expired. Email us at support@vidalo.io and we will sort it out.",
   },
 
   scanBusy: {
@@ -1561,7 +1561,7 @@ export const en: CopyShape = {
   checkout: {
     mockNotice: "Payment simulated (no Stripe key set).",
     cancelled: "Your payment was not completed. Nothing has been charged. You can try again below.",
-    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at hello@vidalo.io.",
+    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.io.",
     productSetup: "Vidalo Set it right (one-off)",
     productMonitor: "Vidalo Keep it right (per month)",
     consentSubmit: (terms: string, privacy: string) => `Vidalo is a service for businesses, not consumers. By paying you confirm you are buying on behalf of a business and agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
@@ -1607,7 +1607,7 @@ export const en: CopyShape = {
     processingH1: "Thank you, your payment is being processed",
     processingBody: "With a direct debit it takes a few working days for the money to arrive. You can already do the steps below; we start as soon as the payment is complete.",
     failedH1: "Your payment did not go through",
-    failedBody: "Nothing has been charged. Try again from your report, or email us at hello@vidalo.io.",
+    failedBody: "Nothing has been charged. Try again from your report, or email us at support@vidalo.io.",
     receipt: (amount: string, email: string | null) => `You paid ${amount} incl. VAT.${email ? ` The invoice is in your inbox (${email}).` : ""}`,
     steps: [
       { title: "Log in to Google once", body: "With the account of your Google Business Profile. That is how we know you are the owner.", href: "/app/google", cta: "Log in to Google" },
@@ -1844,7 +1844,7 @@ export const en: CopyShape = {
       error: "Something went wrong at Google. Please try again.",
     },
     retry: "Try again",
-    contact: "Not working? Email us at hello@vidalo.io and we will connect it together.",
+    contact: "Not working? Email us at support@vidalo.io and we will connect it together.",
   },
 
   factsPage: {

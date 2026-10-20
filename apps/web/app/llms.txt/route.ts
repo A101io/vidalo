@@ -50,6 +50,7 @@ ${faq}
 
 ## Contact
 hello@vidalo.io
+Support: support@vidalo.io
 `;
   return new Response(body, { headers: { "content-type": "text/markdown; charset=utf-8" } });
 }
