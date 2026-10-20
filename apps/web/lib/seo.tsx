@@ -46,7 +46,7 @@ export function organizationLd(copy: CopyShape) {
     name: copy.brand,
     legalName: "A101 B.V.",
     url: SITE,
-    email: "hallo@vidalo.io",
+    email: "hello@vidalo.io",
     description: copy.tagline,
     identifier: { "@type": "PropertyValue", propertyID: "KvK", value: OWN_BUSINESS.kvk },
     subjectOf: OWN_FACTS_URL,

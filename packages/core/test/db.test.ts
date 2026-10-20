@@ -9,7 +9,7 @@ import { sampleFacts } from "./scanner-fixtures";
  * behave identically; MemDb alone proves nothing about the SQL.
  */
 const PG_URL = process.env.TEST_DATABASE_URL;
-const TABLES = "claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business";
+const TABLES = "claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business, waitlist";
 
 let pg: Db | undefined;
 const backends: [string, () => Promise<Db>][] = [["MemDb", async () => withMockDb()]];
@@ -105,6 +105,15 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(failed.doneAt).toBeNull();
     await db.completeJob(later.id);
     expect(await db.claimJob(["report"])).toBeNull();
+  });
+
+  it("coming-soon list: one row per address, the first consent stays on record", async () => {
+    const first = await db.joinWaitlist({ email: "eigenaar@bakkerij.nl", language: "nl", source: "coming_soon", consentText: "Ja, mail me." });
+    expect(first.created).toBe(true);
+    const again = await db.joinWaitlist({ email: "eigenaar@bakkerij.nl", language: "en", source: "coming_soon", consentText: "Yes, email me." });
+    expect(again.created).toBe(false);
+    await db.joinWaitlist({ email: "owner@shop.com", language: "en", source: "coming_soon", consentText: "Yes, email me." });
+    expect(await db.countWaitlist()).toBe(2);
   });
 
   it("fixes, channels and events", async () => {

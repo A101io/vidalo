@@ -5,7 +5,7 @@ export function GET() {
   const base = (process.env.PUBLIC_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const expires = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
   const body = [
-    "Contact: mailto:hallo@vidalo.io",
+    "Contact: mailto:hello@vidalo.io",
     `Expires: ${expires}`,
     "Preferred-Languages: nl, en",
     `Canonical: ${base}/.well-known/security.txt`,

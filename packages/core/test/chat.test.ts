@@ -14,7 +14,7 @@ describe("website assistant", () => {
     expect(p).toMatch(/Je bent een AI/);
     expect(p).toMatch(/Beloof nooit/);
     expect(p).toMatch(/GEO, AEO, LLM, prompt, credits, platform/);
-    expect(p).toContain("hallo@vidalo.io");
+    expect(p).toContain("hello@vidalo.io");
   });
 
   it("answers a price question from the pricing copy without a model", () => {

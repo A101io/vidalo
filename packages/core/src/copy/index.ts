@@ -622,7 +622,7 @@ export const copy = {
       lang: "NL",
       columns: [
         { title: "Product", links: [{ label: "Hoe het werkt", href: "/hoe-het-werkt" }, { label: "Waarom", href: "/waarom" }, { label: "AI-agents en OKF", href: "/straks" }, { label: "Voorbeeldrapport", href: "/#rapport" }, { label: "Prijs", href: "/prijzen" }, { label: "Per vak", href: "/#vak" }] },
-        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hallo@vidalo.io" }] },
+        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · Prijzen excl. btw",
@@ -677,7 +677,7 @@ export const copy = {
     draft: true,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
     updated: "Laatst bijgewerkt: 9 oktober 2026",
-    contact: "Vragen? Mail ons op hallo@vidalo.io.",
+    contact: "Vragen? Mail ons op hello@vidalo.io.",
     terms: {
       title: "Algemene voorwaarden",
       intro: "Deze voorwaarden gelden voor elke controle en elk abonnement van Vidalo, een handelsnaam van A101 B.V.",
@@ -695,10 +695,10 @@ export const copy = {
       title: "Privacybeleid",
       intro: "Vidalo is een handelsnaam van A101 B.V. Hier staat welke gegevens we gebruiken, waarom, en met wie we ze delen.",
       sections: [
-        { h: "Welke gegevens", p: ["Over je bedrijf: naam, plaats, adres, telefoonnummer, website, openingstijden, diensten en andere gegevens die je bevestigt. Dit zijn meestal geen persoonsgegevens, behalve als je bedrijf je eigen naam draagt.", "Over jou: je e-mailadres, om in te loggen en je rapporten te sturen. Bij betalen verwerkt Stripe je betaalgegevens; wij zien die niet.", "Over de controle: de vragen die we stellen, de antwoorden van AI-assistenten en de bronnen die ze noemen."] },
-        { h: "Waarom", p: ["Om de controle uit te voeren, fouten te herstellen, je te mailen over je rapport en je abonnement te factureren. Na een gratis controle sturen we je na 7 en na 21 dagen nog een herinnering. Elke mail heeft een afmeldlink; na afmelden sturen we niets meer. De grondslag is de overeenkomst met jou, en voor een gratis controle ons gerechtvaardigd belang om je een rapport te kunnen geven."] },
+        { h: "Welke gegevens", p: ["Over je bedrijf: naam, plaats, adres, telefoonnummer, website, openingstijden, diensten en andere gegevens die je bevestigt. Dit zijn meestal geen persoonsgegevens, behalve als je bedrijf je eigen naam draagt.", "Over jou: je e-mailadres, om in te loggen en je rapporten te sturen. Bij betalen verwerkt Stripe je betaalgegevens; wij zien die niet.", "Over de controle: de vragen die we stellen, de antwoorden van AI-assistenten en de bronnen die ze noemen.", "Op de lijst ‘Binnenkort’: je e-mailadres, de taal van de pagina, het moment van aanmelden en de zin waarmee je toestemming gaf."] },
+        { h: "Waarom", p: ["Om de controle uit te voeren, fouten te herstellen, je te mailen over je rapport en je abonnement te factureren. Na een gratis controle sturen we je na 7 en na 21 dagen nog een herinnering. Elke mail heeft een afmeldlink; na afmelden sturen we niets meer. De grondslag is de overeenkomst met jou, en voor een gratis controle ons gerechtvaardigd belang om je een rapport te kunnen geven.", "Zet je je op de lijst ‘Binnenkort’, dan mailen we je wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders. De grondslag is je toestemming; die trek je in met een mail naar hello@vidalo.io, en dan halen we je adres van de lijst."] },
         { h: "Met wie we gegevens delen", p: ["Supabase (database en inloggen, opslag in de EU). OpenAI, Google, Perplexity en SerpAPI om de vragen te stellen; we sturen alleen bedrijfsgegevens, geen e-mailadressen. Google en de KvK om je bedrijf te vinden. Stripe voor betalingen. Resend voor e-mail. Cloudflare voor je feitenpagina.", "Sommige van deze partijen verwerken gegevens buiten de EU. Dat gebeurt op basis van de standaardcontractbepalingen van de Europese Commissie of het EU-VS-gegevensprivacykader."] },
-        { h: "Hoe lang", p: ["Een rapport van een gratis controle is 30 dagen via de link te zien. Gegevens van een betaald plan bewaren we zolang je klant bent. 90 dagen na het einde van je abonnement doen we nog één gratis controle; daarna bewaren we alleen wat de wet voor facturen vraagt."] },
+        { h: "Hoe lang", p: ["Een rapport van een gratis controle is 30 dagen via de link te zien. Gegevens van een betaald plan bewaren we zolang je klant bent. 90 dagen na het einde van je abonnement doen we nog één gratis controle; daarna bewaren we alleen wat de wet voor facturen vraagt.", "De lijst ‘Binnenkort’ bewaren we tot we iedereen over de opening hebben gemaild; daarna verwijderen we hem. Wie zich eerder afmeldt, halen we er direct af."] },
         { h: "Jouw rechten", p: ["Je mag je gegevens inzien, laten verbeteren of laten verwijderen, en bezwaar maken. Mail ons; we reageren binnen een maand. Ben je het niet met ons eens, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens."] },
       ],
     },
@@ -735,9 +735,23 @@ export const copy = {
     kicker: "Binnenkort",
     h1: "Vidalo komt eraan.",
     body: "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt. Binnenkort controleer je hier gratis wat AI-assistenten over je bedrijf zeggen, en laat je elke fout bij de bron herstellen.",
-    contact: "Vragen, of alvast meedoen? Mail ons op",
-    previewButton: "Bekijk de site alvast",
-    previewNote: "Tijdelijk, zolang we bouwen. De site is nog niet af.",
+    /** The logo animation (components/LogoIntro.tsx): three questions typed into the chat field. Keep 28, 23 and 27 characters; the typing steps are fixed. */
+    intro: {
+      label: "Een chatveld waarin klantvragen worden getypt, en dat het Vidalo-logo wordt",
+      questions: ["Is de bakker op zondag open?", "Wat kost een knipbeurt?", "Bezorgen ze ook in Haarlem?"],
+    },
+    contact: "Vragen? Mail ons op",
+    list: {
+      h2: "Hoor het als we opengaan",
+      label: "Je e-mailadres",
+      placeholder: "naam@bedrijf.nl",
+      button: "Zet me op de lijst",
+      consent: "Ja, mail me één keer wanneer Vidalo opengaat. Afmelden kan altijd via hello@vidalo.io.",
+      thanks: "Dank je. Je staat op de lijst; we mailen je zodra Vidalo opengaat.",
+      invalid: "Dat e-mailadres lijkt niet te kloppen. Kijk het nog even na.",
+      busy: "Het is even druk. Probeer het over een paar minuten opnieuw.",
+      failed: "Dat lukte niet. Probeer het later opnieuw, of mail ons.",
+    },
     barTitle: "Voorvertoning",
     barLinks: [
       { label: "Home", href: "/" },
@@ -765,9 +779,9 @@ export const copy = {
     send: "Stuur",
     thinking: "Even kijken.",
     faqNote: "Antwoord uit onze veelgestelde vragen.",
-    fallback: "Dat weet ik niet zeker. Mail ons op hallo@vidalo.io, dan krijg je antwoord van een mens.",
-    error: "Antwoorden lukt nu even niet. Mail ons op hallo@vidalo.io.",
-    rateLimited: "Je stelt veel vragen in korte tijd. Probeer het over een paar minuten opnieuw, of mail hallo@vidalo.io.",
+    fallback: "Dat weet ik niet zeker. Mail ons op hello@vidalo.io, dan krijg je antwoord van een mens.",
+    error: "Antwoorden lukt nu even niet. Mail ons op hello@vidalo.io.",
+    rateLimited: "Je stelt veel vragen in korte tijd. Probeer het over een paar minuten opnieuw, of mail hello@vidalo.io.",
   },
 
   /** The cookie notice (components/CookieConsent.tsx) and the footer button that reopens it. */
@@ -796,7 +810,7 @@ export const copy = {
     button: "Afmelden",
     doneH1: "Je bent afgemeld",
     doneBody: "We sturen je hierover geen mails meer.",
-    invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op hallo@vidalo.io, dan regelen we het.",
+    invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op hello@vidalo.io, dan regelen we het.",
   },
 
   scanBusy: {
@@ -1570,7 +1584,7 @@ export const copy = {
   checkout: {
     mockNotice: "Betaling gesimuleerd (geen Stripe-sleutel ingesteld).",
     cancelled: "Je betaling is niet afgerond. Er is niets afgeschreven. Je kunt het hieronder opnieuw proberen.",
-    error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op hallo@vidalo.io.",
+    error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op hello@vidalo.io.",
     productSetup: "Vidalo Goed zetten (eenmalig)",
     productMonitor: "Vidalo Goed houden (per maand)",
     /** Above the pay button on Stripe Checkout. Stripe renders [label](url) as a link. */
@@ -1618,7 +1632,7 @@ export const copy = {
     processingH1: "Bedankt, je betaling wordt verwerkt",
     processingBody: "Bij een incasso duurt het een paar werkdagen voor het geld binnen is. Je kunt alvast de stappen hieronder doen; we starten zodra de betaling rond is.",
     failedH1: "Je betaling is niet gelukt",
-    failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op hallo@vidalo.io.",
+    failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op hello@vidalo.io.",
     receipt: (amount: string, email: string | null) => `Je betaalde ${amount} incl. btw.${email ? ` De factuur staat in je mail (${email}).` : ""}`,
     steps: [
       { title: "Log één keer in bij Google", body: "Met het account van je Google-bedrijfsprofiel. Zo weten we dat jij de eigenaar bent.", href: "/app/google", cta: "Inloggen bij Google" },
@@ -1858,7 +1872,7 @@ export const copy = {
       error: "Er ging iets mis bij Google. Probeer het nog een keer.",
     },
     retry: "Opnieuw proberen",
-    contact: "Lukt het niet? Mail ons op hallo@vidalo.io, dan koppelen we het samen.",
+    contact: "Lukt het niet? Mail ons op hello@vidalo.io, dan koppelen we het samen.",
   },
 
   factsPage: {
