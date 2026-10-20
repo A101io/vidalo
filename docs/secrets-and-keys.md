@@ -67,3 +67,25 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
 
 Nothing above is set anywhere yet except in local `.env` for mock mode.
+
+## Inventory: what the product still needs (20 Oct 2026)
+
+One row per step of the customer journey. "Have" means it exists and was checked; everything else is open. The Worker secrets are set with `wrangler secret put` once `vidalo-web` and `vidalo-worker` exist (the first production deploy creates them).
+
+| Journey step | Needed | Status |
+|---|---|---|
+| Database | Supabase project, migrations 0001–0009, Hyperdrive `vidalo-db` | Have (16–18 Oct) |
+| Deploy | Cloudflare token + account id on the GitHub environments, zone `vidalo.io` | Have (16 Oct); `staging` environment exists but is empty |
+| Free check | `OPENAI_API_KEY` (in Julian's local `.env`, valid, 20 Oct; not yet a Worker secret), `GOOGLE_PLACES_API_KEY`, optional `KVK_API_KEY` | Places and KvK open |
+| Other AI systems | `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY` (Google AI answers). Without a key that system is not checked, so copy may not name it | Open |
+| Sign-in | `SUPABASE_URL`, `SUPABASE_ANON_KEY` as Worker vars; Supabase Auth site URL + redirect URLs for vidalo.io; custom SMTP through Resend | Open (needs Resend) |
+| E-mail | Resend account + `RESEND_API_KEY`, vidalo.io verified (SPF, DKIM, DMARC), `UNSUBSCRIBE_SECRET` (`openssl rand -hex 32`), mailboxes hello@ and support@ (`docs/mail.md`) | Open |
+| Payment | Vidalo's own Stripe account (test mode first), then `pnpm stripe:setup --apply`: prices, 21% tax rate, webhook, portal; Terms and Privacy URLs in Stripe settings | Open |
+| Ownership proof | Google Cloud OAuth client (`GOOGLE_OAUTH_CLIENT_ID/SECRET`) and Google's approval for Business Profile API access (days to weeks; every paid job waits for proof) | Open; the longest lead time |
+| Facts pages | Runtime Cloudflare token (Zone: SSL and Certificates Edit, DNS Edit), `CLOUDFLARE_ZONE_ID` (have: `5d39e2dacc81b8603d5dc69a163b6bca`), Cloudflare for SaaS on the zone, `INDEXNOW_KEY`, decision on the fallback host scheme (go-live D5) | Open |
+| Directories | No keys: forms and correction e-mails, done through the operator queue | Process |
+| Google index check (#23) | `GOOGLE_SERVICE_ACCOUNT_JSON`; without it the check is skipped | Optional |
+| Legal | Terms and privacy from the De Boer masters, NL + EN (checkout requires them; the coming-soon list links the privacy page) | Open |
+| Cost control | Hard monthly budget per AI provider; `FREE_SCANS_PER_DAY` | Open |
+
+End-to-end test: possible up to ownership proof once OpenAI, Places, Resend, Stripe test mode, the OAuth client and the runtime Cloudflare token are in; the whole journey once Google grants Business Profile API access. It can run on production behind the coming-soon gate (preview key, Stripe test mode), with the test rows cleared afterwards.

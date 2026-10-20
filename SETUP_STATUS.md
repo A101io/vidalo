@@ -119,4 +119,4 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## Needs Julian
 1. Upload the De Boer Legal masters (B2B, July 2026) so R2 can be built from them.
 2. ~~`vidalo.io` as a zone in A101's Cloudflare account~~ done 16 Oct 2026 (zone `5d39e2dacc81b8603d5dc69a163b6bca`). Still: SSL Full (strict) + Always Use HTTPS in the dashboard; then D4–D6, G1–G2 and production D2 can proceed.
-3. The Supabase database password (for `DATABASE_URL`, go-live D3), ~~a Cloudflare API token plus the `preview`/`production` GitHub environments (X2)~~ done 16 Oct, Vidalo's own Stripe account (B1), a Google OAuth client (A3), and one click on "Stuur inloglink" on the local sign-in page (A1).
+3. ~~The Supabase database password (for `DATABASE_URL`, go-live D3)~~ done 18 Oct, pipeline ran against the hosted project, ~~a Cloudflare API token plus the `preview`/`production` GitHub environments (X2)~~ done 16 Oct, Vidalo's own Stripe account (B1), a Google OAuth client (A3), and one click on "Stuur inloglink" on the local sign-in page (A1).
