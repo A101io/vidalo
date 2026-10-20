@@ -12,6 +12,7 @@ import { FACT_KEY_CRITERIUM } from "../criteria";
 import { sectorPrompts, type SectorPromptTemplate } from "./sectors";
 
 export * from "./sectors";
+export * from "./rotation";
 
 export type PromptTemplate = Omit<Prompt, "id" | "businessId">;
 
@@ -140,9 +141,10 @@ export function basePrompts(facts: Facts): PromptTemplate[] {
 }
 
 /**
- * All prompts for a business: the base prompts plus the sector pack (6 to 10
- * extra questions, at least two of them recommendation questions). A text
- * that already exists in the base set is not added twice.
+ * All prompts for a business: the base prompts plus the sector pack (up to 6
+ * questions about the business and one recommendation question per intent,
+ * pool "core", plus the rotating bank, pool "bank"). A text that already
+ * exists in the base set is not added twice.
  */
 export function generatePrompts(facts: Facts, opts: GenerateOptions = {}): PromptTemplate[] {
   const base = basePrompts(facts);
@@ -151,9 +153,15 @@ export function generatePrompts(facts: Facts, opts: GenerateOptions = {}): Promp
   return [...base, ...extra];
 }
 
+/** Intents the free scan asks for, in order of preference: who is the best, who can you trust, who can help now. */
+const FREE_SCAN_INTENTS = ["quality", "trust", "now", "specialty", "place", "price"] as const;
+
 /**
  * The 6 prompts for the free scan. With a sector: existence, phone, Sunday
- * hours and up to 3 sector prompts of which one asks for a recommendation.
+ * hours and three recommendation questions from the core: kwaliteit,
+ * vertrouwen and nu ("Wat is de beste loodgieter in Utrecht?"), falling back
+ * to specialisme, plek and prijs. That is the question a customer really
+ * asks, and the one an owner wants to see answered.
  * Without a sector: existence, Sunday hours, phone, address, one service the
  * business does NOT offer (falls back to one it does), and pin payment.
  */
@@ -163,10 +171,12 @@ export function freeScanPrompts(facts: Facts, opts: GenerateOptions = {}): Promp
   const sector: SectorPromptTemplate[] = sectorPrompts(facts, sectorOf(facts, opts.sector));
   if (sector.length) {
     const out: PromptTemplate[] = [existencePrompts(ctx)[0]!, phonePrompts(ctx)[0]!, sunday];
-    const rec = sector.find((p) => p.kind === "recommendation");
-    const abouts = sector.filter((p) => p.kind === "about" && !out.some((o) => o.textNl === p.textNl));
-    const picked: PromptTemplate[] = [...abouts.slice(0, rec ? 2 : 3)];
-    if (rec) picked.push(rec);
+    const recs = sector.filter((p) => p.kind === "recommendation" && p.pool === "core");
+    const picked: PromptTemplate[] = [];
+    for (const intent of FREE_SCAN_INTENTS) {
+      const p = recs.find((r) => r.intent === intent);
+      if (p && picked.length < 3) picked.push(p);
+    }
     // Top up with base prompts when the pack is short.
     const fill = [addressPrompts(ctx)[0]!, paymentPrompts(ctx)[0]!];
     while (picked.length < 3 && fill.length) picked.push(fill.shift()!);

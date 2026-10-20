@@ -10,7 +10,7 @@
 import { ENGINES, visibilityFor, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
-import { generatePrompts, selectFreeScanPrompts } from "../prompts";
+import { generatePrompts, promptsForFullScan, selectFreeScanPrompts } from "../prompts";
 import { attributeAll, type AttributionContext } from "./attribute";
 import { compare, groupKey, type ComparableSample, type CompareResult } from "./compare";
 import { computeStip, groupBySeverity } from "./stip";
@@ -19,6 +19,7 @@ import { ENGINE_TIMEOUT_MS } from "./engines/types";
 import { defaultExtractMode, extractClaims } from "./extract";
 import { normalizeWebsite } from "./normalize";
 import { createLimiter, retry, withTimeout } from "./util";
+import { promotionCandidates, summarizeRecommendations } from "./recommendations";
 import { cellsFromSamples, type ScanSnapshot } from "../progress";
 
 export * from "./compare";
@@ -30,6 +31,7 @@ export type { EngineClient, AskContext, EngineAnswer } from "./engines";
 export * from "./resolve";
 export * from "./onboard";
 export * from "./stip";
+export * from "./recommendations";
 export * from "./progress";
 
 /** Defaults per scan kind (ARCHITECTURE.md workflows A and C). */
@@ -72,19 +74,26 @@ interface Asked {
   skipped: boolean;
 }
 
-/** Load prompts for a scan, generating + storing them when the business has none yet. */
-async function loadPrompts(db: Db, businessId: string, facts: Facts, kind: ScanKind, sector: SectorSlug | null, promptIds?: string[]): Promise<Prompt[]> {
+/**
+ * Load prompts for a scan. Generated prompts the business does not have yet
+ * are stored first (new businesses get all of them; existing ones get new
+ * questions, such as the recommendation intents and the bank, as they are
+ * added). A full scan asks the core plus this month's slice of the bank.
+ */
+async function loadPrompts(db: Db, businessId: string, facts: Facts, kind: ScanKind, sector: SectorSlug | null, promptIds?: string[], now = new Date()): Promise<Prompt[]> {
   let prompts = await db.listPrompts(businessId, { activeOnly: true });
-  if (!prompts.length) prompts = await db.insertPrompts(businessId, generatePrompts(facts, { sector }));
   if (promptIds?.length) {
     const set = new Set(promptIds);
     return prompts.filter((p) => set.has(p.id));
   }
+  const stored = new Set((await db.listPrompts(businessId)).map((p) => p.textNl));
+  const missing = generatePrompts(facts, { sector }).filter((p) => !stored.has(p.textNl));
+  if (missing.length) prompts = [...prompts, ...(await db.insertPrompts(businessId, missing))];
   if (kind === "free") {
     const free = selectFreeScanPrompts(prompts, facts, { sector });
-    return free.length ? free : prompts.slice(0, 6);
+    return free.length ? free : prompts.filter((p) => p.pool !== "bank").slice(0, 6);
   }
-  return prompts;
+  return promptsForFullScan(prompts, now);
 }
 
 /** Ask every (engine x prompt x sample) with bounded concurrency, retries and timeouts. */
@@ -256,7 +265,14 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
     });
     opts.onProgress?.({ type: "phase", phase: "done" });
 
-    return assembleReport({ business, scanRun: { ...scanRun, costCents }, engines, samples, result, findings, unavailable });
+    const report = assembleReport({ business, facts, prompts, scanRun: { ...scanRun, costCents }, engines, samples, result, findings, unavailable });
+    // A bank question where the business is mostly not named becomes a fixed question.
+    if (opts.kind === "monthly" || opts.kind === "baseline") {
+      const promote = promotionCandidates(report.recommendations ?? []);
+      for (const id of promote) await db.setPromptPool(id, "core");
+      if (promote.length) await db.logEvent(business.id, "prompts.promoted", { scanRunId: scanRun.id, promptIds: promote });
+    }
+    return report;
   } catch (err) {
     await db.updateScanRun(scanRun.id, { status: "failed", finishedAt: new Date().toISOString(), error: String((err as Error)?.message ?? err) });
     await db.logEvent(business.id, "scan.failed", { scanRunId: scanRun.id, error: String((err as Error)?.message ?? err) });
@@ -266,6 +282,8 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
 
 function assembleReport(args: {
   business: { id: string; slug: string; name: string; place: string };
+  facts: Facts;
+  prompts: Prompt[];
   scanRun: { id: string; kind: ScanKind; startedAt: string; finishedAt?: string | null; costCents?: number };
   engines: Engine[];
   samples: Sample[];
@@ -273,7 +291,7 @@ function assembleReport(args: {
   findings: Finding[];
   unavailable: Set<Engine>;
 }): ScanReport {
-  const { business, scanRun, engines, samples, result, findings, unavailable } = args;
+  const { business, facts, prompts, scanRun, engines, samples, result, findings, unavailable } = args;
   const verdictOf = (s: Sample) => result.verdicts.get(s.id);
   const wrongAnswers = samples.filter((s) => verdictOf(s) === "wrong" || verdictOf(s) === "other_entity").length;
   const notFoundAnswers = samples.filter((s) => verdictOf(s) === "not_found").length;
@@ -314,6 +332,7 @@ function assembleReport(args: {
     findingsBySeverity: groupBySeverity(findings),
     instable,
     criteriaNotFound,
+    recommendations: summarizeRecommendations({ samples, prompts, verdicts: result.verdicts, facts }),
   };
 }
 
@@ -371,5 +390,5 @@ export async function buildReport(scanRunId: string, dbOverride?: Db): Promise<S
   const result = compare(comparable, facts);
   const findings = await db.listFindingsByScanRun(scanRunId);
   const unavailable = new Set(scanRun.engines.filter((e) => !samples.some((s) => s.engine === e)));
-  return assembleReport({ business, scanRun, engines: scanRun.engines, samples, result, findings, unavailable });
+  return assembleReport({ business, facts, prompts, scanRun, engines: scanRun.engines, samples, result, findings, unavailable });
 }

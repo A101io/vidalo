@@ -58,12 +58,12 @@ function sourceLabel(f: Finding): string {
 /** Not-found answer count, visibility, colour and instable answers for a scan run, rebuilt from stored samples and claims. */
 async function notFoundStats(
   scanRunId: string | null | undefined,
-): Promise<Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable"> | null> {
+): Promise<Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable" | "recommendations"> | null> {
   if (!scanRunId) return null;
   try {
     const { buildReport } = await import("../scanner/index.js");
     const r = await buildReport(scanRunId);
-    return { notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable };
+    return { notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable, recommendations: r.recommendations };
   } catch (err) {
     log.warn("reporter.not_found_stats_failed", { scanRunId, error: String((err as Error)?.message ?? err) });
     return null;
@@ -160,6 +160,7 @@ export async function sendBaselineSummary(scanRunId: string): Promise<MailResult
     stip: nf?.stip,
     engineStips: nf?.engineStips,
     instable: nf?.instable,
+    recommendations: nf?.recommendations,
     findings,
     engines: run.engines,
     links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business) },
@@ -245,6 +246,7 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
     stip: nf?.stip,
     engineStips: nf?.engineStips,
     instable: nf?.instable,
+    recommendations: nf?.recommendations,
     resolved: resolvedThisMonth.length,
     inProgress: openFindings.length,
     unfixable: unfixable.length,

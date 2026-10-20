@@ -61,6 +61,8 @@ export function recommendationQuestionFor(factKey: FactKey, subject: string | nu
       return subject ? q.credential(subject, place) : q.other(place);
     case "policy":
       return subject ? q.policy(subject, place) : q.other(place);
+    case "existence":
+      return subject && q.intent[subject] ? q.intent[subject]!(place) : q.other(place);
     default:
       return q.other(place);
   }

@@ -6,10 +6,18 @@ import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_V
 
 const DAYS = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
 
+/** Recommendation questions not tied to one fact (probe "existence:beste" etc.). */
+const INTENT_LABEL: Record<string, string> = {
+  beste: "of je genoemd wordt als iemand de beste in je vak zoekt",
+  betrouwbaar: "of je genoemd wordt als iemand een betrouwbaar bedrijf zoekt",
+  betaalbaar: "of je genoemd wordt als iemand een betaalbaar bedrijf zoekt",
+  dichtbij: "of je genoemd wordt als iemand iets in de buurt zoekt",
+};
+
 export function factLabelNl(factKey: FactKey, subject: string | null): string {
   switch (factKey) {
     case "existence":
-      return "of het bedrijf open is";
+      return subject && INTENT_LABEL[subject] ? INTENT_LABEL[subject]! : "of het bedrijf open is";
     case "hours": {
       const idx = subject != null && /^\d$/.test(subject) ? Number(subject) : -1;
       return idx >= 0 && idx < 7 ? `de openingstijden op ${DAYS[idx]}` : "de openingstijden";
@@ -125,7 +133,7 @@ export function findingWordsNl(f: Pick<Finding, "factKey" | "subject" | "wrongVa
     what,
     field: factFieldNl(f.factKey, f.subject),
     wrong: notFound ? NOT_FOUND_LABEL : recommendation ? ABSENT_LABEL : valueNl(f.factKey, f.wrongValue),
-    correct: valueNl(f.factKey, f.correctValue),
+    correct: recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? "je bent open en werkt in deze plaats" : valueNl(f.factKey, f.correctValue),
     frequency: `${f.frequency} van de ${f.sampleCount} keer`,
     notFound,
     notFoundLine: notFound ? `vond niets over ${what}` : "",

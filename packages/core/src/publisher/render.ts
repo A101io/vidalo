@@ -14,6 +14,8 @@ export interface RenderOptions {
   verifiedAt?: string;
   /** Protocol for canonical links; https in production. */
   protocol?: "https" | "http";
+  /** Search Console verification token for this host (google-index.ts); adds the google-site-verification meta tag. */
+  googleSiteVerification?: string | null;
   /** Full canonical URL when the page does not live at the root of `host` (Vidalo's own page at /feiten). */
   canonicalUrl?: string;
 }
@@ -415,7 +417,7 @@ ${list(facts.notConfusedWith)}
 <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
 <link rel="alternate" type="text/plain" href="/llms.txt">
 <link rel="sitemap" type="application/xml" href="/sitemap.xml">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow">${opts.googleSiteVerification ? `\n<meta name="google-site-verification" content="${escapeHtml(opts.googleSiteVerification)}">` : ""}
 <meta name="last-modified" content="${escapeHtml(lastmod)}">
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>

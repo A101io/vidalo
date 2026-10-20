@@ -145,6 +145,22 @@ export type Severity = "afhaker" | "misleider" | "verwarring";
  */
 export type PromptKind = "about" | "recommendation";
 
+/**
+ * What a customer is after when asking for a recommendation. Every sector
+ * asks one question per intent in its fixed set (docs/CRITERIA.md).
+ */
+export type RecommendationIntent = "quality" | "trust" | "now" | "specialty" | "price" | "place";
+export const RECOMMENDATION_INTENTS: RecommendationIntent[] = ["quality", "trust", "now", "specialty", "price", "place"];
+
+/**
+ * Probe subjects for the intents that are not tied to one fact ("existence:beste").
+ * The business only has to be open for its absence to count.
+ */
+export const INTENT_SUBJECT = { quality: "beste", trust: "betrouwbaar", price: "betaalbaar", place: "dichtbij" } as const;
+
+/** "core": asked on every full scan. "bank": a few rotate into each monthly scan. */
+export type PromptPool = "core" | "bank";
+
 export interface Prompt {
   id: string;
   businessId: string;
@@ -157,6 +173,20 @@ export interface Prompt {
   criterium?: CriteriumId | null;
   /** "about" (default) or "recommendation". */
   kind?: PromptKind;
+  /** Recommendation prompts: which intent they ask for. */
+  intent?: RecommendationIntent | null;
+  /** "core" (default) or "bank" (rotates in a few at a time). */
+  pool?: PromptPool;
+  /** Bank prompts tied to a season ask only in that season. */
+  season?: Season | null;
+}
+
+export type Season = "winter" | "lente" | "zomer" | "herfst";
+
+/** Season of a date in the Netherlands (meteorological: Dec–Feb winter). */
+export function seasonOf(date: Date): Season {
+  const m = date.getUTCMonth();
+  return m === 11 || m <= 1 ? "winter" : m <= 4 ? "lente" : m <= 7 ? "zomer" : "herfst";
 }
 
 export type Engine = "chatgpt" | "gemini" | "perplexity" | "google_ai" | "copilot";
@@ -325,6 +355,23 @@ export interface CriteriumNotFound {
 }
 
 /** Result of a scan as shown on the result page. */
+/** One recommendation question in a scan: was the business named, and who was named instead. */
+export interface RecommendationSummary {
+  promptId: string;
+  prompt: string;
+  intent: RecommendationIntent | null;
+  pool: PromptPool;
+  /** first probe of the prompt ("existence:beste", "urgency"), to link a finding to its question */
+  probe: string | null;
+  answers: number;
+  /** answers that named the business */
+  named: number;
+  /** other businesses named, by how many answers named them */
+  others: { name: string; answers: number }[];
+  /** sites the answers cited, by how many answers cited them */
+  sources: { host: string; url: string; answers: number }[];
+}
+
 export interface ScanReport {
   business: Pick<Business, "id" | "slug" | "name" | "place">;
   scanRunId: string;
@@ -349,4 +396,6 @@ export interface ScanReport {
   instable: InstableFinding[];
   /** Criteria the engine said it knows nothing about. Criterium 1 here weighs as an afhaker. */
   criteriaNotFound: CriteriumNotFound[];
+  /** Per recommendation question: named or not, who was named instead, which sites were cited. Absent on older reports. */
+  recommendations?: RecommendationSummary[];
 }

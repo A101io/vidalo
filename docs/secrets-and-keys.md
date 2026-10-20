@@ -4,7 +4,7 @@ Every secret: where it comes from, where it is set, how to prove it landed. When
 
 ## Deploying (GitHub → Cloudflare)
 
-Set on **both** GitHub environments of `A101io/vidalo` (Settings → Environments → `preview` and `production` → Environment secrets; an environment does not inherit a repository secret of the same name):
+Set on **every** GitHub environment of `A101io/vidalo` (`preview`, `staging`, `production`) (Settings → Environments → `preview` and `production` → Environment secrets; an environment does not inherit a repository secret of the same name):
 
 | Name | Comes from | Prove it |
 |---|---|---|
@@ -14,7 +14,7 @@ Set on **both** GitHub environments of `A101io/vidalo` (Settings → Environment
 
 ### The deploy token (`CLOUDFLARE_API_TOKEN`, written 16 Oct 2026)
 
-One token, used only by `.github/workflows/deploy.yml`, stored twice: on the `preview` and on the `production` GitHub environment. Create it at https://dash.cloudflare.com/profile/api-tokens → Create Token → Create Custom Token.
+One token, used only by `.github/workflows/deploy.yml`, stored on each GitHub environment: `preview`, `staging` and `production`. Create it at https://dash.cloudflare.com/profile/api-tokens → Create Token → Create Custom Token.
 
 Token name: `vidalo-deploy (GitHub Actions)`
 
