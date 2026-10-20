@@ -59,7 +59,7 @@ export interface EventRow {
   at: string;
 }
 
-/** One address on the coming-soon list (migration 0007). */
+/** One address on the coming-soon list (migration 0009). */
 export interface WaitlistInput {
   /** Lower-cased, trimmed, validated by the caller. */
   email: string;

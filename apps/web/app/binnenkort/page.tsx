@@ -18,7 +18,7 @@ const STATES: readonly State[] = ["ok", "fout", "druk", "mislukt"];
 /**
  * The page behind the launch gate (core/shared/gate.ts). Also reachable
  * directly. Collects the coming-soon list: one field, a consent box, a hidden
- * trap field for bots; /api/waitlist stores it (migration 0007) and comes back
+ * trap field for bots; /api/waitlist stores it (migration 0009) and comes back
  * here with ?lijst=<state>. The public preview button was removed 18 Oct 2026;
  * the full site opens only with VIDALO_PREVIEW_KEY through /api/preview.
  */

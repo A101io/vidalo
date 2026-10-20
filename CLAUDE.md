@@ -56,7 +56,7 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 
 ## Added 18 Oct 2026
 - **Address**: `hello@vidalo.io` in both languages (was `hallo@`), in copy, chat, security.txt, llms.txt and docs. The mailbox itself is Julian's to create.
-- **Coming-soon list**: form on `/binnenkort` (EN `/coming-soon`) → `POST /api/waitlist` → table `waitlist` (`0007_waitlist.sql`, applied on the hosted project 18 Oct). RLS on, no policies, no grants for anon/authenticated (proven with a rolled-back DO block: anon and authenticated denied read and write, owner inserts). Checks live in `core/shared/waitlist.ts` (tested): hidden `website` trap field (bot gets "ok", nothing stored), required consent box, address normalised and validated, 5 posts per IP per 10 min, 300 per hour site-wide, foreign `Origin` refused. Same "ok" for new and existing addresses (no enumeration). The stored consent is the server's sentence in the page's language; events carry only language and `created`, never the address. Nobody gets mailed yet: sending the launch mail and deleting the list afterwards is a launch-day task (go-live P8).
+- **Coming-soon list**: form on `/binnenkort` (EN `/coming-soon`) → `POST /api/waitlist` → table `waitlist` (`0009_waitlist.sql`, applied on the hosted project 18 Oct; its ledger row there is still named `0007_waitlist`, version `20261018192302`, because it was applied before the file was renumbered after #23's 0007/0008). RLS on, no policies, no grants for anon/authenticated (proven with a rolled-back DO block: anon and authenticated denied read and write, owner inserts). Checks live in `core/shared/waitlist.ts` (tested): hidden `website` trap field (bot gets "ok", nothing stored), required consent box, address normalised and validated, 5 posts per IP per 10 min, 300 per hour site-wide, foreign `Origin` refused. Same "ok" for new and existing addresses (no enumeration). The stored consent is the server's sentence in the page's language; events carry only language and `created`, never the address. Nobody gets mailed yet: sending the launch mail and deleting the list afterwards is a launch-day task (go-live P8).
 - **Staging + local production run**: see go-live X6/X7; `scripts/local-prod.sh`, launch entry `vidalo-prod-local`.
 
 ## Read first
@@ -85,7 +85,7 @@ Not built: Bing/Apple/form-directory adapters (fall to operator queue), Copilot 
 
 ## Supabase
 Project `maicro`, ref **`bbynmqvaxpjdnkaasutd`**, eu-west-1 (Ireland), org A101BV — https://bbynmqvaxpjdnkaasutd.supabase.co.
-Migrations 0001–0007 are applied (ledger: `supabase_migrations.schema_migrations`). Every public table has RLS; the four internal tables (`prompt`, `sample`, `claim`, `job`) have no policies, so only the service role / table owner reach them.
+Migrations 0001–0009 are applied (0007 `google_index` and 0008 `question_bank` come from #23) (ledger: `supabase_migrations.schema_migrations`). Every public table has RLS; the four internal tables (`prompt`, `sample`, `claim`, `job`) have no policies, so only the service role / table owner reach them.
 The same org holds **`hlelpndtejajipqwjwrf` (Sitty)** and **`muuijbupsnhascqzfbin` (Sonable)** — check the ref on every call; the names give no warning.
 Not done yet: `DATABASE_URL` / service-role key in a secret store, and a run of the pipeline against this project.
 

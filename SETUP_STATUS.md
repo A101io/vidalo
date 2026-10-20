@@ -93,7 +93,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | P1 | Processors | written | `docs/processors.md`; DPAs not yet accepted; hosting missing from the privacy text. | 13 Oct |
 | P2 | Records of processing | written | `docs/records-of-processing.md` | 13 Oct |
 | P3 | DPIA screening | written | Not indicated (guidelines doc). | 13 Oct |
-| P4 | Proof of consent | written | Coming-soon list: each row stores the exact consent sentence shown, in its language, with the time (`waitlist.consent_text`, `created_at`; migration 0007). Terms version accepted at checkout: open. | 18 Oct |
+| P4 | Proof of consent | written | Coming-soon list: each row stores the exact consent sentence shown, in its language, with the time (`waitlist.consent_text`, `created_at`; migration 0009). Terms version accepted at checkout: open. | 18 Oct |
 | P5 | Retention runs | open | Retention periods await counsel. | |
 
 ## C. Conditional

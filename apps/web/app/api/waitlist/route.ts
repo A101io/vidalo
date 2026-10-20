@@ -24,7 +24,7 @@ function fromOwnSite(req: Request): boolean {
 
 /**
  * POST email + consent (+ lang, + the hidden `website` trap) from /binnenkort
- * → one row in `waitlist` (migration 0007), then back to the page with
+ * → one row in `waitlist` (migration 0009), then back to the page with
  * ?lijst=ok | fout | druk | mislukt. The answer for a new address and for one
  * already on the list is the same "ok", so the form cannot be used to find
  * out who signed up. The address never goes into the event log or the server

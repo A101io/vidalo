@@ -1,6 +1,6 @@
 /**
  * The coming-soon list (/binnenkort, EN /coming-soon): what a sign-up must
- * look like before it reaches the database (migration 0007). Pure, so the
+ * look like before it reaches the database (migration 0009). Pure, so the
  * route stays thin and every rule has a test.
  *
  * The rules, in order:
