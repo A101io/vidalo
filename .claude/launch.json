@@ -4,25 +4,61 @@
     {
       "name": "vidalo-dev",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm", "--filter", "@vidalo/web", "dev"],
+      "runtimeArgs": [
+        "pnpm",
+        "--filter",
+        "@vidalo/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "vidalo-dev-gate",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["VIDALO_COMING_SOON=1", "VIDALO_PREVIEW_BUTTON=1", "corepack", "pnpm", "--filter", "@vidalo/web", "dev"],
+      "runtimeArgs": [
+        "VIDALO_COMING_SOON=1",
+        "VIDALO_PREVIEW_BUTTON=1",
+        "corepack",
+        "pnpm",
+        "--filter",
+        "@vidalo/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "vidalo-dev-mock",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["SUPABASE_URL=", "SUPABASE_ANON_KEY=", "VIDALO_COMING_SOON=1", "VIDALO_PREVIEW_BUTTON=1", "corepack", "pnpm", "--filter", "@vidalo/web", "dev"],
+      "runtimeArgs": [
+        "SUPABASE_URL=",
+        "SUPABASE_ANON_KEY=",
+        "VIDALO_COMING_SOON=1",
+        "VIDALO_PREVIEW_BUTTON=1",
+        "corepack",
+        "pnpm",
+        "--filter",
+        "@vidalo/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "vidalo-worker",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm", "--filter", "@vidalo/worker", "start"],
+      "runtimeArgs": [
+        "pnpm",
+        "--filter",
+        "@vidalo/worker",
+        "start"
+      ],
+      "port": 8787
+    },
+    {
+      "name": "vidalo-prod-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "scripts/local-prod.sh"
+      ],
       "port": 8787
     }
   ]

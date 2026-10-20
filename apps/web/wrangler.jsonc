@@ -50,6 +50,19 @@
       "vars": { "VIDALO_MOCK": "1", "PUBLIC_BASE_URL": "https://vidalo-web-preview.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "0", "VIDALO_PREVIEW_BUTTON": "0" },
       "hyperdrive": [],
       "queues": { "producers": [] }
+    },
+    // Staging: the production build and settings on a workers.dev address,
+    // never vidalo.io, with its OWN database and queue so a test never
+    // touches customers. Deployed with deploy.yml target `staging`.
+    // Until the staging database exists `hyperdrive` stays empty, and the
+    // Worker answers 503 instead of falling back to mock data (worker.ts).
+    "staging": {
+      "name": "vidalo-web-staging",
+      "workers_dev": true,
+      "routes": [],
+      "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo-web-staging.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "1", "VIDALO_PREVIEW_BUTTON": "1" },
+      "hyperdrive": [],
+      "queues": { "producers": [{ "binding": "SCAN_QUEUE", "queue": "vidalo-scans-staging" }] }
     }
   }
 }

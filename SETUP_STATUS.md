@@ -79,7 +79,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | H2 | Error monitoring | open | | |
 | H3 | Uptime | open | `/api/health` ready for it. | |
 | H4 | Rate limiting | written | `FREE_SCANS_PER_DAY` caps live scans site-wide; per-IP limits open. | |
-| H5 | Staging | open | | |
+| H5 | Staging | written | 18 Oct 2026: `deploy.yml` target `staging`, `env.staging` in both wrangler.jsonc (own queue, own database slot, workers.dev only). Waits for its own database (Julian: $10/month) and the GitHub environment secrets. Meanwhile `scripts/local-prod.sh` runs the production build locally against the real database (go-live X7, verified). | 18 Oct |
 | H6 | Rollback plan | open | In go-live X5. | |
 | H7 | Dependency updates | ✓verified | `.github/dependabot.yml` weekly, grouped; it opened PRs #10–#15 on 13 Oct. Majors ignored (Julian): #12–#15 closed; security updates still open regardless. | 13 Oct |
 | H8 | Operator 2FA | blocked | Julian. | |
