@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCopy, getI18n } from "@/lib/i18n";
-import { Logo } from "@/components/Logo";
+import { Wordmark } from "@/components/SiteHeader";
 import { LangSwitch } from "@/components/LangSwitch";
 import { LogoIntro } from "@/components/LogoIntro";
+import { ComingSoonFooter } from "@/components/ComingSoonFooter";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
       {/* One screen: header, then text + list on the left and the animation on the right (stacked on a phone). The footer sits just below. */}
       <div className="flex min-h-svh flex-col">
         <header className="wrap flex shrink-0 items-center justify-between py-4 sm:py-5">
-          <Logo size={24} />
+          <Wordmark />
           <LangSwitch />
         </header>
         <main data-coming-soon className="wrap flex flex-1 items-center pb-4 pt-1 sm:pb-6 lg:pb-12">
@@ -109,22 +110,7 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
           </div>
         </main>
       </div>
-      <footer className="border-t-[1.5px] border-line">
-        <div className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-8 text-[13px] text-muted">
-          <span>{copy.landing.footer.legal}</span>
-          <span className="flex flex-wrap gap-x-4">
-            <Link href={href("/voorwaarden")} className="nav-link">
-              {copy.legal.terms.title}
-            </Link>
-            <Link href={href("/privacy")} className="nav-link">
-              {copy.legal.privacy.title}
-            </Link>
-            <Link href={href("/cookies")} className="nav-link">
-              {copy.legal.cookies.title}
-            </Link>
-          </span>
-        </div>
-      </footer>
+      <ComingSoonFooter />
     </>
   );
 }
