@@ -62,7 +62,7 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `pnpm --filter @vidalo/web exec next dev --port ${port}`,
+        command: `pnpm --filter @vidalo/web exec next dev --webpack --port ${port}`,
         url: `${baseURL}/api/health`,
         reuseExistingServer: false,
         timeout: 180_000,
