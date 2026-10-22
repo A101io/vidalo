@@ -1642,6 +1642,13 @@ export const en: CopyShape = {
     mockHint: "No Supabase keys set: you are logged straight into the demo environment.",
     noBusiness: "We found no business for this email address. Start with a free check.",
     linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
+    signedInAs: (email: string) => `You are signed in as ${email}.`,
+    signedInNoBusiness: "No business is linked to this address yet. Start a free check; after checkout we link the business to this account.",
+    freeCheck: "Start a free check",
+    logout: "Log out",
+    linkBusiness: (name: string, place: string) => `Link ${name} (${place}) to this account?`,
+    linkButton: "Yes, link this business",
+    linkTaken: "This business is already linked to another account. Email support@vidalo.io if that is wrong.",
   },
 
   dashboard: {
