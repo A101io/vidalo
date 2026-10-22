@@ -3,7 +3,7 @@
 # (wrangler dev, both configs, one process) against the database named in
 # the root .env. Nothing is deployed; vidalo.io is not touched.
 #
-#   pnpm --filter @vidalo/web cf:build      # first; stop `next dev` before (both write apps/web/.next)
+#   pnpm --filter @vidalo/web cf:build      # first (Next.js 16: next dev writes .next/dev, so it may keep running)
 #   bash scripts/local-prod.sh              # then open http://localhost:8787
 #
 # The connection string goes to wrangler through the environment variable
