@@ -84,7 +84,11 @@ jobs:
         env:
           PUBLIC_BASE_URL: ${{ env.SITE }}
           VIDALO_MOCK: ${{ inputs.target == 'preview' && '1' || '0' }}
-        run: pnpm cf:build
+        # Next.js 15 left its support window on 21 Oct 2026 and OpenNext now
+        # refuses to build it. The mock preview (no data, no secrets) may build
+        # with OpenNext's override; staging and production may not, until the
+        # upgrade to Next.js 16 (go-live X8).
+        run: pnpm cf:build ${{ inputs.target == 'preview' && '--dangerously-use-unsupported-next-version' || '' }}
 
       # Staging and production: the queue the website sends free scans to,
       # then the worker that consumes it. Creating a queue that exists is an
