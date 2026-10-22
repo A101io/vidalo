@@ -37,7 +37,6 @@ const serverEnv: Record<string, string> = {
   ...keyless,
   PUBLIC_BASE_URL: baseURL,
   VIDALO_COMING_SOON: mode === "gate" ? "1" : "0",
-  VIDALO_PREVIEW_BUTTON: mode === "gate" ? "1" : "0",
   VIDALO_PREVIEW_KEY: mode === "gate" ? "e2e-preview-key" : "",
 };
 if (mode === "stripe") {
@@ -62,7 +61,7 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `pnpm --filter @vidalo/web exec next dev --port ${port}`,
+        command: `pnpm --filter @vidalo/web exec next dev --webpack --port ${port}`,
         url: `${baseURL}/api/health`,
         reuseExistingServer: false,
         timeout: 180_000,
