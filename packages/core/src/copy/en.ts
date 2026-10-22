@@ -1641,6 +1641,7 @@ export const en: CopyShape = {
     sent: "We have sent you a login link. Check your inbox.",
     mockHint: "No Supabase keys set: you are logged straight into the demo environment.",
     noBusiness: "We found no business for this email address. Start with a free check.",
+    linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
   },
 
   dashboard: {

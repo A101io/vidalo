@@ -32,7 +32,8 @@ export async function sendMagicLink(form: FormData) {
   if (supabase) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${env.baseUrl}/auth/callback?next=${encodeURIComponent(href(next))}` },
+      // The Vidalo template appends token_hash and type to this (docs/auth-email/README.md).
+      options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(next))}` },
     });
     if (error) redirect(href(`/inloggen?fout=1&${q}`));
     redirect(href(`/inloggen?sent=1`));

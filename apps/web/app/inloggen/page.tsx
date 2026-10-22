@@ -5,13 +5,14 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
 import { sendMagicLink } from "./actions";
+import { safeNext } from "@/lib/auth-confirm";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
-  if (sp.fout !== "geen" && (await getSession())) redirect(href(sp.next ?? "/app"));
+  if (sp.fout !== "geen" && (await getSession())) redirect(href(safeNext(sp.next ?? null)));
   const a = copy.auth;
   return (
     <>
@@ -32,6 +33,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} />
               {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
               {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
+              {sp.fout === "link" && <p className="mt-2 text-[14px] text-rood">{a.linkExpired}</p>}
               <button type="submit" className="btn-primary mt-4 w-full">
                 {a.button}
               </button>

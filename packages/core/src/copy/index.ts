@@ -1667,6 +1667,7 @@ export const copy = {
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",
     mockHint: "Geen Supabase-sleutels ingesteld: je wordt direct ingelogd in de voorbeeldomgeving.",
     noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
+    linkExpired: "Deze inloglink werkt niet meer: hij is al gebruikt of verlopen. Vraag hieronder een nieuwe aan.",
   },
 
   dashboard: {

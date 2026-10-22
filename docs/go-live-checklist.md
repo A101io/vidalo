@@ -35,7 +35,7 @@ The launch gate. "continue" resumes from the first row that is not ✓. Status k
 | # | Item | Status |
 |---|---|---|
 | A1 | Magic-link sign-in with Supabase Auth, from the local dev server | written, partly observed 14 Oct 2026: with `SUPABASE_URL` + `SUPABASE_ANON_KEY` in the root `.env` the sign-in page drops the mock hint and `/api/health` keeps `"db":"mem"`; scan → mock checkout → `/welkom` → `/inloggen?business=…` now links the business to the e-mail before the link is sent (`apps/web/app/inloggen/actions.ts`; before this the real-auth path dropped the business and the first sign-in after paying landed on "geen bedrijf"). **Not observed:** the link itself (sending it mails Julian; the browser pane was left on that page), `/auth/callback`, `/app` |
-| A2 | Supabase Auth settings: Site URL and Redirect URLs for the real host, custom SMTP (Resend), rate limits | blocked: domain (J2). Local sign-in works on the default `http://localhost:3000` |
+| A2 | Supabase Auth settings: Custom SMTP through Resend (`inloggen@vidalo.io`), the Vidalo template for Magic Link and Confirm signup, Site URL and Redirect URLs for vidalo.io, staging, preview and localhost:3000. Exact values: `docs/auth-email/README.md` | open: Julian, dashboard (22 Oct 2026: the first real test mail came from Supabase, in English, with a `*.supabase.co` link) |
 | A3 | Google sign-in for ownership (`GOOGLE_OAUTH_CLIENT_ID/SECRET`), redirect URI `<site>/api/google/callback` | blocked: Julian creates the OAuth client in Google Cloud (as Vidalo), with the Business Profile API scope |
 
 ## Billing
