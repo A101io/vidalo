@@ -69,7 +69,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## G. Support and email
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
-| G1 | Support channel | open | hello@vidalo.io for contact, support@vidalo.io for support (was hallo@ until 19 Oct; split in `docs/mail.md`). Zone is on Cloudflare since 16 Oct; runbook `docs/mail.md` (Workspace secondary domain, aliases support@/hello@/julian@/controle@/inloggen@ on Julian's user, Send mail as, DNS records), check with `scripts/verify-mail-dns.sh`. Julian's clicks. | 18 Oct |
+| G1 | Support channel | open | hello@vidalo.io for contact, support@vidalo.io for support (was hallo@ until 19 Oct; split in `docs/mail.md`). Zone is on Cloudflare since 16 Oct; runbook `docs/mail.md` (Workspace secondary domain, aliases support@/hello@/julian@/controle@/inloggen@ on Julian's user, Send mail as, DNS records), check with `scripts/verify-mail-dns.sh`. **22 Oct: Workspace domain + five aliases done, DNS 5/5 green (MX, SPF, DKIM, DMARC → julian@vidalo.io, verification).** Still: Start authentication in Google Admin, Send mail as, delivery test with a control. | 22 Oct |
 | G2 | Transactional email | blocked | Resend code + one-click unsubscribe (RFC 8058) written; DNS (SPF/DKIM/DMARC) needs the domain. | |
 
 ## H. Operations
