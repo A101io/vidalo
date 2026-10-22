@@ -55,6 +55,18 @@ https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/url-configurati
 it with the bare Site URL, and the template's link becomes `https://vidalo.io&token_hash=...`,
 which is broken. Every host that sends sign-in links must be listed.
 
+## Apply from the command line
+
+Steps 2 and 3 can be applied in one go, after `supabase login` (the CLI keeps its token in
+the keychain):
+
+```bash
+node scripts/supabase-auth-config.mjs          # apply, then print each setting with ✓ or ✗
+node scripts/supabase-auth-config.mjs --check  # read back only
+```
+
+It never touches step 1 (the SMTP sender and the Resend key).
+
 ## Check
 
 Request a link on `/inloggen`, then confirm: sender "Vidalo <inloggen@vidalo.io>", Dutch
