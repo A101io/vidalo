@@ -83,3 +83,18 @@ test("@gate legal pages behind the gate link only inside the coming-soon setup",
     for (const href of hrefs) expect(allowed.has(href), `${url} links to ${href}`).toBe(true);
   }
 });
+
+test("@gate Google can read the logo behind the gate", async ({ page, request }) => {
+  // Organization markup on the facts page (not gated) points at a square PNG Google can fetch.
+  const logo = await request.get("/logo-512.png");
+  expect(logo.status()).toBe(200);
+  expect(logo.headers()["content-type"]).toContain("image/png");
+  await page.goto("/feiten");
+  const ld = await page.locator("script[type='application/ld+json']").allTextContents();
+  const org = ld.flatMap((t) => [JSON.parse(t)].flat()).find((d) => [d["@type"]].flat().includes("Organization"));
+  expect(org?.logo?.url).toMatch(/\/logo-512\.png$/);
+  // Every page, the coming-soon page included, offers the icon and the touch icon.
+  await page.goto("/");
+  await expect(page.locator("link[rel='icon']").first()).toHaveAttribute("href", /icon/);
+  await expect(page.locator("link[rel='apple-touch-icon']")).toHaveAttribute("href", /apple-icon/);
+});
