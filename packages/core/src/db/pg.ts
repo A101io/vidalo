@@ -27,6 +27,7 @@ import type {
   ScanRunUpdate,
   WaitlistInput,
 } from "./types";
+import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
 type Row = Record<string, unknown>;
 
@@ -562,6 +563,31 @@ export class PgDb implements Db {
   async countWaitlist(): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from waitlist where unsubscribed_at is null`;
     return Number(row?.n ?? 0);
+  }
+
+  // --- support@ auto-replies ---
+  async supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters> {
+    const [thread] = threadId
+      ? await this.sql`select exists (select 1 from support_autoreply_log where provider_thread_id = ${threadId} and action = 'replied') as hit`
+      : [{ hit: false }];
+    const [today] = await this.sql`
+      select count(*)::int as n from support_autoreply_log
+       where from_email = ${fromEmail} and action = 'replied' and created_at > now() - interval '24 hours'`;
+    return { alreadyRepliedInThread: Boolean(thread?.hit), repliesToSenderToday: Number(today?.n ?? 0) };
+  }
+
+  async recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }> {
+    const rows = await this.sql`
+      insert into support_autoreply_log
+        (provider_message_id, provider_thread_id, from_email, subject, body_excerpt, action, reason, topic, language,
+         platform_related, flagged_for_human, reply_subject, reply_body, guard_violations, matched)
+      values
+        (${row.provider_message_id}, ${row.provider_thread_id}, ${row.from_email}, ${row.subject}, ${row.body_excerpt},
+         ${row.action}, ${row.reason}, ${row.topic}, ${row.language}, ${row.platform_related}, ${row.flagged_for_human},
+         ${row.reply_subject}, ${row.reply_body}, ${row.guard_violations}, ${row.matched ? this.sql.json(row.matched as never) : null})
+      on conflict (provider_message_id) where provider_message_id is not null do nothing
+      returning id`;
+    return { duplicate: rows.length === 0 };
   }
 
   // --- channels ---
