@@ -12,7 +12,7 @@ open out/mail-lab/index.html
 
 Two journeys run in mock mode:
 - **Free check only**: the report mail, then the day-7 and day-21 follow-ups.
-- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, and the resolved and unfixable notices.
+- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, and the resolved and unfixable notices.
 
 The correction request to a source and its follow-up are not reached in mock mode, because the mock answers cite no third-party site with a contact address. They are rendered from their templates with the journey's real finding, and the page marks them "template only".
 
@@ -25,7 +25,7 @@ The page shows one card per kind: recipient, sender, subject, the HTML and the p
 | No `undefined`, `NaN`, `[object Object]`, `{{ }}` in subject or body | yes |
 | Every link to our own site points to a page or route that exists in `apps/web/app` | yes |
 | Commercial mail (follow-ups) carries `List-Unsubscribe` | yes |
-| The same mail to the same third party more than once | no, a warning |
+| The same mail to the same third party more than once | yes |
 
 CI runs `pnpm mail:lab` in the `check` job, so a broken template fails the PR.
 
@@ -58,5 +58,5 @@ The template is the same in both languages today.
 
 ## Known findings (23 Oct 2026)
 
-- **Directories get the same correction mail again and again.** Every sync sends a correction mail to every directory whose details differ, with no memory of an identical mail already sent. Sync runs at setup, after publishing, after rechecks and from the cron. One lab run sends the identical mail 14 to 46 times to one directory. The lab shows this as a warning.
+- **Directories got the same correction mail again and again**: every sync re-sent it, 14 to 46 times to one directory in one lab run. Fixed the same day: one correction per set of corrected details, one reminder after 30 days, then nothing until the details change (`publisher/index.ts`, `CORRECTION_REMINDER_DAYS`). The lab now fails on any repeat.
 - **All mails are Dutch**, also for an owner who chose English (CLAUDE.md, language preference).

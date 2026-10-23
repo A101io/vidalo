@@ -37,7 +37,7 @@ const { db } = await import("@vidalo/core/db");
 const { prepareBusiness, runScan } = await import("@vidalo/core/scanner");
 const { setBusinessStatus } = await import("@vidalo/core/shared");
 const { handlerFor } = await import("@vidalo/worker/src/jobs/index.ts");
-const { runSiteCheck } = await import("@vidalo/core/publisher");
+const { runSiteCheck, syncAllChannels } = await import("@vidalo/core/publisher");
 const { runRecheck, correctionRequestEmail, correctionFollowUpEmail, ownerWebsiteReminderEmail } = await import("@vidalo/core/fixer");
 const reporter = await import("@vidalo/core/reporter");
 const { sendMail, sendFollowUp, sendMonthlyReport, sendResolutionNotice, sendUnfixableNotice, dashboardUrl, factsPageUrl } = reporter;
@@ -118,6 +118,9 @@ await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, 
 const fakeSite: import("@vidalo/core/publisher").FetchLike = async (url) =>
   new URL(url).pathname === "/robots.txt" ? new Response("User-agent: *\nDisallow: /\n", { status: 200 }) : new Response("<html><head><title>Bakkerij De Vries</title></head><body>Welkom</body></html>", { status: 200, headers: { "content-type": "text/html" } });
 await runSiteCheck(b.id, { fetch: fakeSite });
+await drain();
+// 31 days after the first sync: each directory still wrong gets its one reminder.
+await syncAllChannels(b.id, { now: new Date(Date.now() + 31 * DAY) });
 await drain();
 await sendMonthlyReport(b.id);
 const [first, second] = findings;
@@ -206,10 +209,10 @@ for (const f of (await readdir(mailDir)).sort()) {
   mails.push(m);
 }
 
-// The same mail to the same third party more than once: a warning, not a failure (resend policy is a product decision).
+// The same mail to the same third party more than once fails the run: one correction per change, one reminder (publisher CORRECTION_REMINDER_DAYS).
 const seenBody = new Map<string, Mail[]>();
 for (const m of mails) if (KINDS[m.kind]?.to === "third_party") seenBody.set(`${m.to}\n${m.subject}\n${m.text}`, [...(seenBody.get(`${m.to}\n${m.subject}\n${m.text}`) ?? []), m]);
-for (const group of seenBody.values()) if (group.length > 1) for (const m of group) m.warnings.push(`identical mail sent ${group.length}x to ${m.to}`);
+for (const group of seenBody.values()) if (group.length > 1) for (const m of group) m.problems.push(`identical mail sent ${group.length}x to ${m.to}`);
 const warned = mails.filter((m) => m.warnings.length);
 
 const missing = Object.keys(KINDS).filter((k) => !mails.some((m) => m.kind === k));

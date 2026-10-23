@@ -79,12 +79,15 @@ export const email: Handler<"email"> = async (p) => {
       const db = getDb();
       const business = await db.getBusiness(p.businessId);
       if (!business) throw new Error(`business ${p.businessId} not found`);
-      const m = directoryCorrectionEmail(p.directory, p.listingUrl ?? null, p.diff, {
-        business: { name: business.name, place: business.place, ownerEmail: business.ownerEmail, kvk: business.kvk },
-        factsPageUrl: factsPageUrl(business),
-      });
+      const m = directoryCorrectionEmail(
+        p.directory,
+        p.listingUrl ?? null,
+        p.diff,
+        { business: { name: business.name, place: business.place, ownerEmail: business.ownerEmail, kvk: business.kvk }, factsPageUrl: factsPageUrl(business) },
+        p.reminder ? { reminderOf: p.firstSentAt ?? null } : {},
+      );
       const r = await sendMail({ to: p.to, subject: m.subject, text: m.text, replyTo: business.ownerEmail ?? undefined, tags: { kind: "directory_correction" } });
-      await db.logEvent(business.id, "email.directory_correction", { to: p.to, directory: p.directory, channelId: p.channelId ?? null, mode: r.mode, id: r.id });
+      await db.logEvent(business.id, "email.directory_correction", { to: p.to, directory: p.directory, channelId: p.channelId ?? null, reminder: p.reminder ?? false, mode: r.mode, id: r.id });
       return { mode: r.mode, id: r.id };
     }
     default:
