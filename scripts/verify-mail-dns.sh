@@ -26,8 +26,10 @@ elif echo "$dmarc" | grep -qi 'rua=mailto:julian@'; then ok "DMARC reporting to 
 elif echo "$dmarc" | grep -qi 'rua=mailto:'; then bad "DMARC rua is not julian@$d: an address on another domain gets no reports unless that domain publishes $d._report._dmarc (docs/mail.md)"; note "$dmarc"
 else bad "DMARC has no rua, so no reports arrive"; note "$dmarc"; fi
 
-if [ -n "$(dig +short TXT "google._domainkey.$d")" ]; then ok "Google DKIM record present"
-else bad "Google DKIM (google._domainkey) missing"; fi
+dkim=$(dig +short TXT "google._domainkey.$d")
+if [ -z "$dkim" ]; then bad "Google DKIM (google._domainkey) missing"
+elif echo "$dkim" | grep -q 'v=DKIM1' && echo "$dkim" | grep -q 'p=MII'; then ok "Google DKIM record present"
+else bad "google._domainkey exists but holds no DKIM key (paste the value from Google Admin → Gmail → Authenticate email)"; note "$(echo "$dkim" | cut -c1-70)"; fi
 
 if [ -n "$(dig +short TXT "$d" | grep -i google-site-verification)" ]; then ok "Workspace site-verification present"
 else bad "google-site-verification TXT missing (Workspace cannot verify the domain)"; fi
