@@ -25,6 +25,7 @@ The page shows one card per kind: recipient, sender, subject, the HTML and the p
 | No `undefined`, `NaN`, `[object Object]`, `{{ }}` in subject or body | yes |
 | Every link to our own site points to a page or route that exists in `apps/web/app` | yes |
 | Commercial mail (follow-ups) carries `List-Unsubscribe` | yes |
+| Owner mail carries the Vidalo-branded HTML (logo, company line); third-party mail is plain text | yes |
 | The same mail to the same third party more than once | yes |
 
 CI runs `pnpm mail:lab` in the `check` job, so a broken template fails the PR.
@@ -60,3 +61,15 @@ The template is the same in both languages today.
 
 - **Directories got the same correction mail again and again**: every sync re-sent it, 14 to 46 times to one directory in one lab run. Fixed the same day: one correction per set of corrected details, one reminder after 30 days, then nothing until the details change (`publisher/index.ts`, `CORRECTION_REMINDER_DAYS`). The lab now fails on any repeat.
 - **All mails are Dutch**, also for an owner who chose English (CLAUDE.md, language preference).
+
+## Branding (23 Oct 2026)
+
+Every mail Vidalo sends in its own voice goes through `textToHtml` in `packages/core/src/reporter/templates.ts`, which is design G in an e-mail:
+- the mark and the `vidalo` wordmark, built in HTML so nothing has to load
+- ink text, blue links and 1.5px lines
+- Plus Jakarta Sans where the mail client has it
+- a coloured dot on the "Stip:" line
+- bold ink for short lines that open a block, monospace panels for `robots.txt` lines
+- the company line from the site footer
+
+The mails are light only. The owner mails that the fixer and the site check queue as plain text get the same HTML in the worker (`OWNER_TEXT_KINDS` in `apps/worker/src/jobs/misc.ts`). Letters to directories and websites stay plain text, because they are signed by the owner.

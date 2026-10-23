@@ -207,6 +207,10 @@ for (const f of (await readdir(mailDir)).sort()) {
     if (!routes.some((r) => r.test(p))) m.problems.push(`link to a page that does not exist: ${u.pathname}`);
   }
   if (m.kind.startsWith("followup") && !m.headers["List-Unsubscribe"]) m.problems.push("commercial mail without List-Unsubscribe");
+  // Vidalo speaks: the branded HTML (logo + company line). A letter to a third party is signed by the owner: plain text.
+  if (want?.to === "owner" && !m.html?.includes('data-brand="vidalo"')) m.problems.push("owner mail without the Vidalo-branded HTML");
+  if (want?.to === "owner" && m.html && !m.html.includes("A101 B.V.")) m.problems.push("owner mail without the company line");
+  if (want?.to === "third_party" && m.html) m.problems.push("third-party mail carries Vidalo HTML; it is a letter from the owner");
   mails.push(m);
 }
 
