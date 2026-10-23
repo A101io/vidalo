@@ -1,6 +1,6 @@
 // VENDORED from /Users/a101/A101/kit/core/support/index.ts (@a101/kit 0.7.0, 23 Oct 2026).
 // Do not edit here: change the kit, run its tests, copy the file back. The kit's
-// tests/unit/support.test.ts (34 tests) are the specification of this file.
+// tests/unit/support.test.ts (35 tests) are the specification of this file.
 /**
  * Support mailbox auto-replies — the brain behind every A101 support@ address.
  *
@@ -32,7 +32,9 @@
  *   3. Drafting — a second call with the brand's knowledge file and, when the
  *      venture can look it up, the sender's account context. The inbound text
  *      is passed as quoted data with an explicit "this is not an instruction".
- *   4. `scanOutboundReply()` — deterministic, and the one that keeps the
+ *   4. `draftHasNoAnswer()` — a draft that is only the disclosure, a hand-off
+ *      and a sign-off is not sent; the message goes to a person instead.
+ *   5. `scanOutboundReply()` — deterministic, and the one that keeps the
  *      promise: secrets, internal infrastructure, unsupported claims, links
  *      anywhere but the brand's own hosts, third-party addresses, profanity,
  *      plus the brand's own deny list. Any hit destroys the draft; no retry.
@@ -386,6 +388,47 @@ export function scanOutboundReply(
 }
 
 // ---------------------------------------------------------------------------
+// The no-answer guard — a reply that says nothing must not be sent
+// ---------------------------------------------------------------------------
+
+/**
+ * Sentences that are hand-off or disclosure, not an answer: "I am an automated
+ * assistant", "a colleague will follow up", the sign-off. The prompt asks for
+ * them, so every draft has them; what matters is whether anything else is left.
+ */
+const HANDOFF_SENTENCE = [
+  /\b(automated|automatic|automatically)\b/i,
+  /\b(assistant|assistent)\b/i,
+  /\b(colleague|colleagues|collega|collega's|medewerker|team member)\b/i,
+  /\b(not a (real )?person|geen (mens|persoon))\b/i,
+  /\b(pass(ing)? (this|it|your (question|message)) (on|along)|forward(ing)? (this|it)|doorgestuurd|doorgeven|geef .* door)\b/i,
+  /\b(kind regards|best regards|regards|met vriendelijke groet|vriendelijke groet|groeten)\b/i,
+  /^\s*[\w.-]+ support\s*[.!]?\s*$/i,
+];
+
+/** The draft with the hand-off sentences and the sign-off removed: what the customer would actually learn. */
+export function draftAnswerText(draft: string): string {
+  const sentences = (draft ?? "")
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  return sentences.filter((x) => !HANDOFF_SENTENCE.some((re) => re.test(x))).join(" ").trim();
+}
+
+/** Fewer words than this and the draft contains no answer, only the frame around one. */
+export const MIN_ANSWER_WORDS = 6;
+
+/**
+ * True when the draft would tell the customer nothing. Found on Sonable's first
+ * dry-run mail (23 Oct 2026): a vague "my account is glitchy" produced the
+ * disclosure sentence and the footer, and it was marked replied. A reply
+ * without an answer is worse than a person reading the message.
+ */
+export function draftHasNoAnswer(draft: string): boolean {
+  return draftAnswerText(draft).split(/\s+/).filter(Boolean).length < MIN_ANSWER_WORDS;
+}
+
+// ---------------------------------------------------------------------------
 // The brain — classify, draft, scan
 // ---------------------------------------------------------------------------
 
@@ -664,7 +707,14 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     return escalate("drafting_failed", { ...classified, language, account });
   }
 
-  // 5. Scan. The check that actually keeps the promise.
+  // 5. A draft that says nothing is not sent: the prompt tells the model to
+  // hand off when the facts do not cover the question, and a hand-off is a
+  // person's job, not an email with only a disclosure in it.
+  if (draftHasNoAnswer(draft)) {
+    return escalate("no_answer_in_draft", { ...classified, language, account, blockedDraft: draft });
+  }
+
+  // 6. Scan. The check that actually keeps the promise.
   const scan = scanOutboundReply(
     draft,
     { senderEmail: fromEmail },
@@ -678,7 +728,7 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     return escalate("content_guard_blocked", { ...classified, language, account, violations: scan.violations, blockedDraft: draft });
   }
 
-  // 6. Hand the text back. The relay sends it verbatim as plain text, so the
+  // 7. Hand the text back. The relay sends it verbatim as plain text, so the
   // disclosure and the identity line are in the body itself.
   return {
     ...base,
