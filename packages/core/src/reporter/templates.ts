@@ -12,6 +12,7 @@ import { criteriumFor, severityOf } from "../criteria.js";
 import { findingWordsNl, hostOfUrl, notFoundCountNl, visibilityLineNl } from "../shared/facts-nl.js";
 import { fixPathForFinding } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
+import { BRAND, renderMail } from "./layout.js";
 
 export interface Mail {
   subject: string;
@@ -40,15 +41,6 @@ function esc(s: string): string {
  * show without loading anything; Outlook desktop draws the mark square.
  * Light only, like the site. Colours are the tokens in apps/web/app/globals.css.
  */
-const BRAND = {
-  ink: "#111827",
-  ink2: "#374151",
-  muted: "#666d7b",
-  line: "#e7e3dc",
-  blue: "#2563eb",
-  font: "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-  stip: { rood: "#d41b44", oranje: "#f59e0b", groen: "#2b7a53", grijs: "#9ca3af" } as Record<string, string>,
-};
 
 function linkify(line: string): string {
   return esc(line).replace(/(https?:\/\/[^\s)]+)/g, `<a href="$1" style="color:${BRAND.blue};text-decoration:underline;word-break:break-all">$1</a>`);
@@ -62,7 +54,7 @@ export function textToHtml(text: string): string {
       const raw = p.split("\n");
       const lines = raw.map(linkify);
       // "Stip: rood. ..." gets its dot in the status colour (status colours only in dots).
-      const stip = /^Stip: (rood|oranje|groen|grijs)\b/i.exec(p)?.[1]?.toLowerCase();
+      const stip = /^Stip: (rood|oranje|groen|grijs)\b/i.exec(p)?.[1]?.toLowerCase() as Stip | undefined;
       const dot = stip ? `<span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${BRAND.stip[stip]};margin-right:8px;vertical-align:0"></span>` : "";
       // Structure without new wording: a short line opening a block ("Over: ...", "1. Bevestig je gegevens") and a
       // short title on its own ("Wie AI wel noemt", "Afhaker (6): ...") are set in ink, bold. Greetings keep their weight.
@@ -239,6 +231,49 @@ export function notFoundParagraph(d: { business: Pick<Business, "name">; notFoun
   return parts.join(" ");
 }
 
+
+// ---------------------------------------------------------------------------
+// shared pieces of the customer mails (layout.ts renders them)
+// ---------------------------------------------------------------------------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const plus = (iso: string, days: number) => formatDateNl(new Date(Date.parse(iso) + days * DAY_MS).toISOString());
+const SEVERITY_ORDER: Record<Severity, number> = { afhaker: 0, misleider: 1, verwarring: 2 };
+const SEVERITY_TONE: Record<Severity, Stip> = { afhaker: "rood", misleider: "oranje", verwarring: "grijs" };
+
+/** The most serious findings first (afhakers, then how often the answer came), at most `max`, as cards in the wording of findingBlock. */
+export function exampleCards(findings: Finding[], max = 3): { title: string; lines: string[]; tone: Stip }[] {
+  return [...findings]
+    .sort((a, b) => SEVERITY_ORDER[severityFor(a)] - SEVERITY_ORDER[severityFor(b)] || b.frequency / (b.sampleCount || 1) - a.frequency / (a.sampleCount || 1))
+    .slice(0, max)
+    .map((f) => {
+      const [title, ...lines] = findingBlock(f).split("\n");
+      return { title: title!, lines: lines.filter((l) => !l.startsWith("Wat we doen:")), tone: SEVERITY_TONE[severityFor(f)] };
+    });
+}
+
+/** "Wie AI wel noemt" for the first recommendation question where the business was left out: one card that shows what is at stake. */
+function namedCard(recs: RecommendationSummary[] | undefined): { title: string; lines: string[] } | null {
+  const N = copy.result.named;
+  const r = (recs ?? []).find((x) => x.pool === "core" && x.named < x.answers && x.others.length > 0);
+  if (!r) return null;
+  return { title: `Vraag: ${r.prompt}`, lines: [N.you(r.named, r.answers), `${N.others}: ${r.others.slice(0, 3).map((o) => `${o.name} (${N.times(o.answers)})`).join(", ")}`] };
+}
+
+/** What happens once Vidalo works on it, in the order and the time the fix paths take (fixer/paths.ts: 7 to 30 days). */
+const HOW_WE_FIX = {
+  title: "Zo herstellen wij het",
+  items: [
+    { when: "Dag 1", what: "We leggen je gegevens vast en zetten je feitenpagina live." },
+    { when: "Week 1", what: "We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple." },
+    { when: "Week 1 tot 4", what: "We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt." },
+    { when: "Elke maand", what: "Een nieuwe controle van alle vragen, met een kort rapport." },
+  ],
+};
+
+const offerNote = (setup: number, monitor: number) => `Liever dat wij het herstellen? Instellen kost ${setup} euro eenmalig, bewaking ${monitor} euro per maand, maandelijks opzegbaar. Prijzen excl. btw.`;
+
+
 // ---------------------------------------------------------------------------
 // 1. Welcome after checkout (4 steps)
 // ---------------------------------------------------------------------------
@@ -253,37 +288,36 @@ export interface WelcomeData {
 export function welcomeEmail(d: WelcomeData): Mail {
   const subject = `Welkom bij Vidalo: 4 stappen voor ${d.business.name}`;
   const dns = d.cname
-    ? `2. Eén DNS-regel
-   Maak bij je domeinbeheerder een CNAME aan:
-   ${d.cname.host}  →  ${d.cname.target}
-   Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres.`
-    : `2. Feitenpagina
-   Je hebt geen eigen domein opgegeven. We zetten je feitenpagina op ${d.links.factsPageUrl ?? "ons adres"}. Later verhuizen kan altijd.`;
-  const text = `Hoi,
-
-Bedankt voor je bestelling. Vanaf nu controleren we wat AI over ${d.business.name} zegt en herstellen we fouten bij de bron. Om te starten vragen we 4 dingen van je. Samen ongeveer 5 minuten.
-
-1. Bevestig je gegevens
-   Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na.
-   ${d.links.confirmFactsUrl}
-
-${dns}
-
-3. Log één keer in bij Google
-   Daarmee mogen we je Google Bedrijfsprofiel lezen en de openingstijden, het telefoonnummer en de website gelijk zetten.
-   ${d.links.googleConnectUrl}
-
-4. Wij doen de rest
-   Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we direct bij; bij Bing en Apple dienen we de wijziging in en bewaken we de verwerking. De eerste volledige controle draait binnen 48 uur na je bevestiging; het resultaat krijg je per mail.
-
-Je overzicht: ${d.links.dashboardUrl}
-
-Vragen? Antwoord op deze mail.
-
-Groet,
-Vidalo
-`;
-  return mail(subject, text);
+    ? { title: "2. Eén DNS-regel", lines: ["Maak bij je domeinbeheerder een CNAME aan:", `${d.cname.host}  →  ${d.cname.target}`, "Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres."] }
+    : { title: "2. Feitenpagina", lines: [`Je hebt geen eigen domein opgegeven. We zetten je feitenpagina op ${d.links.factsPageUrl ?? "ons adres"}. Later verhuizen kan altijd.`] };
+  return renderMail({
+    subject,
+    preheader: `Vier stappen, samen ongeveer 5 minuten. Daarna doen wij de rest.`,
+    headline: `Welkom. Zo starten we voor ${d.business.name}.`,
+    blocks: [
+      { kind: "p", text: `Bedankt voor je bestelling. Vanaf nu controleren we wat AI over ${d.business.name} zegt en herstellen we fouten bij de bron. Om te starten vragen we 4 dingen van je. Samen ongeveer 5 minuten.` },
+      {
+        kind: "cards",
+        items: [
+          { title: "1. Bevestig je gegevens", lines: ["Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na."] },
+          dns,
+          { title: "3. Log één keer in bij Google", lines: ["Daarmee mogen we je Google Bedrijfsprofiel lezen en de openingstijden, het telefoonnummer en de website gelijk zetten.", d.links.googleConnectUrl] },
+          { title: "4. Wij doen de rest", lines: ["Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we direct bij; bij Bing en Apple dienen we de wijziging in en bewaken we de verwerking."] },
+        ],
+      },
+      { kind: "cta", label: "Bevestig je gegevens", url: d.links.confirmFactsUrl, note: `Je overzicht, met alles wat we doen: ${d.links.dashboardUrl}` },
+      {
+        kind: "steps",
+        title: "Wat je daarna van ons krijgt",
+        items: [
+          { when: "Binnen 48 uur", what: "Je eerste volledige controle, per mail, met de belangrijkste fouten." },
+          { when: "Daarna", what: "Een mail zodra een antwoord weer klopt, met het antwoord van voor en na." },
+          { when: "Elke maand", what: "Een nieuwe controle en een kort rapport. Alles staat in je overzicht." },
+        ],
+      },
+      { kind: "note", text: "Vragen? Antwoord op deze mail." },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +326,9 @@ Vidalo
 
 export interface BaselineData {
   business: Pick<Business, "name" | "place">;
+  /** a paying customer: the button goes to the account, else to the report page (links.resultUrl) with the offer */
+  paying?: boolean;
+  offer?: { setupEur: number; monitorEur: number };
   checkedAt: string;
   totalAnswers: number;
   wrongAnswers: number;
@@ -322,29 +359,59 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
         : d.wrongAnswers === 0
           ? `Eerste controle van ${d.business.name}: ${notFoundCountNl(notFoundFindings || d.notFoundAnswers || 0)}`
           : `Eerste controle van ${d.business.name}: ${d.wrongAnswers} ${d.wrongAnswers === 1 ? "antwoord klopt" : "antwoorden kloppen"} niet`;
-  const blocks = d.stip ? findingsBySeverityText(d.findings) : d.findings.slice(0, 8).map((f) => findingBlock(f)).join("\n\n");
   const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility, notFoundFindings });
-  const stip = stipParagraph(d);
-  const instable = instableText(d.instable);
-  const named = namedParagraph(d.recommendations);
-  const text = `Hoi,
-
-Op ${formatDateNl(d.checkedAt)} stelden we ${d.totalAnswers} vragen over ${d.business.name} aan ${engines}. ${
-    d.wrongAnswers === 0 && !nf
-      ? "Alle antwoorden klopten. We controleren volgende maand opnieuw."
-      : d.wrongAnswers === 0
-        ? "Geen verkeerde antwoorden."
-        : `${d.wrongAnswers} ${d.wrongAnswers === 1 ? "antwoord klopte" : "antwoorden klopten"} niet. Dit is wat we vonden en wat we eraan doen.`
-  }
-${stip ? `\n${stip}\n` : ""}${nf ? `\n${nf}\n` : ""}${blocks ? `\n${blocks}\n` : ""}${d.findings.length > 8 ? `\nEn nog ${d.findings.length - 8} ${d.findings.length - 8 === 1 ? "fout" : "fouten"}, zie je overzicht.\n` : ""}${named ? `\n${named}\n` : ""}${instable ? `\n${instable}\n` : ""}
-Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
-
-Je overzicht: ${d.links.dashboardUrl}
-
-Groet,
-Vidalo
-`;
-  return mail(subject, text);
+  // Paying: the full picture is the account. Before that: the report page, which needs no account.
+  const full = d.paying ? { label: "Bekijk alles in je overzicht", url: d.links.dashboardUrl, where: "in je overzicht" } : { label: "Bekijk je volledige resultaat", url: d.links.resultUrl ?? d.links.dashboardUrl, where: "in je resultaat" };
+  const cards = exampleCards(d.findings);
+  const more = d.findings.length - cards.length;
+  const named = namedCard(d.recommendations);
+  const per = (d.engineStips ?? []).map((e) => `${engineName(e.engine)}: ${copy.stip[e.stip].toLowerCase()}`);
+  const recheck = d.findings.map((f) => fixPathForFinding(f).recheckDays).filter((n) => n > 0);
+  const headline =
+    d.wrongAnswers > 0
+      ? `${d.wrongAnswers} van de ${d.totalAnswers} antwoorden over ${d.business.name} kloppen niet`
+      : visibility === "unknown"
+        ? `AI vindt (bijna) niets over ${d.business.name}`
+        : nf
+          ? `AI vindt een deel van ${d.business.name} niet`
+          : `Alle ${d.totalAnswers} antwoorden over ${d.business.name} kloppen`;
+  return renderMail({
+    subject,
+    preheader: d.wrongAnswers > 0 ? `De belangrijkste fouten staan in deze mail, de rest ${full.where}.` : `We controleren elke maand opnieuw.`,
+    headline,
+    stip: d.stip,
+    stipText: d.stip ? `${copy.stipMeaning[d.stip]}. ${copy.stipLine[d.stip]}` : undefined,
+    blocks: [
+      { kind: "p", text: `Op ${formatDateNl(d.checkedAt)} stelden we ${d.totalAnswers} vragen over ${d.business.name} aan ${engines}.` },
+      ...(per.length ? [{ kind: "note" as const, text: `Per AI: ${per.join(", ")}.` }] : []),
+      {
+        kind: "stats",
+        items: [
+          { value: String(d.totalAnswers), label: "antwoorden gecontroleerd" },
+          { value: String(d.wrongAnswers), label: d.wrongAnswers === 1 ? "klopte niet" : "klopten niet" },
+          ...(d.notFoundAnswers ? [{ value: String(d.notFoundAnswers), label: "waren leeg" }] : []),
+        ],
+      },
+      ...(nf ? [{ kind: "p" as const, text: nf }] : []),
+      ...(cards.length ? [{ kind: "cards" as const, title: cards.length === 1 ? "De fout" : "De belangrijkste fouten", items: cards }] : []),
+      ...(more > 0 ? [{ kind: "p" as const, text: `En nog ${more} ${more === 1 ? "fout" : "fouten"}. Alles staat ${full.where}, met de bron van elke fout en wat we eraan doen.` }] : []),
+      ...(named ? [{ kind: "cards" as const, title: copy.result.named.h2, items: [named] }] : []),
+      { kind: "cta", label: full.label, url: full.url, note: d.paying ? undefined : d.offer ? offerNote(d.offer.setupEur, d.offer.monitorEur) : undefined },
+      d.paying
+        ? {
+            kind: "steps",
+            title: "Wat er nu gebeurt",
+            items: [
+              { when: "Vandaag", what: "We dienen de eerste correcties in bij de bronnen.", done: true },
+              ...(recheck.length ? [{ when: `Rond ${plus(d.checkedAt, Math.min(...recheck))}`, what: "De eerste hercontroles. Je hoort het zodra een antwoord weer klopt." }] : []),
+              // The last rechecks only get their own line when they fall before the monthly check.
+              ...(recheck.length && Math.max(...recheck) > Math.min(...recheck) && Math.max(...recheck) < 30 ? [{ when: `Rond ${plus(d.checkedAt, Math.max(...recheck))}`, what: "De laatste bronnen opnieuw gecontroleerd." }] : []),
+              { when: `Rond ${plus(d.checkedAt, 30)}`, what: "Je volgende maandcontrole." },
+            ],
+          }
+        : { kind: "steps", ...HOW_WE_FIX },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -364,26 +431,23 @@ export function resolutionNoticeEmail(d: ResolutionData): Mail {
   const w = findingWordsNl(d.finding);
   const engine = engineName(d.finding.engine);
   const subject = `Hersteld: ${engine} zegt nu "${w.correct}" over ${d.business.name}`;
-  const text = `Hoi,
-
-${engine} gaf een verkeerd antwoord over ${w.what} van ${d.business.name}. Dat is hersteld.
-
-Voor (${formatDateNl(d.before.at)}):
-"${d.before.quote}"
-
-Na (${formatDateNl(d.after.at)}):
-"${d.after.quote}"
-
-Bron: ${sourceLine(d.finding)}, hersteld in ${d.days} ${d.days === 1 ? "dag" : "dagen"}.
-
-We blijven dit antwoord elke maand controleren.
-
-Je overzicht: ${d.links.dashboardUrl}
-
-Groet,
-Vidalo
-`;
-  return mail(subject, text);
+  return renderMail({
+    subject,
+    preheader: `Van "${d.before.quote.slice(0, 60)}" naar het goede antwoord, in ${d.days} ${d.days === 1 ? "dag" : "dagen"}.`,
+    headline: `${engine} geeft weer het goede antwoord over ${w.what}`,
+    blocks: [
+      { kind: "p", text: `${engine} gaf een verkeerd antwoord over ${w.what} van ${d.business.name}. Dat is hersteld.` },
+      {
+        kind: "cards",
+        items: [
+          { title: `Voor (${formatDateNl(d.before.at)})`, lines: [`"${d.before.quote}"`], tone: "rood" },
+          { title: `Na (${formatDateNl(d.after.at)})`, lines: [`"${d.after.quote}"`], tone: "groen" },
+        ],
+      },
+      { kind: "p", text: `Bron: ${sourceLine(d.finding)}, hersteld in ${d.days} ${d.days === 1 ? "dag" : "dagen"}. We blijven dit antwoord elke maand controleren.` },
+      { kind: "cta", label: "Bekijk je overzicht", url: d.links.dashboardUrl },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -435,34 +499,44 @@ export interface MonthlyReportData {
 export function monthlyReportEmail(d: MonthlyReportData): Mail {
   const line = statusLine(d);
   const subject = d.stip ? `${d.business.name} in ${d.month}: ${copy.stip[d.stip].toLowerCase()}, ${line}` : `${d.business.name} in ${d.month}: ${line}`;
-  const proofs = d.proofCards
-    .map((p) => `${engineName(p.engine)} zei: "${p.before}"\nNu: "${p.after}"\nBron: ${p.source}, hersteld in ${p.days} ${p.days === 1 ? "dag" : "dagen"}.`)
-    .join("\n\n");
-  const nextStepOf = new Map(d.openFindings.map((o) => [o.finding.id, o.nextStep]));
-  const open = d.stip
-    ? findingsBySeverityText(
-        d.openFindings.map((o) => o.finding),
-        { max: 50, nextStepFor: (f) => nextStepOf.get(f.id) ?? fixPathForFinding(f).labelNl },
-      )
-    : d.openFindings.map((o) => findingBlock(o.finding, { nextStep: o.nextStep })).join("\n\n");
   const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility: d.visibility, notFoundFindings: d.notFound });
-  const stip = stipParagraph(d);
-  const instable = instableText(d.instable);
-  const named = namedParagraph(d.recommendations);
-  const text = `Hoi,
-
-Controle van ${formatDateNl(d.checkedAt)}: ${line}.
-
-We stelden ${d.totalAnswers} vragen over ${d.business.name} aan ${d.engines.map(engineName).join(", ")}.
-${stip ? `\n${stip}\n` : ""}${nf ? `\n${nf}\n` : ""}${proofs ? `\nHersteld deze maand\n\n${proofs}\n` : ""}${open ? `\nNog open\n\n${open}\n` : ""}${
-    !proofs && !open ? "\nEr is niets te herstellen. Fijn.\n" : ""
-  }${named ? `\n${named}\n` : ""}${instable ? `\n${instable}\n` : ""}
-Alle antwoorden, met datum en bron: ${d.links.dashboardUrl}
-
-Groet,
-Vidalo
-`;
-  return mail(subject, text);
+  const proofs = d.proofCards.slice(0, 3).map((p) => ({ title: `${engineName(p.engine)} over ${p.what}`, lines: [`Was: "${p.before}"`, `Nu: "${p.after}"`, `Bron: ${p.source}, hersteld in ${p.days} ${p.days === 1 ? "dag" : "dagen"}.`], tone: "groen" as Stip }));
+  const open = exampleCards(d.openFindings.map((o) => o.finding));
+  const moreOpen = d.openFindings.length - open.length;
+  const moreProofs = d.proofCards.length - proofs.length;
+  return renderMail({
+    subject,
+    preheader: `${line}. Wat er hersteld is en wat er nu gebeurt.`,
+    headline: `${d.month[0]!.toUpperCase()}${d.month.slice(1)}: ${line}`,
+    stip: d.stip,
+    stipText: d.stip ? `${copy.stipMeaning[d.stip]}. ${copy.stipLine[d.stip]}` : undefined,
+    blocks: [
+      { kind: "p", text: `Controle van ${formatDateNl(d.checkedAt)}. We stelden ${d.totalAnswers} vragen over ${d.business.name} aan ${d.engines.map(engineName).join(", ")}.` },
+      {
+        kind: "stats",
+        items: [
+          { value: String(d.resolved), label: "hersteld" },
+          { value: String(d.inProgress), label: "in behandeling" },
+          ...(d.unfixable ? [{ value: String(d.unfixable), label: "niet te herstellen" }] : []),
+        ],
+      },
+      ...(nf ? [{ kind: "p" as const, text: nf }] : []),
+      ...(proofs.length ? [{ kind: "cards" as const, title: "Hersteld deze maand", items: proofs }] : []),
+      ...(moreProofs > 0 ? [{ kind: "p" as const, text: `En nog ${moreProofs} hersteld.` }] : []),
+      ...(open.length ? [{ kind: "cards" as const, title: "Nog open, de belangrijkste", items: open }] : []),
+      ...(moreOpen > 0 ? [{ kind: "p" as const, text: `En nog ${moreOpen} open. Bij elk staat in je overzicht wat we doen en wanneer we opnieuw kijken.` }] : []),
+      ...(!proofs.length && !open.length ? [{ kind: "p" as const, text: "Er is niets te herstellen. Fijn." }] : []),
+      { kind: "cta", label: "Bekijk alles in je overzicht", url: d.links.dashboardUrl },
+      {
+        kind: "steps",
+        title: "De komende weken",
+        items: [
+          { when: "Tussendoor", what: "Een mail zodra een antwoord weer klopt, met het antwoord van voor en na." },
+          { when: `Rond ${plus(d.checkedAt, 30)}`, what: "Je volgende maandcontrole." },
+        ],
+      },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -483,42 +557,37 @@ export interface FollowUpData {
 export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
   const w = d.example ? findingWordsNl(d.example) : null;
   const engine = d.example ? engineName(d.example.engine) : "ChatGPT";
+  const example = d.example ? exampleCards([d.example], 1) : [];
+  const cta = { kind: "cta" as const, label: "Bekijk je volledige resultaat", url: d.links.resultUrl, note: offerNote(d.priceSetupEur, d.priceMonitorEur) };
   if (day === 7) {
     const subject = `${d.wrongAnswers} ${d.wrongAnswers === 1 ? "antwoord" : "antwoorden"} over ${d.business.name} ${d.wrongAnswers === 1 ? "klopt" : "kloppen"} niet`;
-    const text = `Hoi,
-
-Een week geleden controleerden we wat AI over ${d.business.name} zegt. Van de ${d.totalAnswers} antwoorden klopten er ${d.wrongAnswers} niet.${
-      w ? ` ${engine} zei bijvoorbeeld "${w.wrong}" over ${w.what}; het is ${w.correct}.` : ""
-    }
-
-Een klant die dit vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert.
-
-Het volledige resultaat, met de bron van elke fout: ${d.links.resultUrl}
-
-Zelf oplossen kan: de bronnen staan erbij. Liever dat wij het doen? Instellen kost ${d.priceSetupEur} euro eenmalig, bewaking ${d.priceMonitorEur} euro per maand, maandelijks opzegbaar. Prijzen excl. btw.
-
-Groet,
-Vidalo
-
-Geen mails meer hierover? Afmelden: ${d.links.unsubscribeUrl}
-`;
-    return mail(subject, text);
+    return renderMail({
+      subject,
+      preheader: w ? `${engine} zegt "${w.wrong}" over ${w.what}. Het is ${w.correct}.` : `De bron van elke fout staat in je resultaat.`,
+      headline: `${d.wrongAnswers} van de ${d.totalAnswers} antwoorden over ${d.business.name} kloppen niet`,
+      blocks: [
+        { kind: "p", text: `Een week geleden controleerden we wat AI over ${d.business.name} zegt. Een klant die het vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert.` },
+        ...(example.length ? [{ kind: "cards" as const, title: "Bijvoorbeeld", items: example }] : []),
+        { kind: "p", text: "Zelf oplossen kan: de bronnen staan in je resultaat." },
+        cta,
+        { kind: "steps", ...HOW_WE_FIX },
+      ],
+      unsubscribeUrl: d.links.unsubscribeUrl,
+    });
   }
   const subject = w ? `Nog steeds "${w.wrong}"` : `Nog steeds ${d.wrongAnswers} ${d.wrongAnswers === 1 ? "fout" : "fouten"} over ${d.business.name}`;
-  const text = `Hoi,
-
-Drie weken geleden zagen we dat ${w ? `${engine} "${w.wrong}" zegt over ${w.what} van ${d.business.name}` : `${d.wrongAnswers} antwoorden over ${d.business.name} niet klopten`}. We hebben het vandaag opnieuw gecontroleerd. Het staat er nog.
-
-Resultaat: ${d.links.resultUrl}
-
-Dit is de laatste mail hierover. Wil je dat wij de bronnen herstellen, dan regel je dat via de link. Zo niet, dan laten we je met rust.
-
-Groet,
-Vidalo
-
-Geen mails meer hierover? Afmelden: ${d.links.unsubscribeUrl}
-`;
-  return mail(subject, text);
+  return renderMail({
+    subject,
+    preheader: `We hebben het vandaag opnieuw gecontroleerd. Dit is de laatste mail hierover.`,
+    headline: w ? `${engine} zegt nog steeds "${w.wrong}"` : `Nog steeds ${d.wrongAnswers} fouten over ${d.business.name}`,
+    blocks: [
+      { kind: "p", text: `Drie weken geleden zagen we dat ${w ? `${engine} "${w.wrong}" zegt over ${w.what} van ${d.business.name}` : `${d.wrongAnswers} antwoorden over ${d.business.name} niet klopten`}. We hebben het vandaag opnieuw gecontroleerd. Het staat er nog.` },
+      ...(example.length ? [{ kind: "cards" as const, items: example }] : []),
+      cta,
+      { kind: "note", text: "Dit is de laatste mail hierover. Wil je dat wij de bronnen herstellen, dan regel je dat via je resultaat. Zo niet, dan laten we je met rust." },
+    ],
+    unsubscribeUrl: d.links.unsubscribeUrl,
+  });
 }
 
 // ---------------------------------------------------------------------------

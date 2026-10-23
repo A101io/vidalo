@@ -73,3 +73,15 @@ Every mail Vidalo sends in its own voice goes through `textToHtml` in `packages/
 - the company line from the site footer
 
 The mails are light only. The owner mails that the fixer and the site check queue as plain text get the same HTML in the worker (`OWNER_TEXT_KINDS` in `apps/worker/src/jobs/misc.ts`). Letters to directories and websites stay plain text, because they are signed by the owner.
+
+## The customer mails are summaries (23 Oct 2026)
+
+The first report, the follow-ups, the monthly report, the welcome and the resolved notice are built from blocks in `packages/core/src/reporter/layout.ts`. One source renders both the HTML and the plain text. Each mail is a summary:
+- a headline, with the colour dot when there is one
+- a row of counts
+- at most 3 examples, the most serious first, in the wording of `findingBlock`
+- one blue button
+- "Wat er nu gebeurt": real next dates for a paying owner; for a prospect, "Zo herstellen wij het", in the timing the fix paths take
+- a hidden preview line, so Gmail does not show the wordmark first
+
+The full picture lives in the account (`/app`) for a paying owner, and on the report page (`/r/…`) for someone who only did the free check. Following `docs/MESSAGING.md`: no countdowns, no scarcity, no exclamation marks, counts and dots instead of scores.

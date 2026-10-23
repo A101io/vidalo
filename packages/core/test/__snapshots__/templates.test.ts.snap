@@ -5,17 +5,26 @@ exports[`email templates > snapshots > baseline 1`] = `
 
 Hoi,
 
-Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot. 1 antwoord klopte niet. Dit is wat we vonden en wat we eraan doen.
+1 van de 100 antwoorden over Bakkerij Jansen kloppen niet
+
+Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+100 antwoorden gecontroleerd · 1 klopte niet
+
+De fout
 
 Over: de openingstijden op zondag
 ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
 Klopt niet. Het is: gesloten
 Waar het vandaan komt: openingstijden.nl
-Wat we doen: We vragen de bron uit jouw naam om de gegevens te corrigeren.
 
-Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
 
-Je overzicht: https://vidalo.io/dashboard
+Zo herstellen wij het
+- Dag 1: We leggen je gegevens vast en zetten je feitenpagina live.
+- Week 1: We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple.
+- Week 1 tot 4: We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt.
+- Elke maand: Een nieuwe controle van alle vragen, met een kort rapport.
 
 Groet,
 Vidalo
@@ -27,11 +36,19 @@ exports[`email templates > snapshots > baselineClean 1`] = `
 
 Hoi,
 
-Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT. Alle antwoorden klopten. We controleren volgende maand opnieuw.
+Alle 100 antwoorden over Bakkerij Jansen kloppen
 
-Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
+Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT.
 
-Je overzicht: https://vidalo.io/dashboard
+100 antwoorden gecontroleerd · 0 klopten niet
+
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
+
+Zo herstellen wij het
+- Dag 1: We leggen je gegevens vast en zetten je feitenpagina live.
+- Week 1: We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple.
+- Week 1 tot 4: We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt.
+- Elke maand: Een nieuwe controle van alle vragen, met een kort rapport.
 
 Groet,
 Vidalo
@@ -43,34 +60,38 @@ exports[`email templates > snapshots > baselineNotFound 1`] = `
 
 Hoi,
 
-Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot. 1 antwoord klopte niet. Dit is wat we vonden en wat we eraan doen.
+1 van de 100 antwoorden over Bakkerij Jansen kloppen niet
+
+Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+100 antwoorden gecontroleerd · 1 klopte niet · 70 waren leeg
 
 3 vragen: AI vindt niets over je. 70 antwoorden waren leeg: de AI zei dat het geen informatie over je heeft. AI vindt (bijna) niets over Bakkerij Jansen. Je bestaat niet in het antwoord. Dat tellen we niet als fout, maar het betekent wel dat een klant die het vraagt, geen antwoord krijgt. We maken je feitenpagina, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren na 3 weken of je genoemd wordt.
+
+De belangrijkste fouten
+
+Over: de openingstijden op zondag
+ChatGPT vond niets over de openingstijden op zondag (8 van de 10 keer)
+Niet gevonden. Jouw gegeven is: gesloten
+
+Over: het telefoonnummer
+ChatGPT vond niets over het telefoonnummer (8 van de 10 keer)
+Niet gevonden. Jouw gegeven is: gesloten
 
 Over: de openingstijden op zondag
 ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
 Klopt niet. Het is: gesloten
 Waar het vandaan komt: openingstijden.nl
-Wat we doen: We vragen de bron uit jouw naam om de gegevens te corrigeren.
 
-Over: de openingstijden op zondag
-ChatGPT vond niets over de openingstijden op zondag (8 van de 10 keer)
-Niet gevonden. Jouw gegeven is: gesloten
-Wat we doen: Niet gevonden: we maken je vindbaar
+En nog 1 fout. Alles staat in je resultaat, met de bron van elke fout en wat we eraan doen.
 
-Over: het telefoonnummer
-ChatGPT vond niets over het telefoonnummer (8 van de 10 keer)
-Niet gevonden. Jouw gegeven is: gesloten
-Wat we doen: Niet gevonden: we maken je vindbaar
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
 
-Over: het adres
-ChatGPT vond niets over het adres (8 van de 10 keer)
-Niet gevonden. Jouw gegeven is: gesloten
-Wat we doen: Niet gevonden: we maken je vindbaar
-
-Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
-
-Je overzicht: https://vidalo.io/dashboard
+Zo herstellen wij het
+- Dag 1: We leggen je gegevens vast en zetten je feitenpagina live.
+- Week 1: We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple.
+- Week 1 tot 4: We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt.
+- Elke maand: Een nieuwe controle van alle vragen, met een kort rapport.
 
 Groet,
 Vidalo
@@ -82,39 +103,40 @@ exports[`email templates > snapshots > baselineStip 1`] = `
 
 Hoi,
 
-Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot. 3 antwoorden klopten niet. Dit is wat we vonden en wat we eraan doen.
+3 van de 100 antwoorden over Bakkerij Jansen kloppen niet
 
 Stip: rood. AI stuurt klanten weg. Minstens één antwoord stuurt klanten weg. Dat herstellen we eerst.
+
+Op 2 oktober 2026 stelden we 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
 Per AI: ChatGPT: rood, Gemini: groen, Perplexity: oranje, Google AI: groen, Copilot: grijs.
 
-Afhaker (2): Eén fout en de klant komt niet.
+100 antwoorden gecontroleerd · 3 klopten niet
+
+De belangrijkste fouten
 
 Over: de openingstijden op zondag
 ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
 Klopt niet. Het is: gesloten
 Waar het vandaan komt: openingstijden.nl
-Wat we doen: We vragen de bron uit jouw naam om de gegevens te corrigeren.
 
 Over: het telefoonnummer
 ChatGPT zei: +31231234568 (2 van de 10 keer)
 Klopt niet. Het is: +31231234567
 Waar het vandaan komt: openingstijden.nl
-Wat we doen: We vragen de bron uit jouw naam om de gegevens te corrigeren.
-
-Misleider (1): De klant komt wel, maar voor het verkeerde.
 
 Aanbevelingsvraag over: of desembrood wordt aangeboden
 ChatGPT noemt je niet (7 van de 10 keer)
 Je wordt niet genoemd, terwijl dit bij je klopt. Jouw gegeven is: ja
 Geen bron: dit gegeven staat nergens waar AI het kan lezen.
-Wat we doen: Niet genoemd: we zetten dit gegeven op je feitenpagina en in je profielen, en controleren na 3 weken opnieuw.
 
-Instabiel (1): Dit antwoord klopte af en toe niet. Te zelden om te herstellen; we houden het in de gaten.
-- ChatGPT zei 1 van de 10 keer "€ 5,50" over de prijs van Desembrood; het is € 4,50.
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
 
-Elke fout controleren we opnieuw zodra de bron is aangepast. Je hoort van ons als een antwoord is hersteld, met het antwoord van voor en na.
-
-Je overzicht: https://vidalo.io/dashboard
+Zo herstellen wij het
+- Dag 1: We leggen je gegevens vast en zetten je feitenpagina live.
+- Week 1: We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple.
+- Week 1 tot 4: We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt.
+- Elke maand: Een nieuwe controle van alle vragen, met een kort rapport.
 
 Groet,
 Vidalo
@@ -201,13 +223,27 @@ exports[`email templates > snapshots > followup7 1`] = `
 
 Hoi,
 
-Een week geleden controleerden we wat AI over Bakkerij Jansen zegt. Van de 12 antwoorden klopten er 3 niet. ChatGPT zei bijvoorbeeld "10:00 tot 14:00" over de openingstijden op zondag; het is gesloten.
+3 van de 12 antwoorden over Bakkerij Jansen kloppen niet
 
-Een klant die dit vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert.
+Een week geleden controleerden we wat AI over Bakkerij Jansen zegt. Een klant die het vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert.
 
-Het volledige resultaat, met de bron van elke fout: https://vidalo.io/scan/bakkerij-jansen-haarlem
+Bijvoorbeeld
 
-Zelf oplossen kan: de bronnen staan erbij. Liever dat wij het doen? Instellen kost 149 euro eenmalig, bewaking 49 euro per maand, maandelijks opzegbaar. Prijzen excl. btw.
+Over: de openingstijden op zondag
+ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
+Klopt niet. Het is: gesloten
+Waar het vandaan komt: openingstijden.nl
+
+Zelf oplossen kan: de bronnen staan in je resultaat.
+
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
+Liever dat wij het herstellen? Instellen kost 149 euro eenmalig, bewaking 49 euro per maand, maandelijks opzegbaar. Prijzen excl. btw.
+
+Zo herstellen wij het
+- Dag 1: We leggen je gegevens vast en zetten je feitenpagina live.
+- Week 1: We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple.
+- Week 1 tot 4: We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt.
+- Elke maand: Een nieuwe controle van alle vragen, met een kort rapport.
 
 Groet,
 Vidalo
@@ -221,11 +257,19 @@ exports[`email templates > snapshots > followup21 1`] = `
 
 Hoi,
 
+ChatGPT zegt nog steeds "10:00 tot 14:00"
+
 Drie weken geleden zagen we dat ChatGPT "10:00 tot 14:00" zegt over de openingstijden op zondag van Bakkerij Jansen. We hebben het vandaag opnieuw gecontroleerd. Het staat er nog.
 
-Resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
+Over: de openingstijden op zondag
+ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
+Klopt niet. Het is: gesloten
+Waar het vandaan komt: openingstijden.nl
 
-Dit is de laatste mail hierover. Wil je dat wij de bronnen herstellen, dan regel je dat via de link. Zo niet, dan laten we je met rust.
+Bekijk je volledige resultaat: https://vidalo.io/scan/bakkerij-jansen-haarlem
+Liever dat wij het herstellen? Instellen kost 149 euro eenmalig, bewaking 49 euro per maand, maandelijks opzegbaar. Prijzen excl. btw.
+
+Dit is de laatste mail hierover. Wil je dat wij de bronnen herstellen, dan regel je dat via je resultaat. Zo niet, dan laten we je met rust.
 
 Groet,
 Vidalo
@@ -279,25 +323,31 @@ exports[`email templates > snapshots > report 1`] = `
 
 Hoi,
 
-Controle van 7 oktober 2026: 2 fouten gevonden, 1 hersteld, 1 in behandeling.
+Oktober 2026: 2 fouten gevonden, 1 hersteld, 1 in behandeling
 
-We stelden 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+Controle van 7 oktober 2026. We stelden 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+1 hersteld · 1 in behandeling
 
 Hersteld deze maand
 
-ChatGPT zei: "gesloten op maandag"
+ChatGPT over de openingstijden op zondag
+Was: "gesloten op maandag"
 Nu: "open 9–18"
 Bron: openingstijden.nl, hersteld in 12 dagen.
 
-Nog open
+Nog open, de belangrijkste
 
 Over: de openingstijden op zondag
 ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
 Klopt niet. Het is: gesloten
 Waar het vandaan komt: openingstijden.nl
-Wat we doen: We vragen de bron uit jouw naam om de gegevens te corrigeren.
 
-Alle antwoorden, met datum en bron: https://vidalo.io/dashboard
+Bekijk alles in je overzicht: https://vidalo.io/dashboard
+
+De komende weken
+- Tussendoor: Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.
+- Rond 6 november 2026: Je volgende maandcontrole.
 
 Groet,
 Vidalo
@@ -309,13 +359,19 @@ exports[`email templates > snapshots > reportClean 1`] = `
 
 Hoi,
 
-Controle van 7 oktober 2026: 12 van 12 antwoorden kloppen.
+Oktober 2026: 12 van 12 antwoorden kloppen
 
-We stelden 12 vragen over Bakkerij Jansen aan ChatGPT.
+Controle van 7 oktober 2026. We stelden 12 vragen over Bakkerij Jansen aan ChatGPT.
+
+0 hersteld · 0 in behandeling
 
 Er is niets te herstellen. Fijn.
 
-Alle antwoorden, met datum en bron: https://vidalo.io/dashboard
+Bekijk alles in je overzicht: https://vidalo.io/dashboard
+
+De komende weken
+- Tussendoor: Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.
+- Rond 6 november 2026: Je volgende maandcontrole.
 
 Groet,
 Vidalo
@@ -327,20 +383,25 @@ exports[`email templates > snapshots > reportNotFound 1`] = `
 
 Hoi,
 
-Controle van 7 oktober 2026: 3 in behandeling, 3 vragen: AI vindt niets over je.
+Oktober 2026: 3 in behandeling, 3 vragen: AI vindt niets over je
 
-We stelden 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+Controle van 7 oktober 2026. We stelden 100 vragen over Bakkerij Jansen aan ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+0 hersteld · 3 in behandeling
 
 3 vragen: AI vindt niets over je. 40 antwoorden waren leeg: de AI zei dat het geen informatie over je heeft. AI kent Bakkerij Jansen maar half: een deel van de antwoorden is leeg. Dat tellen we niet als fout, maar het betekent wel dat een klant die het vraagt, geen antwoord krijgt. We maken je feitenpagina, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren na 3 weken of je genoemd wordt.
 
-Nog open
+Nog open, de belangrijkste
 
 Over: de openingstijden op zondag
 ChatGPT vond niets over de openingstijden op zondag (8 van de 10 keer)
 Niet gevonden. Jouw gegeven is: gesloten
-Wat we doen: Niet gevonden: we maken je vindbaar
 
-Alle antwoorden, met datum en bron: https://vidalo.io/dashboard
+Bekijk alles in je overzicht: https://vidalo.io/dashboard
+
+De komende weken
+- Tussendoor: Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.
+- Rond 6 november 2026: Je volgende maandcontrole.
 
 Groet,
 Vidalo
@@ -352,19 +413,19 @@ exports[`email templates > snapshots > resolution 1`] = `
 
 Hoi,
 
+ChatGPT geeft weer het goede antwoord over de openingstijden op zondag
+
 ChatGPT gaf een verkeerd antwoord over de openingstijden op zondag van Bakkerij Jansen. Dat is hersteld.
 
-Voor (2 oktober 2026):
+Voor (2 oktober 2026)
 "Op zondag open van 10:00 tot 14:00."
 
-Na (14 oktober 2026):
+Na (14 oktober 2026)
 "Op zondag gesloten."
 
-Bron: openingstijden.nl, hersteld in 12 dagen.
+Bron: openingstijden.nl, hersteld in 12 dagen. We blijven dit antwoord elke maand controleren.
 
-We blijven dit antwoord elke maand controleren.
-
-Je overzicht: https://vidalo.io/dashboard
+Bekijk je overzicht: https://vidalo.io/dashboard
 
 Groet,
 Vidalo
@@ -416,25 +477,32 @@ exports[`email templates > snapshots > welcome 1`] = `
 
 Hoi,
 
+Welkom. Zo starten we voor Bakkerij Jansen.
+
 Bedankt voor je bestelling. Vanaf nu controleren we wat AI over Bakkerij Jansen zegt en herstellen we fouten bij de bron. Om te starten vragen we 4 dingen van je. Samen ongeveer 5 minuten.
 
 1. Bevestig je gegevens
-   Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na.
-   https://vidalo.io/dashboard/feiten
+Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na.
 
 2. Eén DNS-regel
-   Maak bij je domeinbeheerder een CNAME aan:
-   feiten.bakkerijjansen.nl  →  feiten.vidalo.io
-   Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres.
+Maak bij je domeinbeheerder een CNAME aan:
+feiten.bakkerijjansen.nl  →  feiten.vidalo.io
+Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres.
 
 3. Log één keer in bij Google
-   Daarmee mogen we je Google Bedrijfsprofiel lezen en de openingstijden, het telefoonnummer en de website gelijk zetten.
-   https://vidalo.io/dashboard/google
+Daarmee mogen we je Google Bedrijfsprofiel lezen en de openingstijden, het telefoonnummer en de website gelijk zetten.
+https://vidalo.io/dashboard/google
 
 4. Wij doen de rest
-   Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we direct bij; bij Bing en Apple dienen we de wijziging in en bewaken we de verwerking. De eerste volledige controle draait binnen 48 uur na je bevestiging; het resultaat krijg je per mail.
+Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we direct bij; bij Bing en Apple dienen we de wijziging in en bewaken we de verwerking.
 
-Je overzicht: https://vidalo.io/dashboard
+Bevestig je gegevens: https://vidalo.io/dashboard/feiten
+Je overzicht, met alles wat we doen: https://vidalo.io/dashboard
+
+Wat je daarna van ons krijgt
+- Binnen 48 uur: Je eerste volledige controle, per mail, met de belangrijkste fouten.
+- Daarna: Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.
+- Elke maand: Een nieuwe controle en een kort rapport. Alles staat in je overzicht.
 
 Vragen? Antwoord op deze mail.
 

@@ -22,6 +22,25 @@ const recommendationFinding = { ...finding, id: "f5", factKey: "service" as cons
 const phoneFinding = { ...finding, id: "f6", factKey: "phone" as const, subject: null, wrongValue: "+31231234568", correctValue: "+31231234567", frequency: 2, criterium: 2 as const };
 const instableFinding = { ...finding, id: undefined, status: undefined, firstSeenAt: undefined, resolvedAt: undefined, evidenceAfter: undefined, factKey: "price" as const, subject: "Desembrood", wrongValue: "5.5", correctValue: "4.5", frequency: 1, sampleCount: 10, instable: true as const, criterium: 9 as const };
 
+const baselineStipData: Parameters<typeof baselineSummaryEmail>[0] = {
+    business,
+    checkedAt: "2026-10-02T03:00:00Z",
+    totalAnswers: 100,
+    wrongAnswers: 3,
+    findings: [{ ...finding, criterium: 3 }, recommendationFinding, phoneFinding],
+    engines: ["chatgpt", "gemini", "perplexity", "google_ai", "copilot"],
+    links,
+    stip: "rood",
+    engineStips: [
+      { engine: "chatgpt", stip: "rood", usage: 0.83, counts: true },
+      { engine: "gemini", stip: "groen", usage: 0.12, counts: true },
+      { engine: "perplexity", stip: "oranje", usage: 0.04, counts: false },
+      { engine: "google_ai", stip: "groen", usage: 0.6, counts: true },
+      { engine: "copilot", stip: "grijs", usage: 0.15, counts: true },
+    ],
+    instable: [instableFinding as never],
+  };
+
 const all: Record<string, Mail | { subject: string; text: string }> = {
   welcome: welcomeEmail({
     business,
@@ -41,24 +60,7 @@ const all: Record<string, Mail | { subject: string; text: string }> = {
     engines: ["chatgpt", "gemini", "perplexity", "google_ai", "copilot"],
     links,
   }),
-  baselineStip: baselineSummaryEmail({
-    business,
-    checkedAt: "2026-10-02T03:00:00Z",
-    totalAnswers: 100,
-    wrongAnswers: 3,
-    findings: [{ ...finding, criterium: 3 }, recommendationFinding, phoneFinding],
-    engines: ["chatgpt", "gemini", "perplexity", "google_ai", "copilot"],
-    links,
-    stip: "rood",
-    engineStips: [
-      { engine: "chatgpt", stip: "rood", usage: 0.83, counts: true },
-      { engine: "gemini", stip: "groen", usage: 0.12, counts: true },
-      { engine: "perplexity", stip: "oranje", usage: 0.04, counts: false },
-      { engine: "google_ai", stip: "groen", usage: 0.6, counts: true },
-      { engine: "copilot", stip: "grijs", usage: 0.15, counts: true },
-    ],
-    instable: [instableFinding as never],
-  }),
+  baselineStip: baselineSummaryEmail(baselineStipData),
   resolution: resolutionNoticeEmail({
     business,
     finding: { ...finding, status: "resolved", resolvedAt: "2026-10-14T03:00:00Z" },
@@ -145,21 +147,29 @@ describe("email templates", () => {
     expect(statusLine({ totalAnswers: 12, wrongAnswers: 1, resolved: 0, inProgress: 1, notFound: 1 })).toBe("1 fout gevonden, 1 in behandeling, 1 vraag: AI vindt niets over je");
   });
 
-  it("the baseline mail opens with the colour, groups findings by severity and names a recommendation absence, never a score", () => {
+  it("the baseline mail is a summary: the colour, at most 3 examples worst first, one button to everything, never a score", () => {
     const b = all.baselineStip!;
     expect(b.text).toContain("Stip: rood. AI stuurt klanten weg.");
     expect(b.text).toContain("Per AI: ChatGPT: rood, Gemini: groen, Perplexity: oranje, Google AI: groen, Copilot: grijs.");
-    const afhaker = b.text.indexOf("Afhaker (2)");
-    const misleider = b.text.indexOf("Misleider (1)");
-    expect(afhaker).toBeGreaterThan(0);
-    expect(misleider).toBeGreaterThan(afhaker);
-    expect(b.text).toContain("Aanbevelingsvraag over: of desembrood wordt aangeboden");
-    expect(b.text).toContain("ChatGPT noemt je niet (7 van de 10 keer)");
-    expect(b.text).toContain("Geen bron: dit gegeven staat nergens waar AI het kan lezen.");
-    expect(b.text).toContain("Wat we doen: Niet genoemd: we zetten dit gegeven op je feitenpagina");
-    expect(b.text).toContain("Instabiel (1)");
-    expect(b.text).toContain("ChatGPT zei 1 van de 10 keer \"€ 5,50\" over de prijs van Desembrood; het is € 4,50.");
+    // The full listing (severity groups, every finding, what we do, instable answers) lives in the account, not the mail.
+    expect(b.text).not.toMatch(/Afhaker \(|Misleider \(|Instabiel \(|Wat we doen:/);
+    const examples = b.text.split("De belangrijkste fouten")[1]?.split(/\n\n(?=En nog|Wie AI wel noemt|Bekijk)/)[0] ?? "";
+    expect(examples.split("\n\n").filter(Boolean).length).toBeLessThanOrEqual(3);
+    expect(b.text).toMatch(/Bekijk (je volledige resultaat|alles in je overzicht): https:\/\/vidalo\.io\//);
+    expect(b.html.match(/background:#2563eb"><a /g)?.length).toBe(1); // one primary button
     expect(b.text).not.toMatch(/score|\d+ ?\/ ?100|punten/i);
+  });
+
+  it("the baseline mail of a paying owner points to the account and shows what happens next, with dates", () => {
+    const paid = baselineSummaryEmail({ ...baselineStipData, paying: true });
+    expect(paid.text).toContain("Bekijk alles in je overzicht: https://vidalo.io/dashboard");
+    expect(paid.text).toContain("Wat er nu gebeurt");
+    expect(paid.text).toMatch(/- Rond \d+ \w+ 2026: Je volgende maandcontrole\./);
+    expect(paid.text).not.toContain("euro eenmalig");
+    const free = baselineSummaryEmail({ ...baselineStipData, links: { ...baselineStipData.links, resultUrl: "https://vidalo.io/r/run1" }, offer: { setupEur: 149, monitorEur: 49 } });
+    expect(free.text).toContain("Bekijk je volledige resultaat: https://vidalo.io/r/run1");
+    expect(free.text).toContain("Zo herstellen wij het");
+    expect(free.text).toContain("149 euro eenmalig");
   });
 
   it("not found is named as such, never as a wrong value or a source", () => {
@@ -169,7 +179,7 @@ describe("email templates", () => {
     expect(b.text).toContain("70 antwoorden waren leeg");
     expect(b.text).toContain("AI vindt (bijna) niets over Bakkerij Jansen. Je bestaat niet in het antwoord.");
     expect(b.text).toContain("ChatGPT vond niets over de openingstijden op zondag (8 van de 10 keer)");
-    expect(b.text).toContain("Wat we doen: Niet gevonden: we maken je vindbaar");
+    expect(b.text).not.toContain("Wat we doen:");
     expect(b.text).not.toContain('zei: niet gevonden');
     const r = all.reportNotFound!;
     expect(r.subject).toContain("3 vragen: AI vindt niets over je");
