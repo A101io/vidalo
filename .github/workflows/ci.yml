@@ -75,6 +75,10 @@ jobs:
     # switch and a Dutch form bubble reached vidalo.io because no test ran in
     # CI (Control Room I2, I7).
     runs-on: ubuntu-latest
+    # The browser and its system libraries come with the image; installing
+    # them with apt took 13 of 14.5 minutes on the first run. Keep the tag
+    # equal to @playwright/test in package.json.
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
     env:
       VIDALO_MOCK: "1"
       E2E_SERVER: start
@@ -86,7 +90,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm --filter @vidalo/web build
       - run: pnpm e2e
       - run: pnpm e2e:gate
