@@ -421,6 +421,7 @@ export class MemDb implements Db {
       url: input.url ?? existing?.url ?? null,
       status: input.status ?? existing?.status ?? "pending",
       lastSyncedAt: input.lastSyncedAt ?? existing?.lastSyncedAt ?? null,
+      meta: input.meta ?? existing?.meta ?? {},
     };
     this.channels.set(row.id, row);
     return { ...row };

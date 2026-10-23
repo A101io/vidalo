@@ -134,9 +134,12 @@ export async function discoverDirectories(businessId: string): Promise<Channel[]
   const business = await db.getBusiness(businessId);
   if (!business) throw new Error(`business ${businessId} not found`);
   const hits = await findAllListings(business);
+  const known = await db.listChannels(business.id);
   const channels: Channel[] = [];
   for (const hit of hits) {
     if (!hit.found) continue;
+    // Keep what a sync stored (the correction already sent): a re-run must not make it mail again.
+    const before = known.find((c) => c.type === "directory" && c.name === hit.directory.name)?.meta ?? {};
     channels.push(
       await db.upsertChannel({
         businessId: business.id,
@@ -145,7 +148,7 @@ export async function discoverDirectories(businessId: string): Promise<Channel[]
         externalId: null,
         url: hit.url,
         status: "pending",
-        meta: { mode: hit.directory.mode, domain: hit.directory.domain, discovery: hit.mode, factsPageUrl: factsPageUrl(business) },
+        meta: { ...before, mode: hit.directory.mode, domain: hit.directory.domain, discovery: hit.mode, factsPageUrl: factsPageUrl(business) },
       }),
     );
   }
@@ -175,8 +178,34 @@ export interface SyncAllResult {
   results: SyncResult[];
 }
 
+/**
+ * A directory gets one correction mail per set of corrected details, one
+ * reminder after this many days if nothing changed, then nothing until the
+ * details change (decided by Julian, 23 Oct 2026). Before, every sync sent
+ * the identical mail again (14-46 times in one mail-lab run).
+ */
+export const CORRECTION_REMINDER_DAYS = 30;
+
+export interface CorrectionSent {
+  /** recipient + corrected fields and their values; a new key is a new correction */
+  key: string;
+  sentAt: string;
+  remindedAt: string | null;
+}
+
+export function correctionKey(to: string, diff: { field: string; expected: string | null }[]): string {
+  return JSON.stringify([to.toLowerCase(), [...diff].map((d) => [d.field, d.expected]).sort()]);
+}
+
+/** What to do with a correction for `key`, given what this channel already sent. */
+export function correctionDecision(prev: CorrectionSent | null | undefined, key: string, now: Date): "send" | "remind" | "skip" {
+  if (!prev || prev.key !== key) return "send";
+  if (!prev.remindedAt && now.getTime() - Date.parse(prev.sentAt) >= CORRECTION_REMINDER_DAYS * 24 * 60 * 60 * 1000) return "remind";
+  return "skip";
+}
+
 /** Sync every non-facts_page channel against the latest facts and persist status + evidence. */
-export async function syncAllChannels(businessId: string, opts: { facts?: Facts; channelIds?: string[] } = {}): Promise<SyncAllResult> {
+export async function syncAllChannels(businessId: string, opts: { facts?: Facts; channelIds?: string[]; now?: Date } = {}): Promise<SyncAllResult> {
   const db = getDb();
   const business = await db.getBusiness(businessId);
   if (!business) throw new Error(`business ${businessId} not found`);
@@ -188,7 +217,7 @@ export async function syncAllChannels(businessId: string, opts: { facts?: Facts;
 
   const results: SyncResult[] = [];
   for (const channel of channels) {
-    const result = await syncOneChannel(channel, facts, business);
+    const result = await syncOneChannel(channel, facts, business, opts.now);
     results.push(result);
   }
   await db.logEvent(businessId, "channels.synced", { results: results.map((r) => ({ channel: r.channelId, type: r.channelType, status: r.status, diff: r.diff.length })) });
@@ -196,10 +225,28 @@ export async function syncAllChannels(businessId: string, opts: { facts?: Facts;
 }
 
 /** Sync one channel, store the outcome and enqueue any follow-up job. */
-export async function syncOneChannel(channel: Channel, facts: Facts, business?: BusinessRecord): Promise<SyncResult> {
+export async function syncOneChannel(channel: Channel, facts: Facts, business?: BusinessRecord, now = new Date()): Promise<SyncResult> {
   const db = getDb();
   const result = await syncChannel(channel, facts);
   const status: Channel["status"] = result.status === "skipped" ? channel.status : result.status;
+  // The correction this channel already got. Cleared once the listing is right, so a later error is mailed again.
+  const prev = (channel.meta?.correction as CorrectionSent | null | undefined) ?? null;
+  let correction: CorrectionSent | null = result.status === "synced" ? null : prev;
+  let mail: { decision: "send" | "remind"; firstSentAt: string } | null = null;
+  if (result.followUp?.kind === "email") {
+    const p = result.followUp.payload as { to: string; diff: { field: string; expected: string | null }[] };
+    const key = correctionKey(p.to, p.diff);
+    const decision = correctionDecision(prev, key, now);
+    if (decision === "send") {
+      correction = { key, sentAt: now.toISOString(), remindedAt: null };
+      mail = { decision, firstSentAt: correction.sentAt };
+    } else if (decision === "remind") {
+      correction = { ...prev!, remindedAt: now.toISOString() };
+      mail = { decision, firstSentAt: prev!.sentAt };
+    } else {
+      log.info("channel.correction_skipped", { channelId: channel.id, name: channel.name, sentAt: prev?.sentAt, remindedAt: prev?.remindedAt ?? null });
+    }
+  }
   await db.upsertChannel({
     id: channel.id,
     businessId: channel.businessId,
@@ -209,12 +256,20 @@ export async function syncOneChannel(channel: Channel, facts: Facts, business?: 
     url: channel.url,
     status,
     lastSyncedAt: new Date().toISOString(),
-    meta: { lastSync: result.evidence, lastDiff: result.diff, note: result.note ?? null },
+    // Merged: directories.ts reads meta.current and meta.factsPageUrl, which a sync must not wipe.
+    meta: { ...channel.meta, lastSync: result.evidence, lastDiff: result.diff, note: result.note ?? null, correction },
   });
   if (result.followUp) {
     const payload: Record<string, unknown> = { ...result.followUp.payload, businessId: channel.businessId, channelId: channel.id, channelName: channel.name };
     if (result.followUp.kind === "email") {
-      await db.enqueueJob("email", { template: "directory_correction", ...payload, ownerEmail: business?.ownerEmail ?? null });
+      if (mail) {
+        await db.enqueueJob("email", {
+          template: "directory_correction",
+          ...payload,
+          ownerEmail: business?.ownerEmail ?? null,
+          ...(mail.decision === "remind" ? { reminder: true, firstSentAt: mail.firstSentAt } : {}),
+        });
+      }
     } else {
       await db.enqueueJob("operator_task", payload);
     }

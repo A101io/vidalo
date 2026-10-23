@@ -186,6 +186,7 @@ const mapChannel = (row: Row): Channel => {
     url: (r.url as string | null) ?? null,
     status: r.status as Channel["status"],
     lastSyncedAt: (r.lastSyncedAt as string | null) ?? null,
+    meta: (r.meta as Record<string, unknown> | null) ?? {},
   };
 };
 

@@ -333,6 +333,8 @@ export interface Channel {
   url: string | null;
   status: "pending" | "synced" | "mismatch" | "failed" | "manual";
   lastSyncedAt: string | null;
+  /** last sync evidence and diff, and the correction already sent (publisher/index.ts) */
+  meta?: Record<string, unknown>;
 }
 
 /** The colour of the dot (docs/CRITERIA.md "Ernst en kleur: de stipregel"). */
