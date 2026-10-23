@@ -48,6 +48,8 @@ export function toEml(input: MailInput, id: string): string {
     `Message-ID: <${id}@vidalo.io>`,
     "MIME-Version: 1.0",
     ...Object.entries(input.headers ?? {}).map(([k, v]) => `${k}: ${v}`),
+    // Mock files only: the tags Resend would get, so the mail lab knows which mail this is.
+    ...Object.entries(input.tags ?? {}).map(([k, v]) => `X-Vidalo-${k}: ${v}`),
   ].filter(Boolean);
   if (input.html) {
     const boundary = `----vidalo-${id}`;
