@@ -23,6 +23,7 @@ jobs:
       - run: pnpm -r typecheck
       - run: pnpm -r test
       - run: pnpm e2e:mock
+      - run: pnpm mail:lab
 
   postgres:
     # The migrations and PgDb against a real Postgres, driven by the mock engines.

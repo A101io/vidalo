@@ -76,6 +76,8 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 pnpm install
 pnpm -r typecheck && pnpm -r test          # must stay green
 pnpm e2e:mock                              # whole pipeline in one process, no keys
+pnpm mail:lab                              # every e-mail, real code paths, checked → out/mail-lab/index.html (docs/mail-lab.md)
+pnpm mail:send --to you@x.nl [--send]      # one of each to your inbox through Resend; dry run without --send
 pnpm verify:pg                             # migrations + PgDb + whole pipeline on a real local Postgres (PG_ADMIN_URL)
 VIDALO_MOCK=1 pnpm dev                     # web on :3000 (demo owner eigenaar@bakkerijdevries.nl)
 VIDALO_MOCK=1 pnpm worker                  # job loop + cron + facts pages on :8787
