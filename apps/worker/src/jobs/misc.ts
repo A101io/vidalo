@@ -11,6 +11,7 @@ import {
   sendUnfixableNotice,
   sendWelcome,
   factsPageUrl,
+  textToHtml,
 } from "@vidalo/core/reporter";
 import { getDb, runScan } from "../compat.js";
 import { log } from "../log.js";
@@ -56,9 +57,13 @@ export const followup: Handler<"followup"> = async (p) => {
   return { sent: r !== null, mode: r?.mode ?? null };
 };
 
+/** Owner mails queued as plain text get the branded HTML; mails to directories and websites stay plain letters signed by the owner. */
+const OWNER_TEXT_KINDS = new Set(["owner_instruction", "owner_reminder", "site_instruction"]);
+
 export const email: Handler<"email"> = async (p) => {
   if (!("template" in p) || p.template === undefined) {
-    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html: p.html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
+    const html = p.html ?? (p.kind && OWNER_TEXT_KINDS.has(p.kind) ? textToHtml(p.text) : undefined);
+    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
     if (p.businessId) await getDb().logEvent(p.businessId, `email.${p.kind ?? "raw"}`, { to: p.to, subject: p.subject, mode: r.mode, id: r.id, findingId: p.findingId ?? null, fixId: p.fixId ?? null });
     return { mode: r.mode, id: r.id };
   }
