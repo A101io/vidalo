@@ -1,9 +1,14 @@
 /**
  * Real delivery of the mail lab's mails, to one inbox you choose.
  *
- *   pnpm mail:lab                                   first: produces out/mail-lab/mail/*.eml
  *   pnpm mail:send --to you@example.com             dry run: lists what would be sent
  *   pnpm mail:send --to you@example.com --send      sends one of each kind through Resend
+ *
+ * It first runs the mail lab itself into out/mail-send with links to
+ * https://vidalo.io (MAIL_LAB_BASE_URL), so the links in the inbox open the
+ * real site, and refuses any mail that still links to localhost. The lab's
+ * test businesses do not exist on vidalo.io, so their report and
+ * unsubscribe links land on the not-found or invalid-link page.
  *
  * Every mail goes to --to and nowhere else: the owner and third-party
  * addresses in the lab are replaced, so a directory or a website never gets
@@ -16,6 +21,7 @@
  * controle@vidalo.io), from the environment or the root .env. Not covered:
  * the sign-in link, which Supabase sends itself (docs/mail-lab.md).
  */
+import { execFileSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -41,10 +47,19 @@ try {
 // sendMail only uses Resend outside mock mode.
 delete process.env.VIDALO_MOCK;
 
-const dir = path.resolve(process.env.MAIL_LAB_DIR ?? "out/mail-lab", "mail");
+const site = process.env.MAIL_LAB_BASE_URL ?? "https://vidalo.io";
+const labDir = path.resolve("out/mail-send");
+console.log(`Building the mails (mail lab, links to ${site}) …`);
+try {
+  execFileSync("pnpm", ["-s", "mail:lab"], { env: { ...process.env, VIDALO_MOCK: "1", RESEND_API_KEY: "", MAIL_LAB_DIR: labDir, MAIL_LAB_BASE_URL: site }, stdio: ["ignore", "ignore", "inherit"] });
+} catch {
+  console.error("The mail lab failed; fix that first (pnpm mail:lab). Nothing sent.");
+  process.exit(1);
+}
+const dir = path.join(labDir, "mail");
 const files = await readdir(dir).catch(() => null);
 if (!files?.length) {
-  console.error(`No lab mails in ${dir}. Run pnpm mail:lab first.`);
+  console.error(`No lab mails in ${dir}. Nothing sent.`);
   process.exit(2);
 }
 
@@ -78,6 +93,12 @@ const byKind = new Map<string, LabMail>();
 for (const f of files.sort()) {
   const m = parse(await readFile(path.join(dir, f), "utf8"));
   if (!byKind.has(m.kind) && (!only || only.includes(m.kind))) byKind.set(m.kind, m);
+}
+// A test mail with links to this machine is useless in an inbox (23 Oct 2026).
+const local = [...byKind].filter(([, m]) => /https?:\/\/(localhost|127\.0\.0\.1)\b/.test(`${m.text}\n${m.html ?? ""}\n${m.headers["List-Unsubscribe"] ?? ""}`));
+if (local.length) {
+  console.error(`Links to localhost in: ${local.map(([k]) => k).join(", ")}. Nothing sent.`);
+  process.exit(1);
 }
 
 const { sendMail, defaultFrom } = await import("@vidalo/core/reporter");
