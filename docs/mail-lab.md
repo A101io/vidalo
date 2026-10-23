@@ -36,12 +36,12 @@ The `.eml` files are in `out/mail-lab/mail/`. They carry the mail's tags as `X-V
 Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `controle@vidalo.io`; `docs/mail.md`, `docs/setup/stripe-and-resend.md`). Both can come from the environment or the root `.env`.
 
 ```
-pnpm mail:lab
 pnpm mail:send --to you@example.com            # dry run: lists the 13 mails
 pnpm mail:send --to you@example.com --send     # sends one of each kind
 pnpm mail:send --to you@example.com --send --kinds welcome,baseline
 ```
 
+- It builds the mails itself first (the mail lab, into `out/mail-send`) with links to `https://vidalo.io` (`MAIL_LAB_BASE_URL` to change), and refuses any mail that still links to localhost. The lab's test businesses do not exist on vidalo.io, so report links land on the not-found page and unsubscribe links (signed with the lab's secret) on the invalid-link page; the other links open real pages.
 - Every mail goes to `--to` only. The owner and third-party addresses from the lab are replaced, so no directory or website ever receives a test.
 - The subject starts with `[Test <kind>]`. The original recipient is in the `X-Vidalo-Original-To` header.
 - It goes through `sendMail`, the production path, so From, Reply-To and `List-Unsubscribe` are what a customer gets.
