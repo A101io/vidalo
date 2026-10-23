@@ -750,6 +750,14 @@ export const en: CopyShape = {
       { label: "Log in", href: "/inloggen" },
     ],
     barExit: "Back to Coming soon",
+    previewPage: {
+      title: "Preview",
+      h1: "See the whole site",
+      body: "Enter the preview key. You then see the site as it will be after launch, until you close the browser.",
+      label: "Preview key",
+      button: "Open the site",
+      wrong: "That key is not right. Please check it.",
+    },
   },
 
   chat: {

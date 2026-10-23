@@ -766,6 +766,15 @@ export const copy = {
       { label: "Inloggen", href: "/inloggen" },
     ],
     barExit: "Terug naar Binnenkort",
+    /** /voorvertoning: the key form for the full site behind the gate. Not linked anywhere; noindex. */
+    previewPage: {
+      title: "Voorvertoning",
+      h1: "Bekijk de hele site",
+      body: "Voer de voorvertoningssleutel in. Je ziet de site dan zoals hij wordt na de lancering, tot je de browser sluit.",
+      label: "Voorvertoningssleutel",
+      button: "Open de site",
+      wrong: "Die sleutel klopt niet. Kijk hem nog even na.",
+    },
   },
 
   /** The website assistant (components/ChatWidget.tsx, /api/chat, core/chat). */
