@@ -47,6 +47,8 @@ export function organizationLd(copy: CopyShape) {
     legalName: "A101 B.V.",
     url: SITE,
     email: "hello@vidalo.io",
+    // The logo Google shows in results and the knowledge panel: square, at least 112px, crawlable (public/logo-512.png, rendered from app/icon.svg).
+    logo: { "@type": "ImageObject", url: `${SITE}/logo-512.png`, width: 512, height: 512 },
     description: copy.tagline,
     identifier: { "@type": "PropertyValue", propertyID: "KvK", value: OWN_BUSINESS.kvk },
     subjectOf: OWN_FACTS_URL,
