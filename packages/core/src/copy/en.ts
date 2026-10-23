@@ -1891,6 +1891,13 @@ export const en: CopyShape = {
     generic: "Something went wrong. Please try again.",
     notFound: "This page does not exist.",
     loginRequired: "Log in to continue.",
+    field: {
+      required: "Please fill in this field.",
+      checkbox: "Tick this box to continue.",
+      email: "Please enter a valid email address, like name@company.com.",
+      url: "Please enter a valid web address, like https://yourbusiness.com.",
+      number: "Please enter a valid number.",
+    },
   },
 
   email: {
