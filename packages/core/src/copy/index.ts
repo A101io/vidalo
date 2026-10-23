@@ -1667,6 +1667,16 @@ export const copy = {
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",
     mockHint: "Geen Supabase-sleutels ingesteld: je wordt direct ingelogd in de voorbeeldomgeving.",
     noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
+    linkExpired: "Deze inloglink werkt niet meer: hij is al gebruikt of verlopen. Vraag hieronder een nieuwe aan.",
+    /** Signed in, but no business is linked to this address yet. */
+    signedInAs: (email: string) => `Je bent ingelogd als ${email}.`,
+    signedInNoBusiness: "Er is nog geen bedrijf aan dit adres gekoppeld. Start een gratis controle; na het afrekenen koppelen we het bedrijf aan dit account.",
+    freeCheck: "Start een gratis controle",
+    logout: "Uitloggen",
+    /** From /welkom after checkout, while already signed in: link that business to this account. */
+    linkBusiness: (name: string, place: string) => `Koppel ${name} (${place}) aan dit account?`,
+    linkButton: "Ja, koppel dit bedrijf",
+    linkTaken: "Dit bedrijf is al aan een ander account gekoppeld. Mail support@vidalo.io als dat niet klopt.",
   },
 
   dashboard: {
