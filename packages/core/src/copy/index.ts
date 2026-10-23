@@ -1920,6 +1920,14 @@ export const copy = {
     generic: "Er ging iets mis. Probeer het nog een keer.",
     notFound: "Deze pagina bestaat niet.",
     loginRequired: "Log in om verder te gaan.",
+    /** Replace the browser's own form-validation bubbles, which speak the browser's language (components/FormMessages.tsx). */
+    field: {
+      required: "Vul dit veld in.",
+      checkbox: "Vink dit vakje aan om verder te gaan.",
+      email: "Vul een geldig e-mailadres in, zoals naam@bedrijf.nl.",
+      url: "Vul een geldig webadres in, zoals https://jouwbedrijf.nl.",
+      number: "Vul een geldig getal in.",
+    },
   },
 
   email: {
