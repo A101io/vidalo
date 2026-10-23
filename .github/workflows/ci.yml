@@ -69,3 +69,34 @@ jobs:
         working-directory: apps/web
       - run: ../web/node_modules/.bin/wrangler deploy --dry-run --outdir ../../out/cf-worker
         working-directory: apps/worker
+
+  browser:
+    # The Playwright suites against a production build (next start), in mock
+    # mode and behind the launch gate. Added 23 Oct 2026 after a language
+    # switch and a Dutch form bubble reached vidalo.io because no test ran in
+    # CI (Control Room I2, I7).
+    runs-on: ubuntu-latest
+    # The browser and its system libraries come with the image; installing
+    # them with apt took 13 of 14.5 minutes on the first run. Keep the tag
+    # equal to @playwright/test in package.json.
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    env:
+      VIDALO_MOCK: "1"
+      E2E_SERVER: start
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vidalo/web build
+      - run: pnpm e2e
+      - run: pnpm e2e:gate
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: out/playwright-report
+          retention-days: 7
