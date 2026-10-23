@@ -733,6 +733,7 @@ export const en: CopyShape = {
       consent: "Yes, email me once when Vidalo opens. You can unsubscribe at any time via hello@vidalo.io.",
       thanks: "Thank you. You are on the list; we will email you as soon as Vidalo opens.",
       invalid: "That email address does not look right. Please check it.",
+      noConsent: "Tick the box, and we will put you on the list.",
       busy: "It is busy right now. Please try again in a few minutes.",
       failed: "That did not work. Please try again later, or email us.",
     },

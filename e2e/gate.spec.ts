@@ -47,3 +47,39 @@ test("@gate no public preview button; only the preview key opens the whole site"
   await page.goto("/");
   await expect(page.locator("form[action='/api/scan']").first()).toBeVisible();
 });
+
+test("@gate the language switch on the coming-soon page changes the whole page", async ({ page }) => {
+  // next/link left the Dutch page standing under /en/coming-soon (vidalo.io, 23 Oct 2026).
+  await page.goto("/");
+  await page.locator(".lang-switch a[hreflang='en']").first().click();
+  await expect(page).toHaveURL(/\/en\/coming-soon$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("h1")).toHaveText("Vidalo is on its way.");
+  await page.locator(".lang-switch a[hreflang='nl']").first().click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+  await expect(page.locator("h1")).toHaveText("Vidalo komt eraan.");
+});
+
+test("@gate the coming-soon list answers in the page's language", async ({ page }) => {
+  // The browser's own "tick this box" bubble spoke the browser's language; the server answers instead.
+  for (const [url, message] of [
+    ["/en/coming-soon", "Tick the box, and we will put you on the list."],
+    ["/binnenkort", "Vink het vakje aan, dan zetten we je op de lijst."],
+  ] as const) {
+    await page.goto(url);
+    await page.locator("#lijst-email").fill("e2e@example.com");
+    await page.locator("form[action='/api/waitlist'] button[type='submit']").click();
+    await expect(page.locator("#lijst-error"), url).toHaveText(message);
+    await expect(page.locator("input[name='consent']"), url).toHaveAttribute("aria-invalid", "true");
+  }
+});
+
+test("@gate legal pages behind the gate link only inside the coming-soon setup", async ({ page }) => {
+  // Behind the gate they keep the coming-soon footer, never the site's (A101io/vidalo#34).
+  const allowed = new Set(["/", "/en", "/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]);
+  for (const url of ["/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]) {
+    await page.goto(url);
+    const hrefs = await page.locator("a[href^='/']").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
+    for (const href of hrefs) expect(allowed.has(href), `${url} links to ${href}`).toBe(true);
+  }
+});

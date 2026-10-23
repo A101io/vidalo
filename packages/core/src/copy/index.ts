@@ -749,6 +749,7 @@ export const copy = {
       consent: "Ja, mail me één keer wanneer Vidalo opengaat. Afmelden kan altijd via hello@vidalo.io.",
       thanks: "Dank je. Je staat op de lijst; we mailen je zodra Vidalo opengaat.",
       invalid: "Dat e-mailadres lijkt niet te kloppen. Kijk het nog even na.",
+      noConsent: "Vink het vakje aan, dan zetten we je op de lijst.",
       busy: "Het is even druk. Probeer het over een paar minuten opnieuw.",
       failed: "Dat lukte niet. Probeer het later opnieuw, of mail ons.",
     },
