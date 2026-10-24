@@ -23,6 +23,7 @@ export const copy = {
     copilot: "Copilot",
     gemini: "Gemini",
     perplexity: "Perplexity",
+    claude: "Claude",
   },
 
   nav: {
@@ -155,11 +156,11 @@ export const copy = {
       steps: [
         { n: "1", tone: "ink", title: "Vastleggen", body: "Je gegevens één keer goed: adres, telefoon, openingstijden, wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
         { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Dezelfde gegevens naar Google, Bing, Apple en de bedrijvengidsen.", meta: "Live zodra je DNS-regel staat" },
-        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini en Perplexity in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
+        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
         { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Hersteld waar wij bij kunnen, aangeschreven waar het moet, namens jou. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
       ],
       note: "Meerdere keren vragen is nodig: AI geeft zelden twee keer precies hetzelfde antwoord. Daarom tellen we hoe vaak een fout terugkomt.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twaalf feiten die een klant laten komen, of afhaken",
@@ -576,7 +577,7 @@ export const copy = {
         price: "€49",
         unit: "per maand",
         includes: [
-          "Elke maand een nieuwe controle bij ChatGPT, Google AI, Gemini en Perplexity.",
+          "Elke maand een nieuwe controle bij ChatGPT, Google AI, Gemini, Perplexity en Claude.",
           "Herstel aan de bron bij elke nieuwe fout.¹",
           "Een maandelijks rapport met bewijs van wat er is hersteld.",
         ],
@@ -659,7 +660,7 @@ export const copy = {
     how: {
       crumb: "Zo werkt het",
       title: "Zo werkt Vidalo: vastleggen, publiceren, controleren, herstellen",
-      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tien keer per vraag controleren bij ChatGPT, Google AI, Gemini en Perplexity, en fouten aan de bron herstellen met bewijs.",
+      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tien keer per vraag controleren bij ChatGPT, Google AI, Gemini, Perplexity en Claude, en fouten aan de bron herstellen met bewijs.",
       h1: "Zo werkt Vidalo",
       intro: "Vijf minuten werk voor jou bij de start. Daarna controleren we elke maand wat AI-assistenten over je zeggen, en herstellen we elke fout bij de bron.",
     },
@@ -697,7 +698,7 @@ export const copy = {
       sections: [
         { h: "Welke gegevens", p: ["Over je bedrijf: naam, plaats, adres, telefoonnummer, website, openingstijden, diensten en andere gegevens die je bevestigt. Dit zijn meestal geen persoonsgegevens, behalve als je bedrijf je eigen naam draagt.", "Over jou: je e-mailadres, om in te loggen en je rapporten te sturen. Bij betalen verwerkt Stripe je betaalgegevens; wij zien die niet.", "Over de controle: de vragen die we stellen, de antwoorden van AI-assistenten en de bronnen die ze noemen.", "Op de lijst ‘Binnenkort’: je e-mailadres, de taal van de pagina, het moment van aanmelden en de zin waarmee je toestemming gaf."] },
         { h: "Waarom", p: ["Om de controle uit te voeren, fouten te herstellen, je te mailen over je rapport en je abonnement te factureren. Na een gratis controle sturen we je na 7 en na 21 dagen nog een herinnering. Elke mail heeft een afmeldlink; na afmelden sturen we niets meer. De grondslag is de overeenkomst met jou, en voor een gratis controle ons gerechtvaardigd belang om je een rapport te kunnen geven.", "Zet je je op de lijst ‘Binnenkort’, dan mailen we je wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders. De grondslag is je toestemming; die trek je in met een mail naar hello@vidalo.io, en dan halen we je adres van de lijst."] },
-        { h: "Met wie we gegevens delen", p: ["Supabase (database en inloggen, opslag in de EU). OpenAI, Google, Perplexity en SerpAPI om de vragen te stellen; we sturen alleen bedrijfsgegevens, geen e-mailadressen. Google en de KvK om je bedrijf te vinden. Stripe voor betalingen. Resend voor e-mail. Cloudflare voor je feitenpagina.", "Sommige van deze partijen verwerken gegevens buiten de EU. Dat gebeurt op basis van de standaardcontractbepalingen van de Europese Commissie of het EU-VS-gegevensprivacykader."] },
+        { h: "Met wie we gegevens delen", p: ["Supabase (database en inloggen, opslag in de EU). OpenAI, Google, Perplexity, Anthropic en SerpAPI om de vragen te stellen; we sturen alleen bedrijfsgegevens, geen e-mailadressen. Google en de KvK om je bedrijf te vinden. Stripe voor betalingen. Resend voor e-mail. Cloudflare voor je feitenpagina.", "Sommige van deze partijen verwerken gegevens buiten de EU. Dat gebeurt op basis van de standaardcontractbepalingen van de Europese Commissie of het EU-VS-gegevensprivacykader."] },
         { h: "Hoe lang", p: ["Een rapport van een gratis controle is 30 dagen via de link te zien. Gegevens van een betaald plan bewaren we zolang je klant bent. 90 dagen na het einde van je abonnement doen we nog één gratis controle; daarna bewaren we alleen wat de wet voor facturen vraagt.", "De lijst ‘Binnenkort’ bewaren we tot we iedereen over de opening hebben gemaild; daarna verwijderen we hem. Wie zich eerder afmeldt, halen we er direct af."] },
         { h: "Jouw rechten", p: ["Je mag je gegevens inzien, laten verbeteren of laten verwijderen, en bezwaar maken. Mail ons; we reageren binnen een maand. Ben je het niet met ons eens, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens."] },
       ],
@@ -998,7 +999,7 @@ export const copy = {
     factsH2: (noun: string) => `Drie feiten die voor een ${noun} de doorslag geven`,
     factQuestion: "Controlevraag:",
     checkH2: (nounPlural: string) => `Wat we voor ${nounPlural} controleren`,
-    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Copilot, Gemini en Perplexity.`,
+    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Copilot, Gemini, Perplexity en Claude.`,
     table: { question: "Vraag die een klant stelt", criterium: "Feit", severity: "Ernst als het fout is" },
     why: {
       h2: "Waarom je dit niet ziet aan je telefoon",

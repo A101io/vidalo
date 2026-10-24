@@ -121,7 +121,8 @@ export function criteriumNotFound(frequency: number, sampleCount: number): boole
 /**
  * Share of Dutch AI-assistant use per engine (docs/CRITERIA.md "Meetmethode":
  * ChatGPT 83% of chatbot traffic; Google AI Overviews above nearly every local
- * search; Copilot default in Windows/Edge; Gemini; Perplexity a few percent).
+ * search; Copilot default in Windows/Edge; Gemini; Perplexity and Claude a few percent each,
+ * StatCounter NL June 2026).
  * Only engines at or above STIP_ENGINE_MIN_USAGE decide the overall colour.
  */
 export const ENGINE_NL_USAGE: Record<Engine, number> = {
@@ -130,6 +131,7 @@ export const ENGINE_NL_USAGE: Record<Engine, number> = {
   copilot: 0.15,
   gemini: 0.12,
   perplexity: 0.04,
+  claude: 0.05,
 };
 export const STIP_ENGINE_MIN_USAGE = 0.1;
 

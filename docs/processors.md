@@ -8,6 +8,7 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | OpenAI | Processor: asks the questions, extracts claims | Business facts only, never email addresses | US | DPF / SCCs | open |
 | Google (Gemini, Places, Business Profile, OAuth) | Processor; OAuth also sign-in | Business facts; for verification the owner's Google account id and their Business Profile locations | US/EU | DPF / SCCs | open |
 | Perplexity | Processor: asks the questions | Business facts only | US | SCCs | open |
+| Anthropic (Claude) | Processor: asks the questions | Business facts only | US | DPF / SCCs | open |
 | SerpAPI | Processor: Google AI answers | Business facts only | US | SCCs | open |
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |

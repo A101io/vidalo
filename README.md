@@ -2,7 +2,7 @@
 
 **Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.**
 
-Vidalo checks what AI assistants (ChatGPT, Gemini, Perplexity, Google AI Overviews, Copilot) say about a Dutch business, finds the wrong facts and the source each one came from, publishes an authoritative facts page on the business's own domain, syncs directories, and fixes errors at the source — with proof.
+Vidalo checks what AI assistants (ChatGPT, Gemini, Perplexity, Google AI Overviews, Copilot, Claude) say about a Dutch business, finds the wrong facts and the source each one came from, publishes an authoritative facts page on the business's own domain, syncs directories, and fixes errors at the source — with proof.
 
 ## Layout
 
@@ -43,6 +43,7 @@ Mock mode uses deterministic fake engine answers (≈35 % contain an injected wr
 | ChatGPT | `OPENAI_API_KEY` | Responses API + web search; also used for claim extraction (`EXTRACTION_MODEL`) |
 | Gemini | `GEMINI_API_KEY` | Google Search grounding |
 | Perplexity | `PERPLEXITY_API_KEY` | sonar |
+| Claude | `ANTHROPIC_API_KEY` | Messages API + web search; model from `CLAUDE_MODEL` (default `claude-opus-5-5`) |
 | Google AI Overviews | `SERPAPI_KEY` | nl-NL SERP, parses the AI overview block |
 | Copilot | `COPILOT_ENABLED=1` + a Playwright adapter (`setCopilotAdapter`) | no API; lowest priority, skipped on failure |
 | Business lookup | `GOOGLE_PLACES_API_KEY`, `KVK_API_KEY` | otherwise one synthetic candidate |
