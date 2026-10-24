@@ -289,7 +289,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
 
           <div className="flex flex-col gap-3">
-            <RailLabel>{d.sources}</RailLabel>
+            <div className="flex items-baseline justify-between gap-3">
+              <RailLabel>{d.sources}</RailLabel>
+              <QuietLink href={href(`/feiten/${business.slug}`)}>{d.factsPage}</QuietLink>
+            </div>
             {sources.length === 0 ? (
               <p className="m-0 text-[14px] text-muted">{d.noChannels}</p>
             ) : (
