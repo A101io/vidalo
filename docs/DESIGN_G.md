@@ -8,6 +8,11 @@ This is the design `apps/web` must match. It supersedes the visual spec in `docs
 | `design-g/ResultG.dc.html` | Result, red/green (7 questions, incl. one "niets gevonden" row) | `/r/[id]` |
 | `design-g/ResultGGrey.dc.html` | Result, grey: AI does not know the business | `/r/[id]` when `visibility === "unknown"` |
 | `design-g/SectorG.dc.html` | Sector page (loodgieters & installateurs, with switcher) | `/vak/[slug]` |
+| `design-g/AppG.dc.html` | Owner overview (direction "Eigener en rustig", picked by Julian 24 Oct 2026 from the Design canvas, `docs/PRODUCT.md`): the facts of the last check, then "Wat nu" (the owner's actions with a link to the exact place, then what runs at Vidalo with dates), six dots for ChatGPT, Google AI, Copilot, Gemini, Perplexity and Claude, open errors each with its next action, a log with a proof link per line; rail with next check, "Uitbreiden" (extra check, more systems, second location; prices are `[PRIJS]` placeholders), sources, proof, plan. No overall dot and no "jouw stip is rood": per system a colour, the rest counts | `/app` |
+| `design-g/FindingG.dc.html` | Finding detail: "Wat nu" first (the sentence now on the website, the sentence to replace it, links to the page and to copy the text), the raw answers, the source, every action with evidence; rail with "Ik heb dit aangepast" (primary), "Dit klopt wél", the status steps | `/app/fouten/[id]` |
+| `design-g/ChannelG.dc.html` | Channel with a pending change: the Business Profile now and after with the changed lines marked and "overslaan" per line, approve or decline, the last sync as evidence (date, fields, Google's answer, who approved), earlier syncs | `/app/vermeldingen/[id]` |
+
+The owner boards share one idiom: no card borders except the rail's top card and the two profile cards, sections separated by whitespace and one ink rule, hanging dates in lists, status colours only in dots and marked spans. Each is responsive in one file (the `@media (max-width:640px)` block in its `<helmet>`): open at 1280 and at 390.
 
 Open them in a browser (they are self-contained HTML; ignore the `support.js`/`x-dc` wrapper). Copy the Dutch copy **verbatim** — every string goes into `packages/core/src/copy/index.ts`, nothing hard-coded in JSX.
 
