@@ -10,6 +10,7 @@ export const en: CopyShape = {
     copilot: "Copilot",
     gemini: "Gemini",
     perplexity: "Perplexity",
+    claude: "Claude",
   },
 
   nav: {
@@ -142,11 +143,11 @@ export const en: CopyShape = {
       steps: [
         { n: "1", tone: "ink", title: "Record", body: "Your details right, once: address, phone, opening hours, what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
         { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. The same details to Google, Bing, Apple and the business directories.", meta: "Live as soon as your DNS record is in place" },
-        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini and Perplexity, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
+        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
         { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Fixed where we can reach the source, requested in writing where we cannot, on your behalf. Then we ask again and you see before and after.", meta: "Proof for every error" },
       ],
       note: "Asking several times is necessary: AI rarely gives exactly the same answer twice. That is why we count how often an error comes back.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twelve facts that make a customer come, or drop out",
@@ -563,7 +564,7 @@ export const en: CopyShape = {
         price: "€49",
         unit: "per month",
         includes: [
-          "A new check with ChatGPT, Google AI, Gemini and Perplexity every month.",
+          "A new check with ChatGPT, Google AI, Gemini, Perplexity and Claude every month.",
           "A fix at the source for every new error.¹",
           "A monthly report with proof of what was fixed.",
         ],
@@ -645,7 +646,7 @@ export const en: CopyShape = {
     how: {
       crumb: "How it works",
       title: "How Vidalo works: record, publish, check, fix",
-      description: "Record your details once, publish them the same everywhere, check every question ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
+      description: "Record your details once, publish them the same everywhere, check every question ten times a month with ChatGPT, Google AI, Gemini, Perplexity and Claude, and fix errors at the source with proof.",
       h1: "How Vidalo works",
       intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and fix every error at its source.",
     },
@@ -683,7 +684,7 @@ export const en: CopyShape = {
       sections: [
         { h: "Which data", p: ["About your business: name, town, address, phone number, website, opening hours, services and other details you confirm. These are usually not personal data, unless your business carries your own name.", "About you: your email address, to log in and to send your reports. When you pay, Stripe processes your payment details; we do not see them.", "About the check: the questions we ask, the answers of AI assistants and the sources they mention.", "On the coming-soon list: your email address, the language of the page, when you signed up and the sentence with which you gave consent."] },
         { h: "Why", p: ["To carry out the check, fix errors, email you about your report and invoice your subscription. After a free check we send you a reminder after 7 and after 21 days. Every email has an unsubscribe link; after that we send nothing more. The legal basis is the agreement with you, and for a free check our legitimate interest in being able to give you a report.", "If you put yourself on the coming-soon list, we email you when Vidalo opens. No newsletter and no advertising for anything else. The basis is your consent; you withdraw it by emailing hello@vidalo.io, and we then take your address off the list."] },
-        { h: "With whom we share data", p: ["Supabase (database and login, storage in the EU). OpenAI, Google, Perplexity and SerpAPI to ask the questions; we only send business details, no email addresses. Google and the KvK to find your business. Stripe for payments. Resend for email. Cloudflare for your facts page.", "Some of these parties process data outside the EU. That happens on the basis of the European Commission's standard contractual clauses or the EU-US Data Privacy Framework."] },
+        { h: "With whom we share data", p: ["Supabase (database and login, storage in the EU). OpenAI, Google, Perplexity, Anthropic and SerpAPI to ask the questions; we only send business details, no email addresses. Google and the KvK to find your business. Stripe for payments. Resend for email. Cloudflare for your facts page.", "Some of these parties process data outside the EU. That happens on the basis of the European Commission's standard contractual clauses or the EU-US Data Privacy Framework."] },
         { h: "How long", p: ["A report from a free check can be seen through the link for 30 days. We keep the data of a paid plan for as long as you are a customer. 90 days after your subscription ends we do one more free check; after that we only keep what the law requires for invoices.", "We keep the coming-soon list until we have emailed everyone about the opening; then we delete it. If you unsubscribe earlier, we take you off at once."] },
         { h: "Your rights", p: ["You may access your data, have it corrected or deleted, and object. Email us; we respond within a month. If you disagree with us, you can file a complaint with the Autoriteit Persoonsgegevens (the Dutch Data Protection Authority)."] },
       ],
@@ -979,7 +980,7 @@ export const en: CopyShape = {
     factsH2: (noun: string) => `Three facts that make the difference for a ${noun}`,
     factQuestion: "Check question:",
     checkH2: (nounPlural: string) => `What we check for ${nounPlural}`,
-    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Copilot, Gemini and Perplexity.`,
+    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Copilot, Gemini, Perplexity and Claude.`,
     table: { question: "Question a customer asks", criterium: "Fact", severity: "Severity if it is wrong" },
     why: {
       h2: "Why you do not notice this on your phone",

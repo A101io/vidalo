@@ -36,8 +36,10 @@ describe("runScan (mock pipeline)", () => {
     expect(bank.length).toBeGreaterThanOrEqual(6);
 
     const report = await runScan({ businessId: prepared.business.id, kind: "baseline", samplesPerPrompt: 3, db });
-    // A full scan asks the core and six questions from the bank.
-    expect(report.totalAnswers).toBe((core.length + 6) * 5 * 3);
+    // A full scan asks the core and six questions from the bank, to every engine (six since Claude joined).
+    expect(report.totalAnswers).toBe((core.length + 6) * ENGINES.length * 3);
+    expect(ENGINES).toHaveLength(6);
+    expect(report.engines.map((e) => e.engine)).toContain("claude");
     const recs = report.recommendations ?? [];
     expect(recs.filter((r) => r.pool === "core")).toHaveLength(6);
     expect(recs.filter((r) => r.pool === "bank").length).toBeLessThanOrEqual(6);
@@ -46,13 +48,13 @@ describe("runScan (mock pipeline)", () => {
     expect(recs.every((r) => r.others.every((o) => !o.name.includes("De Vries")))).toBe(true);
     expect(recs.some((r) => r.others.length > 0)).toBe(true);
     expect(["rood", "oranje", "groen", "grijs"]).toContain(report.stip);
-    expect(report.engineStips).toHaveLength(5);
+    expect(report.engineStips).toHaveLength(ENGINES.length);
     expect(report.findingsBySeverity.afhaker.length + report.findingsBySeverity.misleider.length + report.findingsBySeverity.verwarring.length).toBe(report.findings.length);
     expect(report.wrongAnswers).toBeGreaterThan(0);
     expect(report.wrongAnswers).toBeLessThan(report.totalAnswers);
     expect(report.findings.length).toBeGreaterThan(0);
     expect(report.correct.length).toBeGreaterThan(0);
-    expect(report.engines).toHaveLength(5);
+    expect(report.engines).toHaveLength(ENGINES.length);
     expect(report.engines.every((e) => !e.skipped)).toBe(true);
 
     for (const f of report.findings) {

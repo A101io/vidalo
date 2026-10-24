@@ -48,15 +48,15 @@ De stip is de samenvatting van alle oordelen in één kleur. De regel is eenvoud
 | Oranje | AI misleidt | Geen afhakers, maar ≥ 1 misleider- of verwarringsbevinding, óf 25 tot 60% niet gevonden |
 | Groen | Klopt | Geen bevindingen; ≤ 10% instabiel; < 25% niet gevonden |
 
-De kleur wordt per AI-systeem berekend en daarna samengevat: de slechtste kleur van de systemen met minstens 10% gebruik in Nederland bepaalt de stip. ChatGPT alleen kan je dus rood maken; Perplexity alleen niet.
+De kleur wordt per AI-systeem berekend en daarna samengevat: de slechtste kleur van de systemen met minstens 10% gebruik in Nederland bepaalt de stip. ChatGPT alleen kan je dus rood maken; Perplexity of Claude alleen niet.
 
 Waarom niet een score van 0 tot 100: een score suggereert dat 78 beter is dan 71, terwijl één "permanent gesloten" bij 78 erger is dan drie foute prijzen bij 71. Kleur plus ernst is eerlijker en begrijpelijker, en de scan toont altijd de losse bevindingen eronder.
 
 ## Meetmethode
 
-**Welke AI-systemen.** ChatGPT (ruim 75% van het Nederlandse chatbotverkeer, StatCounter, juni 2026), Google AI Overviews en AI Mode (verschijnt boven Google-zoekresultaten, dus bij vrijwel elke lokale zoekopdracht), Copilot (standaard in Windows en Edge), Gemini en Perplexity. De gratis scan doet de eerste drie; de maandcontrole alle vijf. Claude kan als zesde worden ingeschakeld voor zakelijke dienstverleners, waar het gebruik hoger ligt.
+**Welke AI-systemen.** ChatGPT (ruim 75% van het Nederlandse chatbotverkeer, StatCounter, juni 2026), Google AI Overviews en AI Mode (verschijnt boven Google-zoekresultaten, dus bij vrijwel elke lokale zoekopdracht), Copilot (standaard in Windows en Edge), Gemini, Perplexity en Claude (sinds 24 oktober 2026; vooral relevant voor zakelijke dienstverleners, waar het gebruik hoger ligt). De gratis scan doet de eerste drie; de maandcontrole alle zes.
 
-**Hoe vaak.** Gratis scan: 6 vragen × 3 systemen × 3 keer = 54 antwoorden. Maandcontrole: 20 tot 30 vragen × 5 systemen × 10 keer, rond de 1.000 tot 1.500 antwoorden. Tien herhalingen is het minimum om een frequentie van 30% betrouwbaar te onderscheiden van ruis.
+**Hoe vaak.** Gratis scan: 6 vragen × 3 systemen × 3 keer = 54 antwoorden. Maandcontrole: 20 tot 30 vragen × 6 systemen × 10 keer, rond de 1.200 tot 1.800 antwoorden. Tien herhalingen is het minimum om een frequentie van 30% betrouwbaar te onderscheiden van ruis.
 
 **In welke taal en vanuit welke plek.** Nederlandse vragen, geformuleerd zoals een klant ze typt ("is bakkerij de vries zondag open"), met Nederland als locatie en zonder gespreksgeschiedenis. Elke vraag staat op zichzelf, zodat het ene antwoord het andere niet kleurt.
 
