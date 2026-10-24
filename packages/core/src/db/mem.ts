@@ -406,9 +406,11 @@ export class MemDb implements Db {
   // --- support@ auto-replies ---
   async supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters> {
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const today = this.supportLog.filter((r) => new Date(r.createdAt).getTime() > dayAgo);
     return {
       alreadyRepliedInThread: threadId !== null && this.supportLog.some((r) => r.provider_thread_id === threadId && r.action === "replied"),
-      repliesToSenderToday: this.supportLog.filter((r) => r.from_email === fromEmail && r.action === "replied" && new Date(r.createdAt).getTime() > dayAgo).length,
+      decisionsForSenderToday: today.filter((r) => r.from_email === fromEmail).length,
+      modelCallsToday: today.reduce((n, r) => n + (r.model_calls ?? 0), 0),
     };
   }
 

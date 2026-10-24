@@ -91,12 +91,16 @@ describe("support@vidalo.io — the account context and the log", () => {
       reply_body: "…",
       guard_violations: [],
       matched: null,
+      model_calls: 2,
     };
     expect(await db.recordSupportAutoreply(row)).toEqual({ duplicate: false });
     expect(await db.recordSupportAutoreply(row)).toEqual({ duplicate: true });
-    expect(await db.supportAutoreplyCounters("bakker@example.nl", "t1")).toEqual({ alreadyRepliedInThread: true, repliesToSenderToday: 1 });
-    expect(await db.supportAutoreplyCounters("bakker@example.nl", "t2")).toEqual({ alreadyRepliedInThread: false, repliesToSenderToday: 1 });
-    expect(await db.supportAutoreplyCounters("other@example.nl", null)).toEqual({ alreadyRepliedInThread: false, repliesToSenderToday: 0 });
+    expect(await db.supportAutoreplyCounters("bakker@example.nl", "t1")).toEqual({ alreadyRepliedInThread: true, decisionsForSenderToday: 1, modelCallsToday: 2 });
+    expect(await db.supportAutoreplyCounters("bakker@example.nl", "t2")).toEqual({ alreadyRepliedInThread: false, decisionsForSenderToday: 1, modelCallsToday: 2 });
+    expect(await db.supportAutoreplyCounters("other@example.nl", null)).toEqual({ alreadyRepliedInThread: false, decisionsForSenderToday: 0, modelCallsToday: 2 });
+    // An escalated row counts toward the sender's day too: every decision does.
+    await db.recordSupportAutoreply({ ...row, provider_message_id: "m2", action: "escalated", model_calls: 1 });
+    expect(await db.supportAutoreplyCounters("bakker@example.nl", null)).toMatchObject({ decisionsForSenderToday: 2, modelCallsToday: 3 });
   });
 });
 

@@ -201,7 +201,7 @@ export interface Db {
   joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }>;
 
   // --- support@ auto-replies (migration 0010; ../support) ---
-  /** The two loop counters the responder needs before it answers: replied on this thread before, replies to this sender in 24 h. */
+  /** The counters the responder needs before it answers: replied on this thread before, this sender's decisions in 24 h (any outcome), model calls in 24 h (all senders). */
   supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters>;
   /** One row per decision. `duplicate` when this provider message id was recorded before: the relay must not send again. */
   recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }>;

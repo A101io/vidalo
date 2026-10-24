@@ -30,7 +30,9 @@ create table if not exists support_autoreply_log (
   reply_body text,
   guard_violations text[] not null default '{}',
   -- The business the sender owns, when known: { businessId, status }. Never a secret.
-  matched jsonb
+  matched jsonb,
+  -- Model calls this decision made (0, 1 or 2); the daily budget sums these.
+  model_calls smallint not null default 0 check (model_calls between 0 and 2)
 );
 
 create unique index if not exists support_autoreply_log_provider_message_id_key
@@ -39,6 +41,8 @@ create index if not exists support_autoreply_log_thread_idx
   on support_autoreply_log (provider_thread_id) where provider_thread_id is not null;
 create index if not exists support_autoreply_log_sender_recent_idx
   on support_autoreply_log (from_email, created_at desc);
+create index if not exists support_autoreply_log_recent_idx
+  on support_autoreply_log (created_at desc);
 
 alter table support_autoreply_log enable row level security;
 revoke all on table support_autoreply_log from anon, authenticated;

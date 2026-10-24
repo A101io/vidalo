@@ -1,6 +1,6 @@
-// VENDORED from /Users/a101/A101/kit/core/support/index.ts (@a101/kit 0.7.0, 23 Oct 2026).
+// VENDORED from /Users/a101/A101/kit/core/support/index.ts (@a101/kit 0.7.0, 24 Oct 2026).
 // Do not edit here: change the kit, run its tests, copy the file back. The kit's
-// tests/unit/support.test.ts (35 tests) are the specification of this file.
+// tests/unit/support.test.ts is the specification of this file.
 /**
  * Support mailbox auto-replies — the brain behind every A101 support@ address.
  *
@@ -24,8 +24,10 @@
  * The safety model, in order:
  *
  *   1. `inboundBlockReason()` — deterministic. Loops, robots, bounces, our own
- *      domains, per-thread and per-sender caps. No model: a mail loop that
- *      depends on a judgement call is a mail loop.
+ *      domains, one reply per thread. No model: a mail loop that depends on a
+ *      judgement call is a mail loop. Then two caps, also before any model
+ *      call: a sender's fourth message of the day and anything past the
+ *      brand's daily model budget go to a person.
  *   2. Classification — one small model call returning a closed topic list. A
  *      topic the brand lists as human-only, an off-topic or unclear message,
  *      or a confidence under the threshold all escalate. Spam is ignored.
@@ -134,16 +136,36 @@ export interface InboundMail {
   threadId?: string | null;
   /** True when the log already holds a reply from us on this thread. */
   alreadyRepliedInThread?: boolean;
-  /** How many auto-replies this sender has had in the trailing 24h. */
-  repliesToSenderToday?: number;
+  /**
+   * How many of this sender's messages were decided in the trailing 24h,
+   * whatever the outcome. Every decision counts, not only replies: a sender
+   * whose mails all escalate still cost a model call each.
+   */
+  decisionsForSenderToday?: number;
+  /** Model calls this brand made in the trailing 24h, every sender together. */
+  modelCallsToday?: number;
+  /**
+   * True when the relay will save the reply as a Gmail draft for a person to
+   * send (dry run), not send it. The reply then does not present itself as
+   * automated: a person reads, edits and sends it.
+   */
+  draft?: boolean;
 }
 
 /**
- * At most this many auto-replies to one sender per day. A human who writes
- * four times in a morning is having a conversation, and the fifth canned
- * answer is worse than silence.
+ * At most this many of one sender's messages go through the model per day;
+ * the next ones go to a person without a model call. A human who writes four
+ * times in a morning is having a conversation, and a person should take it.
  */
-export const MAX_REPLIES_PER_SENDER_PER_DAY = 3;
+export const MAX_MESSAGES_PER_SENDER_PER_DAY = 3;
+
+/**
+ * Model calls one brand may make per day before every further message goes to
+ * a person without one. Each message costs at most two calls, so this is
+ * 150 or more answered questions a day: far above today's mail, and a ceiling
+ * a flood from many addresses cannot push past.
+ */
+export const DEFAULT_MAX_MODEL_CALLS_PER_DAY = 300;
 
 /** The header our own outbound reply carries, seen coming back around. */
 export const AUTOREPLY_HEADER = "x-a101-autoreply";
@@ -247,8 +269,6 @@ export function inboundBlockReason(mail: InboundMail, cfg: InboundGateConfig): s
   if (BOUNCE_OR_VACATION_SUBJECT.test(subject)) return "bounce_or_vacation_subject";
 
   if (mail.alreadyRepliedInThread) return "already_replied_in_thread";
-
-  if ((mail.repliesToSenderToday ?? 0) >= MAX_REPLIES_PER_SENDER_PER_DAY) return "sender_daily_cap_reached";
 
   if (!(mail.body ?? "").trim() && !subject) return "empty_message";
 
@@ -472,6 +492,8 @@ export interface SupportBrainConfig {
   minConfidence?: number;
   /** Line appended under the reply before the identity line; defaults per language. */
   disclosure?: Partial<Record<SupportLanguage, string>>;
+  /** Daily model-call ceiling for this brand. Default `DEFAULT_MAX_MODEL_CALLS_PER_DAY`. */
+  maxModelCallsPerDay?: number;
 }
 
 /** What a venture knows about the sender, if it can look them up. */
@@ -501,6 +523,8 @@ export interface SupportDecision {
   /** The blocked draft, kept so the deny list can be reviewed against evidence. */
   blockedDraft: string | null;
   account: SupportAccountContext | null;
+  /** Model calls this decision made (0, 1 or 2): the daily budget counts these. */
+  modelCalls: number;
 }
 
 export interface DecideDeps {
@@ -516,6 +540,15 @@ export const MAX_BODY_CHARS = 6000;
 const DISCLOSURE: Record<SupportLanguage, (brand: string) => string> = {
   en: (b) => `This is an automated reply from the ${b} support assistant. Reply to this email if you would like a colleague to take a look.`,
   nl: (b) => `Dit is een automatisch antwoord van de ${b}-supportassistent. Beantwoord deze e-mail als je een collega wilt spreken.`,
+};
+
+/**
+ * The footer line of a reply saved as a draft for a person to send (dry run).
+ * Honest about what happened: an assistant wrote it, a person checked it.
+ */
+const DRAFT_DISCLOSURE: Record<SupportLanguage, string> = {
+  en: "Written with the help of an assistant and checked by a person.",
+  nl: "Geschreven met hulp van een assistent en nagekeken door een medewerker.",
 };
 
 function answeredTopics(cfg: SupportBrainConfig): string[] {
@@ -556,7 +589,13 @@ ${extra ? extra + "\n" : ""}- "cancellation": wants to stop or pause a subscript
 Be conservative. When two topics fit, choose the one that most needs a human.`;
 }
 
-export function buildReplyPrompt(cfg: SupportBrainConfig, topic: string, language: SupportLanguage, accountLine: string): string {
+export function buildReplyPrompt(
+  cfg: SupportBrainConfig,
+  topic: string,
+  language: SupportLanguage,
+  accountLine: string,
+  opts: { draft?: boolean } = {},
+): string {
   const langName = language === "nl" ? "Dutch" : "English";
   const knowledge = typeof cfg.knowledge === "function" ? cfg.knowledge(language) : cfg.knowledge;
   const names = [cfg.brand, ...(cfg.productNames ?? [])].map((n) => `"${n}"`).join(", ");
@@ -574,8 +613,13 @@ ${accountLine}
 Write the whole reply in ${langName}. Keep product names as they are (${names}).
 
 ═══ HOW TO WRITE THIS EMAIL ═══
-- Open by identifying yourself as an automated assistant, in one short sentence, and say a colleague will follow up if the answer does not cover it. This is required: an AI must identify itself at first contact.
-- Then answer the question, in 2-5 sentences. Nothing else.
+${
+    opts.draft
+      ? `- A person on the ${cfg.brand} team reads, edits and sends this reply. Do not describe yourself and do not say the reply is automated.
+- Answer the question directly, in 2-5 sentences. Nothing else.`
+      : `- Open by identifying yourself as an automated assistant, in one short sentence, and say a colleague will follow up if the answer does not cover it. This is required: an AI must identify itself at first contact.
+- Then answer the question, in 2-5 sentences. Nothing else.`
+  }
 - No greeting theatre, no "I hope this email finds you well", no restating their question back at them.
 - Sign off as "${cfg.brand} Support". Do not invent a person's name.
 - Do not add a signature block, address or disclaimer — those are appended afterwards.
@@ -594,9 +638,9 @@ Write the whole reply in ${langName}. Keep product names as they are (${names}).
 Return only the body text of the email. No subject line, no JSON, no markdown.`;
 }
 
-/** The plain-text footer every auto-reply carries. Not model-written. */
-export function replyFooter(cfg: SupportBrainConfig, language: SupportLanguage): string {
-  const line = cfg.disclosure?.[language] ?? DISCLOSURE[language](cfg.brand);
+/** The plain-text footer every reply carries. Not model-written. */
+export function replyFooter(cfg: SupportBrainConfig, language: SupportLanguage, opts: { draft?: boolean } = {}): string {
+  const line = opts.draft ? DRAFT_DISCLOSURE[language] : (cfg.disclosure?.[language] ?? DISCLOSURE[language](cfg.brand));
   const identity = typeof cfg.identityLine === "function" ? cfg.identityLine(language) : cfg.identityLine;
   return `\n\n—\n${line}\n${identity}`;
 }
@@ -623,6 +667,8 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
   const fromName = clip(mail.fromName, 160).trim();
   const subject = clip(mail.subject, 400).trim();
   const body = stripQuotedHistory(clip(mail.body, MAX_BODY_CHARS * 2)).slice(0, MAX_BODY_CHARS);
+  const draftMode = mail.draft === true;
+  let calls = 0;
 
   const base: SupportDecision = {
     action: "escalated",
@@ -636,18 +682,25 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     violations: [],
     blockedDraft: null,
     account: null,
+    modelCalls: 0,
   };
-  const escalate = (reason: string, patch: Partial<SupportDecision> = {}): SupportDecision => ({ ...base, ...patch, action: "escalated", reason, flagForHuman: true });
-  const ignore = (reason: string, patch: Partial<SupportDecision> = {}): SupportDecision => ({ ...base, ...patch, action: "ignored", reason, flagForHuman: false });
+  const escalate = (reason: string, patch: Partial<SupportDecision> = {}): SupportDecision => ({ ...base, ...patch, action: "escalated", reason, flagForHuman: true, modelCalls: calls });
+  const ignore = (reason: string, patch: Partial<SupportDecision> = {}): SupportDecision => ({ ...base, ...patch, action: "ignored", reason, flagForHuman: false, modelCalls: calls });
 
   // 1. Deterministic gate.
   const blocked = inboundBlockReason({ ...mail, from: fromEmail, subject, body }, { ownDomains: cfg.ownDomains });
   if (blocked) return ignore(blocked);
 
-  // 2. Classify.
+  // 2. Caps, before any model call. Above either one a person reads the
+  // message: a flood can cost nothing more and bury nothing but its own mail.
+  if ((mail.decisionsForSenderToday ?? 0) >= MAX_MESSAGES_PER_SENDER_PER_DAY) return escalate("sender_daily_cap_reached");
+  if ((mail.modelCallsToday ?? 0) >= (cfg.maxModelCallsPerDay ?? DEFAULT_MAX_MODEL_CALLS_PER_DAY)) return escalate("daily_model_budget_reached");
+
+  // 3. Classify.
   if (!deps.provider) return escalate("ai_not_configured");
   let parsed: Record<string, unknown>;
   try {
+    calls++;
     const out = await deps.provider.complete({
       system: buildClassifierPrompt(cfg),
       messages: [{ role: "user", content: `<email from="${fromEmail}">\n<subject>${subject}</subject>\n<body>\n${body}\n</body>\n</email>` }],
@@ -675,7 +728,7 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
   if (requiresHuman(topic)) return escalate(`human_only_topic:${topic}`, classified);
   if (confidence < (cfg.minConfidence ?? 0.6)) return escalate("low_confidence", classified);
 
-  // 3. Account context, when the venture can look it up. A failed lookup must
+  // 4. Account context, when the venture can look it up. A failed lookup must
   // not upgrade into a wrong answer: fall through with the conservative line.
   let account: SupportAccountContext | null = null;
   if (deps.lookupAccount) {
@@ -688,11 +741,12 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
   if (account?.language) language = account.language;
   const accountLine = account?.line ?? NO_ACCOUNT_LINE;
 
-  // 4. Draft.
+  // 5. Draft.
   let draft: string;
   try {
+    calls++;
     const out = await deps.provider.complete({
-      system: buildReplyPrompt(cfg, topic, language, accountLine),
+      system: buildReplyPrompt(cfg, topic, language, accountLine, { draft: draftMode }),
       messages: [
         {
           role: "user",
@@ -707,14 +761,14 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     return escalate("drafting_failed", { ...classified, language, account });
   }
 
-  // 5. A draft that says nothing is not sent: the prompt tells the model to
+  // 6. A draft that says nothing is not sent: the prompt tells the model to
   // hand off when the facts do not cover the question, and a hand-off is a
   // person's job, not an email with only a disclosure in it.
   if (draftHasNoAnswer(draft)) {
     return escalate("no_answer_in_draft", { ...classified, language, account, blockedDraft: draft });
   }
 
-  // 6. Scan. The check that actually keeps the promise.
+  // 7. Scan. The check that actually keeps the promise.
   const scan = scanOutboundReply(
     draft,
     { senderEmail: fromEmail },
@@ -728,8 +782,8 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     return escalate("content_guard_blocked", { ...classified, language, account, violations: scan.violations, blockedDraft: draft });
   }
 
-  // 7. Hand the text back. The relay sends it verbatim as plain text, so the
-  // disclosure and the identity line are in the body itself.
+  // 8. Hand the text back. The relay sends it verbatim as plain text (or saves
+  // it as a draft), so the disclosure and the identity line are in the body itself.
   return {
     ...base,
     ...classified,
@@ -738,7 +792,8 @@ export async function decideSupportReply(mail: InboundMail, deps: DecideDeps): P
     action: "replied",
     reason: `answered_${topic}`,
     flagForHuman: alsoFlagsHuman(topic),
-    reply: { subject: replySubjectFor(subject, cfg.brand), text: draft + replyFooter(cfg, language) },
+    reply: { subject: replySubjectFor(subject, cfg.brand), text: draft + replyFooter(cfg, language, { draft: draftMode }) },
+    modelCalls: calls,
   };
 }
 
@@ -766,6 +821,8 @@ export interface SupportLogRow {
   reply_body: string | null;
   guard_violations: string[];
   matched: Record<string, string | null> | null;
+  /** Model calls this decision made; the daily budget sums these. */
+  model_calls: number;
 }
 
 export function supportLogRow(mail: InboundMail, decision: SupportDecision): SupportLogRow {
@@ -785,6 +842,7 @@ export function supportLogRow(mail: InboundMail, decision: SupportDecision): Sup
     reply_body: decision.reply?.text ?? decision.blockedDraft,
     guard_violations: decision.violations,
     matched: decision.account?.matched ?? null,
+    model_calls: decision.modelCalls,
   };
 }
 
@@ -805,6 +863,8 @@ export interface RelayRequestBody {
   headers?: Record<string, string>;
   messageId?: string;
   threadId?: string;
+  /** True in dry run: the relay saves the reply as a Gmail draft for a person to send. */
+  draft?: boolean;
 }
 
 /** What the endpoint answers; the relay acts on `action`, `reply` and `flagForHuman`. */
@@ -837,6 +897,7 @@ export function parseRelayRequest(body: unknown): InboundMail | null {
     headers,
     messageId: clip(b.messageId, 300).trim() || null,
     threadId: clip(b.threadId, 300).trim() || null,
+    draft: b.draft === true,
   };
 }
 
@@ -867,8 +928,12 @@ export async function secretMatches(presented: string, expected: string): Promis
 }
 
 export interface RelayCounters {
+  /** The log holds a reply from us on this thread. */
   alreadyRepliedInThread: boolean;
-  repliesToSenderToday: number;
+  /** Log rows for this sender in the trailing 24h, any outcome. */
+  decisionsForSenderToday: number;
+  /** Sum of model_calls over this brand's log rows in the trailing 24h. */
+  modelCallsToday: number;
 }
 
 export interface RelayHandlerDeps extends DecideDeps {
