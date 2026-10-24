@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overzicht, richting B Logboek</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#FFFFFF;color:#111827;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:#111827}a:hover{color:#2563EB}
+.wrap{max-width:1168px;margin:0 auto;padding:0 40px;box-sizing:border-box}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px 48px;align-items:start}
+.eng{display:grid;grid-template-columns:140px minmax(0,1fr) 120px;gap:8px 20px;align-items:center}
+.log{display:grid;grid-template-columns:64px minmax(0,1fr);gap:0 20px}
+.card{border:1.5px solid #E7E3DC;border-radius:22px;background:#fff}
+.panel{background:#F4F1EC;border-radius:28px}
+.divide>*+*{border-top:1px solid #E7E3DC}
+.h3{font-size:20px;font-weight:800;line-height:1.25;margin:0}
+.cap{font-size:13px;color:#666D7B}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot8{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot12{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot22{width:22px;height:22px;border-radius:50%;display:inline-block;flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #E7E3DC;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;background:#fff}
+.tag{display:inline-flex;align-items:center;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700;letter-spacing:0.2px;background:#F4F1EC;color:#374151;white-space:nowrap}
+.btn-p{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 22px;border-radius:12px;background:#2563EB;color:#fff;font-weight:800;font-size:16px;border:0;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.btn-s{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;background:#fff;color:#111827;font-weight:700;font-size:14px;border:1.5px solid #111827;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.link{font-size:14px;font-weight:700;color:#2563EB;text-decoration:none;white-space:nowrap}
+.mark-wrong{background:#FDECEA;padding:2px 6px;border-radius:4px}
+.mark-grey{background:#F4F1EC;padding:2px 6px;border-radius:4px}
+.nav a{color:#111827;text-decoration:none}
+.tl{position:relative;padding-left:0}
+.tl-line{position:absolute;left:5px;top:14px;bottom:14px;width:1.5px;background:#E7E3DC}
+@media (max-width:640px){
+ .wrap{padding:0 16px}
+ .main{grid-template-columns:minmax(0,1fr)}
+ .eng{grid-template-columns:minmax(0,1fr) 120px}
+ .eng .verloop{grid-column:1 / -1}
+ .log{grid-template-columns:minmax(0,1fr)}
+ .hide-m{display:none}
+ .link{white-space:normal}
+ main{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .stack{flex-direction:column;align-items:stretch}
+}
+</style>
+</helmet>
+<div style="width:100%;min-height:100%;background:#FFFFFF;color:#111827;display:flex;flex-direction:column">
+
+<header style="border-bottom:1.5px solid #E7E3DC;background:#fff">
+  <div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-top:18px;padding-bottom:18px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="#top" style="display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:22px;letter-spacing:-0.5px;text-decoration:none"><span aria-hidden="true" style="width:14px;height:14px;background:#2563EB;border-radius:50% 50% 50% 10%;display:inline-block"></span>vidalo</a>
+      <span class="hide-m" style="font-size:14px;color:#666D7B">Bakkerij De Vries, Haarlem</span>
+    </div>
+    <nav class="nav" aria-label="Hoofdmenu" style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;font-weight:600">
+      <a href="#top" style="border-bottom:1.5px solid #111827">Overzicht</a>
+      <a href="#top">Voortgang</a>
+      <a href="#top">Gegevens</a>
+      <a href="#top">Domein</a>
+      <a href="#top">Google</a>
+      <a href="#top">Abonnement</a>
+      <a href="#top">Account</a>
+      <a href="#top" style="color:#666D7B">Uitloggen</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap" style="display:flex;flex-direction:column;gap:36px;padding-top:40px;padding-bottom:88px">
+
+  <!-- Title: the answer in one line -->
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+    <h1 style="margin:0;font-weight:800;font-size:36px;line-height:1.08;letter-spacing:-1.5px">Bakkerij De Vries, Haarlem: jouw stip is rood.</h1>
+    <p style="margin:0;font-size:17px;color:#374151">Op 7 oktober klopten 4 van 7 antwoorden niet en vond de AI 1 keer niets. Sinds de vorige controle: 1 nieuw, 2 hersteld, 3 nog open. Hieronder staat per dag wat we deden en wat we daarvan kunnen laten zien.</p>
+  </div>
+
+  <div class="main">
+
+    <!-- Main column -->
+    <div style="display:flex;flex-direction:column;gap:36px;min-width:0">
+
+      <!-- Per AI system, with the last three checks -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+          <h2 class="h3">Per AI-systeem</h2>
+          <a href="#top" class="link">Rapport van 7 okt</a>
+        </div>
+        <div class="card divide" style="font-size:15px">
+          <div class="eng" style="padding:14px 20px">
+            <span style="display:flex;align-items:center;gap:12px;font-weight:700"><span class="dot22" style="background:#D41B44"></span>ChatGPT</span>
+            <span>4 van 7 fout · 1 niet gevonden</span>
+            <span class="verloop" style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="cap" style="margin-right:4px">verloop</span><span class="dot8" style="background:#D41B44"></span><span class="dot8" style="background:#D41B44"></span><span class="dot8" style="background:#D41B44"></span></span>
+          </div>
+          <div class="eng" style="padding:14px 20px">
+            <span style="display:flex;align-items:center;gap:12px;font-weight:700"><span class="dot22" style="background:#F59E0B"></span>Google AI</span>
+            <span>1 van 7 fout · 1 niet gevonden</span>
+            <span class="verloop" style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="cap" style="margin-right:4px">verloop</span><span class="dot8" style="background:#D41B44"></span><span class="dot8" style="background:#F59E0B"></span><span class="dot8" style="background:#F59E0B"></span></span>
+          </div>
+          <div class="eng" style="padding:14px 20px">
+            <span style="display:flex;align-items:center;gap:12px;font-weight:700"><span class="dot22" style="background:#D41B44"></span>Copilot</span>
+            <span>2 van 7 fout · 1 niet gevonden</span>
+            <span class="verloop" style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="cap" style="margin-right:4px">verloop</span><span class="dot8" style="background:#D41B44"></span><span class="dot8" style="background:#D41B44"></span><span class="dot8" style="background:#D41B44"></span></span>
+          </div>
+          <div class="eng" style="padding:14px 20px">
+            <span style="display:flex;align-items:center;gap:12px;font-weight:700"><span class="dot22" style="background:#2B7A53"></span>Gemini</span>
+            <span>7 van 7 klopt</span>
+            <span class="verloop" style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="cap" style="margin-right:4px">verloop</span><span class="dot8" style="background:#F59E0B"></span><span class="dot8" style="background:#2B7A53"></span><span class="dot8" style="background:#2B7A53"></span></span>
+          </div>
+          <div class="eng" style="padding:14px 20px">
+            <span style="display:flex;align-items:center;gap:12px;font-weight:700"><span class="dot22" style="background:#9CA3AF"></span>Perplexity</span>
+            <span>5 van 7 niets gevonden · 2 klopt</span>
+            <span class="verloop" style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="cap" style="margin-right:4px">verloop</span><span class="dot8" style="background:#9CA3AF"></span><span class="dot8" style="background:#9CA3AF"></span><span class="dot8" style="background:#9CA3AF"></span></span>
+          </div>
+        </div>
+        <p class="cap" style="margin:0">Verloop: de controles van 7 aug, 7 sep en 7 okt. Rood: een antwoord stuurt klanten weg. Oranje: verkeerde details. Groen: alles klopt. Grijs: de AI vindt niets over je.</p>
+      </section>
+
+      <!-- Logbook: what changed and what Vidalo did, by date, with proof -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+          <h2 class="h3">Logboek</h2>
+          <span class="cap">sinds de controle van 7 september</span>
+        </div>
+        <div class="card" style="padding:8px 20px">
+          <ol class="tl" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">12 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#F59E0B"></span><span class="tag">voor jou</span><span style="font-weight:600">Eén zin op je website aanpassen</span></div>
+                <p style="margin:0;color:#374151">We mailden je welke zin op bakkerijdevries.nl/praktisch moet veranderen: Google AI leest daar nog "alleen contant".</p>
+                <div style="display:flex;gap:16px;flex-wrap:wrap"><a href="FindingG.dc.html" class="link">Ik heb dit aangepast</a><a href="#top" class="link" style="color:#666D7B">De mail</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">10 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#F59E0B"></span><span class="tag">gedaan</span><span style="font-weight:600">Correctieverzoek naar telefoonboek.nl</span></div>
+                <p style="margin:0;color:#374151">Namens jou gevraagd 023 532 00 41 te vervangen door 023 535 22 18. Hercontrole 9 nov.</p>
+                <div style="display:flex;gap:16px"><a href="#top" class="link" style="color:#666D7B">Verstuurde mail</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">9 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#F59E0B"></span><span class="tag">gedaan</span><span style="font-weight:600">Correctie ingediend bij openingstijden.nl</span></div>
+                <p style="margin:0;color:#374151">Zondag: gesloten. Bevestigingsnummer 48213. Hercontrole 23 okt.</p>
+                <div style="display:flex;gap:16px"><a href="#top" class="link" style="color:#666D7B">Bevestiging</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">8 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#2B7A53"></span><span class="tag">gedaan</span><span style="font-weight:600">Google Bedrijfsprofiel bijgewerkt</span></div>
+                <p style="margin:0;color:#374151">Betaalmethoden: pin en contant, na jouw goedkeuring. Google bevestigde de wijziging om 14:02.</p>
+                <div style="display:flex;gap:16px"><a href="ChannelG.dc.html" class="link" style="color:#666D7B">Antwoord van Google</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">7 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#2B7A53"></span><span class="tag">gedaan</span><span style="font-weight:600">Feitenpagina opnieuw gepubliceerd, versie 3</span></div>
+                <p style="margin:0;color:#374151">Met glutenvrij brood op bestelling en "niet te verwarren met Bakkerij De Vries in Heemstede". Aangemeld bij Google en Bing; Google las de pagina op 11 okt.</p>
+                <div style="display:flex;gap:16px"><a href="#top" class="link" style="color:#666D7B">feiten.bakkerijdevries.nl</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0;border-bottom:1px solid #E7E3DC">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">7 okt</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#D41B44"></span><span class="tag">controle</span><span style="font-weight:600">4 van 7 fout, 1 niet gevonden</span></div>
+                <p style="margin:0;color:#374151">Nieuw: ChatGPT zegt <span class="mark-wrong">gesloten sinds 2025</span>, uit een krantenbericht over een naamgenoot in Heemstede. Hersteld sinds 7 sep: adres (Copilot) en taarten op bestelling (ChatGPT). Nog open: zondag, telefoonnummer, pinnen.</p>
+                <div style="display:flex;gap:16px"><a href="#top" class="link" style="color:#666D7B">Rapport</a></div>
+              </div>
+            </li>
+            <li class="log" style="padding:16px 0">
+              <span class="cap" style="font-weight:600;color:#111827;padding-top:2px">30 sep</span>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:15px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="dot" style="background:#2B7A53"></span><span class="tag">hersteld</span><span style="font-weight:600">Taarten op bestelling</span></div>
+                <p style="margin:0;color:#374151">ChatGPT zei "nee" sinds 7 aug en zegt nu "ja". Bron: je feitenpagina. 54 dagen.</p>
+                <div style="display:flex;gap:16px"><a href="#top" class="link" style="color:#666D7B">Voor en na</a></div>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <a href="#top" class="link" style="align-self:flex-start">Ouder logboek, vanaf 14 sep</a>
+      </section>
+
+      <!-- Open findings, short -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2 class="h3">Nog open <span style="font-weight:600;color:#666D7B;font-size:15px">· 5</span></h2>
+        <ol class="card divide" style="list-style:none;margin:0;padding:0;font-size:15px">
+          <li class="stack" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px"><span style="display:flex;align-items:center;gap:12px;min-width:0"><span class="dot12" style="background:#D41B44"></span><span><span style="font-weight:600">Bestaat De Vries nog?</span> <span class="cap">ChatGPT: gesloten sinds 2025</span></span></span><span style="display:flex;align-items:center;gap:14px"><span class="pill"><span class="dot" style="background:#D41B44"></span>Gevonden</span><a href="FindingG.dc.html" class="link">Bekijk</a></span></li>
+          <li class="stack" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px"><span style="display:flex;align-items:center;gap:12px;min-width:0"><span class="dot12" style="background:#D41B44"></span><span><span style="font-weight:600">Zondag open?</span> <span class="cap">ChatGPT: ja, 9:00–17:00</span></span></span><span style="display:flex;align-items:center;gap:14px"><span class="pill"><span class="dot" style="background:#F59E0B"></span>In behandeling</span><a href="FindingG.dc.html" class="link">Bekijk</a></span></li>
+          <li class="stack" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px"><span style="display:flex;align-items:center;gap:12px;min-width:0"><span class="dot12" style="background:#F59E0B"></span><span><span style="font-weight:600">Pinnen?</span> <span class="cap">Google AI: alleen contant</span></span></span><span style="display:flex;align-items:center;gap:14px"><span class="pill"><span class="dot" style="background:#F59E0B"></span>In behandeling</span><a href="FindingG.dc.html" class="link">Bekijk</a></span></li>
+          <li class="stack" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px"><span style="display:flex;align-items:center;gap:12px;min-width:0"><span class="dot12" style="background:#D41B44"></span><span><span style="font-weight:600">Telefoonnummer?</span> <span class="cap">Copilot: 023 532 00 41</span></span></span><span style="display:flex;align-items:center;gap:14px"><span class="pill"><span class="dot" style="background:#F59E0B"></span>Hercontrole</span><a href="FindingG.dc.html" class="link">Bekijk</a></span></li>
+          <li class="stack" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px"><span style="display:flex;align-items:center;gap:12px;min-width:0"><span class="dot12" style="background:#9CA3AF"></span><span><span style="font-weight:600">Glutenvrij brood?</span> <span class="cap">Google AI: niets gevonden</span></span></span><span style="display:flex;align-items:center;gap:14px"><span class="pill"><span class="dot" style="background:#9CA3AF"></span>Hercontrole</span><a href="FindingG.dc.html" class="link">Bekijk</a></span></li>
+        </ol>
+      </section>
+    </div>
+
+    <!-- Right rail -->
+    <aside style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+        <span class="cap" style="font-weight:700">Volgende controle</span>
+        <div style="font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.05">7 nov 2026</div>
+        <p class="cap" style="margin:0;font-size:14px;color:#374151">Elke maand op de 7e. Eerder, als een hercontrole dat vraagt: 21 okt, 23 okt, 28 okt.</p>
+        <form style="margin:0;display:flex"><button type="button" class="btn-p" style="width:100%">Controleer nu</button></form>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="cap" style="font-weight:700">Instellen</span><span class="cap">2 van 3</span></div>
+        <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px">
+          <li style="display:flex;align-items:center;gap:10px;color:#666D7B"><span class="dot12" style="background:#2B7A53"></span>Google gekoppeld</li>
+          <li style="display:flex;align-items:center;gap:10px;color:#666D7B"><span class="dot12" style="background:#2B7A53"></span>Gegevens bevestigd, versie 3</li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="display:flex;align-items:center;gap:10px;font-weight:600"><span class="dot12" style="background:#9CA3AF"></span>Domein</span><a href="#top" class="link">Nog te doen</a></li>
+        </ol>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="cap" style="font-weight:700">Bronnen</span><a href="#top" class="link">Feitenpagina</a></div>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px">
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><a href="ChannelG.dc.html" style="text-decoration:none;font-weight:600">Google Bedrijfsprofiel</a><span class="pill"><span class="dot" style="background:#F59E0B"></span>3 wachten</span></li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>Bing Places</span><span class="pill"><span class="dot" style="background:#2B7A53"></span>Gelijk</span></li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>Apple Business Connect</span><span class="pill"><span class="dot" style="background:#9CA3AF"></span>Wacht</span></li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>openingstijden.nl</span><span class="pill"><span class="dot" style="background:#F59E0B"></span>Wijkt af</span></li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>telefoonboek.nl</span><span class="pill"><span class="dot" style="background:#F59E0B"></span>Wijkt af</span></li>
+          <li style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>Feitenpagina</span><span class="pill"><span class="dot" style="background:#2B7A53"></span>Gepubliceerd</span></li>
+        </ul>
+        <a href="#top" class="link" style="color:#666D7B">Alle 13 bronnen</a>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:10px">
+        <span class="cap" style="font-weight:700">Hersteld</span>
+        <div style="font-size:14px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#2B7A53;margin-top:4px"></span><span><span style="font-weight:600">Taarten op bestelling</span><br><span class="cap">ChatGPT · nee → ja · 30 sep</span></span></div>
+          <div style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#2B7A53;margin-top:4px"></span><span><span style="font-weight:600">Adres</span><br><span class="cap">Copilot · nr 12 → 112 · 18 sep</span></span></div>
+        </div>
+        <a href="#top" class="link" style="color:#666D7B">Alle 6 herstellingen</a>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px">
+        <span class="cap" style="font-weight:700">Abonnement</span>
+        <p style="margin:0;font-size:14px;color:#374151">Bewaking, €49 per maand excl. btw. Volgende factuur 7 nov 2026.</p>
+        <a href="#top" class="link">Open facturen</a>
+      </div>
+    </aside>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

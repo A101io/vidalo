@@ -8,6 +8,11 @@ This is the design `apps/web` must match. It supersedes the visual spec in `docs
 | `design-g/ResultG.dc.html` | Result, red/green (7 questions, incl. one "niets gevonden" row) | `/r/[id]` |
 | `design-g/ResultGGrey.dc.html` | Result, grey: AI does not know the business | `/r/[id]` when `visibility === "unknown"` |
 | `design-g/SectorG.dc.html` | Sector page (loodgieters & installateurs, with switcher) | `/vak/[slug]` |
+| `design-g/AppG.dc.html` | Owner overview, direction "Logboek" (picked 24 Oct 2026 from the Design canvas, `docs/PRODUCT.md`): one dot per AI system with the last three checks, a dated log of what changed and what Vidalo did with a proof link per line, open errors, right rail with next check, setup, sources, proof, plan | `/app` |
+| `design-g/FindingG.dc.html` | Finding detail, direction "Dossier": the raw answers, the source with the exact sentence to replace, every action with evidence; rail with status timeline, next step, "Ik heb dit aangepast" (primary) and "Dit klopt wél" | `/app/fouten/[id]` |
+| `design-g/ChannelG.dc.html` | Channel with a pending change, direction "Twee kaarten": the Business Profile now and after with the changed lines marked and "overslaan" per field, approve or decline, the last sync as evidence (date, fields, Google's answer, who approved), earlier syncs | `/app/vermeldingen/[id]` |
+
+The three owner boards are responsive in one file (the `@media (max-width:640px)` block in each `<helmet>`): open them at 1280 and at 390.
 
 Open them in a browser (they are self-contained HTML; ignore the `support.js`/`x-dc` wrapper). Copy the Dutch copy **verbatim** — every string goes into `packages/core/src/copy/index.ts`, nothing hard-coded in JSX.
 

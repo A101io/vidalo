@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fout, richting A Dossier</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#FFFFFF;color:#111827;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:#111827}a:hover{color:#2563EB}
+.wrap{max-width:1168px;margin:0 auto;padding:0 40px;box-sizing:border-box}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px 48px;align-items:start}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.act{display:grid;grid-template-columns:64px minmax(0,1fr) 130px;gap:8px 20px;align-items:start}
+.card{border:1.5px solid #E7E3DC;border-radius:22px;background:#fff}
+.panel{background:#F4F1EC;border-radius:28px}
+.divide>*+*{border-top:1px solid #E7E3DC}
+.h3{font-size:20px;font-weight:800;line-height:1.25;margin:0}
+.cap{font-size:13px;color:#666D7B}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot12{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot22{width:22px;height:22px;border-radius:50%;display:inline-block;flex-shrink:0}
+.ring{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0;box-sizing:border-box;border:1.5px solid #9CA3AF;background:#fff}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #E7E3DC;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;background:#fff}
+.btn-p{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 22px;border-radius:12px;background:#2563EB;color:#fff;font-weight:800;font-size:16px;border:0;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.btn-o{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 22px;border-radius:12px;background:#fff;color:#111827;font-weight:800;font-size:16px;border:1.5px solid #111827;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.link{font-size:14px;font-weight:700;color:#2563EB;text-decoration:none;white-space:nowrap}
+.mark-wrong{background:#FDECEA;padding:2px 6px;border-radius:4px}
+.mark-ok{background:#DCFCE7;padding:2px 6px;border-radius:4px}
+.nav a{color:#111827;text-decoration:none}
+.quote{margin:0;font-size:16px;line-height:1.5;color:#111827}
+@media (max-width:640px){
+ .wrap{padding:0 16px}
+ .main{grid-template-columns:minmax(0,1fr)}
+ .g3{grid-template-columns:minmax(0,1fr)}
+ .act{grid-template-columns:64px minmax(0,1fr)}
+ .act>*:last-child{grid-column:2}
+ .hide-m{display:none}
+ .link{white-space:normal}
+ main{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .stack{flex-direction:column;align-items:stretch}
+}
+</style>
+</helmet>
+<div style="width:100%;min-height:100%;background:#FFFFFF;color:#111827;display:flex;flex-direction:column">
+
+<header style="border-bottom:1.5px solid #E7E3DC;background:#fff">
+  <div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-top:18px;padding-bottom:18px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="AppG.dc.html" style="display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:22px;letter-spacing:-0.5px;text-decoration:none"><span aria-hidden="true" style="width:14px;height:14px;background:#2563EB;border-radius:50% 50% 50% 10%;display:inline-block"></span>vidalo</a>
+      <span class="hide-m" style="font-size:14px;color:#666D7B">Bakkerij De Vries, Haarlem</span>
+    </div>
+    <nav class="nav" aria-label="Hoofdmenu" style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;font-weight:600">
+      <a href="AppG.dc.html" style="border-bottom:1.5px solid #111827">Overzicht</a>
+      <a href="#top">Voortgang</a>
+      <a href="#top">Gegevens</a>
+      <a href="#top">Domein</a>
+      <a href="#top">Google</a>
+      <a href="#top">Abonnement</a>
+      <a href="#top">Account</a>
+      <a href="#top" style="color:#666D7B">Uitloggen</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap" style="display:flex;flex-direction:column;gap:32px;padding-top:32px;padding-bottom:88px">
+
+  <a href="AppG.dc.html" class="link" style="align-self:flex-start">← Overzicht</a>
+
+  <!-- Title: the question, the wrong answer, the right answer -->
+  <div style="display:flex;flex-direction:column;gap:12px;max-width:820px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="pill"><span class="dot" style="background:#F59E0B"></span>In behandeling</span>
+      <span class="cap">Gevonden 7 okt 2026 · Betalen · misleider</span>
+    </div>
+    <h1 style="margin:0;font-weight:800;font-size:36px;line-height:1.08;letter-spacing:-1.5px">Kan ik pinnen bij Bakkerij De Vries?</h1>
+    <p style="margin:0;font-size:17px;color:#374151">Google AI zei 3 van 3 keer <span class="mark-wrong">alleen contant</span>. Dat klopt niet: je accepteert pin en contant. De fout komt van je eigen website.</p>
+  </div>
+
+  <div class="main">
+
+    <!-- Evidence column -->
+    <div style="display:flex;flex-direction:column;gap:36px;min-width:0">
+
+      <!-- The raw answers -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+          <h2 class="h3">Wat de AI letterlijk zei</h2>
+          <span class="cap">3 keer gevraagd op 7 okt</span>
+        </div>
+        <div class="g3">
+          <figure class="card" style="margin:0;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <figcaption class="cap" style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#F59E0B"></span>Google AI · 7 okt, 09:14</figcaption>
+            <blockquote class="quote" style="font-style:italic">"Bij Bakkerij De Vries in Haarlem kun je <span class="mark-wrong">alleen contant</span> betalen. Neem dus cash mee."</blockquote>
+          </figure>
+          <figure class="card" style="margin:0;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <figcaption class="cap" style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#F59E0B"></span>Google AI · 7 okt, 09:16</figcaption>
+            <blockquote class="quote" style="font-style:italic">"Volgens de website van de bakkerij is <span class="mark-wrong">pinnen niet mogelijk</span>; betalen gaat contant."</blockquote>
+          </figure>
+          <figure class="card" style="margin:0;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <figcaption class="cap" style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#F59E0B"></span>Google AI · 7 okt, 09:19</figcaption>
+            <blockquote class="quote" style="font-style:italic">"Bakkerij De Vries (Grote Houtstraat 112) accepteert <span class="mark-wrong">geen pin</span>. Er is een geldautomaat om de hoek."</blockquote>
+          </figure>
+        </div>
+        <p class="cap" style="margin:0">ChatGPT, Copilot en Gemini zeiden "ja, pinnen kan". Perplexity vond niets. Deze fout zit dus alleen bij Google AI.</p>
+      </section>
+
+      <!-- The source -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2 class="h3">Waar het vandaan komt</h2>
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div class="stack" style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:#F4F1EC;border-radius:14px;padding:12px 16px;font-size:15px">
+            <span style="display:flex;align-items:center;gap:10px;min-width:0"><span class="dot12" style="background:#D41B44"></span><a href="#top" style="font-weight:600;text-decoration:none">bakkerijdevries.nl/praktisch</a><span class="cap">je eigen website</span></span>
+            <span class="cap">tekst uit 2019 · gelezen op 7 okt</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span class="cap" style="font-weight:700">Deze zin staat er nu</span>
+            <p style="margin:0;font-size:16px;border-left:1.5px solid #E7E3DC;padding-left:14px;color:#374151">"Betalen kan bij ons <span class="mark-wrong">alleen contant</span>. Pinnen is helaas niet mogelijk."</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span class="cap" style="font-weight:700">Vervang die door</span>
+            <p style="margin:0;font-size:16px;border-left:1.5px solid #E7E3DC;padding-left:14px;color:#111827;font-weight:600">"Je kunt bij ons <span class="mark-ok">pinnen en contant betalen</span>."</p>
+          </div>
+          <p class="cap" style="margin:0">Wij kunnen je website niet aanpassen; dat doe jij of je websitebouwer. Zodra de zin weg is, lezen de AI-systemen de nieuwe tekst bij de volgende controle.</p>
+        </div>
+      </section>
+
+      <!-- Every action with its evidence -->
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2 class="h3">Wat wij deden</h2>
+        <ol class="card divide" style="list-style:none;margin:0;padding:0;font-size:15px">
+          <li class="act" style="padding:14px 20px"><span class="cap" style="font-weight:600;color:#111827">7 okt</span><span style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#D41B44;margin-top:6px"></span><span>Gevonden in de maandelijkse controle: Google AI, 3 van 3 keer.</span></span><a href="#top" class="link">Rapport</a></li>
+          <li class="act" style="padding:14px 20px"><span class="cap" style="font-weight:600;color:#111827">7 okt</span><span style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#2B7A53;margin-top:6px"></span><span>Feitenpagina opnieuw gepubliceerd met "Betalen: pin en contant" (versie 3) en aangemeld bij Google en Bing.</span></span><a href="#top" class="link">Feitenpagina</a></li>
+          <li class="act" style="padding:14px 20px"><span class="cap" style="font-weight:600;color:#111827">8 okt</span><span style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#2B7A53;margin-top:6px"></span><span>Google Bedrijfsprofiel bijgewerkt na jouw goedkeuring: betaalmethoden pin en contant. Google bevestigde om 14:02.</span></span><a href="ChannelG.dc.html" class="link">Antwoord van Google</a></li>
+          <li class="act" style="padding:14px 20px"><span class="cap" style="font-weight:600;color:#111827">12 okt</span><span style="display:flex;align-items:flex-start;gap:10px"><span class="dot12" style="background:#F59E0B;margin-top:6px"></span><span>Aan jou gemaild welke zin op bakkerijdevries.nl/praktisch moet veranderen, met de nieuwe tekst erbij.</span></span><a href="#top" class="link">De mail</a></li>
+          <li class="act" style="padding:14px 20px"><span class="cap" style="font-weight:600;color:#111827">21 okt</span><span style="display:flex;align-items:flex-start;gap:10px"><span class="ring" style="margin-top:6px"></span><span style="color:#666D7B">Hercontrole gepland: dezelfde vraag, 3 keer, aan Google AI.</span></span><span class="cap">nog niet</span></li>
+        </ol>
+      </section>
+    </div>
+
+    <!-- Status rail: timeline, next step, the two owner buttons -->
+    <aside style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:16px">
+        <span class="cap" style="font-weight:700">Status</span>
+        <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;font-size:15px">
+          <li style="display:grid;grid-template-columns:12px minmax(0,1fr);gap:0 14px;align-items:start"><span style="display:flex;flex-direction:column;align-items:center;height:100%"><span class="dot12" style="background:#D41B44;margin-top:5px"></span><span style="width:1.5px;flex:1;background:#E7E3DC;margin:4px 0"></span></span><span style="padding-bottom:14px;color:#666D7B"><span style="font-weight:600;color:#111827">Gevonden</span><br><span class="cap">7 okt 2026</span></span></li>
+          <li style="display:grid;grid-template-columns:12px minmax(0,1fr);gap:0 14px;align-items:start"><span style="display:flex;flex-direction:column;align-items:center;height:100%"><span class="dot12" style="background:#F59E0B;margin-top:5px"></span><span style="width:1.5px;flex:1;background:#E7E3DC;margin:4px 0"></span></span><span style="padding-bottom:14px"><span style="font-weight:700">In behandeling</span><br><span class="cap">sinds 8 okt 2026 · nu</span></span></li>
+          <li style="display:grid;grid-template-columns:12px minmax(0,1fr);gap:0 14px;align-items:start"><span style="display:flex;flex-direction:column;align-items:center;height:100%"><span class="ring" style="margin-top:5px"></span><span style="width:1.5px;flex:1;background:#E7E3DC;margin:4px 0"></span></span><span style="padding-bottom:14px;color:#666D7B"><span style="font-weight:600;color:#111827">Hercontrole</span><br><span class="cap">21 okt 2026</span></span></li>
+          <li style="display:grid;grid-template-columns:12px minmax(0,1fr);gap:0 14px;align-items:start"><span style="display:flex;flex-direction:column;align-items:center"><span class="ring" style="margin-top:5px"></span></span><span style="color:#666D7B"><span style="font-weight:600;color:#111827">Hersteld</span><br><span class="cap">als Google AI het 3 van 3 keer goed zegt</span></span></li>
+        </ol>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px">
+        <span class="cap" style="font-weight:700">Volgende stap</span>
+        <p style="margin:0;font-size:15px;color:#374151">Jij past de zin op je website aan. Pas je hem eerder aan dan 21 oktober, dan controleren we binnen 24 uur in plaats van over 14 dagen.</p>
+        <form style="margin:0;display:flex;flex-direction:column;gap:10px">
+          <button type="button" class="btn-p" style="width:100%">Ik heb dit aangepast</button>
+          <button type="button" class="btn-o" style="width:100%">Dit klopt wél</button>
+        </form>
+        <p class="cap" style="margin:0">Klopt het antwoord van de AI en zijn je gegevens verkeerd? Kies "Dit klopt wél": we zetten je gegevens klaar om aan te passen en vragen je bevestiging. Daarna is dit geen fout meer.</p>
+      </div>
+
+      <p class="cap" style="margin:0;padding:0 6px">Vragen over deze fout? Mail support@vidalo.io en noem "pinnen, 7 okt".</p>
+    </aside>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
