@@ -9,8 +9,11 @@
  *   5. follow-ups for scanned-but-not-purchased businesses at day 7 / day 21
  *   6. own-website check every 30 days for paying businesses
  *   7. Google index check of the facts page: daily until Google has it, then weekly
+ *   8. owner's pause and cancel: reminder a week before a pause ends, the end of a pause, a cancel Stripe never closed
  */
 import { pollFactsHost } from "@vidalo/core/publisher";
+import { duePauseMail } from "@vidalo/core/billing";
+import { sendSubscriptionMail } from "@vidalo/core/reporter";
 import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
@@ -202,6 +205,38 @@ export async function enqueueIndexChecks(now = new Date()): Promise<number> {
   return n;
 }
 
+/**
+ * The owner's pause and cancel (core/billing/lifecycle.ts). Stripe resumes
+ * charging by itself on the pause end; this tells the owner a week before and
+ * on the day, and lets the paid jobs run again. A cancellation normally ends
+ * with Stripe's customer.subscription.deleted; when that never comes (no
+ * Stripe in mock mode, a lost webhook) the business is closed two days after
+ * its end date.
+ */
+export async function ownerSubscriptionChanges(now = new Date()): Promise<{ reminders: number; resumed: number; closed: number }> {
+  let reminders = 0;
+  let resumed = 0;
+  let closed = 0;
+  for (const b of await listBusinessesByStatus(["trial", "active"])) {
+    if (b.pauseUntil) {
+      const due = duePauseMail(b, await events(b.id), now);
+      if (due) await sendSubscriptionMail(b, due, b.pauseUntil);
+      if (due === "pause_ending") reminders++;
+      if (due === "pause_ended" || (!due && new Date(b.pauseUntil) <= now)) {
+        await sharedDb().upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: null });
+        await getDb().logEvent(b.id, "subscription.resumed", { early: false, wasUntil: b.pauseUntil });
+        resumed++;
+      }
+    }
+    if (b.cancelAt && daysSince(b.cancelAt, now) >= 2) {
+      await setBusinessStatus(b.id, "churned");
+      await getDb().logEvent(b.id, "business.status", { status: "churned", from: b.status, reason: "cancel_at_passed" });
+      closed++;
+    }
+  }
+  return { reminders, resumed, closed };
+}
+
 export async function cronTick(now = new Date()): Promise<void> {
   const started = Date.now();
   const out: Record<string, unknown> = {};
@@ -213,6 +248,7 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["followups", () => enqueueFollowUps(now)],
     ["sitechecks", () => enqueueSiteChecks(now)],
     ["indexChecks", () => enqueueIndexChecks(now)],
+    ["ownerSubscription", () => ownerSubscriptionChanges(now)],
   ];
   for (const [name, fn] of steps) {
     try {
