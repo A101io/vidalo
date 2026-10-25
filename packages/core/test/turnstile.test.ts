@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TURNSTILE_TEST_KEYS, TURNSTILE_VERIFY_URL, turnstileMode, turnstilePasses, verifyTurnstile } from "../src/shared/turnstile";
+import { KIES_TOKEN_TTL_MS, TURNSTILE_TEST_KEYS, TURNSTILE_VERIFY_URL, signKiesToken, turnstileMode, turnstilePasses, verifyKiesToken, verifyTurnstile } from "../src/shared/turnstile";
 
 const answer = (body: unknown, ok = true) => (async () => ({ ok, json: async () => body })) as unknown as typeof fetch;
 
@@ -55,5 +55,39 @@ describe("turnstile verification", () => {
     expect(await turnstilePasses("misconfigured", "tok", { secret: "s", fetchFn })).toBe(false);
     expect(await turnstilePasses("on", "tok", { secret: "s", fetchFn })).toBe(true);
     expect(await turnstilePasses("on", "", { secret: "s", fetchFn })).toBe(false);
+  });
+});
+
+describe("kies token (GET /scan/kies after a passed check)", () => {
+  const secret = "test-secret";
+  const now = 1_800_000_000_000;
+
+  it("verifies for the same query and place until it expires", () => {
+    const t = signKiesToken(secret, "Bakkerij", "Delft", now);
+    expect(verifyKiesToken(secret, t, "Bakkerij", "Delft", now)).toBe(true);
+    expect(verifyKiesToken(secret, t, "Bakkerij", "Delft", now + KIES_TOKEN_TTL_MS)).toBe(true);
+    expect(verifyKiesToken(secret, t, "Bakkerij", "Delft", now + KIES_TOKEN_TTL_MS + 1)).toBe(false);
+  });
+
+  it("refuses another query, place, secret or a changed token", () => {
+    const t = signKiesToken(secret, "Bakkerij", "", now);
+    expect(verifyKiesToken(secret, t, "Bakkerij", "", now)).toBe(true);
+    expect(verifyKiesToken(secret, t, "Slagerij", "", now)).toBe(false);
+    expect(verifyKiesToken(secret, t, "Bakkerij", "Delft", now)).toBe(false);
+    expect(verifyKiesToken("other", t, "Bakkerij", "", now)).toBe(false);
+    expect(verifyKiesToken("", t, "Bakkerij", "", now)).toBe(false);
+    expect(verifyKiesToken(secret, t.slice(0, -1) + (t.endsWith("A") ? "B" : "A"), "Bakkerij", "", now)).toBe(false);
+    const [exp, sig] = t.split(".");
+    expect(verifyKiesToken(secret, `${Number(exp) + 60_000}.${sig}`, "Bakkerij", "", now)).toBe(false);
+  });
+
+  it("refuses missing, malformed and far-future tokens", () => {
+    expect(verifyKiesToken(secret, undefined, "Bakkerij", "", now)).toBe(false);
+    expect(verifyKiesToken(secret, "", "Bakkerij", "", now)).toBe(false);
+    expect(verifyKiesToken(secret, "abc", "Bakkerij", "", now)).toBe(false);
+    expect(verifyKiesToken(secret, "1.2.3", "Bakkerij", "", now)).toBe(false);
+    // Signed for a far later expiry (a forged lifetime) is refused even with the right secret.
+    const far = signKiesToken(secret, "Bakkerij", "", now + 24 * 3600_000);
+    expect(verifyKiesToken(secret, far, "Bakkerij", "", now)).toBe(false);
   });
 });

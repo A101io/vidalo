@@ -817,10 +817,10 @@ export const copy = {
 
   unsubscribe: {
     h1: "Afmelden",
-    body: (name: string) => `Je krijgt dan geen mails meer van ons over de controle van ${name}. Je rapport blijft gewoon bereikbaar via de link.`,
+    body: (name: string) => `Je krijgt dan geen maandrapporten, herinneringen en andere berichten meer die je zelf kunt uitzetten, over de controle van ${name}. Mails die nodig zijn voor je abonnement of je inlog blijven komen. Je rapport blijft gewoon bereikbaar via de link.`,
     button: "Afmelden",
     doneH1: "Je bent afgemeld",
-    doneBody: "We sturen je hierover geen mails meer.",
+    doneBody: "We sturen je alleen nog mails die nodig zijn voor je abonnement of je inlog. Ingelogd kun je bij Account kiezen wat je weer wilt krijgen.",
     invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op support@vidalo.io, dan regelen we het.",
   },
 
@@ -852,6 +852,8 @@ export const copy = {
       placeLabel: "Plaats",
       placeHint: "In welke plaats zit het bedrijf?",
       back: "Terug",
+      /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
+      again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },
@@ -859,6 +861,8 @@ export const copy = {
   /** Result page (docs/design-g/ResultG.dc.html and ResultGGrey.dc.html). Three states: rood/oranje, groen, grijs. */
   result: {
     checkedAt: (dateTime: string) => `Gecontroleerd op ${dateTime}`,
+    /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
+    print: "Print of bewaar als PDF",
     /** Hero: the number inside the dot and its two-line label. */
     hero: {
       wrongLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "fout beantwoord"],
@@ -1845,6 +1849,35 @@ export const copy = {
       deleted: "Je gegevens zijn verwijderd.",
     },
     /** The language row: the dashboard, the report and the e-mails follow it. */
+    /** Change the sign-in address (account/actions.ts changeEmail). */
+    changeEmail: {
+      label: "Nieuw e-mailadres",
+      button: "Wijzig",
+      body: "We sturen een bevestigingslink naar het nieuwe adres. Pas als je op die link klikt, wordt het je inlog en krijg je daar onze mails. Soms vragen we het oude adres ook om te bevestigen.",
+      status: {
+        verstuurd: "Bevestigingslink verstuurd. Klik op de link in die mail om de wijziging af te ronden. Tot dan blijft je oude adres je inlog.",
+        gewijzigd: "Je e-mailadres is gewijzigd.",
+        bevestigd: "Je nieuwe e-mailadres is bevestigd.",
+        zelfde: "Dit is al je e-mailadres.",
+        bezet: "Dit adres kun je hier niet gebruiken. Mail support@vidalo.io als het wel van jou is.",
+        fout: "Dat lukte niet. Controleer het adres en probeer het opnieuw.",
+      } as Record<string, string>,
+    },
+    /** Mail preferences (shared/mail-prefs.ts): optional groups have a box, required mails are listed. */
+    mails: {
+      h: "Mails die je krijgt",
+      body: "Kies welke berichten je wilt krijgen. Je rapporten en alles wat we doen staan ook altijd in je dashboard.",
+      optional: {
+        report: { label: "Maandrapport", body: "Elke maand hoe AI over je bedrijf praat." },
+        resolution: { label: "Fout opgelost", body: "Een bericht zodra een fout antwoord goed is." },
+        reminder: { label: "Herinneringen", body: "Een herinnering als een stap op je website nog openstaat." },
+        followup: { label: "Na de gratis controle", body: "Twee berichten na je gratis controle over wat we voor je kunnen doen." },
+      },
+      requiredH: "Deze krijg je altijd",
+      required: "Je welkomstmail, je eerste rapport, stappen die alleen jij kunt zetten, een bericht als we een fout niet kunnen oplossen, en mails over je abonnement en je inlog.",
+      save: "Opslaan",
+      saved: "Je keuze is opgeslagen.",
+    },
     language: { label: "Taal", names: { nl: "Nederlands", en: "English" }, save: "Opslaan", saved: "Taal opgeslagen.", body: "Je dashboard en je rapport volgen deze taal. De NL · EN-knop onderaan elke pagina past hem ook aan." },
     fields: { name: "Naam", place: "Plaats", address: "Adres", phone: "Telefoon", email: "E-mail", website: "Website", kvk: "KvK", factsHost: "Feitenpagina", factsVersion: "Gegevens" },
     empty: "nog niet ingevuld",
@@ -1944,6 +1977,59 @@ export const copy = {
     optionBButton: "Registreer voor mij",
     optionBQueued: "We registreren het domein en laten je weten als het live is.",
     noDomain: "We kennen je website nog niet. Vul die eerst in bij je gegevens.",
+    /** Facts page status: channel facts_page + table google_index (core/publisher/status.ts). */
+    factsStatus: {
+      h2: "Je feitenpagina",
+      pageLabel: "Online",
+      googleLabel: "Google",
+      published: (date: string) => `Gepubliceerd, laatst bijgewerkt op ${date}.`,
+      waitingDns: (date: string) => `Klaargezet op ${date}. Te zien zodra je DNS-regel staat.`,
+      notPublished: "Nog niet gepubliceerd.",
+      indexed: (since: string, checked: string) => `Opgenomen door Google sinds ${since}. Laatst gecontroleerd op ${checked}.`,
+      notIndexed: (checked: string) => `Nog niet opgenomen door Google. Gecontroleerd op ${checked}. Dat duurt vaak een paar weken; we controleren het opnieuw.`,
+      notChecked: "Nog niet gecontroleerd of Google je feitenpagina heeft opgenomen.",
+    },
+    /** Own-website check: the last sitecheck.done event. Fix texts follow sitecheckEmail (core/publisher/sitecheck.ts). */
+    site: {
+      h2: "Je eigen website",
+      intro: (domain: string) => `We kijken of AI-assistenten je eigen website ${domain} goed kunnen lezen.`,
+      notChecked: "Nog niet gecontroleerd.",
+      noDomain: (date: string) => `Niet gecontroleerd op ${date}: we kennen je website nog niet. Vul die eerst in bij je gegevens.`,
+      checkedAt: (date: string) => `Laatst gecontroleerd op ${date}.`,
+      robotsH: "Mag de zoekrobot je website lezen?",
+      robotFor: (who: string) => `voor ${who}`,
+      and: "en",
+      allowed: "Mag lezen",
+      blocked: "Buitengesloten",
+      unknown: "Kon niet worden gelezen",
+      pageH: "Je homepage",
+      noindexLabel: "Zoekmachines mogen haar opnemen",
+      noindexOk: "Ja",
+      noindexBad: "Nee, er staat \"noindex\"",
+      dataLabel: "Bedrijfsgegevens in de vaste vorm die zoekmachines lezen",
+      present: "Aanwezig",
+      absent: "Ontbreekt",
+      phoneLabel: "Telefoonnummer in die gegevens",
+      phoneOk: "Geen afwijkend nummer",
+      phoneBad: "Ander nummer dan in je gegevens",
+      phoneNa: "Niet te vergelijken",
+      changesH: "Dit kan beter",
+      noChanges: "Niets aan te passen.",
+      forward: "Lukt het niet zelf? Stuur dit door naar wie je website bouwt, dit is alles wat er moet gebeuren. Wij controleren het over een maand opnieuw.",
+      fix: {
+        robotsTitle: (who: string, one: boolean) => `${who} ${one ? "mag" : "mogen"} je website niet lezen`,
+        robotsBody: (robotsUrl: string, who: string) => `In het bestand ${robotsUrl} staat een regel die de zoekrobot van ${who} buitensluit. Daardoor kan ${who} je openingstijden en telefoonnummer niet van je eigen website halen, en neemt het ze over van andere sites.`,
+        robotsFix: "Haal die regel weg, of zet dit bovenaan het bestand:",
+        noindexTitle: "Je homepage vraagt zoekmachines om haar over te slaan",
+        noindexBody: (via: "meta" | "header") => `${via === "header" ? "Je webserver stuurt bij de homepage de instructie \"noindex\" mee." : "In de code van je homepage staat de instructie \"noindex\"."} Google, Bing en de AI-assistenten die daarop zoeken, nemen de pagina dan niet op.`,
+        noindexFix: "Haal \"noindex\" weg. Werk je met WordPress, kijk dan bij Instellingen, Lezen: daar staat vaak het vinkje \"Zoekmachines ontmoedigen deze site te indexeren\". Zet dat uit.",
+        phoneTitle: "Een oud telefoonnummer in de bedrijfsgegevens van je homepage",
+        phoneBody: (found: string, expected: string) => `In de bedrijfsgegevens die je homepage voor zoekmachines meestuurt (niet zichtbaar op de pagina zelf) staat: ${found}. Dit moet zijn: ${expected}.`,
+        phoneFix: "Pas het aan in de instellingen van je website (bij WordPress vaak in een plugin als Yoast), of vraag het je websitebouwer.",
+        dataTitle: "Kleine verbetering: je bedrijfsgegevens in een vaste vorm",
+        dataBody: "Je homepage stuurt je adres, openingstijden en telefoonnummer niet mee in de vaste vorm die zoekmachines en AI-assistenten direct lezen. Op je feitenpagina staat die vorm al. Je websitebouwer kan het blok overnemen:",
+      },
+    },
   },
 
   google: {

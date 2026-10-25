@@ -41,6 +41,10 @@ export async function getOwnedBusiness(session: Session): Promise<BusinessRecord
   if (!b) {
     b = await db.getBusinessByOwner({ email: session.email });
     if (b && !b.ownerUserId) b = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerUserId: session.userId });
+  } else if (b.ownerEmail?.toLowerCase() !== session.email.toLowerCase()) {
+    // The owner confirmed a new address with Supabase (account page): owner mail follows the login.
+    b = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: session.email.toLowerCase() });
+    await db.logEvent(b.id, "account.email_changed", { via: "auth" });
   }
   return b;
 }

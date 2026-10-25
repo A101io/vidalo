@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
+import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
   BusinessUpsert,
@@ -100,6 +101,7 @@ export class MemDb implements Db {
       language: "nl",
       cancelAt: null,
       pauseUntil: null,
+      mailPrefs: {},
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };
@@ -107,6 +109,7 @@ export class MemDb implements Db {
       if (v !== undefined && k !== "id" && k !== "createdAt") (merged as unknown as Record<string, unknown>)[k] = v;
     }
     merged.slug = base.slug;
+    merged.mailPrefs = normalizeMailPrefs(merged.mailPrefs);
     this.businesses.set(merged.id, merged);
     return { ...merged };
   }

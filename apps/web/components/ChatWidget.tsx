@@ -56,12 +56,12 @@ export function ChatWidget({ copy, lang }: { copy: CopyShape["chat"]; lang: Lang
         aria-expanded={open}
         aria-controls="vidalo-chat"
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-16 right-4 z-40 rounded-pill border-[1.5px] border-ink bg-white px-4 py-2.5 text-[14px] font-semibold shadow-[0_4px_16px_rgba(16,18,24,0.10)] hover:border-blue hover:text-blue sm:bottom-6 sm:right-6"
+        className="print:hidden fixed bottom-16 right-4 z-40 rounded-pill border-[1.5px] border-ink bg-white px-4 py-2.5 text-[14px] font-semibold shadow-[0_4px_16px_rgba(16,18,24,0.10)] hover:border-blue hover:text-blue sm:bottom-6 sm:right-6"
       >
         {open ? copy.close : copy.button}
       </button>
       {open && (
-        <section id="vidalo-chat" aria-label={copy.title} className="fixed bottom-28 right-4 z-40 flex max-h-[70vh] w-[min(380px,calc(100vw-2rem))] flex-col rounded-2xl border-[1.5px] border-line bg-white shadow-[0_8px_32px_rgba(16,18,24,0.14)] sm:bottom-20 sm:right-6">
+        <section id="vidalo-chat" aria-label={copy.title} className="print:hidden fixed bottom-28 right-4 z-40 flex max-h-[70vh] w-[min(380px,calc(100vw-2rem))] flex-col rounded-2xl border-[1.5px] border-line bg-white shadow-[0_8px_32px_rgba(16,18,24,0.14)] sm:bottom-20 sm:right-6">
           <header className="border-b-[1.5px] border-line px-4 py-3">
             <p className="text-[15px] font-bold">{copy.title}</p>
             <p className="mt-0.5 text-[12px] leading-[1.4] text-muted">

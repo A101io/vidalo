@@ -8,6 +8,7 @@ import postgres, { type Sql } from "postgres";
 import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
+import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
   BusinessUpsert,
@@ -73,6 +74,7 @@ function mapBusiness(row: Row): BusinessRecord {
     language: r.language === "en" ? "en" : "nl",
     cancelAt: (r.cancelAt as string | null) ?? null,
     pauseUntil: (r.pauseUntil as string | null) ?? null,
+    mailPrefs: normalizeMailPrefs(r.mailPrefs),
     createdAt: r.createdAt as string,
   };
 }
@@ -267,6 +269,7 @@ export class PgDb implements Db {
     if (input.ownerVerifiedAt !== undefined) cols.ownerVerifiedAt = toDate(input.ownerVerifiedAt);
     if (input.cancelAt !== undefined) cols.cancelAt = toDate(input.cancelAt);
     if (input.pauseUntil !== undefined) cols.pauseUntil = toDate(input.pauseUntil);
+    if (input.mailPrefs !== undefined) cols.mailPrefs = this.sql.json(normalizeMailPrefs(input.mailPrefs) as never);
     const insertRow = { ...cols, slug, ...(input.id ? { id: input.id } : {}) } as Row;
     const updateCols = Object.keys(cols) as string[];
     const rows = updateCols.length

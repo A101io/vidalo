@@ -19,6 +19,7 @@ import type {
   ScanKind,
   ScanRun,
 } from "../types";
+import type { MailPrefs } from "../shared/mail-prefs";
 
 /** Business plus the operational columns that exist in SQL but not in the shared Business type. */
 export interface BusinessRecord extends Business {
@@ -37,6 +38,8 @@ export interface BusinessRecord extends Business {
   cancelAt: string | null;
   /** The owner paused; nothing runs and nothing is charged until this moment (migration 0012). */
   pauseUntil: string | null;
+  /** Optional mail groups the owner switched off or on (shared/mail-prefs.ts); absent = on. */
+  mailPrefs: MailPrefs;
 }
 
 /** What Google's URL Inspection API last said about the facts page. */
