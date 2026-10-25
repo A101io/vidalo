@@ -572,6 +572,32 @@ export const en: CopyShape = {
       },
       footnote: "¹ Fixes at third-party sources usually take two to four weeks, sometimes longer. Your report shows where each one stands.",
       multi: "More than 10 locations? Get in touch.",
+      /** Websites built from the facts page; by request, no checkout. */
+      website: {
+        h3: "No website yet?",
+        sub: "Then we build one, from the same details as your facts page. Easy to read for your customers and for AI.",
+        simple: {
+          name: "Simple website",
+          price: "€249",
+          unit: "one-off",
+          includes: [
+            "One page on your own domain, with your details, opening hours and a call and directions button.",
+            "Photos, your menu or price list and a short description.",
+            "Updates itself when you update your details.",
+          ],
+        },
+        custom: {
+          name: "Extended website",
+          price: "from €750",
+          unit: "one-off",
+          includes: [
+            "More pages, your own logo and colours.",
+            "Copy we write together with you.",
+          ],
+        },
+        note: "With a Vidalo plan. The domain is in your name. Ordering and payments on the website are not included.",
+        ask: "Ask for a website",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -1611,6 +1637,7 @@ export const en: CopyShape = {
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Set it right’, you add ‘Keep it right’ later under ‘Subscription’ in your account." },
+      { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
   },
 

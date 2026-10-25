@@ -585,6 +585,32 @@ export const copy = {
       },
       footnote: "¹ Herstel bij bronnen van derden duurt meestal twee tot vier weken, soms langer. Je ziet in je rapport waar het staat.",
       multi: "Meer dan 10 vestigingen? Neem contact op.",
+      /** Websites built from the facts page; by request, no checkout. */
+      website: {
+        h3: "Nog geen website?",
+        sub: "Dan maken we er een, uit dezelfde gegevens als je feitenpagina. Goed leesbaar voor je klanten en voor AI.",
+        simple: {
+          name: "Eenvoudige website",
+          price: "€249",
+          unit: "eenmalig",
+          includes: [
+            "Eén pagina op je eigen domein, met je gegevens, openingstijden en een bel- en routeknop.",
+            "Foto's, je menukaart of prijslijst en een korte beschrijving.",
+            "Werkt vanzelf mee als je je gegevens bijwerkt.",
+          ],
+        },
+        custom: {
+          name: "Uitgebreide website",
+          price: "vanaf €750",
+          unit: "eenmalig",
+          includes: [
+            "Meer pagina's, je eigen logo en kleuren.",
+            "Teksten die we samen met je schrijven.",
+          ],
+        },
+        note: "Bij een plan van Vidalo. Het domein staat op jouw naam. Bestellen en betalen op de website zitten er niet in.",
+        ask: "Vraag een website aan",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -1638,6 +1664,7 @@ export const copy = {
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Goed zetten’ gekozen, dan voeg je ‘Goed houden’ later toe onder ‘Abonnement’ in je account." },
+      { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
   },
 
