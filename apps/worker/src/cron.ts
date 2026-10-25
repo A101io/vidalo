@@ -9,9 +9,11 @@
  *   5. follow-ups for scanned-but-not-purchased businesses at day 7 / day 21
  *   6. own-website check every 30 days for paying businesses
  *   7. Google index check of the facts page: daily until Google has it, then weekly
- *   8. owner's pause and cancel: reminder a week before a pause ends, the end of a pause, a cancel Stripe never closed
+ *   8. "Klopt dit nog?": one mail a year after the owner last confirmed the facts
+ *   9. owner's pause and cancel: reminder a week before a pause ends, the end of a pause, a cancel Stripe never closed
  */
 import { pollFactsHost } from "@vidalo/core/publisher";
+import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
 import { duePauseMail } from "@vidalo/core/billing";
 import { sendSubscriptionMail } from "@vidalo/core/reporter";
 import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
@@ -206,6 +208,29 @@ export async function enqueueIndexChecks(now = new Date()): Promise<number> {
 }
 
 /**
+ * The yearly re-confirmation mail for paying businesses. Once per confirmed
+ * version and year: the event carries both, so a second tick (or a second
+ * cron run that day) finds it and queues nothing. Only in the first 30 days
+ * of a due year (RECONFIRM_MAIL_WINDOW_DAYS). Confirming again makes a new
+ * version, which starts a new year.
+ */
+export async function enqueueReconfirmations(now = new Date()): Promise<number> {
+  const db = sharedDb();
+  let n = 0;
+  for (const b of await listBusinessesByStatus(["trial", "active"])) {
+    if (!b.ownerEmail) continue;
+    const r = reconfirmation(lastConfirmed(await db.listFacts(b.id)), now);
+    if (!r || !inReconfirmMailWindow(r, now)) continue;
+    if (reconfirmAlreadyAsked(await db.listEvents(b.id, 500), r)) continue;
+    const job = await db.enqueueJob("email", { template: "reconfirm", businessId: b.id });
+    await db.logEvent(b.id, RECONFIRM_EVENT, { version: r.version, cycle: r.cycle, jobId: job.id });
+    n++;
+  }
+  if (n) log.info("cron.reconfirm.enqueued", { count: n });
+  return n;
+}
+
+/**
  * The owner's pause and cancel (core/billing/lifecycle.ts). Stripe resumes
  * charging by itself on the pause end; this tells the owner a week before and
  * on the day, and lets the paid jobs run again. A cancellation normally ends
@@ -248,6 +273,7 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["followups", () => enqueueFollowUps(now)],
     ["sitechecks", () => enqueueSiteChecks(now)],
     ["indexChecks", () => enqueueIndexChecks(now)],
+    ["reconfirm", () => enqueueReconfirmations(now)],
     ["ownerSubscription", () => ownerSubscriptionChanges(now)],
   ];
   for (const [name, fn] of steps) {

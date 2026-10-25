@@ -140,7 +140,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               </span>
             )}
           </Row>
-          <Row label={A.fields.factsVersion}>{facts && !facts.provisional ? A.factsConfirmed(facts.version, dateShort(facts.verifiedAt ?? new Date())) : <span className="text-muted">{A.factsProvisional}</span>}</Row>
+          <Row label={A.fields.factsVersion}>
+            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+              {facts && !facts.provisional ? A.factsConfirmed(facts.version, dateShort(facts.verifiedAt ?? new Date())) : <span className="text-muted">{A.factsProvisional}</span>}
+              {facts && (
+                <Link href={href("/app/gegevens/versies")} className="btn-link">
+                  {A.factsHistory}
+                </Link>
+              )}
+            </span>
+          </Row>
         </div>
       </section>
 

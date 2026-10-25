@@ -8,6 +8,7 @@ import {
   sendFollowUp,
   sendMonthlyReport,
   sendResolutionNotice,
+  sendFactsReconfirm,
   sendUnfixableNotice,
   sendWelcome,
   sendOwnerText,
@@ -86,6 +87,8 @@ export const email: Handler<"email"> = async (p) => {
       return { mode: (await sendMonthlyReport(p.businessId, { scanRunId: p.scanRunId }))?.mode ?? null };
     case "followup":
       return { mode: (await sendFollowUp(p.businessId, p.day))?.mode ?? null };
+    case "reconfirm":
+      return { mode: (await sendFactsReconfirm(p.businessId))?.mode ?? null };
     case "directory_correction": {
       const db = getDb();
       const business = await db.getBusiness(p.businessId);

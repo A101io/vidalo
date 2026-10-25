@@ -46,6 +46,7 @@ function mapFacts(row: Row): Facts {
     version: row.version as number,
     provisional: row.provisional as boolean,
     verifiedAt: row.verifiedAt instanceof Date ? row.verifiedAt.toISOString() : ((row.verifiedAt as string | null) ?? null),
+    ...(row.createdAt ? { createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt) } : {}),
   };
 }
 
@@ -341,7 +342,7 @@ export class PgDb implements Db {
     const provisional = opts.provisional ?? data.provisional ?? true;
     const verifiedAt = opts.verifiedAt ?? data.verifiedAt ?? null;
     // Strip the row-level fields from the jsonb payload; they live in columns.
-    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, ...payload } = data as Facts;
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...payload } = data as Facts;
     const rows = await this.sql`
       insert into facts (business_id, version, provisional, verified_at, data)
       values (${businessId},

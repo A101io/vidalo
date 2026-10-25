@@ -85,6 +85,8 @@ export interface Facts {
   version: number;
   verifiedAt: string | null; // null = provisional (scraped, not confirmed)
   provisional: boolean;
+  /** When this version was stored (facts.created_at); read-only, set by the db. */
+  createdAt?: string;
   name: string;
   place: string;
   address: string | null;
