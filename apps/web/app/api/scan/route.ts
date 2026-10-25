@@ -6,6 +6,8 @@ import { langFromReferer } from "@/lib/request-lang";
 import { env } from "@/lib/env";
 import { ready } from "@/lib/db";
 import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, progressTemplate, type BusinessCandidate } from "@/lib/core";
+import { requestBehindGate } from "@/lib/gate-state";
+import { FREE_SCANS_PER_IP, clientIp, dayStart, scanIpEvent } from "@vidalo/core/shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,12 +33,16 @@ async function readInput(req: Request): Promise<{ q: string; pick: number | null
  * free scan after the response and redirects to the waiting room /scan/[token].
  */
 export async function POST(req: Request) {
-  const { q, pick, place: placeInput } = await readInput(req);
   const lang = langFromReferer(req);
-  const copy = copyFor(lang);
   // Redirects land on pages in the language the form was posted from.
   const base = env.baseUrl;
   const to = (path: string) => `${base}${localizeHref(path, lang)}`;
+  // While the launch gate is on, only a browser with the preview cookie may start a check.
+  // The gate hides the scan form, but a direct POST would otherwise still spend engine and
+  // Places calls before launch. Checked before anything else, the lookup included.
+  if (requestBehindGate(req)) return NextResponse.redirect(to("/binnenkort"), 303);
+  const { q, pick, place: placeInput } = await readInput(req);
+  const copy = copyFor(lang);
   if (!q) return NextResponse.redirect(to("/?fout=leeg#controle"), 303);
   await ready();
 
@@ -67,6 +73,16 @@ export async function POST(req: Request) {
   if (recent) {
     await db.logEvent(business.id, "scan.reused", { scanRunId: recent.id, via: "web" });
     return NextResponse.redirect(to(`/r/${recent.id}`), 303);
+  }
+
+  // At most FREE_SCANS_PER_IP new checks per address per day; a reused report above costs nothing and is not counted.
+  if (env.realEngines) {
+    const ipEvent = scanIpEvent(clientIp(req));
+    if ((await db.countEventsSince(ipEvent, dayStart())) >= FREE_SCANS_PER_IP) {
+      await db.logEvent(null, "scan.refused", { reason: "ip_cap", cap: FREE_SCANS_PER_IP });
+      return NextResponse.redirect(to("/scan/druk"), 303);
+    }
+    await db.logEvent(null, ipEvent, {});
   }
 
   await db.logEvent(business.id, "scan.requested", { q, created, via: "web" });
