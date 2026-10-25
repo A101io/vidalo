@@ -400,6 +400,10 @@ export class MemDb implements Db {
     return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).length;
   }
 
+  async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {
+    return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).map((w) => ({ email: w.email, language: w.language }));
+  }
+
   // --- channels ---
   async listChannels(businessId: string): Promise<Channel[]> {
     return [...this.channels.values()].filter((c) => c.businessId === businessId);

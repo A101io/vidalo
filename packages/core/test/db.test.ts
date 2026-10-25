@@ -114,6 +114,10 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(again.created).toBe(false);
     await db.joinWaitlist({ email: "owner@shop.com", language: "en", source: "coming_soon", consentText: "Yes, email me." });
     expect(await db.countWaitlist()).toBe(2);
+    expect(await db.listWaitlist()).toEqual([
+      { email: "eigenaar@bakkerij.nl", language: "nl" },
+      { email: "owner@shop.com", language: "en" },
+    ]);
   });
 
   it("fixes, channels and events", async () => {
