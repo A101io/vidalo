@@ -816,10 +816,10 @@ export const copy = {
 
   unsubscribe: {
     h1: "Afmelden",
-    body: (name: string) => `Je krijgt dan geen mails meer van ons over de controle van ${name}. Je rapport blijft gewoon bereikbaar via de link.`,
+    body: (name: string) => `Je krijgt dan geen maandrapporten, herinneringen en andere berichten meer die je zelf kunt uitzetten, over de controle van ${name}. Mails die nodig zijn voor je abonnement of je inlog blijven komen. Je rapport blijft gewoon bereikbaar via de link.`,
     button: "Afmelden",
     doneH1: "Je bent afgemeld",
-    doneBody: "We sturen je hierover geen mails meer.",
+    doneBody: "We sturen je alleen nog mails die nodig zijn voor je abonnement of je inlog. Ingelogd kun je bij Account kiezen wat je weer wilt krijgen.",
     invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op support@vidalo.io, dan regelen we het.",
   },
 
@@ -1782,6 +1782,35 @@ export const copy = {
       deleted: "Je gegevens zijn verwijderd.",
     },
     /** The language row: the dashboard, the report and the e-mails follow it. */
+    /** Change the sign-in address (account/actions.ts changeEmail). */
+    changeEmail: {
+      label: "Nieuw e-mailadres",
+      button: "Wijzig",
+      body: "We sturen een bevestigingslink naar het nieuwe adres. Pas als je op die link klikt, wordt het je inlog en krijg je daar onze mails. Soms vragen we het oude adres ook om te bevestigen.",
+      status: {
+        verstuurd: "Bevestigingslink verstuurd. Klik op de link in die mail om de wijziging af te ronden. Tot dan blijft je oude adres je inlog.",
+        gewijzigd: "Je e-mailadres is gewijzigd.",
+        bevestigd: "Je nieuwe e-mailadres is bevestigd.",
+        zelfde: "Dit is al je e-mailadres.",
+        bezet: "Dit adres kun je hier niet gebruiken. Mail support@vidalo.io als het wel van jou is.",
+        fout: "Dat lukte niet. Controleer het adres en probeer het opnieuw.",
+      } as Record<string, string>,
+    },
+    /** Mail preferences (shared/mail-prefs.ts): optional groups have a box, required mails are listed. */
+    mails: {
+      h: "Mails die je krijgt",
+      body: "Kies welke berichten je wilt krijgen. Je rapporten en alles wat we doen staan ook altijd in je dashboard.",
+      optional: {
+        report: { label: "Maandrapport", body: "Elke maand hoe AI over je bedrijf praat." },
+        resolution: { label: "Fout opgelost", body: "Een bericht zodra een fout antwoord goed is." },
+        reminder: { label: "Herinneringen", body: "Een herinnering als een stap op je website nog openstaat." },
+        followup: { label: "Na de gratis controle", body: "Twee berichten na je gratis controle over wat we voor je kunnen doen." },
+      },
+      requiredH: "Deze krijg je altijd",
+      required: "Je welkomstmail, je eerste rapport, stappen die alleen jij kunt zetten, een bericht als we een fout niet kunnen oplossen, en mails over je abonnement en je inlog.",
+      save: "Opslaan",
+      saved: "Je keuze is opgeslagen.",
+    },
     language: { label: "Taal", names: { nl: "Nederlands", en: "English" }, save: "Opslaan", saved: "Taal opgeslagen.", body: "Je dashboard en je rapport volgen deze taal. De NL · EN-knop onderaan elke pagina past hem ook aan." },
     fields: { name: "Naam", place: "Plaats", address: "Adres", phone: "Telefoon", email: "E-mail", website: "Website", kvk: "KvK", factsHost: "Feitenpagina", factsVersion: "Gegevens" },
     empty: "nog niet ingevuld",
