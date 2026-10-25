@@ -80,10 +80,10 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | H3 | Uptime | open | `/api/health` ready for it. | |
 | H4 | Rate limiting | written | `FREE_SCANS_PER_DAY` caps live scans site-wide; per-IP limits open. | |
 | H5 | Staging | written | 18 Oct 2026: `deploy.yml` target `staging`, `env.staging` in both wrangler.jsonc (own queue, own database slot, workers.dev only). Waits for its own database (Julian: $10/month) and the GitHub environment secrets. Meanwhile `scripts/local-prod.sh` runs the production build locally against the real database (go-live X7, verified). | 18 Oct |
-| H6 | Rollback plan | open | In go-live X5. | |
+| H6 | Rollback plan | written | `docs/RUNBOOK.md` §3–4: roll both Workers back to the pair from one earlier run (`wrangler deployments list`, `wrangler rollback`), verify, fix forward; migrations only forward. Drill on preview not run yet (go-live X5). | 25 Oct |
 | H7 | Dependency updates | ✓verified | `.github/dependabot.yml` weekly, grouped; it opened PRs #10–#15 on 13 Oct. Majors ignored (Julian): #12–#15 closed; security updates still open regardless. | 13 Oct |
 | H8 | Operator 2FA | blocked | Julian. | |
-| H9 | Incident runbook | open | | |
+| H9 | Incident runbook | written | `docs/RUNBOOK.md`: first five minutes, switches without a deploy (gate, `FREE_SCANS_PER_DAY=0`, `queues pause-delivery`, cron triggers, provider keys, webhook), leaked secrets, datalek (72 h, register). | 25 Oct |
 | H10 | security.txt | ✓verified | `/.well-known/security.txt` 200 with Contact, Expires, Canonical, Policy. | 13 Oct |
 | H11 | Cost alerts | open | AI spend capped by `FREE_SCANS_PER_DAY`; provider budget alerts not set. | |
 
