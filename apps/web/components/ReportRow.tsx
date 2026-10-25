@@ -6,8 +6,8 @@ export interface ReportRowData {
   question: string;
   /** What the AI said. */
   said: string;
-  /** rood = wrong, grijs = not found / not named, groen = correct. */
-  tone: Extract<StipColour, "rood" | "grijs" | "groen">;
+  /** rood = wrong, oranje = differs from unconfirmed facts ("check this"), grijs = not found / not named, groen = correct. */
+  tone: Extract<StipColour, "rood" | "oranje" | "grijs" | "groen">;
   /** The correct value, or "klopt" on a green row. */
   correct: string;
   /** Source of the error (host, label) or "—". */
@@ -17,13 +17,14 @@ export interface ReportRowData {
   note?: string;
 }
 
-const saidColour = { rood: "text-rood", grijs: "text-muted", groen: "text-groen" } as const;
+const saidColour = { rood: "text-rood", oranje: "text-oranje", grijs: "text-muted", groen: "text-groen" } as const;
 const grid = "sm:grid sm:grid-cols-[32px_1.3fr_1.2fr_1fr_1fr] sm:items-center sm:gap-4";
 
 /** Header row of the question table. Hidden on phones, where rows become stacked cards. */
-export async function ReportHeaderRow({ compact = false }: { compact?: boolean }) {
+export async function ReportHeaderRow({ compact = false, check = false }: { compact?: boolean; check?: boolean }) {
   const { copy } = await getI18n();
-  const h = copy.result.table.headers;
+  // Before the owner confirmed: the right-hand value is what Google says, not what is right.
+  const h = check ? { ...copy.result.table.headers, correct: copy.result.check.correctHeader } : copy.result.table.headers;
   return (
     <div className={`hidden border-b-[1.5px] border-ink font-semibold text-muted print:break-after-avoid ${compact ? "py-2.5 text-[12px]" : "py-3 text-[13px]"} ${grid}`}>
       <span />
@@ -38,7 +39,7 @@ export async function ReportHeaderRow({ compact = false }: { compact?: boolean }
 /** One question of the report: dot, question, what AI said, what is right, where it came from. */
 export async function ReportRow({ row, compact = false }: { row: ReportRowData; compact?: boolean }) {
   const { copy } = await getI18n();
-  const h = copy.result.table.headers;
+  const h = row.tone === "oranje" ? { ...copy.result.table.headers, correct: copy.result.check.correctHeader } : copy.result.table.headers;
   const ok = row.tone === "groen";
   const source = row.sourceUrl ? (
     <a href={row.sourceUrl} target="_blank" rel="nofollow noopener" className="underline-offset-2 hover:underline">

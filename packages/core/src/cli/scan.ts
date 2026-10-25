@@ -148,7 +148,11 @@ export function summarizeNl(report: ScanReport): string {
   const { business, totalAnswers, wrongAnswers, notFoundAnswers = 0, visibility = "found" } = report;
   const stip = report.stip ?? "grijs";
   lines.push(`${business.name} (${business.place})`);
-  const headline = [`${STIP_DOT[stip]} ${copy.stip[stip]}: ${copy.stipMeaning[stip]}.`, `${wrongAnswers} van ${totalAnswers} antwoorden ${wrongAnswers === 1 ? "klopt" : "kloppen"} niet.`];
+  // Before the owner confirmed the facts, a mismatch is "check this" (copy.result.check), not an error.
+  const check = report.factsConfirmed === false && wrongAnswers > 0;
+  const headline = check
+    ? [`${STIP_DOT[stip]} ${copy.stip[stip]}: ${copy.result.check.meaning}.`, copy.result.check.headline(wrongAnswers, totalAnswers)]
+    : [`${STIP_DOT[stip]} ${copy.stip[stip]}: ${copy.stipMeaning[stip]}.`, `${wrongAnswers} van ${totalAnswers} antwoorden ${wrongAnswers === 1 ? "klopt" : "kloppen"} niet.`];
   if (notFoundAnswers) headline.push(`${notFoundAnswers} ${notFoundAnswers === 1 ? "antwoord" : "antwoorden"}: niet gevonden.`);
   if (visibility !== "found") headline.push(VISIBILITY_LABEL[visibility]);
   lines.push(headline.join(" "));

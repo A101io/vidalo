@@ -404,4 +404,12 @@ export interface ScanReport {
   criteriaNotFound: CriteriumNotFound[];
   /** Per recommendation question: named or not, who was named instead, which sites were cited. Absent on older reports. */
   recommendations?: RecommendationSummary[];
+  /**
+   * False while the facts the answers were compared with are provisional (from
+   * Google and the website, not confirmed by the owner). Then a mismatch means
+   * "AI says something else than your Google profile, check this", not "AI is
+   * wrong": Google itself can be the one that is wrong (first real scan, 25 Oct
+   * 2026). Absent on older reports.
+   */
+  factsConfirmed?: boolean;
 }

@@ -47,6 +47,8 @@ export interface PlanStep {
 
 export interface ReportView {
   state: ReportState;
+  /** Facts not confirmed by the owner: mismatches read as "check this" (copy.result.check). */
+  check: boolean;
   stip: Stip;
   questions: number;
   perQuestion: number;
@@ -229,9 +231,11 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const grey = report.visibility === "unknown" || report.stip === "grijs";
   const state: ReportState = grey ? "grijs" : report.stip === "groen" ? "groen" : "rood";
   const groups = groupQuestions(report, copy);
-  const rows = groups.map((g) => rowFor(g, copy));
+  // Before the owner confirmed their facts, a mismatch is "check this" (orange), not wrong (red).
+  const check = report.factsConfirmed === false && !grey;
+  const rows = groups.map((g) => rowFor(g, copy)).map((r) => (check && r.tone === "rood" ? { ...r, tone: "oranje" as const } : r));
   const questions = rows.length;
-  const wrongQuestions = rows.filter((r) => r.tone === "rood").length;
+  const wrongQuestions = rows.filter((r) => r.tone === "rood" || r.tone === "oranje").length;
   const notFoundQuestions = rows.filter((r) => r.tone === "grijs").length;
   const activeEngines = report.engines.filter((e) => !e.skipped);
   const perQuestion = report.findings[0]?.sampleCount ?? (questions && activeEngines.length ? Math.max(1, Math.round(report.totalAnswers / (questions * activeEngines.length))) : 3);
@@ -247,10 +251,10 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
       ? { number: rows.filter((r) => r.tone === "groen").length, label: R.hero.answeredLabel(questions) }
       : state === "groen"
         ? { number: questions, label: R.hero.okLabel(questions) }
-        : { number: wrongQuestions, label: R.hero.wrongLabel(questions) };
+        : { number: wrongQuestions, label: check ? R.check.heroLabel(questions) : R.hero.wrongLabel(questions) };
 
-  const h1 = state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood");
-  const intro = state === "grijs" ? R.hero.introGrey(enginesText, questions, perQuestion, report.notFoundAnswers, report.totalAnswers, otherEntityTotal) : R.hero.intro(enginesText, questions, perQuestion, wrongQuestions, notFoundQuestions);
+  const h1 = check && state === "rood" ? R.check.h1(report.business.name, report.business.place) : state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood");
+  const intro = check && state === "rood" ? R.check.intro(enginesText, questions, perQuestion, wrongQuestions, notFoundQuestions) : state === "grijs" ? R.hero.introGrey(enginesText, questions, perQuestion, report.notFoundAnswers, report.totalAnswers, otherEntityTotal) : R.hero.intro(enginesText, questions, perQuestion, wrongQuestions, notFoundQuestions);
 
   const engineLines = report.engines.map((e) => {
     const other = otherByEngine.get(e.engine) ?? 0;
@@ -265,7 +269,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
       question: g.question,
       engine: ENGINE_LABEL[f.engine],
       value: f.verdict === "not_found" ? R.table.notFound : f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy),
-      tone: (f.verdict === "not_found" ? "grijs" : "rood") as ReportRowData["tone"],
+      tone: (f.verdict === "not_found" ? "grijs" : check ? "oranje" : "rood") as ReportRowData["tone"],
     }));
     const fromCorrect = g.correct.map((c) => ({ question: g.question, engine: ENGINE_LABEL[c.engine], value: c.value, tone: "groen" as const }));
     return row ? [...fromFindings, ...fromCorrect] : [];
@@ -352,6 +356,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
 
   return {
     state,
+    check,
     stip: report.stip,
     questions,
     perQuestion,

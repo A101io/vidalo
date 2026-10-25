@@ -289,5 +289,13 @@ describe("stipregel", () => {
     // Without ChatGPT's afhaker, Perplexity's red alone does not colour the dot.
     const withoutChatgpt = computeStip({ engines: ["chatgpt", "google_ai", "perplexity", "gemini", "copilot"], samples, verdicts, findings: findings.filter((x) => x.engine !== "chatgpt"), instable: [], criteriaNotFound: [], unavailable: new Set() });
     expect(withoutChatgpt.stip).toBe("oranje");
+
+    // Facts not confirmed by the owner (free check against Google): a mismatch is "check this", at most orange.
+    const unconfirmed = computeStip({ engines: ["chatgpt", "google_ai", "perplexity", "gemini", "copilot"], samples, verdicts, findings, instable: [], criteriaNotFound: [], unavailable: new Set(), unconfirmed: true });
+    expect(Object.fromEntries(unconfirmed.engineStips.map((e) => [e.engine, e.stip]))).toEqual({ chatgpt: "oranje", google_ai: "oranje", perplexity: "oranje", gemini: "oranje", copilot: "groen" });
+    expect(unconfirmed.stip).toBe("oranje");
+    // ... but not knowing the business at all is not a comparison with Google, and still counts in full.
+    const unknown = computeStip({ engines: ["chatgpt"], samples: samples.filter((x) => x.engine === "chatgpt"), verdicts, findings: [], instable: [], criteriaNotFound: [{ criterium: 1, engine: "chatgpt", frequency: 3, sampleCount: 3 }], unavailable: new Set(), unconfirmed: true });
+    expect(unknown.stip).toBe("rood");
   });
 });

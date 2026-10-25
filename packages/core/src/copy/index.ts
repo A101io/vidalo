@@ -860,6 +860,23 @@ export const copy = {
 
   /** Result page (docs/design-g/ResultG.dc.html and ResultGGrey.dc.html). Three states: rood/oranje, groen, grijs. */
   result: {
+    /**
+     * The free check before the owner confirmed their facts: the comparison is
+     * with Google and the website, which can be wrong themselves. A mismatch is
+     * worded as "check this", never as an error (25 Oct 2026).
+     */
+    check: {
+      meaning: "Controleer dit",
+      h1: (name: string, place: string) => `${name}, ${place}: AI zegt iets anders dan je Google-profiel.`,
+      heroLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "anders dan Google"],
+      intro: (engines: string, questions: number, perQuestion: number, differs: number, notFound: number) => {
+        const asked = `${engines} beantwoordden ${questions} ${questions === 1 ? "vraag" : "vragen"}, elk ${perQuestion} keer.`;
+        const nf = notFound > 0 ? ` Bij ${notFound} ${notFound === 1 ? "vraag" : "vragen"} vond de AI niets.` : "";
+        return `${asked} Bij ${differs} ${differs === 1 ? "vraag" : "vragen"} zegt de AI iets anders dan je Google-profiel.${nf} Wie gelijk heeft weten we pas als jij je gegevens bevestigt: soms is het profiel zelf verouderd.`;
+      },
+      correctHeader: "Volgens Google",
+      headline: (differs: number, total: number) => `${differs} van ${total} antwoorden wijken af van het Google-profiel. Nog niet bevestigd door de eigenaar: controleer wie gelijk heeft.`,
+    },
     checkedAt: (dateTime: string) => `Gecontroleerd op ${dateTime}`,
     /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
     print: "Print of bewaar als PDF",

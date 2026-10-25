@@ -102,7 +102,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
         {/* Per question */}
         <section data-motion="stagger" className="flex flex-col">
-          <ReportHeaderRow />
+          <ReportHeaderRow check={v.check} />
           {v.rows.map((row) => (
             <ReportRow key={row.question + row.tone} row={row} />
           ))}

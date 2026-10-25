@@ -8,6 +8,8 @@ import { ENGINE_NL_USAGE, criteriumFor, engineCounts, engineStip, overallStip, s
 import type { FindingCandidate, SampleVerdict } from "./compare";
 
 export interface StipInput {
+  /** Facts not confirmed by the owner: a mismatch is "check this", at most orange; not knowing the business still counts in full. */
+  unconfirmed?: boolean;
   engines: Engine[];
   samples: Pick<Sample, "id" | "engine">[];
   verdicts: Map<string, SampleVerdict>;
@@ -51,11 +53,12 @@ export function computeEngineStips(input: StipInput): EngineStip[] {
     const instableAnswers = input.instable.filter((f) => f.engine === engine).reduce((n, f) => n + f.frequency, 0);
     const stip: Stip = engineStip({
       skipped: input.unavailable.has(engine) || total === 0,
-      findingSeverities: findings.filter((f) => f.verdict !== "not_found").map(findingSeverity),
+      // Unconfirmed facts: we do not know yet whether the AI or Google is right, so no mismatch makes it red.
+      findingSeverities: findings.filter((f) => f.verdict !== "not_found").map((f) => (input.unconfirmed && findingSeverity(f) === "afhaker" ? "misleider" : findingSeverity(f))),
       notFoundCriteria: input.criteriaNotFound.filter((c) => c.engine === engine).map((c) => c.criterium),
       fixesInProgress: findings.filter((f) => f.status === "fixing" || f.status === "recheck").length,
       notFoundShare: total ? notFound / total : 0,
-      wrongShare: total ? wrong / total : 0,
+      wrongShare: total && !input.unconfirmed ? wrong / total : 0,
       instableShare: judged ? instableAnswers / judged : 0,
     });
     return { engine, stip, usage: ENGINE_NL_USAGE[engine] ?? 0, counts: engineCounts(engine) };

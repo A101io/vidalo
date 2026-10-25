@@ -316,7 +316,8 @@ function assembleReport(args: {
     instable: true,
   }));
   const criteriaNotFound = result.criteriaNotFound.map((c) => ({ ...c }));
-  const { stip, engineStips } = computeStip({ engines, samples, verdicts: result.verdicts, findings, instable, criteriaNotFound, unavailable });
+  const factsConfirmed = !facts.provisional && Boolean(facts.verifiedAt);
+  const { stip, engineStips } = computeStip({ engines, samples, verdicts: result.verdicts, findings, instable, criteriaNotFound, unavailable, unconfirmed: !factsConfirmed });
   return {
     business: { id: business.id, slug: business.slug, name: business.name, place: business.place },
     scanRunId: scanRun.id,
@@ -335,6 +336,7 @@ function assembleReport(args: {
     instable,
     criteriaNotFound,
     recommendations: summarizeRecommendations({ samples, prompts, verdicts: result.verdicts, facts }),
+    factsConfirmed,
   };
 }
 
@@ -361,7 +363,8 @@ export async function buildSnapshot(scanRunId: string, dbOverride?: Db): Promise
   const result = compare(comparable, facts);
   const unavailable = new Set(scanRun.engines.filter((e) => !samples.some((s) => s.engine === e)));
   const ownFindings = result.findings.map((c) => ({ ...c, status: "open" as const })) as unknown as Finding[];
-  const { stip, engineStips } = computeStip({ engines: scanRun.engines, samples, verdicts: result.verdicts, findings: ownFindings, instable: result.instable, criteriaNotFound: result.criteriaNotFound, unavailable });
+  const unconfirmed = facts.provisional || !facts.verifiedAt;
+  const { stip, engineStips } = computeStip({ engines: scanRun.engines, samples, verdicts: result.verdicts, findings: ownFindings, instable: result.instable, criteriaNotFound: result.criteriaNotFound, unavailable, unconfirmed });
   return {
     scanRunId,
     kind: scanRun.kind,

@@ -83,6 +83,19 @@ describe("runScan (mock pipeline)", () => {
     expect(rebuilt.findings.map((f) => f.id).sort()).toEqual(report.findings.map((f) => f.id).sort());
   });
 
+  it("a free check on facts the owner has not confirmed says so; confirmed facts are judged as before", async () => {
+    const db = withMockDb();
+    const prepared = await prepareBusiness({ name: "Kapsalon Mooi", place: "Leiden", db });
+    const first = await runScan({ businessId: prepared.business.id, kind: "free", db });
+    expect(first.factsConfirmed).toBe(false);
+    if (first.wrongAnswers > 0) expect(first.stip).not.toBe("rood");
+    const draft = (await db.latestFacts(prepared.business.id))!;
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, ...data } = draft;
+    await db.insertFacts(prepared.business.id, data, { provisional: false, verifiedAt: new Date().toISOString() });
+    const second = await runScan({ businessId: prepared.business.id, kind: "free", db });
+    expect(second.factsConfirmed).toBe(true);
+  });
+
   it("free scan uses 6 prompts and the free-scan engines", async () => {
     const db = withMockDb();
     const prepared = await prepareBusiness({ name: "Kapsalon Mooi", place: "Leiden", db });

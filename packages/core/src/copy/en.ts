@@ -841,6 +841,18 @@ export const en: CopyShape = {
 
   /** Result page. Three states: red/orange, green, grey. */
   result: {
+    check: {
+      meaning: "Check this",
+      h1: (name: string, place: string) => `${name}, ${place}: AI says something else than your Google profile.`,
+      heroLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "differ from Google"],
+      intro: (engines: string, questions: number, perQuestion: number, differs: number, notFound: number) => {
+        const asked = `${engines} answered ${questions} ${questions === 1 ? "question" : "questions"}, each ${perQuestion} times.`;
+        const nf = notFound > 0 ? ` For ${notFound} ${notFound === 1 ? "question" : "questions"} the AI found nothing.` : "";
+        return `${asked} For ${differs} ${differs === 1 ? "question" : "questions"} the AI says something else than your Google profile.${nf} Who is right we only know once you confirm your details: sometimes the profile itself is out of date.`;
+      },
+      correctHeader: "According to Google",
+      headline: (differs: number, total: number) => `${differs} of ${total} answers differ from the Google profile. Not yet confirmed by the owner: check who is right.`,
+    },
     checkedAt: (dateTime: string) => `Checked on ${dateTime}`,
     /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
     print: "Print or save as PDF",
