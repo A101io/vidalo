@@ -12,7 +12,7 @@ open out/mail-lab/index.html
 
 Two journeys run in mock mode:
 - **Free check only**: the report mail, then the day-7 and day-21 follow-ups.
-- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, and the resolved and unfixable notices.
+- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, the resolved and unfixable notices, and a year later the "Klopt dit nog?" mail (queued by the cron step, twice, to show it goes out once).
 
 The correction request to a source and its follow-up are not reached in mock mode, because the mock answers cite no third-party site with a contact address. They are rendered from their templates with the journey's real finding, and the page marks them "template only".
 
@@ -20,7 +20,7 @@ The page shows one card per kind: recipient, sender, subject, the HTML and the p
 
 | Check | Fails the run |
 |---|---|
-| Every one of the 13 kinds is produced | yes |
+| Every one of the 14 kinds is produced | yes |
 | Owner mail goes to the owner, third-party mail never does | yes |
 | No `undefined`, `NaN`, `[object Object]`, `{{ }}` in subject or body | yes |
 | Every link to our own site points to a page or route that exists in `apps/web/app` | yes |
@@ -37,7 +37,7 @@ The `.eml` files are in `out/mail-lab/mail/`. They carry the mail's tags as `X-V
 Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `controle@vidalo.io`; `docs/mail.md`, `docs/setup/stripe-and-resend.md`). Both can come from the environment or the root `.env`.
 
 ```
-pnpm mail:send --to you@example.com            # dry run: lists the 13 mails
+pnpm mail:send --to you@example.com            # dry run: lists the 14 mails
 pnpm mail:send --to you@example.com --send     # sends one of each kind
 pnpm mail:send --to you@example.com --send --kinds welcome,baseline
 ```

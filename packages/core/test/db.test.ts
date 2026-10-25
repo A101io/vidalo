@@ -57,6 +57,11 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(f1.version).toBe(1);
     expect(f2.version).toBe(2);
     expect((await db.latestFacts(b.id))?.phone).toBe("023-5300000");
+    // every version carries the moment it was stored; a copy of a version does not carry the old one over
+    expect(f1.createdAt).toBeTruthy();
+    const f3 = await db.insertFacts(b.id, { ...f2, createdAt: "2000-01-01T00:00:00.000Z" }, { provisional: false, verifiedAt: new Date().toISOString() });
+    expect(f3.createdAt).not.toBe("2000-01-01T00:00:00.000Z");
+    expect((await db.listFacts(b.id)).map((f) => [f.version, Boolean(f.createdAt)])).toEqual([[1, true], [2, true], [3, true]]);
 
     const prompts = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
     expect(await db.listPrompts(b.id)).toHaveLength(1);

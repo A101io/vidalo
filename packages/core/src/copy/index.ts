@@ -1789,6 +1789,7 @@ export const copy = {
     factsConfirmed: (version: number, date: string) => `versie ${version}, bevestigd op ${date}`,
     factsProvisional: "nog niet door jou bevestigd",
     editFacts: "Gegevens bewerken",
+    factsHistory: "Alle versies",
     setDomain: "Domein instellen",
     reportLine: (ok: number, total: number) => `${ok} van ${total} antwoorden kloppen`,
     reportDate: (date: string) => `Gecontroleerd op ${date}`,
@@ -1863,6 +1864,42 @@ export const copy = {
     days: ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"],
     submit: "Gegevens bevestigen",
     saved: "Gegevens bevestigd. We publiceren je feitenpagina en werken de bronnen bij.",
+  },
+
+  /** /app/gegevens/versies: every facts version, what changed, which checks ran on it (core/facts-history.ts). */
+  factsHistory: {
+    h1: "Versies van je gegevens",
+    intro: "Elke keer dat je gegevens veranderen of dat je ze bevestigt, bewaren we een nieuwe versie. Hier zie je wat er veranderde en welke controles op welke versie draaiden.",
+    back: "Terug naar je account",
+    edit: "Gegevens bewerken",
+    empty: "Er zijn nog geen gegevens bewaard.",
+    version: (n: number) => `Versie ${n}`,
+    current: "huidige",
+    confirmed: (date: string) => `Bevestigd op ${date}`,
+    provisional: (date: string | null) => (date ? `Voorlopig, opgehaald op ${date}` : "Voorlopig"),
+    provisionalNote: "Opgehaald van je website en Google, nog niet door jou bevestigd.",
+    first: "Eerste versie.",
+    unchanged: "Niets gewijzigd.",
+    reconfirmed: "Niets gewijzigd, opnieuw bevestigd.",
+    changesH: "Wat er veranderde",
+    runsH: "Controles op deze versie",
+    noRuns: "Geen controles op deze versie.",
+    reconfirmedNotice: "Bedankt. Je gegevens zijn opnieuw bevestigd.",
+    none: "leeg",
+    from: "was",
+    to: "nu",
+    added: "erbij",
+    removed: "eraf",
+    closed: "gesloten",
+    km: (n: string) => `${n} km`,
+  },
+
+  /** The yearly "Klopt dit nog?" banner on every /app page (app/app/layout.tsx). */
+  reconfirm: {
+    h: "Klopt dit nog?",
+    body: (date: string, years: number) => `Je hebt je gegevens op ${date} bevestigd. Dat is ${years === 1 ? "een jaar" : `${years} jaar`} geleden. Kijk even of alles nog klopt.`,
+    confirm: "Alles klopt nog",
+    edit: "Aanpassen",
   },
 
   domain: {

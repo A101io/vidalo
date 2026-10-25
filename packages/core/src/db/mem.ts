@@ -175,7 +175,7 @@ export class MemDb implements Db {
     const list = this.facts.get(businessId) ?? [];
     const version = (list[list.length - 1]?.version ?? 0) + 1;
     const provisional = opts.provisional ?? data.provisional ?? true;
-    const row: Facts = { ...(data as Facts), businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null };
+    const row: Facts = { ...(data as Facts), businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null, createdAt: nowIso() };
     list.push(row);
     this.facts.set(businessId, list);
     return { ...row };

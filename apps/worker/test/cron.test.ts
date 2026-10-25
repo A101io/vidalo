@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
-import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueSiteChecks, monthlySlot } from "../src/cron";
+import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -72,5 +72,47 @@ describe("own-website and Google index checks", () => {
     await db.upsertGoogleIndex({ businessId: b.id, host: "feiten.bakkerijdevries.nl", inspection: { at: day(16).toISOString(), verdict: "PASS", coverageState: null, indexingState: null, pageFetchState: null, robotsTxtState: null, lastCrawlTime: null, googleCanonical: null } });
     expect(await enqueueIndexChecks(day(17))).toBe(0);
     expect(await enqueueIndexChecks(day(23))).toBe(1);
+  });
+});
+
+describe("yearly re-confirmation mail", () => {
+  let db: MemDb;
+  beforeEach(() => {
+    db = new MemDb();
+    setDb(db);
+  });
+
+  const mails = () => [...db.jobs.values()].filter((j) => j.kind === "email" && j.payload.template === "reconfirm");
+  const facts = { name: "Bakkerij De Vries", place: "Haarlem", address: null, postcode: null, phone: null, email: null, website: null, openStatus: "open" as const, hours: [], servicesYes: [], servicesNo: [], prices: [], policies: [], paymentMethods: [], notConfusedWith: [] };
+
+  let n = 0;
+  async function business(status: "active" | "paused" = "active", ownerEmail: string | null = "eigenaar@bakkerijdevries.nl") {
+    const b = await db.upsertBusiness({ name: `Bakkerij ${++n}`, place: "Haarlem", status, ownerEmail });
+    await db.insertFacts(b.id, facts, { provisional: false, verifiedAt: "2026-03-01T09:00:00.000Z" });
+    return b;
+  }
+
+  it("queues one mail a year after the confirmation, never twice for the same year", async () => {
+    const b = await business();
+    await business("paused");
+    await business("active", null);
+    expect(await enqueueReconfirmations(new Date("2027-02-28T09:00:00Z"))).toBe(0);
+    expect(await enqueueReconfirmations(new Date("2027-03-01T09:10:00Z"))).toBe(1);
+    expect(await enqueueReconfirmations(new Date("2027-03-01T09:20:00Z"))).toBe(0);
+    expect(await enqueueReconfirmations(new Date("2027-03-20T09:00:00Z"))).toBe(0);
+    expect(mails()).toHaveLength(1);
+    expect(mails()[0]!.payload.businessId).toBe(b.id);
+    // nobody answered: the next year asks once more
+    expect(await enqueueReconfirmations(new Date("2028-03-02T09:00:00Z"))).toBe(1);
+    expect(await enqueueReconfirmations(new Date("2028-03-02T09:10:00Z"))).toBe(0);
+    expect(mails()).toHaveLength(2);
+  });
+
+  it("starts a new year when the owner confirms again", async () => {
+    const b = await business();
+    expect(await enqueueReconfirmations(new Date("2027-03-02T09:00:00Z"))).toBe(1);
+    await db.insertFacts(b.id, facts, { provisional: false, verifiedAt: "2027-03-03T09:00:00.000Z" });
+    expect(await enqueueReconfirmations(new Date("2027-03-04T09:00:00Z"))).toBe(0);
+    expect(await enqueueReconfirmations(new Date("2028-03-03T09:00:00Z"))).toBe(1);
   });
 });

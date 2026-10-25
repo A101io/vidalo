@@ -6,6 +6,7 @@
 import type { Channel, Facts, Finding, ScanRun } from "@vidalo/core/types";
 import { createServerSupabase } from "./supabase";
 import { ready } from "./core";
+import { lastConfirmed } from "@vidalo/core/facts-history";
 
 export interface DashboardData {
   facts: Facts | null;
@@ -45,4 +46,39 @@ export async function loadDashboard(businessId: string): Promise<DashboardData> 
     channels: ((channelsRes.data ?? []) as Row[]).map(camel) as unknown as Channel[],
     scanRuns: ((runsRes.data ?? []) as Row[]).map(camel) as unknown as ScanRun[],
   };
+}
+
+function factsFromRow(row: Row, businessId: string): Facts {
+  return { ...(row.data as Row), businessId, version: row.version, provisional: row.provisional, verifiedAt: row.verified_at ?? null, createdAt: row.created_at ?? undefined } as unknown as Facts;
+}
+
+/** Every facts version (oldest first) and the checks, for /app/gegevens/versies. */
+export async function loadFactsHistory(businessId: string): Promise<{ versions: Facts[]; runs: ScanRun[] }> {
+  const supabase = await createServerSupabase();
+  if (!supabase) {
+    const db = await ready();
+    const [versions, runs] = await Promise.all([db.listFacts(businessId), db.listScanRuns(businessId, 500)]);
+    return { versions, runs };
+  }
+  const [factsRes, runsRes] = await Promise.all([
+    supabase.from("facts").select("*").eq("business_id", businessId).order("version", { ascending: true }),
+    supabase.from("scan_run").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(500),
+  ]);
+  return {
+    versions: ((factsRes.data ?? []) as Row[]).map((r) => factsFromRow(r, businessId)),
+    // started_at is null until a worker picks the run up; the queue time stands in, as in PgDb.
+    runs: ((runsRes.data ?? []) as Row[]).map(camel).map((r) => ({ ...r, startedAt: r.startedAt ?? r.createdAt })) as unknown as ScanRun[],
+  };
+}
+
+/** The newest facts version the owner confirmed, or null (the yearly "Klopt dit nog?"). */
+export async function loadLastConfirmedFacts(businessId: string): Promise<Facts | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) {
+    const db = await ready();
+    return lastConfirmed(await db.listFacts(businessId));
+  }
+  const res = await supabase.from("facts").select("*").eq("business_id", businessId).eq("provisional", false).not("verified_at", "is", null).order("version", { ascending: false }).limit(1);
+  const row = (res.data?.[0] ?? null) as Row | null;
+  return row ? factsFromRow(row, businessId) : null;
 }

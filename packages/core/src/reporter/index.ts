@@ -28,6 +28,7 @@ export * from "./mail.js";
 export * from "./templates.js";
 export * from "./links.js";
 export * from "./launch.js";
+export * from "./reconfirm.js";
 
 const PRICE_SETUP = 149;
 const PRICE_MONITOR = 49;

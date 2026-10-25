@@ -7,6 +7,7 @@ import { SECTOR_SLUGS } from "@vidalo/core/types";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
 import { requireVerifiedOwner } from "@/lib/owner";
+import { lastConfirmed } from "@vidalo/core/facts-history";
 
 const str = (form: FormData, k: string): string | null => {
   const v = String(form.get(k) ?? "").trim();
@@ -78,4 +79,25 @@ export async function saveFacts(form: FormData) {
   revalidatePath("/app");
   revalidatePath("/app/gegevens");
   redirect((await getI18n()).href("/app/gegevens?opgeslagen=1"));
+}
+
+/**
+ * "Alles klopt nog" (the yearly question): the owner confirms the last
+ * confirmed facts unchanged. Recorded as a new confirmed version with the same
+ * content, so verifiedAt stays the one date that says when the owner last
+ * vouched for the facts (the facts page shows it, the history lists it, the
+ * yearly rule counts from it). Republished for the new date; nothing to sync,
+ * nothing changed.
+ */
+export async function reconfirmFacts() {
+  const { business } = await requireVerifiedOwner("/app/gegevens/versies");
+  const db = await ready();
+  const confirmed = lastConfirmed(await db.listFacts(business.id));
+  if (!confirmed) redirect((await getI18n()).href("/app/gegevens"));
+  const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...data } = confirmed;
+  const facts = await db.insertFacts(business.id, data, { provisional: false, verifiedAt: new Date().toISOString() });
+  await db.enqueueJob("publish", { businessId: business.id, reason: `facts v${facts.version} confirmed again (yearly)` });
+  await db.logEvent(business.id, "facts.confirmed", { version: facts.version, reconfirmed: confirmed.version });
+  revalidatePath("/app", "layout");
+  redirect((await getI18n()).href("/app/gegevens/versies?bevestigd=1"));
 }
