@@ -51,7 +51,7 @@ function linkify(line: string): string {
 }
 
 /** The branded HTML version of a plain-text mail: logo, paragraphs with clickable links, the colour dot, the company line. */
-export function textToHtml(text: string, lang: Lang = "nl"): string {
+export function textToHtml(text: string, lang: "nl" | "en" = "nl"): string {
   const paras = text.trim().split(/\n{2,}/);
   const body = paras
     .map((p) => {
