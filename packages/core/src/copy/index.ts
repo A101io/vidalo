@@ -851,6 +851,8 @@ export const copy = {
       placeLabel: "Plaats",
       placeHint: "In welke plaats zit het bedrijf?",
       back: "Terug",
+      /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
+      again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },

@@ -8,7 +8,7 @@ import { ready } from "@/lib/db";
 import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, progressTemplate, type BusinessCandidate } from "@/lib/core";
 import { requestBehindGate } from "@/lib/gate-state";
 import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, scanIpEvent } from "@vidalo/core/shared";
-import { passesTurnstile } from "@/lib/turnstile";
+import { passesTurnstile, kiesToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,7 +54,9 @@ export async function POST(req: Request) {
   const parsed = parseQuery(q);
   const place = placeInput ?? parsed.place;
   const candidates = await resolveBusiness(parsed.query, place);
-  const kies = to(`/scan/kies?q=${encodeURIComponent(q)}${place ? `&place=${encodeURIComponent(place)}` : ""}`);
+  // The pick page looks the business up again; the token says this visitor passed the check.
+  const k = kiesToken(q, place ?? "");
+  const kies = to(`/scan/kies?q=${encodeURIComponent(q)}${place ? `&place=${encodeURIComponent(place)}` : ""}${k ? `&k=${encodeURIComponent(k)}` : ""}`);
   if (candidates.length === 0) return NextResponse.redirect(kies, 303);
 
   let candidate: BusinessCandidate | undefined;

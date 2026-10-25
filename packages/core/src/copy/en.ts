@@ -832,6 +832,8 @@ export const en: CopyShape = {
       placeLabel: "Town",
       placeHint: "Which town is the business in?",
       back: "Back",
+      /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
+      again: "Enter your business here once more to continue.",
     },
     empty: "Enter a business name or website.",
   },
