@@ -577,6 +577,11 @@ export class PgDb implements Db {
     return Number(row?.n ?? 0);
   }
 
+  async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {
+    const rows = await this.sql`select email, language from waitlist where unsubscribed_at is null order by created_at, email`;
+    return rows.map((r) => ({ email: String(r.email), language: r.language === "en" ? "en" : "nl" }));
+  }
+
   // --- channels ---
   async listChannels(businessId: string): Promise<Channel[]> {
     const rows = await this.sql`select * from channel where business_id = ${businessId} order by type, name`;
