@@ -145,10 +145,18 @@ export interface Db {
   getBusinessByStripeCustomer(customerId: string): Promise<BusinessRecord | null>;
   listBusinessesByStatus(statuses: BusinessStatus[]): Promise<BusinessRecord[]>;
   /** Owner lookup for the dashboard: by owner_user_id first, then by owner_email (case-insensitive). */
+  /**
+   * Removes the business and everything that hangs off it (facts, prompts,
+   * scans, samples, claims, findings, fixes, channels, events, index state)
+   * and its jobs that have not run. The owner's "verwijder mijn gegevens".
+   */
+  deleteBusiness(id: string): Promise<void>;
   getBusinessByOwner(opts: { userId?: string | null; email?: string | null }): Promise<BusinessRecord | null>;
 
   // --- facts (versioned, owner-asserted) ---
   latestFacts(businessId: string): Promise<Facts | null>;
+  /** Every facts version, oldest first (the owner's data export). */
+  listFacts(businessId: string): Promise<Facts[]>;
   insertFacts(businessId: string, data: Omit<Facts, "businessId" | "version" | "provisional" | "verifiedAt"> & Partial<Facts>, opts?: { provisional?: boolean; verifiedAt?: string | null }): Promise<Facts>;
 
   // --- prompts ---

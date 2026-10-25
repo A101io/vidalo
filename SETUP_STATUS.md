@@ -100,7 +100,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
 | C1 | Payments | blocked | Code done (`docs/PAYMENTS.md`, wrong-account guard). Needs Vidalo's own Stripe account. | |
-| C2 | Accounts + personal data | open | Export / delete my data not built. | |
+| C2 | Accounts + personal data | written | "Je gegevens" on `/app/account`: JSON download of everything under the business (`GET /api/account/export`, 401 without a session) and "Verwijder alles" (business with every child row, its unrun jobs, the Supabase login, the session), only once no subscription runs (`core/shared/my-data.ts`, `Db.deleteBusiness`, tested on MemDb and PgDb). Seen 25 Oct in mock mode: export 200 with 8 scans and 51 findings; delete on a trial business refused with the message. Not clicked: a successful delete in the browser; the Supabase user deletion needs `SUPABASE_SERVICE_ROLE_KEY` on `vidalo-web`. | 25 Oct |
 | C3 | AI features | written | Vidalo asks AI providers; it does not chat with customers. Spend capped by `FREE_SCANS_PER_DAY`. | |
 | C4 | B2C | n/a | B2B only. | |
 | C5 | Native app | n/a | | |
