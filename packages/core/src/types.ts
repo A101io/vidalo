@@ -110,6 +110,8 @@ export interface Facts {
   credentials?: string[];
   /** Owner override of the sector; falls back to Business.sector. */
   sector?: SectorSlug | null;
+  /** Google Places types of the business, primary first ("bakery", "cafe"); pick the question word when the name does not say it. */
+  googleTypes?: string[];
 }
 
 export const EMPTY_SERVICE_AREA: ServiceArea = { places: [], radiusKm: null };

@@ -36,7 +36,7 @@ export interface SectorPack {
   biggestRisk: string;
   /** Criterium ids that matter most, in order. */
   decisiveCriteria: CriteriumId[];
-  /** The noun a customer uses when asking for a recommendation ("loodgieter", "kapper"). */
+  /** The noun a customer uses when asking for a recommendation ("loodgieter", "kapper"); matched on the name, then on the Google types. */
   nouns: { match: RegExp; noun: string }[];
   defaultNoun: string;
   prompts(facts: Facts): SectorPromptTemplate[];
@@ -68,7 +68,8 @@ const about = (category: FactKey, criterium: CriteriumId, textNl: string, probes
 const rec = (category: FactKey, criterium: CriteriumId, textNl: string, probes: string[]): SectorPromptTemplate => ({ category, criterium, kind: "recommendation", textNl, probes, active: true, pool: "core" });
 
 function ctxFor(facts: Facts, pack: Pick<SectorPack, "slug" | "nouns" | "defaultNoun">): Ctx {
-  const noun = pack.nouns.find((n) => n.match.test(facts.name))?.noun ?? pack.defaultNoun;
+  const types = facts.googleTypes ?? [];
+  const noun = pack.nouns.find((n) => n.match.test(facts.name))?.noun ?? pack.nouns.find((n) => types.some((t) => n.match.test(t)))?.noun ?? pack.defaultNoun;
   const open = (day: number) => {
     const h = facts.hours.find((x) => x.day === day);
     return !!h && !h.closed && !!h.open && !!h.close;
@@ -305,8 +306,8 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "Niet genoemd bij spoedvraag",
     decisiveCriteria: [4, 5, 6, 12],
     nouns: [
-      { match: /elektr/i, noun: "elektricien" },
-      { match: /cv|verwarming|warmte/i, noun: "cv-monteur" },
+      { match: /elektr|electrician/i, noun: "elektricien" },
+      { match: /cv|verwarming|warmte|hvac|heating/i, noun: "cv-monteur" },
       { match: /install/i, noun: "installateur" },
     ],
     defaultNoun: "loodgieter",
@@ -340,9 +341,9 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "Niet op de shortlist",
     decisiveCriteria: [6, 11, 9, 4],
     nouns: [
-      { match: /dak/i, noun: "dakdekker" },
-      { match: /schilder/i, noun: "schilder" },
-      { match: /hoven|tuin/i, noun: "hovenier" },
+      { match: /dak|roofing/i, noun: "dakdekker" },
+      { match: /schilder|painter/i, noun: "schilder" },
+      { match: /hoven|tuin|landscap/i, noun: "hovenier" },
       { match: /stuk/i, noun: "stukadoor" },
     ],
     defaultNoun: "aannemer",
@@ -408,10 +409,10 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "\"Neemt niemand aan\"",
     decisiveCriteria: [1, 5, 10, 12],
     nouns: [
-      { match: /fysio/i, noun: "fysio" },
-      { match: /tandarts|mondzorg/i, noun: "tandarts" },
+      { match: /fysio|physiotherap/i, noun: "fysio" },
+      { match: /tandarts|mondzorg|dentist|dental/i, noun: "tandarts" },
       { match: /huisarts/i, noun: "huisarts" },
-      { match: /dierenarts|dierenkliniek/i, noun: "dierenarts" },
+      { match: /dierenarts|dierenkliniek|veterinar/i, noun: "dierenarts" },
       { match: /psycho/i, noun: "psycholoog" },
     ],
     defaultNoun: "praktijk",
@@ -445,7 +446,7 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "\"Gesloten\" terwijl open",
     decisiveCriteria: [3, 1, 10, 6],
     nouns: [
-      { match: /caf[eé]/i, noun: "café" },
+      { match: /caf[eé]|coffee_shop/i, noun: "café" },
       { match: /lunch/i, noun: "lunchroom" },
     ],
     defaultNoun: "restaurant",
@@ -479,11 +480,11 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "Bezoek dat niet komt",
     decisiveCriteria: [3, 8, 6],
     nouns: [
-      { match: /bakker/i, noun: "bakker" },
-      { match: /slager/i, noun: "slager" },
-      { match: /bloem/i, noun: "bloemist" },
-      { match: /boek/i, noun: "boekhandel" },
-      { match: /drogist/i, noun: "drogist" },
+      { match: /bakker|bakery/i, noun: "bakker" },
+      { match: /slager|butcher/i, noun: "slager" },
+      { match: /bloem|florist/i, noun: "bloemist" },
+      { match: /boek|book_store/i, noun: "boekhandel" },
+      { match: /drogist|drugstore/i, noun: "drogist" },
     ],
     defaultNoun: "winkel",
     prompts(facts) {
@@ -516,7 +517,7 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     biggestRisk: "Verkeerde vergelijking",
     decisiveCriteria: [9, 6, 7, 10],
     nouns: [
-      { match: /fiets|rijwiel|bike/i, noun: "fietsenmaker" },
+      { match: /fiets|rijwiel|bike|bicycle/i, noun: "fietsenmaker" },
     ],
     defaultNoun: "garage",
     prompts(facts) {
@@ -550,7 +551,7 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     decisiveCriteria: [3, 10, 9, 1],
     nouns: [
       { match: /barber|barbier/i, noun: "barbier" },
-      { match: /schoonheid|beauty|nagel/i, noun: "schoonheidssalon" },
+      { match: /schoonheid|beauty|nagel|nail_salon/i, noun: "schoonheidssalon" },
     ],
     defaultNoun: "kapper",
     prompts(facts) {
@@ -616,7 +617,7 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     typicalSource: "Oude pagina",
     biggestRisk: "Verkeerde prijs",
     decisiveCriteria: [9, 12, 4],
-    nouns: [{ match: /hypotheek/i, noun: "hypotheekadviseur" }],
+    nouns: [{ match: /hypotheek|mortgage/i, noun: "hypotheekadviseur" }],
     defaultNoun: "makelaar",
     prompts(facts) {
       const c = ctxFor(facts, this);
@@ -649,7 +650,7 @@ export const SECTORS: Record<SectorSlug, SectorPack> = {
     decisiveCriteria: [5, 3, 6],
     nouns: [
       { match: /sport|fit|gym/i, noun: "sportschool" },
-      { match: /rijschool|rijles|autorij/i, noun: "rijschool" },
+      { match: /rijschool|rijles|autorij|driving_school/i, noun: "rijschool" },
     ],
     defaultNoun: "kinderopvang",
     prompts(facts) {
