@@ -1929,6 +1929,8 @@ export const copy = {
     generic: "Er ging iets mis. Probeer het nog een keer.",
     notFound: "Deze pagina bestaat niet.",
     loginRequired: "Log in om verder te gaan.",
+    /** The bot check (Turnstile) on the free check or the sign-in form said no. */
+    humanCheck: "We konden niet nagaan dat je geen robot bent. Probeer het nog een keer.",
     /** Replace the browser's own form-validation bubbles, which speak the browser's language (components/FormMessages.tsx). */
     field: {
       required: "Vul dit veld in.",

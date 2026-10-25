@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ScanField } from "@/components/ScanField";
 import { resolveBusiness, parseQuery } from "@/lib/core";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
                         <input id={`place-${i}`} name="place" required defaultValue={place ?? ""} className="field-sm w-[180px]" />
                       </div>
                     )}
+                    <TurnstileWidget />
                     <button type="submit" className="btn-sm">
                       {c.button}
                     </button>

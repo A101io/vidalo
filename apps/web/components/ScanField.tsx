@@ -1,4 +1,5 @@
 import { getI18n } from "@/lib/i18n";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 /**
  * Name + place in one bordered field, blue button underneath (docs/DESIGN_G.md).
@@ -54,6 +55,7 @@ export async function ScanField({
           className="h-[58px] w-[110px] border-0 border-l-[1.5px] border-ink bg-white px-4 text-[16px] placeholder:text-muted focus:outline-none sm:w-[130px]"
         />
       </div>
+      <TurnstileWidget />
       <button type="submit" className="btn-primary h-14">
         {button ?? s.button}
       </button>

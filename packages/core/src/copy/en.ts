@@ -1899,6 +1899,7 @@ export const en: CopyShape = {
     generic: "Something went wrong. Please try again.",
     notFound: "This page does not exist.",
     loginRequired: "Log in to continue.",
+    humanCheck: "We could not confirm that you are not a robot. Please try again.",
     field: {
       required: "Please fill in this field.",
       checkbox: "Tick this box to continue.",
