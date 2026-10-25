@@ -1,6 +1,6 @@
 # Cancel and pause
 
-How an owner ends or pauses the monthly plan ("Goed houden", €49 per month), why it works this way, and what still needs counsel. Built 25 Oct 2026 (`packages/core/src/billing/lifecycle.ts`, `apps/web/app/app/abonnement/`, migration `0010_cancel_pause.sql`). Not legal advice.
+How an owner ends or pauses the monthly plan ("Goed houden", €49 per month), why it works this way, and what still needs counsel. Built 25 Oct 2026 (`packages/core/src/billing/lifecycle.ts`, `apps/web/app/app/abonnement/`, migration `0012_cancel_pause.sql`). Not legal advice.
 
 ## The flow
 
@@ -46,7 +46,7 @@ Vidalo sells only to businesses (B2B confirmation at checkout, terms for busines
 
 - Unit tests (`packages/core/test/cancel-pause.test.ts`): who may do what, pause dates (month ends), cancel/undo/pause/resume against a Stripe stand-in, the reason without the comment in the event, the monthly check skipping a paused business, the reminder and end mail once each, the webhook echo of `cancel_at_period_end` and `pause_collection`, every mail in both languages.
 - Worker tests: paid jobs skipped during a pause and running after it; the cron's reminder, end and close-after-end.
-- Database: the two columns round-trip on MemDb and PgDb (`verify:pg`, migration 0010 applied to a fresh Postgres).
+- Database: the two columns round-trip on MemDb and PgDb (`verify:pg`, migration 0012 applied to a fresh Postgres).
 - Browser, mock mode, as the demo owner: pause 2 months → "Gepauzeerd tot 25 december 2026" → resume → cancel with a reason → "Opgezegd per 24 november 2026" → undo; each step wrote its confirmation mail.
 
-Not verified: the Stripe calls against a real (test-mode) subscription, which needs the Stripe test key; the English pages in the browser; migration 0010 on the hosted project.
+Not verified: the Stripe calls against a real (test-mode) subscription, which needs the Stripe test key; the English pages in the browser; migration 0012 on the hosted project.

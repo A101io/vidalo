@@ -1,7 +1,7 @@
 /**
  * Cancel and pause, started by the owner on /app/abonnement. Stripe holds the
  * money side; the business row holds what the app and the worker need
- * (cancelAt, pauseUntil, migration 0010). Everything an owner can do here is
+ * (cancelAt, pauseUntil, migration 0012). Everything an owner can do here is
  * one function, so the page, the tests and the webhook agree on the rules.
  *
  * The rules (docs/CANCEL-PAUSE.md has the reasoning and the legal checks):

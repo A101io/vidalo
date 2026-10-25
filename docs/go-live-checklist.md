@@ -45,7 +45,7 @@ The launch gate. "continue" resumes from the first row that is not ✓. Status k
 | B2 | `pnpm stripe:setup --apply` (prices, 21% tax rate, webhook) | blocked: the test secret key (B1); portal configuration already made in test mode (`bpc_1UR8MDEKzmvgQ7J9sXzbS8S0`) |
 | B3 | Terms and Privacy URLs set in Stripe settings. **Checkout now requires them** (14 Oct 2026: terms checkbox, B2B confirmation with legal links, btw-nummer, origin-derived return URLs, as for Sonable; `docs/PAYMENTS.md`). Proof: a completed session whose `checkout.completed` event reads `termsConsent: "accepted"` | blocked: B1 + legal pages |
 | B4 | One live purchase on a real card, refunded | blocked: B2 |
-| B5 | Cancel and pause in the app (`docs/CANCEL-PAUSE.md`): cancel at period end with reason (optional), undo until the end, pause 1–3 months with Stripe `pause_collection`, confirmation mail for each change, portal cancelling switched off | written 25 Oct 2026, mock-mode browser run and tests; **open:** migration 0010 on the hosted project, a test-mode run against a real Stripe subscription (needs the test key), counsel on the pause article |
+| B5 | Cancel and pause in the app (`docs/CANCEL-PAUSE.md`): cancel at period end with reason (optional), undo until the end, pause 1–3 months with Stripe `pause_collection`, confirmation mail for each change, portal cancelling switched off | written 25 Oct 2026, mock-mode browser run and tests; **open:** migration 0012 on the hosted project, a test-mode run against a real Stripe subscription (needs the test key), counsel on the pause article |
 
 ## Deploy
 | # | Item | Status |
