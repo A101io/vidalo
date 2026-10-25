@@ -622,7 +622,7 @@ export const copy = {
       lang: "NL",
       columns: [
         { title: "Product", links: [{ label: "Hoe het werkt", href: "/hoe-het-werkt" }, { label: "Waarom", href: "/waarom" }, { label: "AI-agents en OKF", href: "/straks" }, { label: "Voorbeeldrapport", href: "/#rapport" }, { label: "Prijs", href: "/prijzen" }, { label: "Per vak", href: "/#vak" }] },
-        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
+        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · +31 85 109 1393 · Prijzen excl. btw",
@@ -669,6 +669,20 @@ export const copy = {
       description: "Straks overleggen AI-assistenten met elkaar en met je bedrijf. Wat betekenen OKF (Open Knowledge Format), schema.org, llms.txt, MCP en A2A, en wat moet je ermee? Gewoon uitgelegd.",
       h1: "Straks praten assistenten met elkaar",
       intro: "Wat er verandert als AI-assistenten niet alleen antwoorden maar ook regelen, en welke afspraken daarvoor nu gemaakt worden. Zonder vakjargon.",
+    },
+    /** /contact: WhatsApp, phone and mail, with when we answer. */
+    contact: {
+      crumb: "Contact",
+      title: "Contact met Vidalo: WhatsApp, bellen of mailen",
+      description: "App, bel of mail Vidalo. WhatsApp en telefoon op werkdagen van 09:00 tot 17:00; een mail beantwoorden we binnen twee werkdagen.",
+      h1: "Contact",
+      intro: "Er zit een klein team achter Vidalo. Je appt, belt of mailt gewoon met ons; geen ticketnummer, geen wachtrij.",
+      whatsapp: { h: "WhatsApp", p: "Het snelst. Stuur een berichtje; op werkdagen tussen 09:00 en 17:00 reageren we meestal binnen een uur.", button: "Stuur een WhatsApp-bericht" },
+      phone: { h: "Bellen", p: "Werkdagen van 09:00 tot 17:00. Krijg je ons niet te pakken, stuur dan een berichtje, dan bellen we terug.", button: "Bel ons" },
+      mail: { h: "Mailen", p: "Voor vragen over Vidalo. Over je account, een rapport of een betaling mail je support; we antwoorden binnen twee werkdagen.", button: "Mail ons", supportLabel: "Support" },
+      include: { h: "Handig om mee te sturen", items: ["De naam en plaats van je bedrijf.", "Als het over een rapport gaat: de link van dat rapport.", "Wat je verwachtte, en wat er in plaats daarvan gebeurde."] },
+      never: "Stuur nooit een wachtwoord of betaalgegeven mee. Daar vragen we nooit om.",
+      company: "Onze bedrijfsgegevens, ons adres en ons KvK-nummer staan onderaan deze pagina. Post mag naar dat adres; een berichtje is sneller.",
     },
     home_crumb: "Vidalo",
   },
@@ -740,7 +754,7 @@ export const copy = {
       label: "Een chatveld waarin klantvragen worden getypt, en dat het Vidalo-logo wordt",
       questions: ["Is de bakker op zondag open?", "Wat kost een knipbeurt?", "Bezorgen ze ook in Haarlem?"],
     },
-    contact: "Vragen? Mail ons op",
+    contact: { lead: "Vragen? App, bel of mail ons.", whatsapp: "WhatsApp", phone: "Bellen", mail: "Mailen", more: "Alle contactgegevens" },
     list: {
       h2: "Hoor het als we opengaan",
       label: "Je e-mailadres",

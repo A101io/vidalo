@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CONTACT, telHref, waHref } from "@vidalo/core/shared";
 import { getCopy, getI18n } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import { LangSwitch } from "@/components/LangSwitch";
@@ -99,12 +100,25 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
                   </form>
                 )}
               </section>
-              <p className="mt-5 text-[14px] text-muted sm:mt-6">
-                {c.contact}{" "}
-                <a href="mailto:hello@vidalo.io" className="font-semibold text-ink underline underline-offset-2">
-                  hello@vidalo.io
-                </a>
-              </p>
+              <div className="mt-5 text-[14px] text-muted sm:mt-6">
+                <p>{c.contact.lead}</p>
+                <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                  <a href={waHref(CONTACT.whatsapp)} target="_blank" rel="noopener" className="font-semibold text-ink underline underline-offset-2">
+                    {c.contact.whatsapp} {CONTACT.whatsapp}
+                  </a>
+                  <a href={telHref(CONTACT.phone)} className="font-semibold text-ink underline underline-offset-2">
+                    {c.contact.phone} {CONTACT.phone}
+                  </a>
+                  <a href={`mailto:${CONTACT.email}`} className="font-semibold text-ink underline underline-offset-2">
+                    {CONTACT.email}
+                  </a>
+                </p>
+                <p className="mt-1.5">
+                  <Link href={href("/contact")} className="nav-link">
+                    {c.contact.more}
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </main>
@@ -113,6 +127,9 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
         <div className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-8 text-[13px] text-muted">
           <span>{copy.landing.footer.legal}</span>
           <span className="flex flex-wrap gap-x-4">
+            <Link href={href("/contact")} className="nav-link">
+              {copy.pages.contact.crumb}
+            </Link>
             <Link href={href("/voorwaarden")} className="nav-link">
               {copy.legal.terms.title}
             </Link>

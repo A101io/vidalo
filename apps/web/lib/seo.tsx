@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PRICES, type CopyShape } from "@vidalo/core/copy";
 import { buildJsonLd } from "@vidalo/core/publisher";
-import { OWN_BUSINESS, OWN_FACTS, OWN_FACTS_PATH } from "@vidalo/core/shared";
+import { CONTACT, OWN_BUSINESS, OWN_FACTS, OWN_FACTS_PATH, waHref } from "@vidalo/core/shared";
 import { localizeHref, type Lang } from "./lang-paths";
 
 /**
@@ -46,7 +46,12 @@ export function organizationLd(copy: CopyShape) {
     name: copy.brand,
     legalName: "A101 B.V.",
     url: SITE,
-    email: "hello@vidalo.io",
+    email: CONTACT.email,
+    telephone: CONTACT.phone,
+    contactPoint: [
+      { "@type": "ContactPoint", contactType: "customer service", telephone: CONTACT.phone, email: CONTACT.support, availableLanguage: ["nl", "en"], url: `${SITE}/contact` },
+      { "@type": "ContactPoint", contactType: "customer service", telephone: CONTACT.whatsapp, url: waHref(CONTACT.whatsapp), name: "WhatsApp", availableLanguage: ["nl", "en"] },
+    ],
     description: copy.tagline,
     identifier: { "@type": "PropertyValue", propertyID: "KvK", value: OWN_BUSINESS.kvk },
     subjectOf: OWN_FACTS_URL,

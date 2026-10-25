@@ -13,6 +13,7 @@
  */
 import type { CopyShape } from "../copy/index.js";
 import { PRICES } from "../copy/index.js";
+import { CONTACT } from "../shared/contact.js";
 import type { Lang } from "../copy/index.js";
 
 export interface ChatMessage {
@@ -44,7 +45,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   const notPromised = copy.legal.terms.sections.find((s) => /beloven|promise/i.test(s.h));
   if (notPromised) lines.push(`${notPromised.h}: ${notPromised.p.join(" ")}`);
   lines.push(nl ? "Wat de klant zelf doet: " + (L.vragen.items.find((i) => /zelf/i.test(i.q))?.a ?? "") : "");
-  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: hello@vidalo.io. Support: support@vidalo.io.`);
+  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: WhatsApp ${CONTACT.whatsapp}, ${nl ? "telefoon" : "phone"} ${CONTACT.phone} (${nl ? "werkdagen" : "working days"} ${CONTACT.hours}), ${nl ? "e-mail" : "email"} ${CONTACT.email}. Support: ${CONTACT.support}. ${nl ? "Alles op" : "All on"} /contact.`);
   return lines.filter(Boolean).join("\n");
 }
 
