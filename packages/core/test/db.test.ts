@@ -42,6 +42,17 @@ describe.each(backends)("%s", (_name, makeDb) => {
     db = await makeDb();
   });
 
+  it("stores mail preferences per business; absent keys are on, other updates leave them alone", async () => {
+    const b = await db.upsertBusiness({ name: "Kapsalon Mooi", place: "Leiden" });
+    expect(b.mailPrefs).toEqual({});
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, mailPrefs: { report: false, followup: false, bogus: true } as never });
+    expect((await db.getBusiness(b.id))?.mailPrefs).toEqual({ report: false, followup: false });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status: "trial" });
+    expect((await db.getBusiness(b.slug))?.mailPrefs).toEqual({ report: false, followup: false });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, mailPrefs: { report: true } });
+    expect((await db.getBusiness(b.id))?.mailPrefs).toEqual({ report: true });
+  });
+
   it("stores business, facts, prompts, scan runs, samples, claims and findings", async () => {
     const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", domain: "bakkerijdevries.nl" });
     expect(b.slug).toBe("bakkerij-de-vries-haarlem");
@@ -142,6 +153,18 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.claimJob(["scan"])).toBeNull();
     // Control: the other business keeps everything.
     expect((await exportMyData(db, other.b.id))?.fixes).toHaveLength(1);
+  });
+
+  it("cancel and pause dates round-trip; a paused business skips the monthly check", async () => {
+    const day = new Date().getDate();
+    const end = "2026-11-12T10:00:00.000Z";
+    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", anniversaryDay: day, cancelAt: end });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBe(end);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: null, pauseUntil: new Date(Date.now() + 86_400_000).toISOString() });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBeNull();
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(0);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: null });
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(1);
   });
 
   it("job queue: claim, complete, fail with backoff", async () => {

@@ -37,6 +37,8 @@ The launch gate. "continue" resumes from the first row that is not ✓. Status k
 | A1 | Magic-link sign-in with Supabase Auth, from the local dev server | written, partly observed 14 Oct 2026: with `SUPABASE_URL` + `SUPABASE_ANON_KEY` in the root `.env` the sign-in page drops the mock hint and `/api/health` keeps `"db":"mem"`; scan → mock checkout → `/welkom` → `/inloggen?business=…` now links the business to the e-mail before the link is sent (`apps/web/app/inloggen/actions.ts`; before this the real-auth path dropped the business and the first sign-in after paying landed on "geen bedrijf"). **Not observed:** the link itself (sending it mails Julian; the browser pane was left on that page), `/auth/callback`, `/app` |
 | A2 | Supabase Auth settings: Site URL and Redirect URLs for the real host, custom SMTP (Resend), rate limits | blocked: domain (J2). Local sign-in works on the default `http://localhost:3000` |
 | A3 | Google sign-in for ownership (`GOOGLE_OAUTH_CLIENT_ID/SECRET`), redirect URI `<site>/api/google/callback` | blocked: Julian creates the OAuth client in Google Cloud (as Vidalo), with the Business Profile API scope |
+| A4 | Change e-mail address on `/app/account` (`app/app/account/actions.ts`, `supabase.auth.updateUser` with `emailRedirectTo` → `/auth/callback`; the business's owner address follows the confirmed login in `lib/session.ts`). Supabase settings to check: "Secure email change" (on = both addresses confirm; the page says "soms ook het oude adres"), the "Change email address" template, and `/auth/callback` in Redirect URLs | written 25 Oct 2026; verified in mock mode only (immediate change, same address and taken address refused). **Not tried:** the real confirmation link against Supabase (needs a real mail, Julian's click) |
+| A5 | Mail preferences on `/app/account` (`shared/mail-prefs.ts`, column `business.mail_prefs`, migration `0011_mail_prefs.sql`; enforced in `deliver()` in `reporter/index.ts`; unsubscribe = every optional group off) | written 25 Oct 2026; tests on MemDb and PgDb. **Migration 0011 is not applied to the hosted project yet** |
 
 ## Billing
 | # | Item | Status |
@@ -45,6 +47,7 @@ The launch gate. "continue" resumes from the first row that is not ✓. Status k
 | B2 | `pnpm stripe:setup --apply` (prices, 21% tax rate, webhook) | blocked: the test secret key (B1); portal configuration already made in test mode (`bpc_1UR8MDEKzmvgQ7J9sXzbS8S0`) |
 | B3 | Terms and Privacy URLs set in Stripe settings. **Checkout now requires them** (14 Oct 2026: terms checkbox, B2B confirmation with legal links, btw-nummer, origin-derived return URLs, as for Sonable; `docs/PAYMENTS.md`). Proof: a completed session whose `checkout.completed` event reads `termsConsent: "accepted"` | blocked: B1 + legal pages |
 | B4 | One live purchase on a real card, refunded | blocked: B2 |
+| B5 | Cancel and pause in the app (`docs/CANCEL-PAUSE.md`): cancel at period end with reason (optional), undo until the end, pause 1–3 months with Stripe `pause_collection`, confirmation mail for each change, portal cancelling switched off | written 25 Oct 2026, mock-mode browser run and tests; **open:** migration 0012 on the hosted project, a test-mode run against a real Stripe subscription (needs the test key), counsel on the pause article |
 
 ## Deploy
 | # | Item | Status |

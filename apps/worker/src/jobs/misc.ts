@@ -11,6 +11,7 @@ import {
   sendFactsReconfirm,
   sendUnfixableNotice,
   sendWelcome,
+  sendOwnerText,
   factsPageUrl,
   textToHtml,
 } from "@vidalo/core/reporter";
@@ -63,6 +64,11 @@ const OWNER_TEXT_KINDS = new Set(["owner_instruction", "owner_reminder", "site_i
 
 export const email: Handler<"email"> = async (p) => {
   if (!("template" in p) || p.template === undefined) {
+    // Owner mails go through the reporter, which checks the owner's mail preferences and uses the current address.
+    if (p.businessId && p.kind && OWNER_TEXT_KINDS.has(p.kind)) {
+      const r = await sendOwnerText(p.businessId, p.kind, { subject: p.subject, text: p.text, html: p.html ?? textToHtml(p.text) }, { findingId: p.findingId ?? null, fixId: p.fixId ?? null });
+      return { mode: r?.mode ?? null, id: r?.id ?? null };
+    }
     const html = p.html ?? (p.kind && OWNER_TEXT_KINDS.has(p.kind) ? textToHtml(p.text) : undefined);
     const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
     if (p.businessId) await getDb().logEvent(p.businessId, `email.${p.kind ?? "raw"}`, { to: p.to, subject: p.subject, mode: r.mode, id: r.id, findingId: p.findingId ?? null, fixId: p.fixId ?? null });

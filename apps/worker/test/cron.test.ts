@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
-import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot } from "../src/cron";
+import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -114,5 +114,33 @@ describe("yearly re-confirmation mail", () => {
     await db.insertFacts(b.id, facts, { provisional: false, verifiedAt: "2027-03-03T09:00:00.000Z" });
     expect(await enqueueReconfirmations(new Date("2027-03-04T09:00:00Z"))).toBe(0);
     expect(await enqueueReconfirmations(new Date("2028-03-03T09:00:00Z"))).toBe(1);
+  });
+});
+
+describe("owner's pause and cancel", () => {
+  let db: MemDb;
+  beforeEach(() => {
+    db = new MemDb();
+    setDb(db);
+  });
+  const until = "2026-11-25T00:00:00.000Z";
+  const owner = (patch: Record<string, unknown>) => db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", plan: "monitor", ownerEmail: "eigenaar@x.nl", ...patch });
+
+  it("reminds once a week before, then ends the pause with one mail", async () => {
+    const b = await owner({ pauseUntil: until });
+    expect(await ownerSubscriptionChanges(new Date("2026-11-19T00:00:00Z"))).toEqual({ reminders: 1, resumed: 0, closed: 0 });
+    expect(await ownerSubscriptionChanges(new Date("2026-11-20T00:00:00Z"))).toEqual({ reminders: 0, resumed: 0, closed: 0 });
+    expect(await ownerSubscriptionChanges(new Date("2026-11-25T01:00:00Z"))).toEqual({ reminders: 0, resumed: 1, closed: 0 });
+    expect((await db.getBusiness(b.id))?.pauseUntil).toBeNull();
+    const mails = (await db.listEvents(b.id)).filter((e) => e.type.startsWith("mail.")).map((e) => e.type).sort();
+    expect(mails).toEqual(["mail.pause_ended", "mail.pause_ending"]);
+    expect(await ownerSubscriptionChanges(new Date("2026-11-26T00:00:00Z"))).toEqual({ reminders: 0, resumed: 0, closed: 0 });
+  });
+
+  it("closes a cancellation Stripe never closed, two days after its end date", async () => {
+    const b = await owner({ cancelAt: "2026-11-12T00:00:00.000Z" });
+    expect((await ownerSubscriptionChanges(new Date("2026-11-13T00:00:00Z"))).closed).toBe(0);
+    expect((await ownerSubscriptionChanges(new Date("2026-11-14T01:00:00Z"))).closed).toBe(1);
+    expect((await db.getBusiness(b.id))?.status).toBe("churned");
   });
 });

@@ -25,7 +25,7 @@ export async function ReportHeaderRow({ compact = false }: { compact?: boolean }
   const { copy } = await getI18n();
   const h = copy.result.table.headers;
   return (
-    <div className={`hidden border-b-[1.5px] border-ink font-semibold text-muted ${compact ? "py-2.5 text-[12px]" : "py-3 text-[13px]"} ${grid}`}>
+    <div className={`hidden border-b-[1.5px] border-ink font-semibold text-muted print:break-after-avoid ${compact ? "py-2.5 text-[12px]" : "py-3 text-[13px]"} ${grid}`}>
       <span />
       <span>{h.question}</span>
       <span>{h.said}</span>

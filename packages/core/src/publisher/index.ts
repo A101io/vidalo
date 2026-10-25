@@ -27,6 +27,7 @@ export * from "./indexnow.js";
 export * from "./serve.js";
 export * from "./sitecheck.js";
 export * from "./google-index.js";
+export * from "./status.js";
 export * from "./channels/index.js";
 
 export interface PublishResult {

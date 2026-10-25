@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 /**
  * Cloudflare Turnstile on the two forms that spend money or send mail: the
  * free check (/api/scan: Places lookup and engine calls) and the sign-in
@@ -49,4 +51,31 @@ export async function turnstilePasses(mode: TurnstileMode, token: unknown, o: { 
   if (mode === "off") return true;
   if (mode === "misconfigured" || !o.secret) return false;
   return verifyTurnstile(token, { secret: o.secret, ip: o.ip, fetchFn: o.fetchFn });
+}
+
+/**
+ * The pick step (GET /scan/kies) also runs a Places lookup, so it only looks
+ * a business up for a visitor who just passed the check on POST /api/scan.
+ * That post redirects with this token: an HMAC over q, place and an expiry,
+ * signed with the Turnstile secret (it exists whenever the check is on).
+ */
+export const KIES_TOKEN_TTL_MS = 10 * 60 * 1000;
+
+function kiesSig(secret: string, q: string, place: string, exp: number): string {
+  return createHmac("sha256", secret).update(`kies\n${q}\n${place}\n${exp}`).digest("base64url");
+}
+
+export function signKiesToken(secret: string, q: string, place: string, now = Date.now()): string {
+  const exp = now + KIES_TOKEN_TTL_MS;
+  return `${exp}.${kiesSig(secret, q, place, exp)}`;
+}
+
+export function verifyKiesToken(secret: string, token: unknown, q: string, place: string, now = Date.now()): boolean {
+  if (!secret || typeof token !== "string") return false;
+  const [expText, sig, extra] = token.split(".");
+  const exp = Number(expText);
+  if (extra !== undefined || !sig || !Number.isSafeInteger(exp) || exp < now || exp > now + KIES_TOKEN_TTL_MS) return false;
+  const expected = Buffer.from(kiesSig(secret, q, place, exp));
+  const given = Buffer.from(sig);
+  return expected.length === given.length && timingSafeEqual(expected, given);
 }

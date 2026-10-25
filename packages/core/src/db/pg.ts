@@ -8,6 +8,7 @@ import postgres, { type Sql } from "postgres";
 import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
+import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
   BusinessUpsert,
@@ -72,6 +73,9 @@ function mapBusiness(row: Row): BusinessRecord {
     ownerVerifiedAt: (r.ownerVerifiedAt as string | null) ?? null,
     ownerVerifiedVia: (r.ownerVerifiedVia as string | null) ?? null,
     language: r.language === "en" ? "en" : "nl",
+    cancelAt: (r.cancelAt as string | null) ?? null,
+    pauseUntil: (r.pauseUntil as string | null) ?? null,
+    mailPrefs: normalizeMailPrefs(r.mailPrefs),
     createdAt: r.createdAt as string,
   };
 }
@@ -264,6 +268,9 @@ export class PgDb implements Db {
     for (const k of keys) if (input[k] !== undefined) cols[k] = input[k];
     if (input.factsHostVerifiedAt !== undefined) cols.factsHostVerifiedAt = toDate(input.factsHostVerifiedAt);
     if (input.ownerVerifiedAt !== undefined) cols.ownerVerifiedAt = toDate(input.ownerVerifiedAt);
+    if (input.cancelAt !== undefined) cols.cancelAt = toDate(input.cancelAt);
+    if (input.pauseUntil !== undefined) cols.pauseUntil = toDate(input.pauseUntil);
+    if (input.mailPrefs !== undefined) cols.mailPrefs = this.sql.json(normalizeMailPrefs(input.mailPrefs) as never);
     const insertRow = { ...cols, slug, ...(input.id ? { id: input.id } : {}) } as Row;
     const updateCols = Object.keys(cols) as string[];
     const rows = updateCols.length
@@ -277,6 +284,7 @@ export class PgDb implements Db {
     const rows = await this.sql`
       select * from business
       where status in ('trial','active') and anniversary_day is not null
+        and (pause_until is null or pause_until <= now())
         and (anniversary_day = ${dayOfMonth}
              or (${dayOfMonth} = extract(day from (date_trunc('month', now()) + interval '1 month - 1 day'))::int and anniversary_day > ${dayOfMonth}))
       order by created_at`;
