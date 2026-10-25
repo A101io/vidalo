@@ -65,6 +65,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `UNSUBSCRIBE_SECRET` | `openssl rand -hex 32` | Worker + web env | Unsubscribe link works; without it follow-ups are not sent |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare dashboard → Turnstile → Add widget "Vidalo", hostnames `vidalo.io` and `localhost` | Web env (`vidalo-web`) | The scan and sign-in forms show the widget; a post without it lands on `/scan/druk?check=1` or `/inloggen?fout=check`. Without both keys a production build with real engines refuses both forms (fail closed) |
 
 Nothing above is set anywhere yet except in local `.env` for mock mode.
 

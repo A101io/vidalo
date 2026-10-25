@@ -7,23 +7,26 @@ import { env } from "@/lib/env";
 import { ready } from "@/lib/db";
 import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, progressTemplate, type BusinessCandidate } from "@/lib/core";
 import { requestBehindGate } from "@/lib/gate-state";
-import { FREE_SCANS_PER_IP, clientIp, dayStart, scanIpEvent } from "@vidalo/core/shared";
+import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, scanIpEvent } from "@vidalo/core/shared";
+import { passesTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-async function readInput(req: Request): Promise<{ q: string; pick: number | null; place: string | null }> {
+async function readInput(req: Request): Promise<{ q: string; pick: number | null; place: string | null; form: FormData }> {
   const ct = req.headers.get("content-type") ?? "";
   if (ct.includes("application/json")) {
-    const body = (await req.json()) as { q?: string; pick?: number; place?: string };
-    return { q: String(body.q ?? "").trim(), pick: typeof body.pick === "number" ? body.pick : null, place: body.place?.trim() || null };
+    const body = (await req.json()) as { q?: string; pick?: number; place?: string; [TURNSTILE_FIELD]?: string };
+    const form = new FormData();
+    if (typeof body[TURNSTILE_FIELD] === "string") form.set(TURNSTILE_FIELD, body[TURNSTILE_FIELD]);
+    return { q: String(body.q ?? "").trim(), pick: typeof body.pick === "number" ? body.pick : null, place: body.place?.trim() || null, form };
   }
   const form = await req.formData();
   const pick = form.get("pick");
   const place = String(form.get("place") ?? "").trim();
-  return { q: String(form.get("q") ?? "").trim(), pick: pick != null && pick !== "" ? Number(pick) : null, place: place || null };
+  return { q: String(form.get("q") ?? "").trim(), pick: pick != null && pick !== "" ? Number(pick) : null, place: place || null, form };
 }
 
 /**
@@ -41,9 +44,11 @@ export async function POST(req: Request) {
   // The gate hides the scan form, but a direct POST would otherwise still spend engine and
   // Places calls before launch. Checked before anything else, the lookup included.
   if (requestBehindGate(req)) return NextResponse.redirect(to("/binnenkort"), 303);
-  const { q, pick, place: placeInput } = await readInput(req);
+  const { q, pick, place: placeInput, form } = await readInput(req);
   const copy = copyFor(lang);
   if (!q) return NextResponse.redirect(to("/?fout=leeg#controle"), 303);
+  // Bot check before the Places lookup: every post past this line can cost money.
+  if (!(await passesTurnstile(form, clientIp(req)))) return NextResponse.redirect(to("/scan/druk?check=1"), 303);
   await ready();
 
   const parsed = parseQuery(q);
