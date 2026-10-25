@@ -5,10 +5,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
 import { sendMagicLink } from "./actions";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string; verwijderd?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   if (sp.fout !== "geen" && (await getSession())) redirect(href(sp.next ?? "/app"));
@@ -18,6 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <SiteHeader variant="minimal" />
       <main className="wrap max-w-[560px] py-12 sm:py-16">
         <h1 className="h2">{a.h1}</h1>
+        {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
         {sp.sent === "1" ? (
           <p className="lead mt-4">{a.sent}</p>
         ) : (
@@ -32,6 +34,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} />
               {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
               {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
+              {sp.fout === "check" && <p className="mt-2 text-[14px] text-rood">{copy.errors.humanCheck}</p>}
+              <div className="mt-4">
+                <TurnstileWidget />
+              </div>
               <button type="submit" className="btn-primary mt-4 w-full">
                 {a.button}
               </button>

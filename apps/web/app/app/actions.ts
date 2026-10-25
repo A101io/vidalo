@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ready } from "@/lib/db";
@@ -8,6 +9,9 @@ import { requireOwner, requireVerifiedOwner } from "@/lib/owner";
 import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
 import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
+import { MOCK_SESSION_COOKIE } from "@/lib/session";
+import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
+import { canDeleteMyData } from "@vidalo/core/shared";
 
 /** The language row on the account page: save it, then show the account in that language. */
 export async function setLanguage(formData: FormData) {
@@ -103,4 +107,26 @@ export async function registerDomain() {
   await db.logEvent(business.id, "domain.register_requested", {});
   revalidatePath("/app/domein");
   redirect((await getI18n()).href("/app/domein?registreren=ingepland"));
+}
+
+/**
+ * "Verwijder alles" on the account page (AVG art. 17, core/shared/my-data.ts):
+ * the business and everything under it, then the login, then the session.
+ * Waits until no subscription runs.
+ */
+export async function deleteMyData(formData: FormData) {
+  const { business, session } = await requireOwner("/app/account");
+  const { href } = await getI18n();
+  if (String(formData.get("confirm") ?? "") !== "ja") redirect(href("/app/account#gegevens"));
+  if (!canDeleteMyData(business.status)) redirect(href("/app/account?gegevens=abonnement#gegevens"));
+  const db = await ready();
+  await db.deleteBusiness(business.id);
+  // No business id and no address: only that a deletion happened.
+  await db.logEvent(null, "account.deleted", {});
+  const admin = await createAdminSupabase();
+  if (admin && !session.userId.startsWith("mock-")) await admin.auth.admin.deleteUser(session.userId);
+  const supabase = await createServerSupabase();
+  if (supabase) await supabase.auth.signOut();
+  (await cookies()).delete(MOCK_SESSION_COOKIE);
+  redirect(href("/inloggen?verwijderd=1"));
 }

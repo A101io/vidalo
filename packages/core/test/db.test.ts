@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { withMockDb, isMockMode, createDb, type Db } from "../src/db";
 import { sampleFacts } from "./scanner-fixtures";
+import { exportMyData } from "../src/shared/my-data";
 
 /**
  * Every scenario below runs against MemDb and, when TEST_DATABASE_URL points
@@ -92,6 +93,52 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.businessesDueForMonthlyScan(13)).toHaveLength(0);
   });
 
+  it("my data: export holds everything of one business, delete removes it and nothing else", async () => {
+    async function fill(name: string) {
+      const b = await db.upsertBusiness({ name, place: "Haarlem" });
+      await db.insertFacts(b.id, sampleFacts(), { provisional: true });
+      await db.insertFacts(b.id, { ...sampleFacts(), phone: "023-5300000" }, { provisional: false });
+      const [p] = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
+      const run = await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+      const [s] = await db.insertSamples([{ scanRunId: run.id, promptId: p!.id, engine: "chatgpt", answerText: "023-5399999", citations: [], costCents: 1 }]);
+      await db.insertClaims([{ sampleId: s!.id, factKey: "phone", subject: null, value: "+31235399999", confidence: 0.9, otherEntity: false, rawQuote: "023-5399999" }]);
+      const [f] = await db.upsertFindings([{ businessId: b.id, scanRunId: run.id, factKey: "phone", subject: null, engine: "chatgpt", wrongValue: "+31235399999", correctValue: "+31235300000", frequency: 1, sampleCount: 1, sourceUrl: null, sourceType: "none", evidenceBefore: s!.id }]);
+      await db.insertFix({ findingId: f!.id, action: "email", target: "info@x.nl" });
+      await db.upsertChannel({ businessId: b.id, type: "gbp", name: "Google Bedrijfsprofiel", externalId: null, url: null });
+      await db.logEvent(b.id, "scan.requested", {});
+      await db.enqueueJob("scan", { businessId: b.id });
+      return { b, run, sample: s!, finding: f! };
+    }
+    const mine = await fill("Bakkerij De Vries");
+    const other = await fill("Slagerij Jansen");
+
+    const data = await exportMyData(db, mine.b.id);
+    expect(data?.business.id).toBe(mine.b.id);
+    expect(data?.facts.map((f) => f.version)).toEqual([1, 2]);
+    expect(data?.scans).toHaveLength(1);
+    expect(data?.scans[0]?.samples).toHaveLength(1);
+    expect(data?.scans[0]?.claims).toHaveLength(1);
+    expect(data?.findings).toHaveLength(1);
+    expect(data?.fixes).toHaveLength(1);
+    expect(data?.channels).toHaveLength(1);
+    expect(data?.events.length).toBeGreaterThan(0);
+    expect(JSON.stringify(data)).not.toContain(other.b.id);
+
+    await db.deleteBusiness(mine.b.id);
+    expect(await db.getBusiness(mine.b.id)).toBeNull();
+    expect(await exportMyData(db, mine.b.id)).toBeNull();
+    expect(await db.listFacts(mine.b.id)).toEqual([]);
+    expect(await db.listSamples(mine.run.id)).toEqual([]);
+    expect(await db.listClaims([mine.sample.id])).toEqual([]);
+    expect(await db.listFixes(mine.finding.id)).toEqual([]);
+    expect(await db.listEvents(mine.b.id)).toEqual([]);
+    const job = await db.claimJob(["scan"]);
+    expect(job?.payload.businessId).toBe(other.b.id);
+    expect(await db.claimJob(["scan"])).toBeNull();
+    // Control: the other business keeps everything.
+    expect((await exportMyData(db, other.b.id))?.fixes).toHaveLength(1);
+  });
+
   it("job queue: claim, complete, fail with backoff", async () => {
     await db.enqueueJob("scan", { businessId: "x" });
     const later = await db.enqueueJob("report", {}, new Date(Date.now() + 60_000));
@@ -114,6 +161,10 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(again.created).toBe(false);
     await db.joinWaitlist({ email: "owner@shop.com", language: "en", source: "coming_soon", consentText: "Yes, email me." });
     expect(await db.countWaitlist()).toBe(2);
+    expect(await db.listWaitlist()).toEqual([
+      { email: "eigenaar@bakkerij.nl", language: "nl" },
+      { email: "owner@shop.com", language: "en" },
+    ]);
   });
 
   it("fixes, channels and events", async () => {

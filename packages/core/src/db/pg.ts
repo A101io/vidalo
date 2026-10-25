@@ -311,6 +311,19 @@ export class PgDb implements Db {
   }
 
   // --- facts ---
+  async listFacts(businessId: string): Promise<Facts[]> {
+    const rows = await this.sql`select * from facts where business_id = ${businessId} order by version`;
+    return rows.map(mapFacts);
+  }
+
+  async deleteBusiness(id: string): Promise<void> {
+    // Every table that refers to business has on delete cascade (0001, 0007); jobs keep the id in their payload.
+    await this.sql.begin(async (tx) => {
+      await tx`delete from job where done_at is null and payload->>'businessId' = ${id}`;
+      await tx`delete from business where id = ${id}`;
+    });
+  }
+
   async latestFacts(businessId: string): Promise<Facts | null> {
     const rows = await this.sql`select * from facts where business_id = ${businessId} order by version desc limit 1`;
     return rows[0] ? mapFacts(rows[0]) : null;
@@ -562,6 +575,11 @@ export class PgDb implements Db {
   async countWaitlist(): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from waitlist where unsubscribed_at is null`;
     return Number(row?.n ?? 0);
+  }
+
+  async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {
+    const rows = await this.sql`select email, language from waitlist where unsubscribed_at is null order by created_at, email`;
+    return rows.map((r) => ({ email: String(r.email), language: r.language === "en" ? "en" : "nl" }));
   }
 
   // --- channels ---

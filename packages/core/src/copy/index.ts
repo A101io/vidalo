@@ -1997,6 +1997,17 @@ export const copy = {
     ownerNotVerified: "Nog niet bevestigd met Google",
     verifyNow: "Bevestig met Google",
     logout: "Uitloggen",
+    /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
+    myData: {
+      h: "Je gegevens",
+      body: "Download alles wat Vidalo over je bedrijf bewaart, of laat het verwijderen.",
+      download: "Download je gegevens (JSON)",
+      deleteBody: "We verwijderen je bedrijf, je gegevens, je controles, je rapporten en je inlog. Facturen blijven 7 jaar bij Stripe, omdat de wet dat vraagt. Wat we bij andere sites hebben aangepast, blijft daar staan. Dit kun je niet terugdraaien.",
+      confirm: "Ja, verwijder alles van mijn bedrijf",
+      deleteButton: "Verwijder alles",
+      blocked: "Zeg eerst je abonnement op. Is het afgelopen, dan kun je hier alles verwijderen.",
+      deleted: "Je gegevens zijn verwijderd.",
+    },
     /** The language row: the dashboard, the report and the e-mails follow it. */
     language: { label: "Taal", names: { nl: "Nederlands", en: "English" }, save: "Opslaan", saved: "Taal opgeslagen.", body: "Je dashboard en je rapport volgen deze taal. De NL · EN-knop onderaan elke pagina past hem ook aan." },
     fields: { name: "Naam", place: "Plaats", address: "Adres", phone: "Telefoon", email: "E-mail", website: "Website", kvk: "KvK", factsHost: "Feitenpagina", factsVersion: "Gegevens" },
@@ -2157,6 +2168,8 @@ export const copy = {
     generic: "Er ging iets mis. Probeer het nog een keer.",
     notFound: "Deze pagina bestaat niet.",
     loginRequired: "Log in om verder te gaan.",
+    /** The bot check (Turnstile) on the free check or the sign-in form said no. */
+    humanCheck: "We konden niet nagaan dat je geen robot bent. Probeer het nog een keer.",
     /** Replace the browser's own form-validation bubbles, which speak the browser's language (components/FormMessages.tsx). */
     field: {
       required: "Vul dit veld in.",
