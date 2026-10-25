@@ -1,33 +1,103 @@
 {
-  "_readme": "Social profile text per platform and language. To add a language: copy the \"en\" block of every platform to a new key (e.g. \"de\"), translate, add its link under \"link\", then run: node docs/brand/social/check.mjs",
+  "_readme": "Social profile text and banner text per platform and language. To add a language: copy every \"en\" value to a new key (e.g. \"de\"), translate it, then run: node docs/brand/social/check.mjs && node docs/brand/social/banners.mjs",
   "link": {
     "nl": "https://vidalo.io/binnenkort",
     "en": "https://vidalo.io/en/coming-soon"
   },
   "platforms": {
     "linkedin": {
-      "field": "Tagline",
-      "limit": 120,
-      "nl": "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.",
-      "en": "Your customers ask ChatGPT. We make sure the answer is right."
+      "Tagline": {
+        "limit": 120,
+        "nl": "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.",
+        "en": "Your customers ask ChatGPT. We make sure the answer is right."
+      },
+      "Overview": {
+        "limit": 2000,
+        "nl": "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.\n\nKlanten googelen steeds minder. Ze vragen het aan AI: hoe laat ben je open, wat is je telefoonnummer, waar zit je. Ze krijgen één antwoord, geen tien links. Dat antwoord bouwt de AI uit wat het online vindt: oude gidsen, Wikipedia, nieuwsberichten, soms een bedrijf met dezelfde naam. Klopt het niet, dan hoor je het als laatste.\n\nVidalo controleert elke maand wat ChatGPT, Gemini, Perplexity en Google AI over je bedrijf zeggen. We vinden de antwoorden die niet kloppen en de bron waar ze vandaan komen. Je legt je gegevens één keer goed vast. Wij publiceren ze op een feitenpagina op je eigen domein, zetten ze goed in de Nederlandse bedrijvengidsen en herstellen fouten bij de bron, met bewijs.\n\nVoor Nederlandse ondernemers met een zaak waar klanten naar vragen: bakkers, kappers, garages, restaurants, praktijken en installateurs.\n\nWe starten binnenkort. Zet je op de lijst op vidalo.io.\n\nVidalo is onderdeel van A101 B.V.",
+        "en": "Your customers ask ChatGPT. We make sure the answer is right.\n\nCustomers search less and ask more. They ask AI: what time do you open, what is your phone number, where are you. They get one answer, not ten links. AI builds that answer from what it finds online: old directories, Wikipedia, news articles, sometimes a business with the same name. When it is wrong, you are the last to hear.\n\nVidalo checks every month what ChatGPT, Gemini, Perplexity and Google AI say about your business. We find the answers that are wrong and the source they come from. You record your details once. We publish them on a facts page on your own domain, correct them in the Dutch business directories and fix errors at the source, with proof.\n\nFor businesses in the Netherlands that customers ask about: bakeries, hair salons, garages, restaurants, practices and installers.\n\nWe open soon. Join the list at vidalo.io.\n\nVidalo is part of A101 B.V."
+      },
+      "Specialties": {
+        "limit": 20,
+        "nl": ["AI-antwoordcontrole", "ChatGPT", "Google AI", "Bedrijfsgegevens", "Feitenpagina", "Bedrijvengidsen", "Lokale ondernemers"],
+        "en": ["AI answer checks", "ChatGPT", "Google AI", "Business details", "Facts page", "Business directories", "Local businesses"]
+      },
+      "Industry": {
+        "limit": 100,
+        "nl": "Softwareontwikkeling",
+        "en": "Software Development"
+      }
     },
     "facebook": {
-      "field": "Intro",
-      "limit": 101,
-      "nl": "Wat zegt ChatGPT over jouw zaak? Wij vinden de fouten en herstellen ze bij de bron.",
-      "en": "What does ChatGPT say about your business? We find the errors and fix them at the source."
+      "Page name": {
+        "limit": 75,
+        "nl": "Vidalo",
+        "en": "Vidalo"
+      },
+      "Category": {
+        "limit": 100,
+        "nl": "Softwarebedrijf",
+        "en": "Software Company"
+      },
+      "Bio": {
+        "limit": 101,
+        "nl": "Wat zegt ChatGPT over jouw zaak? Wij vinden de fouten en herstellen ze bij de bron.",
+        "en": "What does ChatGPT say about your business? We find the errors and fix them at the source."
+      }
     },
     "instagram": {
-      "field": "Bio",
-      "limit": 150,
-      "nl": "Je klanten vragen het aan ChatGPT.\nWij zorgen dat het antwoord klopt.\nVoor Nederlandse ondernemers. Zet je op de lijst:",
-      "en": "Your customers ask ChatGPT.\nWe make sure the answer is right.\nFor businesses in the Netherlands. Join the list:"
+      "Name": {
+        "limit": 30,
+        "nl": "Vidalo · AI-antwoordcontrole",
+        "en": "Vidalo · AI answer checks"
+      },
+      "Category": {
+        "limit": 100,
+        "nl": "Software",
+        "en": "Software"
+      },
+      "Bio": {
+        "limit": 150,
+        "nl": "Je klanten vragen het aan ChatGPT.\nWij zorgen dat het antwoord klopt.\nVoor Nederlandse ondernemers. Zet je op de lijst:",
+        "en": "Your customers ask ChatGPT.\nWe make sure the answer is right.\nFor businesses in the Netherlands. Join the list:"
+      }
     },
     "tiktok": {
-      "field": "Bio",
-      "limit": 80,
-      "nl": "Vraag ChatGPT naar je openingstijden. Klopt het niet? Wij herstellen het.",
-      "en": "Ask ChatGPT for your opening hours. Wrong? We fix it at the source."
+      "Name": {
+        "limit": 30,
+        "nl": "Vidalo",
+        "en": "Vidalo"
+      },
+      "Bio": {
+        "limit": 80,
+        "nl": "Vraag ChatGPT naar je openingstijden. Klopt het niet? Wij herstellen het.",
+        "en": "Ask ChatGPT for your opening hours. Wrong? We fix it at the source."
+      }
+    }
+  },
+  "banner": {
+    "line1": {
+      "nl": "Je klanten vragen het aan ChatGPT.",
+      "en": "Your customers ask ChatGPT."
+    },
+    "line2": {
+      "nl": "Wij zorgen dat het antwoord klopt.",
+      "en": "We make sure the answer is right."
+    },
+    "question": {
+      "nl": "Hoe laat is Bakkerij De Vries open op zondag?",
+      "en": "When does Bakkerij De Vries open on Sunday?"
+    },
+    "answer": {
+      "nl": "Zondag 8:00 tot 14:00",
+      "en": "Sunday 8:00 to 14:00"
+    },
+    "verdict": {
+      "nl": "klopt",
+      "en": "correct"
+    },
+    "alt": {
+      "nl": "Vidalo: Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.",
+      "en": "Vidalo: Your customers ask ChatGPT. We make sure the answer is right."
     }
   }
 }
