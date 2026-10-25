@@ -7,6 +7,7 @@ export * from "./own.js";
 export * from "./canonical.js";
 export * from "./origin.js";
 export * from "./waitlist.js";
+export * from "./my-data.js";
 export * from "./turnstile.js";
 export * from "./scan-limit.js";
 // Also exported on its own as "@vidalo/core/shared/gate": the edge middleware must not pull db.js in.

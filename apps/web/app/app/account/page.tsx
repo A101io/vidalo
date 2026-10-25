@@ -6,7 +6,7 @@ import { requireOwner } from "@/lib/owner";
 import { loadDashboard } from "@/lib/reads";
 import { getScanReport } from "@/lib/core";
 import { dateShort, dateTime } from "@/lib/format";
-import { checkNow, setLanguage } from "../actions";
+import { checkNow, deleteMyData, setLanguage } from "../actions";
 import { LANGS } from "@/lib/lang-paths";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +23,11 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 /**
  * The account page: who is signed in, the business as Vidalo knows it (from
  * the confirmed facts, falling back to what the scan found), the latest
- * finished report with its colour, the recent checks, and the plan. Reading
- * only; every change has its own page (gegevens, domein, google, abonnement).
+ * finished report with its colour, the recent checks, the plan, and "Je
+ * gegevens" (download, delete). Reading only, apart from the language and
+ * the delete; every other change has its own page (gegevens, domein, google, abonnement).
  */
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string }> }) {
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/account");
   const data = await loadDashboard(business.id);
@@ -196,6 +197,28 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               <Stip tone={planTone} /> {B.statuses[business.status]}
             </span>
           </Row>
+        </div>
+      </section>
+
+      {/* My data */}
+      <section id="gegevens">
+        <h2 className="h3">{A.myData.h}</h2>
+        <div className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
+          <p>{A.myData.body}</p>
+          <a href="/api/account/export" download className="btn-link">
+            {A.myData.download}
+          </a>
+          <form action={deleteMyData} className="space-y-3 border-t-[1px] border-line pt-4">
+            <p className="text-ink-2">{A.myData.deleteBody}</p>
+            {sp.gegevens === "abonnement" && <p className="text-[14px] text-rood">{A.myData.blocked}</p>}
+            <label className="flex items-start gap-2">
+              <input type="checkbox" name="confirm" value="ja" required className="mt-1" />
+              <span>{A.myData.confirm}</span>
+            </label>
+            <button type="submit" className="btn-sm">
+              {A.myData.deleteButton}
+            </button>
+          </form>
         </div>
       </section>
 

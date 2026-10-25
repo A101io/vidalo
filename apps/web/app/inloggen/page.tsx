@@ -9,7 +9,7 @@ import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string; verwijderd?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   if (sp.fout !== "geen" && (await getSession())) redirect(href(sp.next ?? "/app"));
@@ -19,6 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <SiteHeader variant="minimal" />
       <main className="wrap max-w-[560px] py-12 sm:py-16">
         <h1 className="h2">{a.h1}</h1>
+        {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
         {sp.sent === "1" ? (
           <p className="lead mt-4">{a.sent}</p>
         ) : (
