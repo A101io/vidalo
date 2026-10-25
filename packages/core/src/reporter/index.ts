@@ -1,12 +1,15 @@
 /**
- * Reporter: turns db state into Dutch e-mails and proof-card data.
+ * Reporter: turns db state into e-mails in the owner's language
+ * (business.language) and proof-card data.
  */
 import type { Engine, Finding, Sample, ScanReport } from "../types.js";
 import { ENGINES } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb } from "../shared/db.js";
 import { log } from "../shared/log.js";
-import { findingWordsNl, hostOfUrl } from "../shared/facts-nl.js";
+import { hostOfUrl } from "../shared/facts-nl.js";
+import { findingWords } from "../shared/facts-en.js";
+import { copyFor, type Lang } from "../copy/index.js";
 import { fixPathForFinding, daysBetween } from "../fixer/paths.js";
 import { cnameTarget, isFallbackHost } from "../publisher/host.js";
 import { confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
@@ -14,7 +17,9 @@ import { canSignUnsubscribe, isUnsubscribed } from "../shared/unsubscribe.js";
 import { sendMail, type MailResult } from "./mail.js";
 import {
   baselineSummaryEmail,
+  fixLabel,
   followUpEmail,
+  monthLabel,
   monthlyReportEmail,
   resolutionNoticeEmail,
   unfixableNoticeEmail,
@@ -42,17 +47,23 @@ async function deliver(business: BusinessRecord, m: Mail, type: string, extra: R
     log.warn("reporter.no_owner_email", { businessId: business.id, type });
     return null;
   }
-  const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug } });
+  const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug, lang: langOf(business) } });
   await getDb().logEvent(business.id, `email.${type}`, { to: business.ownerEmail, subject: m.subject, mode: res.mode, id: res.id, ...extra });
   return res;
 }
 
-function sourceLabel(f: Finding): string {
-  if (f.sourceType === "none") return "geheugen van het model";
-  if (f.sourceType === "owned_facts_page") return "je feitenpagina";
-  if (f.sourceType === "owned_website") return hostOfUrl(f.sourceUrl) ?? "je website";
-  if (f.sourceType === "other_entity") return "naamgenoot";
-  return hostOfUrl(f.sourceUrl) ?? "onbekende bron";
+/** The owner's language; Dutch for a record without one. */
+function langOf(business: Pick<BusinessRecord, "language">): Lang {
+  return business.language === "en" ? "en" : "nl";
+}
+
+function sourceLabel(f: Finding, lang: Lang): string {
+  const S = copyFor(lang).mails.sourceShort;
+  if (f.sourceType === "none") return S.none;
+  if (f.sourceType === "owned_facts_page") return S.factsPage;
+  if (f.sourceType === "owned_website") return hostOfUrl(f.sourceUrl) ?? S.website;
+  if (f.sourceType === "other_entity") return S.otherEntity;
+  return hostOfUrl(f.sourceUrl) ?? S.unknown;
 }
 
 /** Not-found answer count, visibility, colour and instable answers for a scan run, rebuilt from stored samples and claims. */
@@ -97,12 +108,12 @@ function trim(s: string, n = 220): string {
 // proof cards
 // ---------------------------------------------------------------------------
 
-export async function proofCards(businessId: string, limit = 12): Promise<ProofCard[]> {
+export async function proofCards(businessId: string, limit = 12, lang: Lang = "nl"): Promise<ProofCard[]> {
   const db = getDb();
   const resolved = (await db.listFindings(businessId, "resolved")).sort((a, b) => (b.resolvedAt ?? "").localeCompare(a.resolvedAt ?? "")).slice(0, limit);
   const cards: ProofCard[] = [];
   for (const f of resolved) {
-    const w = findingWordsNl(f);
+    const w = findingWords(f, lang);
     const before = await sampleQuote(f.scanRunId, f.evidenceBefore);
     const after = await afterSample(f);
     cards.push({
@@ -111,7 +122,7 @@ export async function proofCards(businessId: string, limit = 12): Promise<ProofC
       what: w.what,
       before: before ? trim(before.answerText) : w.wrong,
       after: after ? trim(after.answerText) : w.correct,
-      source: sourceLabel(f),
+      source: sourceLabel(f, lang),
       days: Math.max(0, daysBetween(f.firstSeenAt, f.resolvedAt ?? new Date())),
       resolvedAt: f.resolvedAt ?? new Date().toISOString(),
     });
@@ -128,6 +139,7 @@ export async function sendWelcome(businessId: string): Promise<MailResult | null
   const host = business.factsHost;
   const cname = host && !isFallbackHost(host) ? { host, target: cnameTarget() } : null;
   const m = welcomeEmail({
+    lang: langOf(business),
     business,
     cname,
     links: {
@@ -151,6 +163,7 @@ export async function sendBaselineSummary(scanRunId: string): Promise<MailResult
   const totalAnswers = samples.length || prompts.length * run.engines.length;
   const nf = await notFoundStats(scanRunId);
   const m = baselineSummaryEmail({
+    lang: langOf(business),
     business,
     checkedAt: run.finishedAt ?? run.startedAt,
     totalAnswers,
@@ -166,7 +179,7 @@ export async function sendBaselineSummary(scanRunId: string): Promise<MailResult
     // A paying owner's button goes to the account; before that, to the report page, with the offer.
     paying: business.status === "trial" || business.status === "active",
     offer: { setupEur: PRICE_SETUP, monitorEur: PRICE_MONITOR },
-    links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business), resultUrl: resultUrl(scanRunId) },
+    links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business), resultUrl: resultUrl(scanRunId, langOf(business)) },
   });
   return deliver(business, m, "baseline", { scanRunId, stip: nf?.stip ?? null });
 }
@@ -176,11 +189,13 @@ export async function sendResolutionNotice(findingId: string): Promise<MailResul
   const finding = await db.getFinding(findingId);
   if (!finding) throw new Error(`finding ${findingId} not found`);
   const business = await requireBusiness(finding.businessId);
-  const w = findingWordsNl(finding);
+  const lang = langOf(business);
+  const w = findingWords(finding, lang);
   const before = await sampleQuote(finding.scanRunId, finding.evidenceBefore);
   const after = await afterSample(finding);
   const resolvedAt = finding.resolvedAt ?? new Date().toISOString();
   const m = resolutionNoticeEmail({
+    lang,
     business,
     finding,
     before: { quote: before ? trim(before.answerText) : w.wrong, at: before?.capturedAt ?? finding.firstSeenAt },
@@ -197,6 +212,7 @@ export async function sendUnfixableNotice(findingId: string, note: string): Prom
   if (!finding) throw new Error(`finding ${findingId} not found`);
   const business = await requireBusiness(finding.businessId);
   const m = unfixableNoticeEmail({
+    lang: langOf(business),
     business,
     finding,
     note,
@@ -210,10 +226,6 @@ export interface MonthlyReportOptions {
   /** the monthly scan run this report covers; when omitted the stats come from current findings */
   scanRunId?: string;
   monthLabel?: string;
-}
-
-function monthLabelNl(d = new Date()): string {
-  return new Intl.DateTimeFormat("nl-NL", { month: "long", year: "numeric", timeZone: "Europe/Amsterdam" }).format(d);
 }
 
 export async function sendMonthlyReport(businessId: string, opts: MonthlyReportOptions = {}): Promise<MailResult | null> {
@@ -231,15 +243,17 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
   const openFindings = all.filter((f) => f.status === "open" || f.status === "fixing" || f.status === "recheck");
   const resolvedThisMonth = all.filter((f) => f.status === "resolved" && f.resolvedAt && new Date(f.resolvedAt) >= since);
   const unfixable = all.filter((f) => f.status === "unfixable");
-  const cards = (await proofCards(business.id)).filter((c) => resolvedThisMonth.some((f) => f.id === c.findingId));
+  const lang = langOf(business);
+  const cards = (await proofCards(business.id, 12, lang)).filter((c) => resolvedThisMonth.some((f) => f.id === c.findingId));
 
-  const open: OpenFindingLine[] = openFindings.map((f) => ({ finding: f, nextStep: fixPathForFinding(f).labelNl, since: f.firstSeenAt }));
+  const open: OpenFindingLine[] = openFindings.map((f) => ({ finding: f, nextStep: fixLabel(fixPathForFinding(f), lang), since: f.firstSeenAt }));
   const isNotFound = (f: Finding) => f.verdict === "not_found";
   const nf = await notFoundStats(run?.id);
 
   const m = monthlyReportEmail({
+    lang,
     business,
-    month: opts.monthLabel ?? monthLabelNl(),
+    month: opts.monthLabel ?? monthLabel(new Date(), lang),
     checkedAt: run?.finishedAt ?? run?.startedAt ?? new Date().toISOString(),
     totalAnswers,
     wrongAnswers: openFindings.filter((f) => !isNotFound(f)).length + unfixable.filter((f) => !isNotFound(f)).length,
@@ -288,6 +302,7 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
   const example = [...findings].sort((a, b) => b.frequency / b.sampleCount - a.frequency / a.sampleCount)[0] ?? null;
   const m = followUpEmail(
     {
+      lang: langOf(business),
       business,
       wrongAnswers: findings.length,
       totalAnswers,

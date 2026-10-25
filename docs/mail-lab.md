@@ -10,21 +10,24 @@ pnpm mail:lab
 open out/mail-lab/index.html
 ```
 
-Two journeys run in mock mode:
+Two journeys run in mock mode, each twice: for a Dutch owner and for an owner who chose English (`business.language`, 25 Oct 2026):
 - **Free check only**: the report mail, then the day-7 and day-21 follow-ups.
 - **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, and the resolved and unfixable notices.
 
 The correction request to a source and its follow-up are not reached in mock mode, because the mock answers cite no third-party site with a contact address. They are rendered from their templates with the journey's real finding, and the page marks them "template only".
 
-The page shows one card per kind: recipient, sender, subject, the HTML and the plain text side by side, and every link. Each mail is checked:
+The page shows one card per kind and language: recipient, sender, subject, the HTML and the plain text side by side, and every link. Each mail is checked:
 
 | Check | Fails the run |
 |---|---|
-| Every one of the 13 kinds is produced | yes |
+| Every one of the 13 kinds is produced, for the Dutch and for the English owner | yes |
+| An owner mail is in the owner's language: opens with "Hoi," / "Hi,", `<html lang>` and the `lang` tag match, no Dutch left in an English mail (links, the asked question, names and quoted answers aside) | yes |
+| A letter to a third party is the Dutch letter, also in the English journey | yes |
+| An owner's links are in the owner's language (`/en/...` for English; API routes have one URL) | yes |
 | Owner mail goes to the owner, third-party mail never does | yes |
 | No `undefined`, `NaN`, `[object Object]`, `{{ }}` in subject or body | yes |
-| Every link to our own site points to a page or route that exists in `apps/web/app` | yes |
-| Commercial mail (follow-ups) carries `List-Unsubscribe` | yes |
+| Every link to our own site (also the `List-Unsubscribe` target) points to a page or route that exists in `apps/web/app`; `/en/...` is resolved the way the middleware does (`fromUrl`) | yes |
+| Commercial mail (follow-ups) carries `List-Unsubscribe` and the one-click `List-Unsubscribe-Post` | yes |
 | Owner mail carries the Vidalo-branded HTML (logo, company line); third-party mail is plain text | yes |
 | The same mail to the same third party more than once | yes |
 
@@ -40,6 +43,7 @@ Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `
 pnpm mail:send --to you@example.com            # dry run: lists the 13 mails
 pnpm mail:send --to you@example.com --send     # sends one of each kind
 pnpm mail:send --to you@example.com --send --kinds welcome,baseline
+pnpm mail:send --to you@example.com --lang en  # the owner mails as an English owner gets them
 ```
 
 - It builds the mails itself first (the mail lab, into `out/mail-send`) with links to `https://vidalo.io` (`MAIL_LAB_BASE_URL` to change), and refuses any mail that still links to localhost. The lab's test businesses do not exist on vidalo.io, so report links land on the not-found page and unsubscribe links (signed with the lab's secret) on the invalid-link page; the other links open real pages.
@@ -60,7 +64,7 @@ The template is the same in both languages today.
 ## Known findings (23 Oct 2026)
 
 - **Directories got the same correction mail again and again**: every sync re-sent it, 14 to 46 times to one directory in one lab run. Fixed the same day: one correction per set of corrected details, one reminder after 30 days, then nothing until the details change (`publisher/index.ts`, `CORRECTION_REMINDER_DAYS`). The lab now fails on any repeat.
-- **All mails are Dutch**, also for an owner who chose English (CLAUDE.md, language preference).
+- **All mails were Dutch**, also for an owner who chose English. Fixed 25 Oct 2026: every mail to the owner follows `business.language` (wording in `copy.mails`); letters to directories and websites stay Dutch.
 
 ## Branding (23 Oct 2026)
 

@@ -53,6 +53,8 @@ export type EmailJob =
       findingId?: string;
       fixId?: string;
       kind?: string;
+      /** the owner's language for an owner mail (business.language); the HTML part follows it */
+      lang?: "nl" | "en";
       template?: undefined;
     }
   | { template: "resolution"; findingId: string; businessId?: string }

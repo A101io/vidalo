@@ -62,8 +62,11 @@ const OWNER_TEXT_KINDS = new Set(["owner_instruction", "owner_reminder", "site_i
 
 export const email: Handler<"email"> = async (p) => {
   if (!("template" in p) || p.template === undefined) {
-    const html = p.html ?? (p.kind && OWNER_TEXT_KINDS.has(p.kind) ? textToHtml(p.text) : undefined);
-    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
+    const owner = !!p.kind && OWNER_TEXT_KINDS.has(p.kind);
+    // An owner mail carries the owner's language (business.language); letters to third parties are Dutch, with no tag.
+    const lang = p.lang === "en" ? "en" : "nl";
+    const html = p.html ?? (owner ? textToHtml(p.text, lang) : undefined);
+    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind, ...(owner ? { lang } : {}) } : undefined });
     if (p.businessId) await getDb().logEvent(p.businessId, `email.${p.kind ?? "raw"}`, { to: p.to, subject: p.subject, mode: r.mode, id: r.id, findingId: p.findingId ?? null, fixId: p.fixId ?? null });
     return { mode: r.mode, id: r.id };
   }

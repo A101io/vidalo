@@ -278,8 +278,8 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
       case "manual": {
         // owned_website: instruct the owner
         if (business.ownerEmail) {
-          const m = ownerWebsiteInstructionEmail(finding, business, dashboardUrl(business));
-          await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_instruction" });
+          const m = ownerWebsiteInstructionEmail(finding, business, dashboardUrl(business), business.language);
+          await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, lang: business.language, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_instruction" });
           ev.ownerMail = { subject: m.subject, queuedAt: now.toISOString(), remindersSent: [] };
           fix = await db.updateFix(fix.id, { sentAt: now.toISOString() });
           executed = true;
@@ -400,8 +400,8 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
       const sent = mail.remindersSent ?? [];
       const due = (path.followUpDays ?? []).find((d) => sinceSent >= d && !sent.includes(String(d)));
       if (due != null && business.ownerEmail) {
-        const m = ownerWebsiteReminderEmail(finding, business, dashboardUrl(business), due);
-        await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_reminder" });
+        const m = ownerWebsiteReminderEmail(finding, business, dashboardUrl(business), due, business.language);
+        await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, lang: business.language, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_reminder" });
         ev.ownerMail = { ...mail, remindersSent: [...sent, String(due)] };
         step = `owner_reminder_${due}`;
       }
