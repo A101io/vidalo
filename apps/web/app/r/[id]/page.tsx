@@ -17,6 +17,7 @@ import { dateTimeLong } from "@/lib/format";
 import { buildReportView, type BuildViewOptions } from "@/lib/report";
 import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, demoGreySources, demoGreyReport, demoReport } from "@/lib/demo";
 import { EmailCapture } from "./EmailCapture";
+import { PrintButton } from "./PrintButton";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   return (
     <>
       <SiteHeader variant="minimal" right={R.checkedAt(dateTimeLong(report.checkedAt))} />
-      <main className="wrap flex flex-col gap-14 pb-20 pt-4 sm:gap-16 sm:pt-6">
+      <main className="print-doc wrap flex flex-col gap-14 pb-20 pt-4 sm:gap-16 sm:pt-6 print:gap-8 print:pb-6">
         {/* Hero: the dot */}
         <section className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
           <div className="flex justify-center lg:col-span-4">
@@ -86,6 +87,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
                 </span>
               ))}
             </div>
+            <PrintButton label={R.print} />
           </div>
         </section>
 
@@ -203,7 +205,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             </ol>
             {v.plan.note && <p className="text-[13px] text-muted">{v.plan.note}</p>}
           </div>
-          <div data-motion="stagger" className="flex flex-col gap-3 lg:col-span-5">
+          <div data-motion="stagger" className="flex flex-col gap-3 lg:col-span-5 print:hidden">
             {(sp.betaling === "geannuleerd" || sp.betaling === "fout") && (
               <p className="rounded-xl border-[1.5px] border-line bg-white px-4 py-3 text-[14px] text-ink-2" aria-live="polite">
                 {sp.betaling === "fout" ? copy.checkout.error : copy.checkout.cancelled}
@@ -235,7 +237,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
         </section>
 
         {/* Email + self */}
-        <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2 print:hidden">
           <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || Boolean(ownerEmail)} invalid={sp.mail === "fout"} />
           <div className="flex flex-col gap-2.5">
             <h3 className="text-[16px] font-bold">{v.self.h3}</h3>

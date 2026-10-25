@@ -22,7 +22,7 @@ export function PreviewBar({ copy, lang }: { copy: CopyShape["comingSoon"]; lang
   }, []);
   if (!show) return null;
   return (
-    <nav aria-label={copy.barTitle} className="fixed bottom-0 left-0 right-0 z-40 border-t-[1.5px] border-ink bg-ink text-white">
+    <nav aria-label={copy.barTitle} className="print:hidden fixed bottom-0 left-0 right-0 z-40 border-t-[1.5px] border-ink bg-ink text-white">
       <div className="wrap flex flex-wrap items-center gap-x-5 gap-y-1.5 py-2.5 text-[13px]">
         <span className="font-bold">{copy.barTitle}</span>
         {copy.barLinks.map((l) => (

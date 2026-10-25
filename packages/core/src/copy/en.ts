@@ -839,6 +839,8 @@ export const en: CopyShape = {
   /** Result page. Three states: red/orange, green, grey. */
   result: {
     checkedAt: (dateTime: string) => `Checked on ${dateTime}`,
+    /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
+    print: "Print or save as PDF",
     /** Hero: the number inside the dot and its two-line label. */
     hero: {
       wrongLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "answered wrongly"],
