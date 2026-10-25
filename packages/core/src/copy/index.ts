@@ -625,7 +625,7 @@ export const copy = {
         { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · Prijzen excl. btw",
+      legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · +31 85 109 1393 · Prijzen excl. btw",
       copyright: "© 2026 Vidalo. Alle rechten voorbehouden.",
       reportNote: "Deze rapportlink werkt 30 dagen.",
     },
@@ -677,7 +677,7 @@ export const copy = {
     draft: true,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
     updated: "Laatst bijgewerkt: 9 oktober 2026",
-    contact: "Vragen? Mail ons op hello@vidalo.io.",
+    contact: "Vragen? Mail ons op hello@vidalo.io of bel +31 85 109 1393.",
     terms: {
       title: "Algemene voorwaarden",
       intro: "Deze voorwaarden gelden voor elke controle en elk abonnement van Vidalo, een handelsnaam van A101 B.V.",
@@ -1667,6 +1667,11 @@ export const copy = {
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",
     mockHint: "Geen Supabase-sleutels ingesteld: je wordt direct ingelogd in de voorbeeldomgeving.",
     noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
+    rateLimited: "Je hebt net al een inloglink gevraagd. Kijk in je mailbox, of probeer het over een paar minuten opnieuw.",
+    signedInH1: "Je bent ingelogd",
+    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Start met een gratis controle en laat het rapport naar dit adres mailen: daarna vind je je bedrijf hier.`,
+    startCheck: "Start een gratis controle",
+    otherEmail: "Ander e-mailadres? Log uit",
   },
 
   dashboard: {

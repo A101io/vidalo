@@ -612,7 +612,7 @@ export const en: CopyShape = {
         { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · Prices excl. VAT",
+      legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · +31 85 109 1393 · Prices excl. VAT",
       copyright: "© 2026 Vidalo. All rights reserved.",
       reportNote: "This report link works for 30 days.",
     },
@@ -663,7 +663,7 @@ export const en: CopyShape = {
     draft: true,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
     updated: "Last updated: 9 October 2026",
-    contact: "Questions? Email us at hello@vidalo.io.",
+    contact: "Questions? Email us at hello@vidalo.io or call +31 85 109 1393.",
     terms: {
       title: "Terms and conditions",
       intro: "These terms apply to every check and every subscription from Vidalo, a trade name of A101 B.V. This is a translation; the Dutch text is the binding version.",
@@ -1641,6 +1641,11 @@ export const en: CopyShape = {
     sent: "We have sent you a login link. Check your inbox.",
     mockHint: "No Supabase keys set: you are logged straight into the demo environment.",
     noBusiness: "We found no business for this email address. Start with a free check.",
+    rateLimited: "You asked for a login link a moment ago. Check your inbox, or try again in a few minutes.",
+    signedInH1: "You are logged in",
+    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Start with a free check and have the report emailed to this address: then you will find your business here.`,
+    startCheck: "Start a free check",
+    otherEmail: "Another email address? Log out",
   },
 
   dashboard: {

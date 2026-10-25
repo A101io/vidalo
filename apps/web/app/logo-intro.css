@@ -24,7 +24,7 @@
   /* the still logo: the dot */
   width: .6em; min-width: 0; padding: 0; border-radius: 999px 999px 999px .07em;
 }
-.li-qs { display: inline-grid; font-size: .22em; font-weight: 500; line-height: 1.4; color: #fff; }
+.li-qs { display: inline-grid; font-size: .18em; font-weight: 500; line-height: 1.4; color: #fff; }
 .li-q { grid-area: 1 / 1; display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; }
 .li-caret { display: none; flex: none; width: .02em; height: .24em; background: #fff; margin-left: .03em; }
 .li-name {
@@ -63,7 +63,11 @@
 @keyframes li-caret2-on { 0% { visibility: hidden } 81% { visibility: visible } 95%, 100% { visibility: hidden } }
 
 @media (prefers-reduced-motion: no-preference) {
-  .li-ready .li-field { animation: li-field 10s cubic-bezier(.22, .7, .2, 1) infinite; min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; }
+  /* Fixed at the still logo's width (--lw) and left-aligned: the field grows out of
+     the dot's own spot and stays within the logo, instead of the centred stage
+     shifting sideways as the field widens and closes. */
+  .li-ready.li-stage { width: var(--lw); justify-content: flex-start; }
+  .li-ready .li-field { flex: none; animation: li-field 10s cubic-bezier(.22, .7, .2, 1) infinite; min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; }
   .li-ready .li-q1 { animation: li-q1 10s linear infinite; }
   .li-ready .li-q2 { animation: li-q2 10s linear infinite; }
   .li-ready .li-q3 { animation: li-q3 10s linear infinite; }
@@ -73,7 +77,7 @@
 }
 
 /* On /binnenkort the animation sits in a card and is sized to the card's width
-   (container query units): its widest moment, the first question, is about
-   3.7em, so 17cqi keeps it at roughly two thirds of the card. */
+   (container query units): the logo and the widest question (at .18em) are both about
+   3.2em, so 20cqi keeps it at roughly two thirds of the card. */
 .cs-visual { container-type: inline-size; }
-.cs-visual .li-stage { font-size: clamp(40px, 17cqi, 104px); }
+.cs-visual .li-stage { font-size: clamp(40px, 20cqi, 104px); }

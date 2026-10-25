@@ -1,0 +1,33 @@
+{
+  "_readme": "Social profile text per platform and language. To add a language: copy the \"en\" block of every platform to a new key (e.g. \"de\"), translate, add its link under \"link\", then run: node docs/brand/social/check.mjs",
+  "link": {
+    "nl": "https://vidalo.io/binnenkort",
+    "en": "https://vidalo.io/en/coming-soon"
+  },
+  "platforms": {
+    "linkedin": {
+      "field": "Tagline",
+      "limit": 120,
+      "nl": "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.",
+      "en": "Your customers ask ChatGPT. We make sure the answer is right."
+    },
+    "facebook": {
+      "field": "Intro",
+      "limit": 101,
+      "nl": "Wat zegt ChatGPT over jouw zaak? Wij vinden de fouten en herstellen ze bij de bron.",
+      "en": "What does ChatGPT say about your business? We find the errors and fix them at the source."
+    },
+    "instagram": {
+      "field": "Bio",
+      "limit": 150,
+      "nl": "Je klanten vragen het aan ChatGPT.\nWij zorgen dat het antwoord klopt.\nVoor Nederlandse ondernemers. Zet je op de lijst:",
+      "en": "Your customers ask ChatGPT.\nWe make sure the answer is right.\nFor businesses in the Netherlands. Join the list:"
+    },
+    "tiktok": {
+      "field": "Bio",
+      "limit": 80,
+      "nl": "Vraag ChatGPT naar je openingstijden. Klopt het niet? Wij herstellen het.",
+      "en": "Ask ChatGPT for your opening hours. Wrong? We fix it at the source."
+    }
+  }
+}

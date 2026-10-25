@@ -58,6 +58,14 @@
         "scripts/local-prod.sh"
       ],
       "port": 8787
+    },
+    {
+      "name": "vidalo-signin-test",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "/private/tmp/claude-501/-Users-a101-Vidalo/eb506694-de12-4cb3-942f-7cfb4db06e0a/scratchpad/signin-dev.sh"
+      ],
+      "port": 3000
     }
   ]
 }

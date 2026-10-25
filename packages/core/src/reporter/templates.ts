@@ -12,6 +12,7 @@ import { criteriumFor, severityOf } from "../criteria.js";
 import { findingWordsNl, hostOfUrl, notFoundCountNl, visibilityLineNl } from "../shared/facts-nl.js";
 import { fixPathForFinding } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
+import { LOGO } from "./logo.js";
 
 export interface Mail {
   subject: string;
@@ -33,16 +34,47 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** Minimal HTML version of a plain-text mail: paragraphs, links clickable. */
+// Design G tokens (apps/web/app/globals.css): --panel, --bg, --ink, --muted, --line, --blue.
+// Mail clients read neither custom properties nor <style> reliably, so they are inlined, and only here.
+const FONT = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+const S = {
+  body: `margin:0;padding:0;background:#f4f1ec;color:#111827;font-family:${FONT};font-size:15px;line-height:1.55`,
+  card: "background:#ffffff;border:1.5px solid #e7e3dc;border-radius:12px;padding:28px",
+  p: "margin:0 0 16px",
+  a: "color:#2563eb;word-break:break-all",
+  foot: "color:#666d7b;font-size:12px;line-height:1.5;padding:20px 4px 0",
+} as const;
+
+/**
+ * The HTML twin of a plain-text mail, in the brand's shell: logo, white card on
+ * the panel ground, company line underneath. Paragraphs stay paragraphs and links
+ * become clickable. The logo travels inside the message as a cid: attachment
+ * (logo.ts; sendMail attaches it), so no remote image is ever loaded.
+ */
 export function textToHtml(text: string): string {
   const paras = text.trim().split(/\n{2,}/);
   const body = paras
-    .map((p) => {
-      const lines = p.split("\n").map((l) => esc(l).replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1">$1</a>'));
-      return `<p style="margin:0 0 1em">${lines.join("<br>")}</p>`;
+    .map((p, i) => {
+      const lines = p.split("\n").map((l) => esc(l).replace(/(https?:\/\/[^\s)]+)/g, `<a href="$1" style="${S.a}">$1</a>`));
+      return `<p style="${i === paras.length - 1 ? "margin:0" : S.p}">${lines.join("<br>")}</p>`;
     })
     .join("\n");
-  return `<!doctype html><html lang="nl"><body style="font:16px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#1b1b1b;max-width:40rem;padding:1rem">${body}</body></html>`;
+  // The inbox preview line; without it, clients preview the logo's alt text.
+  const preheader = esc(paras[0]?.replace(/\s+/g, " ").slice(0, 140) ?? "");
+  return [
+    '<!doctype html><html lang="nl"><head><meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1"></head>',
+    `<body style="${S.body}">`,
+    `<div style="display:none;max-height:0;overflow:hidden">${preheader}</div>`,
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ec">',
+    '<tr><td align="center" style="padding:32px 16px">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">',
+    `<tr><td style="padding:0 4px 20px"><img src="cid:${LOGO.contentId}" width="${LOGO.width}" height="${LOGO.height}" alt="Vidalo" style="display:block;border:0;font-family:${FONT};font-weight:800;font-size:24px;color:#111827"></td></tr>`,
+    `<tr><td style="${S.card}">${body}</td></tr>`,
+    // The site's legal line without its price note: name, address, KvK.
+    `<tr><td style="${S.foot}">${esc(copy.landing.footer.legal.split(" · ").slice(0, 3).join(" · "))}</td></tr>`,
+    "</table></td></tr></table></body></html>",
+  ].join("");
 }
 
 function mail(subject: string, text: string): Mail {
