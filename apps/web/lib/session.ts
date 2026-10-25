@@ -19,7 +19,7 @@ export async function getSession(): Promise<Session | null> {
     if (data.user?.email) return { userId: data.user.id, email: data.user.email };
     return null;
   }
-  if (!env.hasSupabase) {
+  if (!env.hasSupabase && env.allowMockAuth) {
     const store = await cookies();
     const raw = store.get(MOCK_SESSION_COOKIE)?.value;
     if (raw) {
