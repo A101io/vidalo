@@ -797,10 +797,10 @@ export const en: CopyShape = {
 
   unsubscribe: {
     h1: "Unsubscribe",
-    body: (name: string) => `You will then no longer receive emails from us about the check of ${name}. Your report remains available through the link.`,
+    body: (name: string) => `You will then no longer receive monthly reports, reminders and other messages you can switch off, about the check of ${name}. Emails needed for your plan or your login keep coming. Your report remains available through the link.`,
     button: "Unsubscribe",
     doneH1: "You have been unsubscribed",
-    doneBody: "We will no longer send you emails about this.",
+    doneBody: "We only send you emails needed for your plan or your login. Signed in, you can choose under Account what you want to receive again.",
     invalid: "This unsubscribe link is not valid or has expired. Email us at support@vidalo.io and we will sort it out.",
   },
 
@@ -1754,6 +1754,33 @@ export const en: CopyShape = {
       deleteButton: "Delete everything",
       blocked: "Cancel your subscription first. Once it has ended, you can delete everything here.",
       deleted: "Your data has been deleted.",
+    },
+    changeEmail: {
+      label: "New email address",
+      button: "Change",
+      body: "We send a confirmation link to the new address. Only when you click that link does it become your login, and our emails go there. Sometimes we ask the old address to confirm as well.",
+      status: {
+        verstuurd: "Confirmation link sent. Click the link in that email to finish the change. Until then your old address stays your login.",
+        gewijzigd: "Your email address has been changed.",
+        bevestigd: "Your new email address is confirmed.",
+        zelfde: "This is already your email address.",
+        bezet: "You cannot use this address here. Email support@vidalo.io if it is yours.",
+        fout: "That did not work. Check the address and try again.",
+      } as Record<string, string>,
+    },
+    mails: {
+      h: "Emails you receive",
+      body: "Choose which messages you want to receive. Your reports and everything we do are always in your dashboard as well.",
+      optional: {
+        report: { label: "Monthly report", body: "Every month, how AI talks about your business." },
+        resolution: { label: "Error fixed", body: "A message as soon as a wrong answer is right." },
+        reminder: { label: "Reminders", body: "A reminder when a step on your website is still open." },
+        followup: { label: "After the free check", body: "Two messages after your free check about what we can do for you." },
+      },
+      requiredH: "You always receive these",
+      required: "Your welcome email, your first report, steps only you can take, a message when we cannot fix an error, and emails about your plan and your login.",
+      save: "Save",
+      saved: "Your choice has been saved.",
     },
     language: { label: "Language", names: { nl: "Nederlands", en: "English" }, save: "Save", saved: "Language saved.", body: "Your dashboard and your report follow this language. The NL · EN switch at the bottom of every page changes it too." },
     fields: { name: "Name", place: "Town", address: "Address", phone: "Phone", email: "Email", website: "Website", kvk: "KvK", factsHost: "Facts page", factsVersion: "Details" },
