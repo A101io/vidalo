@@ -858,6 +858,8 @@ export const copy = {
   /** Result page (docs/design-g/ResultG.dc.html and ResultGGrey.dc.html). Three states: rood/oranje, groen, grijs. */
   result: {
     checkedAt: (dateTime: string) => `Gecontroleerd op ${dateTime}`,
+    /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
+    print: "Print of bewaar als PDF",
     /** Hero: the number inside the dot and its two-line label. */
     hero: {
       wrongLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "fout beantwoord"],
