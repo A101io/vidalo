@@ -1,6 +1,6 @@
 # The brain: how Vidalo keeps up with AI answers
 
-Status: proposal, 17 Oct 2026. Nothing here is built yet.
+Status: proposal, 17 Oct 2026. **Since 25 Oct 2026 the company-wide half runs as `A101/_OS/research/`** (sources from §1 Tier 1–3 as `SOURCES.json`, the §2 scoring in `RUN.md`, a weekly scheduled task, proposals as PRs). Not built: the worker job, `research_item`, Tier 0 queries over scan data, the Haiku/Sonnet/Opus split; those wait for paying customers.
 
 One question only: **what makes an AI assistant or agent give a correct, complete answer about a
 specific business, and act on it (call, book, order)?** Not "how to rank in Google", not content
