@@ -385,7 +385,7 @@ export class PgDb implements Db {
     if (patch.status !== undefined) cols.status = patch.status;
     if (patch.startedAt !== undefined) cols.startedAt = toDate(patch.startedAt);
     if (patch.finishedAt !== undefined) cols.finishedAt = toDate(patch.finishedAt);
-    if (patch.costCents !== undefined) cols.costCents = patch.costCents;
+    if (patch.costCents !== undefined) cols.costCents = Math.round(patch.costCents);
     if (patch.error !== undefined) cols.error = patch.error;
     const rows = Object.keys(cols).length
       ? await this.sql`update scan_run set ${this.sql(cols)} where id = ${id} returning *`
@@ -412,7 +412,9 @@ export class PgDb implements Db {
       engine: s.engine,
       answerText: s.answerText,
       citations: s.citations,
-      costCents: s.costCents,
+      // cost_cents is an integer column; a real answer costs a fraction of a cent (2.6). Unrounded, every
+      // real scan failed while storing the answers it had already paid for (25 Oct 2026). The cost is an estimate.
+      costCents: Math.round(s.costCents),
       capturedAt: s.capturedAt ? new Date(s.capturedAt) : new Date(),
     }));
     const out = await this.sql`insert into sample ${this.sql(rows as never[])} returning *`;
