@@ -1,14 +1,14 @@
 # SETUP_STATUS — Vidalo
 
-Baseline v3 (project-setup-baseline) · last checked 13 Oct 2026 · a compliance aid, **not legal advice**.
+Baseline v3 (project-setup-baseline) · last checked 25 Oct 2026 · a compliance aid, **not legal advice**.
 Status: `✓verified` (observed, evidence + date) · `written` (code exists, not proven on real infrastructure) · `blocked` (names what it needs) · `open` · `n/a` (reason).
 
 ## Project facts
 - Product: Vidalo (name under review, see go-live J1). Company: A101 B.V. (handelend als Vidalo), Factorij 80, 3071 AV Rotterdam, KvK 42057858, VAT NL869514192B01 (not shown on the site by design: footer has no btw-nummer).
-- Domain: **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others; go-live J2). Code, copy and config say `vidalo.io` since 14 Oct; DNS not yet on Cloudflare. Support: support@vidalo.io (mailbox does not exist yet).
+- Domain: **`vidalo.io`**, registered by Julian 14 Oct 2026 (`vidalo.nl` and `vidalo.com` are held by others; go-live J2). Code, copy and config say `vidalo.io` since 14 Oct; zone on Cloudflare since 16 Oct; live as the coming-soon page since 23 Oct. Support: support@vidalo.io (mailbox does not exist yet).
 - Audience: B2B (Dutch businesses). Languages: NL + EN.
-- Stack: Next.js 15 (apps/web), worker (apps/worker), core (packages/core), Supabase `bbynmqvaxpjdnkaasutd` (eu-west-1). Hosting: Cloudflare Workers (decided 13 Oct 2026; account `37c9615a0d7d9629154eca03d7de59a6`).
-- Accounts: yes (magic link + Google verification). Payments: Stripe (account not created). AI: yes, as a tool to ask questions (OpenAI, Google, Perplexity, SerpAPI). Outbound email: Resend. Native app: no.
+- Stack: Next.js 16.4.2 (apps/web, since 22 Oct), worker (apps/worker), core (packages/core), Supabase `bbynmqvaxpjdnkaasutd` (eu-west-1). Hosting: Cloudflare Workers (decided 13 Oct 2026; account `37c9615a0d7d9629154eca03d7de59a6`).
+- Accounts: yes (magic link + Google verification). Payments: Stripe, account `acct_1UR4QnEKzmvgQ7J9` (test mode, 16 Oct; no secret key set anywhere yet). AI: yes, as a tool to ask questions (OpenAI, Google, Perplexity, SerpAPI). Outbound email: Resend. Native app: no.
 - Baseline reference files (`/mnt/project-files/setup/`, legal masters, `projects.md`): **not present in this environment**; this file was made from the skill's section 5.
 
 ## R. Required
@@ -41,18 +41,18 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
 | D1 | CI on every PR | ✓verified | `ci.yml`: secret scan, typecheck, tests, mock pipeline, Postgres. No linter configured yet. | 13 Oct |
-| D2 | Deploy | ✓verified (preview) · written (production) | Cloudflare Workers (Julian, 13 Oct): `vidalo-web` via OpenNext, `vidalo-worker` for cron, the scan queue and facts pages; `deploy.yml` manual, preview or production, never Workers Builds. Verified locally in workerd against real Postgres: every route NL+EN, a free scan through the queue to its report, both crons, a facts page; one handle per request (control without it: every second request 500). Blocked on the Cloudflare token + account id on the GitHub environments. **14 Oct: preview deployed by hand from Julian's Mac** (local `wrangler login`): https://vidalo-web-preview.julian-devriend.workers.dev, `verify-deploy.mjs` 7/7; queue `vidalo-scans` created. Production: no Hyperdrive, no secrets, no custom domains possible (D5). **16 Oct: first run of `deploy.yml` from GitHub Actions** (run 38933068119, `preview`): all steps green, `verify-deploy.mjs` 9/9 against the preview host. Production waits for `DATABASE_URL`/Hyperdrive. | 16 Oct |
+| D2 | Deploy | ✓verified (preview) · written (production) | Cloudflare Workers (Julian, 13 Oct): `vidalo-web` via OpenNext, `vidalo-worker` for cron, the scan queue and facts pages; `deploy.yml` manual, preview or production, never Workers Builds. Verified locally in workerd against real Postgres: every route NL+EN, a free scan through the queue to its report, both crons, a facts page; one handle per request (control without it: every second request 500). Blocked on the Cloudflare token + account id on the GitHub environments. **14 Oct: preview deployed by hand from Julian's Mac** (local `wrangler login`): https://vidalo-web-preview.julian-devriend.workers.dev, `verify-deploy.mjs` 7/7; queue `vidalo-scans` created. Production: no Hyperdrive, no secrets, no custom domains possible (D5). **23 Oct 2026: first production deploy** (run 39949070125, success): `vidalo.io` serves the coming-soon page, `/api/health` `{"ok":true,"db":"pg","mock":false}` through Hyperdrive, `www.vidalo.io` 301 to `vidalo.io` (read back 25 Oct). Later production runs 23 Oct all green. **Secrets on the production Workers (25 Oct, `wrangler secret list`):** `vidalo-web` holds only `VIDALO_PREVIEW_KEY`, `vidalo-worker` none; no AI, mail or payment key is set, so nothing behind the gate can scan, mail or charge yet. **16 Oct: first run of `deploy.yml` from GitHub Actions** (run 38933068119, `preview`): all steps green, `verify-deploy.mjs` 9/9 against the preview host. | 25 Oct |
 | D3 | No empty env overrides | ✓verified | Workflows set no `NEXT_PUBLIC_*`; live checkout refuses without `STRIPE_TAX_RATE_ID`; production without `DATABASE_URL`/Hyperdrive answers 503 instead of mock data (verified in workerd, and the deploy verifier fails on it). | 13 Oct |
 | D4 | Verify deployed bundle | written | `scripts/verify-deploy.mjs` as the last deploy step: health, NL and EN landing, pricing, llms.txt, sitemap, 404; prints status and bytes for each. Passes on the local preview, fails (with the reason) on a database-less production. | 13 Oct |
 | D5 | Domain | ✓verified | `vidalo.io` registered at one.com 15 Oct 2026; NS at the registry `zac`/`nucum.ns.cloudflare.com`; zone `5d39e2dacc81b8603d5dc69a163b6bca` active in account `37c9615a0d7d9629154eca03d7de59a6` (API read); no DNS records yet, so the Custom Domain can now bind at the first production deploy. SSL Full (strict) + Always Use HTTPS not readable with the local token: Julian. | 16 Oct |
-| D6 | Launch gate | open | Julian, 13 Oct: the GitHub Pages preview (mock data) stays public until there is a domain. The gate (coming-soon on `/`, `/legal/*` reachable, invariant test) comes with the production deploy. | 13 Oct |
+| D6 | Launch gate | ✓verified | `VIDALO_COMING_SOON=1` on production: `https://vidalo.io/` title "Binnenkort · Vidalo" (25 Oct). Legal pages behind the gate use the coming-soon footer (#34); hidden preview page `/voorvertoning` (#50); the full site opens only with `VIDALO_PREVIEW_KEY`. | 25 Oct |
 | D7 | Security headers + CSP | written | HSTS, nosniff, Referrer-Policy, X-Frame-Options, Permissions-Policy seen via `curl -I` on dev; CSP production-only (`next.config.ts`). | 13 Oct |
 | D8 | Health endpoint | ✓verified | `/api/health` → `{"ok":true,"db":"mem"}` 200 on dev; 503 path when the db throws. | 13 Oct |
 
 ## E. Quality
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
-| E1 | Unit + e2e | written | 152 core + 8 worker tests, `e2e:mock`, `verify:pg`. No Playwright suite in the repo yet (checks run ad hoc). | 13 Oct |
+| E1 | Unit + e2e | written | Unit tests in core + worker, `e2e:mock`, `verify:pg`; Playwright suite (`e2e/`, merged 20 Oct) runs in CI in the Playwright image (#41); form and language-switch tests on both languages (#40, #41). | 25 Oct |
 | E2 | Accessibility | open | Reduced motion honoured everywhere, scenes have labels, simulator buttons use aria-pressed + aria-live. No axe run yet. | |
 | E3 | Daily checks | open | | |
 | E4 | Dependency audit | open | | |
@@ -70,7 +70,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
 | G1 | Support channel | open | hello@vidalo.io for contact, support@vidalo.io for support (was hallo@ until 19 Oct; split in `docs/mail.md`). Zone is on Cloudflare since 16 Oct; runbook `docs/mail.md` (Workspace secondary domain, aliases support@/hello@/julian@/controle@/inloggen@ on Julian's user, Send mail as, DNS records), check with `scripts/verify-mail-dns.sh`. Julian's clicks. | 18 Oct |
-| G2 | Transactional email | blocked | Resend code + one-click unsubscribe (RFC 8058) written; DNS (SPF/DKIM/DMARC) needs the domain. | |
+| G2 | Transactional email | blocked | Resend code + one-click unsubscribe (RFC 8058) written; Vidalo branding in every mail (#47); mail lab `pnpm mail:lab` checks all 13 kinds, `pnpm mail:send` delivers one of each to one inbox (#42, #45); directory corrections one mail per change (#44). Needs: Resend account, `vidalo.io` verified there, `RESEND_API_KEY`. Open PRs: #37 sign-in mail, #38 DNS check, #48 mail redesign. | 25 Oct |
 
 ## H. Operations
 | # | Step | Status | Evidence | Date |
@@ -99,7 +99,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## C. Conditional
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
-| C1 | Payments | blocked | Code done (`docs/PAYMENTS.md`, wrong-account guard). Needs Vidalo's own Stripe account. | |
+| C1 | Payments | blocked | Code done (`docs/PAYMENTS.md`, wrong-account guard). Account `acct_1UR4QnEKzmvgQ7J9` and test portal `bpc_1UR8MDEKzmvgQ7J9sXzbS8S0` exist (`docs/setup/stripe-and-resend.md`). Needs: test secret key in `.env`, Terms/Privacy URLs and iDEAL/SEPA in the dashboard, then `pnpm stripe:setup --apply`. | 25 Oct |
 | C2 | Accounts + personal data | open | Export / delete my data not built. | |
 | C3 | AI features | written | Vidalo asks AI providers; it does not chat with customers. Spend capped by `FREE_SCANS_PER_DAY`. | |
 | C4 | B2C | n/a | B2B only. | |
@@ -119,4 +119,4 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## Needs Julian
 1. Upload the De Boer Legal masters (B2B, July 2026) so R2 can be built from them.
 2. ~~`vidalo.io` as a zone in A101's Cloudflare account~~ done 16 Oct 2026 (zone `5d39e2dacc81b8603d5dc69a163b6bca`). Still: SSL Full (strict) + Always Use HTTPS in the dashboard; then D4–D6, G1–G2 and production D2 can proceed.
-3. ~~The Supabase database password (for `DATABASE_URL`, go-live D3)~~ done 18 Oct, pipeline ran against the hosted project, ~~a Cloudflare API token plus the `preview`/`production` GitHub environments (X2)~~ done 16 Oct, Vidalo's own Stripe account (B1), a Google OAuth client (A3), and one click on "Stuur inloglink" on the local sign-in page (A1).
+3. ~~The Supabase database password (for `DATABASE_URL`, go-live D3)~~ done 18 Oct, pipeline ran against the hosted project, ~~a Cloudflare API token plus the `preview`/`production` GitHub environments (X2)~~ done 16 Oct, ~~Vidalo's own Stripe account (B1)~~ created 16 Oct (its test secret key is still open), a Google OAuth client (A3), and one click on "Stuur inloglink" on the local sign-in page (A1).
