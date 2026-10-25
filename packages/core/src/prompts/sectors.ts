@@ -680,6 +680,12 @@ export function sectorPack(slug: SectorSlug | null | undefined): SectorPack | nu
   return slug ? (SECTORS[slug] ?? null) : null;
 }
 
+/** The word a customer uses for this kind of business ("restaurant", "kapper"); null without a sector. */
+export function businessNoun(facts: Facts, sector: SectorSlug | null | undefined): string | null {
+  const pack = sectorPack(facts.sector ?? sector);
+  return pack ? ctxFor(facts, pack).noun : null;
+}
+
 export function isSectorSlug(s: unknown): s is SectorSlug {
   return typeof s === "string" && (SECTOR_SLUGS as string[]).includes(s);
 }
