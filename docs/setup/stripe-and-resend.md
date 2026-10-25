@@ -40,7 +40,7 @@ Business description given to Stripe:
 
 ## 2. Stripe connected to Claude
 
-The Stripe connector (`mcp.stripe.com`) was added in the Claude desktop app (Code tab) and granted to the Vidalo account only. It lists two contexts: `acct_1UR4QnEKzmvgQ7J9` (Vidalo, test mode) and `acct_1UR4RAELCe3OOCe2` (Vidalo sandbox). We use the first: it has the same account id as live, which is what the setup script pins. The sandbox is not used.
+The Stripe connector (`mcp.stripe.com`) was added in the Claude desktop app (Code tab) and granted to the Vidalo account only. It lists two contexts: `acct_1UR4QnEKzmvgQ7J9` (Vidalo, test mode) and `acct_1UR4RAELCe3OOCe2` (Vidalo sandbox). **Changed 25 Oct 2026 (Julian): only the sandbox exists for Vidalo, so the sandbox is what we use** (`VIDALO_STRIPE_ACCOUNT=acct_1UR4RAELCe3OOCe2`). `stripe:setup --apply` ran against it that day: prices €149 and €49/month, BTW 21% exclusive, portal "Vidalo" without cancelling, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` → `https://vidalo.io/api/stripe/webhook`; every id and the webhook secret went straight into `.env` and on to `vidalo-web` (`pnpm secrets:push`). The statement descriptor needs a live account. Going live means a live account in the organisation, `--apply --live`, and pinning that account.
 
 What the connector can and cannot do, found out on 16 Oct:
 - It can read and write products, prices, payment method configurations and portal configurations.

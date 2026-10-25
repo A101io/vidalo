@@ -42,7 +42,8 @@ export async function sendMagicLink(form: FormData) {
     redirect(href(`/inloggen?sent=1`));
   }
 
-  // Mock auth: sign in immediately as this e-mail.
+  // Mock auth: sign in immediately as this e-mail. Never on real data (env.allowMockAuth).
+  if (!env.allowMockAuth) redirect(href(`/inloggen?fout=1&${q}`));
   const store = await cookies();
   if (next.startsWith("/eigenaar/bevestigen")) {
     // Claiming a business: ownership is proven by Google next, not by owning one already.

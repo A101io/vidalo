@@ -1,5 +1,7 @@
 # Secrets and keys (baseline A4)
 
+**Since 25 Oct 2026 the list of record is `secrets.manifest.json`** (name, targets, source link, whether it spends money), and `pnpm secrets:push` moves values from the root `.env` to the Workers without printing them: a plan by default, `--apply` to push, `--allow-spending` for AI and Places keys, `--live` for a live Stripe key; every push is read back by name. Julian types each key once, into `.env`; nothing else asks for it (Control Room A10).
+
 Every secret: where it comes from, where it is set, how to prove it landed. When a credential is "definitely set" and something still fails, **list the NAMES the job can see first** (Sitty lost 17 deploy runs to `CLOUDFLARE_API_SECRET` vs `_TOKEN`). `pnpm scan:secrets` fails CI on anything key-shaped in a tracked file.
 
 ## Deploying (GitHub → Cloudflare)
