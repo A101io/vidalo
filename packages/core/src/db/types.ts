@@ -200,6 +200,8 @@ export interface Db {
   joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }>;
   /** Addresses on the list that have not unsubscribed. */
   countWaitlist(): Promise<number>;
+  /** Addresses on the list that have not unsubscribed, oldest first (the launch mail, scripts/launch-mail.mts). */
+  listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]>;
 
   // --- channels ---
   listChannels(businessId: string): Promise<Channel[]>;

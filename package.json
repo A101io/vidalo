@@ -12,6 +12,7 @@
     "e2e:mock": "VIDALO_MOCK=1 tsx scripts/e2e-mock.mts",
     "mail:lab": "VIDALO_MOCK=1 tsx scripts/mail-lab.mts",
     "mail:send": "tsx scripts/mail-send.mts",
+    "launch:mail": "tsx scripts/launch-mail.mts",
     "verify:pg": "bash scripts/verify-pg.sh",
     "site": "node scripts/site/snapshot.mjs http://localhost:3000 out/site",
     "stripe:setup": "pnpm --filter @vidalo/web stripe:setup",
