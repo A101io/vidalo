@@ -27,6 +27,7 @@ import {
 export * from "./mail.js";
 export * from "./templates.js";
 export * from "./links.js";
+export * from "./subscription-mails.js";
 export * from "./launch.js";
 
 const PRICE_SETUP = 149;

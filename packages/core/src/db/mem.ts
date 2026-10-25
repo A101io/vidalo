@@ -98,6 +98,8 @@ export class MemDb implements Db {
       ownerVerifiedAt: null,
       ownerVerifiedVia: null,
       language: "nl",
+      cancelAt: null,
+      pauseUntil: null,
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };
@@ -114,6 +116,7 @@ export class MemDb implements Db {
     return [...this.businesses.values()].filter(
       (b) =>
         (b.status === "trial" || b.status === "active") &&
+        !(b.pauseUntil && new Date(b.pauseUntil) > new Date()) &&
         b.anniversaryDay != null &&
         (b.anniversaryDay === dayOfMonth || (dayOfMonth === lastDay && b.anniversaryDay > lastDay)),
     );

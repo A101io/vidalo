@@ -139,6 +139,18 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect((await exportMyData(db, other.b.id))?.fixes).toHaveLength(1);
   });
 
+  it("cancel and pause dates round-trip; a paused business skips the monthly check", async () => {
+    const day = new Date().getDate();
+    const end = "2026-11-12T10:00:00.000Z";
+    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", anniversaryDay: day, cancelAt: end });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBe(end);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: null, pauseUntil: new Date(Date.now() + 86_400_000).toISOString() });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBeNull();
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(0);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: null });
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(1);
+  });
+
   it("job queue: claim, complete, fail with backoff", async () => {
     await db.enqueueJob("scan", { businessId: "x" });
     const later = await db.enqueueJob("report", {}, new Date(Date.now() + 60_000));

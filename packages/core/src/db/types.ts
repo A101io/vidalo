@@ -33,6 +33,10 @@ export interface BusinessRecord extends Business {
   ownerVerifiedVia: string | null;
   /** The owner's language ("nl" | "en"); the dashboard and the report follow it; e-mails are still Dutch. */
   language: "nl" | "en";
+  /** The owner cancelled; the subscription ends at this moment (migration 0010). */
+  cancelAt: string | null;
+  /** The owner paused; nothing runs and nothing is charged until this moment (migration 0010). */
+  pauseUntil: string | null;
 }
 
 /** What Google's URL Inspection API last said about the facts page. */
