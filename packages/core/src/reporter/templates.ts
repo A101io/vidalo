@@ -12,7 +12,6 @@ import { criteriumFor, severityOf } from "../criteria.js";
 import { findingWordsNl, hostOfUrl, notFoundCountNl, visibilityLineNl } from "../shared/facts-nl.js";
 import { fixPathForFinding } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
-import { LOGO } from "./logo.js";
 
 export interface Mail {
   subject: string;
@@ -34,47 +33,58 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// Design G tokens (apps/web/app/globals.css): --panel, --bg, --ink, --muted, --line, --blue.
-// Mail clients read neither custom properties nor <style> reliably, so they are inlined, and only here.
-const FONT = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
-const S = {
-  body: `margin:0;padding:0;background:#f4f1ec;color:#111827;font-family:${FONT};font-size:15px;line-height:1.55`,
-  card: "background:#ffffff;border:1.5px solid #e7e3dc;border-radius:12px;padding:28px",
-  p: "margin:0 0 16px",
-  a: "color:#2563eb;word-break:break-all",
-  foot: "color:#666d7b;font-size:12px;line-height:1.5;padding:20px 4px 0",
-} as const;
-
 /**
- * The HTML twin of a plain-text mail, in the brand's shell: logo, white card on
- * the panel ground, company line underneath. Paragraphs stay paragraphs and links
- * become clickable. The logo travels inside the message as a cid: attachment
- * (logo.ts; sendMail attaches it), so no remote image is ever loaded.
+ * Design G in an e-mail (docs/DESIGN_G.md): white, ink, one blue accent,
+ * 1.5px lines, Plus Jakarta Sans where the client has it. The mark (a dot
+ * with one straight corner) and the wordmark are HTML, not an image, so they
+ * show without loading anything; Outlook desktop draws the mark square.
+ * Light only, like the site. Colours are the tokens in apps/web/app/globals.css.
  */
-export function textToHtml(text: string): string {
+const BRAND = {
+  ink: "#111827",
+  ink2: "#374151",
+  muted: "#666d7b",
+  line: "#e7e3dc",
+  blue: "#2563eb",
+  font: "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  stip: { rood: "#d41b44", oranje: "#f59e0b", groen: "#2b7a53", grijs: "#9ca3af" } as Record<string, string>,
+};
+
+function linkify(line: string): string {
+  return esc(line).replace(/(https?:\/\/[^\s)]+)/g, `<a href="$1" style="color:${BRAND.blue};text-decoration:underline;word-break:break-all">$1</a>`);
+}
+
+/** The branded HTML version of a plain-text mail: logo, paragraphs with clickable links, the colour dot, the company line. */
+export function textToHtml(text: string, lang: "nl" | "en" = "nl"): string {
   const paras = text.trim().split(/\n{2,}/);
   const body = paras
-    .map((p, i) => {
-      const lines = p.split("\n").map((l) => esc(l).replace(/(https?:\/\/[^\s)]+)/g, `<a href="$1" style="${S.a}">$1</a>`));
-      return `<p style="${i === paras.length - 1 ? "margin:0" : S.p}">${lines.join("<br>")}</p>`;
+    .map((p) => {
+      const raw = p.split("\n");
+      const lines = raw.map(linkify);
+      // "Stip: rood. ..." gets its dot in the status colour (status colours only in dots).
+      const stip = /^Stip: (rood|oranje|groen|grijs)\b/i.exec(p)?.[1]?.toLowerCase();
+      const dot = stip ? `<span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${BRAND.stip[stip]};margin-right:8px;vertical-align:0"></span>` : "";
+      // Structure without new wording: a short line opening a block ("Over: ...", "1. Bevestig je gegevens") and a
+      // short title on its own ("Wie AI wel noemt", "Afhaker (6): ...") are set in ink, bold. Greetings keep their weight.
+      // Lines to paste (robots.txt) are code: monospace on the panel colour, never a heading.
+      if (raw.every((l) => /^(User-agent|Allow|Disallow|Sitemap):/i.test(l)))
+        return `<pre style="margin:0 0 12px;padding:10px 12px;background:#f4f1ec;border-radius:8px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:${BRAND.ink};white-space:pre-wrap">${raw.map(esc).join("\n")}</pre>`;
+      const first = raw[0]!;
+      const opener = raw.length > 1 && first.length <= 90 && !/[,.]$/.test(first) && !/https?:/.test(first) && !stip;
+      const title = raw.length === 1 && (/^(Afhaker|Misleider|Verwarring) \(\d+\):/.test(first) || (/^\d+\. /.test(first) && !/[.:?]$/.test(first)) || (first.length <= 40 && !/[.,:?]$/.test(first) && !/https?:/.test(first)));
+      if (opener || title) lines[0] = `<strong style="color:${BRAND.ink};font-weight:700">${lines[0]}</strong>`;
+      return `<p style="margin:${title ? "24px" : "0"} 0 16px;font-size:16px;line-height:1.55;color:${BRAND.ink2}">${dot}${lines.join("<br>")}</p>`;
     })
     .join("\n");
-  // The inbox preview line; without it, clients preview the logo's alt text.
-  const preheader = esc(paras[0]?.replace(/\s+/g, " ").slice(0, 140) ?? "");
-  return [
-    '<!doctype html><html lang="nl"><head><meta charset="utf-8">',
-    '<meta name="viewport" content="width=device-width,initial-scale=1"></head>',
-    `<body style="${S.body}">`,
-    `<div style="display:none;max-height:0;overflow:hidden">${preheader}</div>`,
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ec">',
-    '<tr><td align="center" style="padding:32px 16px">',
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">',
-    `<tr><td style="padding:0 4px 20px"><img src="cid:${LOGO.contentId}" width="${LOGO.width}" height="${LOGO.height}" alt="Vidalo" style="display:block;border:0;font-family:${FONT};font-weight:800;font-size:24px;color:#111827"></td></tr>`,
-    `<tr><td style="${S.card}">${body}</td></tr>`,
-    // The site's legal line without its price note: name, address, KvK.
-    `<tr><td style="${S.foot}">${esc(copy.landing.footer.legal.split(" · ").slice(0, 3).join(" · "))}</td></tr>`,
-    "</table></td></tr></table></body></html>",
-  ].join("");
+  const mark = `<span style="display:inline-block;width:17px;height:17px;background:${BRAND.blue};border-radius:999px 999px 999px 2px;vertical-align:-1px;margin-right:6px"></span>`;
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:${BRAND.font}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:${BRAND.font}">
+<tr><td data-brand="vidalo" style="padding:0 0 20px;border-bottom:1.5px solid ${BRAND.line}"><span style="font-size:22px;line-height:1;font-weight:800;letter-spacing:-0.02em;color:${BRAND.ink}">${mark}vidalo</span></td></tr>
+<tr><td style="padding:24px 0 8px">${body}</td></tr>
+<tr><td style="padding:16px 0 0;border-top:1.5px solid ${BRAND.line};font-size:13px;line-height:1.5;color:${BRAND.muted}">${esc(copy.landing.footer.legal)}</td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 function mail(subject: string, text: string): Mail {

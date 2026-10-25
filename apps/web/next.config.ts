@@ -31,7 +31,9 @@ for (const file of [".env", ".env.local"]) {
 const supabase = process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : "https://*.supabase.co";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // challenges.cloudflare.com: the Turnstile bot check on the scan and sign-in forms (lib/turnstile.ts).
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "frame-src 'self' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
@@ -61,6 +63,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Next.js 16 builds with Turbopack by default, but Turbopack cannot map the
+  // "./x.js" imports in packages/core to their .ts files (81 "Module not found"
+  // on 22 Oct 2026), so dev and build pass --webpack (package.json).
   webpack: (config) => {
     // packages/core uses Node-ESM style "./x.js" imports that resolve to .ts files.
     config.resolve.extensionAlias = { ".js": [".ts", ".tsx", ".js"], ".mjs": [".mts", ".mjs"] };

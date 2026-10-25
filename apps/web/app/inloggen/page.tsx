@@ -6,10 +6,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
 import { sendMagicLink } from "./actions";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string; verwijderd?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   const session = await getSession();
@@ -20,6 +21,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <SiteHeader variant="minimal" />
       <main className="wrap max-w-[560px] py-12 sm:py-16">
         <h1 className="h2">{session ? a.signedInH1 : a.h1}</h1>
+        {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
         {session ? (
           // Signed in, but no business belongs to this address yet (requireOwner).
           <>
@@ -48,6 +50,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
               {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
               {sp.fout === "wacht" && <p className="mt-2 text-[14px] text-rood">{a.rateLimited}</p>}
+              {sp.fout === "check" && <p className="mt-2 text-[14px] text-rood">{copy.errors.humanCheck}</p>}
+              <div className="mt-4">
+                <TurnstileWidget />
+              </div>
               <button type="submit" className="btn-primary mt-4 w-full">
                 {a.button}
               </button>

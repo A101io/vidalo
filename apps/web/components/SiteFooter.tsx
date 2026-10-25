@@ -19,9 +19,9 @@ export async function SiteFooter({ variant = "full", note, tagline }: { variant?
   if (variant === "short") {
     return (
       <footer className="border-t-[1.5px] border-line ground-cream">
-        <div className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-10 text-[13px] text-muted">
+        <div className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-10 text-[13px] text-muted print:py-4">
           <span>{f.legal}</span>
-          <span className="flex flex-wrap gap-x-4">
+          <span className="flex flex-wrap gap-x-4 print:hidden">
             <Link href={href("/contact")} className="nav-link">
               {copy.pages.contact.crumb}
             </Link>
@@ -38,8 +38,8 @@ export async function SiteFooter({ variant = "full", note, tagline }: { variant?
   }
   return (
     <footer className="border-t-[1.5px] border-line ground-cream">
-      <div className="wrap flex flex-col gap-10 pb-10 pt-14">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="wrap flex flex-col gap-10 pb-10 pt-14 print:py-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] print:hidden">
           <div className="flex flex-col items-start gap-2.5">
             <Logo size={22} />
             <span className="max-w-[28ch] text-[14px] leading-[1.5] text-muted">{tagline ?? f.tagline}</span>
@@ -68,9 +68,9 @@ export async function SiteFooter({ variant = "full", note, tagline }: { variant?
             </div>
           ))}
         </div>
-        <div className="flex flex-col gap-1.5 border-t-[1.5px] border-line pt-6 text-[13px] leading-[1.5] text-muted">
+        <div className="flex flex-col gap-1.5 border-t-[1.5px] border-line pt-6 text-[13px] leading-[1.5] text-muted print:border-0 print:pt-0">
           <span>{f.legal}</span>
-          <span>{f.copyright}</span>
+          <span className="print:hidden">{f.copyright}</span>
         </div>
       </div>
     </footer>

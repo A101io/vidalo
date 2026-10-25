@@ -61,7 +61,8 @@ export type EmailJob =
   | { template: "baseline"; scanRunId: string; businessId?: string }
   | { template: "report"; businessId: string; scanRunId?: string }
   | { template: "followup"; businessId: string; day: 7 | 21 }
-  | { template: "directory_correction"; to: string; directory: string; listingUrl?: string | null; businessId: string; channelId?: string; diff: { field: string; current: string | null; expected: string | null }[] };
+  | { template: "reconfirm"; businessId: string }
+  | { template: "directory_correction"; to: string; directory: string; listingUrl?: string | null; businessId: string; channelId?: string; diff: { field: string; current: string | null; expected: string | null }[]; reminder?: boolean; firstSentAt?: string };
 
 export interface ReportJob {
   businessId: string;

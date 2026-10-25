@@ -85,6 +85,8 @@ export interface Facts {
   version: number;
   verifiedAt: string | null; // null = provisional (scraped, not confirmed)
   provisional: boolean;
+  /** When this version was stored (facts.created_at); read-only, set by the db. */
+  createdAt?: string;
   name: string;
   place: string;
   address: string | null;
@@ -108,6 +110,8 @@ export interface Facts {
   credentials?: string[];
   /** Owner override of the sector; falls back to Business.sector. */
   sector?: SectorSlug | null;
+  /** Google Places types of the business, primary first ("bakery", "cafe"); pick the question word when the name does not say it. */
+  googleTypes?: string[];
 }
 
 export const EMPTY_SERVICE_AREA: ServiceArea = { places: [], radiusKm: null };
@@ -333,6 +337,8 @@ export interface Channel {
   url: string | null;
   status: "pending" | "synced" | "mismatch" | "failed" | "manual";
   lastSyncedAt: string | null;
+  /** last sync evidence and diff, and the correction already sent (publisher/index.ts) */
+  meta?: Record<string, unknown>;
 }
 
 /** The colour of the dot (docs/CRITERIA.md "Ernst en kleur: de stipregel"). */

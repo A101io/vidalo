@@ -58,6 +58,8 @@ export function toEml(input: MailInput, id: string): string {
     `Message-ID: <${id}@vidalo.io>`,
     "MIME-Version: 1.0",
     ...Object.entries(input.headers ?? {}).map(([k, v]) => `${k}: ${v}`),
+    // Mock files only: the tags Resend would get, so the mail lab knows which mail this is.
+    ...Object.entries(input.tags ?? {}).map(([k, v]) => `X-Vidalo-${k}: ${v}`),
   ].filter(Boolean);
   if (input.html) {
     const boundary = `----vidalo-${id}`;
@@ -132,7 +134,8 @@ export async function sendMail(input: MailInput): Promise<MailResult> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const dir = path.resolve(process.env.VIDALO_OUT_DIR ?? "out", "mail");
   await mkdir(dir, { recursive: true });
-  const file = path.join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}-${safeName(input.subject)}.eml`);
+  // The id keeps two mails with the same subject in the same millisecond apart (they overwrote each other).
+  const file = path.join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}-${safeName(input.subject)}-${id.slice(-6)}.eml`);
   await writeFile(file, toEml(input, id), "utf8");
   log.info("mail.mock", { mode: "mock", file, to, subject: input.subject, replyTo: input.replyTo ?? null });
   return { id, mode: "mock", file };

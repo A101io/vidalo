@@ -7,6 +7,12 @@ import { gateRoute, PREVIEW_COOKIE } from "@vidalo/core/shared/gate";
  * the page which language to render (x-vidalo-lang) and which route it is
  * (x-vidalo-route, for hreflang and the language switch).
  *
+ * Next.js 16 renamed this convention to `proxy`, but a proxy always runs on the
+ * Node.js runtime, which OpenNext on Cloudflare calls experimental and does not
+ * maintain (build warning, 22 Oct 2026). `middleware` keeps the edge runtime,
+ * the path OpenNext supports; Next only prints a deprecation notice. Move to
+ * `proxy` once OpenNext supports it on Cloudflare.
+ *
  * The launch gate (core/shared/gate.ts) sits on the same rewrite: while
  * VIDALO_COMING_SOON=1 the marketing routes render /binnenkort, unless the
  * browser carries the preview cookie.

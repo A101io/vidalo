@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
+import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
   BusinessUpsert,
@@ -98,6 +99,9 @@ export class MemDb implements Db {
       ownerVerifiedAt: null,
       ownerVerifiedVia: null,
       language: "nl",
+      cancelAt: null,
+      pauseUntil: null,
+      mailPrefs: {},
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };
@@ -105,6 +109,7 @@ export class MemDb implements Db {
       if (v !== undefined && k !== "id" && k !== "createdAt") (merged as unknown as Record<string, unknown>)[k] = v;
     }
     merged.slug = base.slug;
+    merged.mailPrefs = normalizeMailPrefs(merged.mailPrefs);
     this.businesses.set(merged.id, merged);
     return { ...merged };
   }
@@ -114,6 +119,7 @@ export class MemDb implements Db {
     return [...this.businesses.values()].filter(
       (b) =>
         (b.status === "trial" || b.status === "active") &&
+        !(b.pauseUntil && new Date(b.pauseUntil) > new Date()) &&
         b.anniversaryDay != null &&
         (b.anniversaryDay === dayOfMonth || (dayOfMonth === lastDay && b.anniversaryDay > lastDay)),
     );
@@ -144,6 +150,28 @@ export class MemDb implements Db {
   }
 
   // --- facts ---
+  async listFacts(businessId: string): Promise<Facts[]> {
+    return (this.facts.get(businessId) ?? []).map((f) => ({ ...f }));
+  }
+
+  async deleteBusiness(id: string): Promise<void> {
+    this.businesses.delete(id);
+    this.facts.delete(id);
+    this.googleIndex.delete(id);
+    for (const [k, p] of this.prompts) if (p.businessId === id) this.prompts.delete(k);
+    const runs = new Set([...this.scanRuns.values()].filter((r) => r.businessId === id).map((r) => r.id));
+    for (const r of runs) this.scanRuns.delete(r);
+    const samples = new Set([...this.samples.values()].filter((s) => runs.has(s.scanRunId)).map((s) => s.id));
+    for (const s of samples) this.samples.delete(s);
+    this.claims = this.claims.filter((c) => !samples.has(c.sampleId));
+    const findings = new Set([...this.findings.values()].filter((f) => f.businessId === id).map((f) => f.id));
+    for (const f of findings) this.findings.delete(f);
+    for (const [k, f] of this.fixes) if (findings.has(f.findingId)) this.fixes.delete(k);
+    for (const [k, c] of this.channels) if (c.businessId === id) this.channels.delete(k);
+    this.events = this.events.filter((e) => e.businessId !== id);
+    for (const [k, j] of this.jobs) if (!j.doneAt && j.payload.businessId === id) this.jobs.delete(k);
+  }
+
   async latestFacts(businessId: string): Promise<Facts | null> {
     const list = this.facts.get(businessId);
     return list && list.length ? { ...list[list.length - 1]! } : null;
@@ -153,7 +181,7 @@ export class MemDb implements Db {
     const list = this.facts.get(businessId) ?? [];
     const version = (list[list.length - 1]?.version ?? 0) + 1;
     const provisional = opts.provisional ?? data.provisional ?? true;
-    const row: Facts = { ...(data as Facts), businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null };
+    const row: Facts = { ...(data as Facts), businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null, createdAt: nowIso() };
     list.push(row);
     this.facts.set(businessId, list);
     return { ...row };
@@ -400,6 +428,10 @@ export class MemDb implements Db {
     return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).length;
   }
 
+  async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {
+    return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).map((w) => ({ email: w.email, language: w.language }));
+  }
+
   // --- channels ---
   async listChannels(businessId: string): Promise<Channel[]> {
     return [...this.channels.values()].filter((c) => c.businessId === businessId);
@@ -421,6 +453,7 @@ export class MemDb implements Db {
       url: input.url ?? existing?.url ?? null,
       status: input.status ?? existing?.status ?? "pending",
       lastSyncedAt: input.lastSyncedAt ?? existing?.lastSyncedAt ?? null,
+      meta: input.meta ?? existing?.meta ?? {},
     };
     this.channels.set(row.id, row);
     return { ...row };

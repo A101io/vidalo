@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
@@ -8,6 +8,8 @@ import { createServerSupabase } from "@/lib/supabase";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
+import { passesTurnstile } from "@/lib/turnstile";
+import { clientIp } from "@vidalo/core/shared";
 
 export async function sendMagicLink(form: FormData) {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -18,6 +20,8 @@ export async function sendMagicLink(form: FormData) {
   const q = `next=${encodeURIComponent(next)}`;
   const { href } = await getI18n();
   if (!isEmail(email)) redirect(href(`/inloggen?fout=1&${q}`));
+  // Bot check before anything is stored or mailed.
+  if (!(await passesTurnstile(form, clientIp({ headers: await headers() })))) redirect(href(`/inloggen?fout=check&${q}`));
 
   // Coming from /welkom after checkout: remember who asked for this business,
   // so the first sign-in finds it. A claim, not proof: ownership is proven by
@@ -43,8 +47,8 @@ export async function sendMagicLink(form: FormData) {
     redirect(href(`/inloggen?sent=1`));
   }
 
-  // Mock auth: sign in immediately as this e-mail, like a clicked magic link.
-  // Without a business, requireOwner sends them to the signed-in "no business yet" state.
+  // Mock auth: sign in immediately as this e-mail. Never on real data (env.allowMockAuth).
+  if (!env.allowMockAuth) redirect(href(`/inloggen?fout=1&${q}`));
   const store = await cookies();
   const owned = await db.getBusinessByOwner({ email });
   store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned?.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });

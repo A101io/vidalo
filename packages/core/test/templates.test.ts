@@ -1,8 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { sendMail } from "../src/reporter/mail";
 import {
   baselineSummaryEmail,
   followUpEmail,
@@ -213,33 +209,21 @@ describe("email templates", () => {
     expect(t).toContain("Dit moet zijn: gesloten");
   });
 
-  it("html version exists for customer mails, in the brand's shell", () => {
+  it("html version exists for customer mails, in the Vidalo branding", () => {
     const html = (all.report as Mail).html;
-    expect(html).toContain("<a href=\"https://vidalo.io/dashboard\"");
-    expect(html).toContain("src=\"cid:vidalo-logo\"");
-    expect(html).toContain("KvK 42057858");
-    expect(html).not.toContain("Prijzen");
+    expect(html).toContain('<a href="https://vidalo.io/dashboard"');
+    expect(html).toContain('data-brand="vidalo"');
+    expect(html).toContain("A101 B.V.");
+    expect(html).toContain('<meta name="color-scheme" content="light">');
   });
-});
 
-describe("sendMail", () => {
-  it("brands a text-only mail and carries the logo inline", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "vidalo-mail-"));
-    const saved = { out: process.env.VIDALO_OUT_DIR, key: process.env.RESEND_API_KEY };
-    process.env.VIDALO_OUT_DIR = dir;
-    delete process.env.RESEND_API_KEY;
-    try {
-      const r = await sendMail({ to: "info@openingstijden.nl", subject: "Correctie", text: "Hallo,\n\nDe tijden kloppen niet." });
-      const eml = await readFile(r.file!, "utf8");
-      expect(eml).toContain("Content-Type: multipart/related");
-      expect(eml).toContain("Content-ID: <vidalo-logo>");
-      expect(eml).toContain("src=\"cid:vidalo-logo\"");
-      expect(eml).toContain("De tijden kloppen niet.");
-    } finally {
-      if (saved.out === undefined) delete process.env.VIDALO_OUT_DIR;
-      else process.env.VIDALO_OUT_DIR = saved.out;
-      if (saved.key !== undefined) process.env.RESEND_API_KEY = saved.key;
-      await rm(dir, { recursive: true, force: true });
-    }
+  it("branded html: headings, the colour dot, code blocks, nothing unescaped", async () => {
+    const { textToHtml } = await import("../src/reporter/templates");
+    const html = textToHtml("Hoi,\n\nStip: rood. AI stuurt klanten weg.\n\n1. Bevestig je gegevens\nAdres en telefoon.\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nA <b>&</b> B");
+    expect(html).toContain("background:#d41b44");
+    expect(html).toContain('<strong style="color:#111827;font-weight:700">1. Bevestig je gegevens</strong>');
+    expect(html).toMatch(/<pre[^>]*>User-agent: OAI-SearchBot\nAllow: \/<\/pre>/);
+    expect(html).not.toContain("<strong style=\"color:#111827;font-weight:700\">Hoi,");
+    expect(html).toContain("A &lt;b&gt;&amp;&lt;/b&gt; B");
   });
 });

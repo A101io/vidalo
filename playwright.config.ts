@@ -37,7 +37,6 @@ const serverEnv: Record<string, string> = {
   ...keyless,
   PUBLIC_BASE_URL: baseURL,
   VIDALO_COMING_SOON: mode === "gate" ? "1" : "0",
-  VIDALO_PREVIEW_BUTTON: mode === "gate" ? "1" : "0",
   VIDALO_PREVIEW_KEY: mode === "gate" ? "e2e-preview-key" : "",
 };
 if (mode === "stripe") {
@@ -62,7 +61,13 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `pnpm --filter @vidalo/web exec next dev --webpack --port ${port}`,
+        // E2E_SERVER=start runs the production build (`next build` first), as CI does:
+        // the Next 16 dev server reloads pages while it compiles, which aborts
+        // navigations when the suite runs in parallel.
+        command:
+          process.env.E2E_SERVER === "start"
+            ? `pnpm --filter @vidalo/web exec next start --port ${port}`
+            : `pnpm --filter @vidalo/web exec next dev --webpack --port ${port}`,
         url: `${baseURL}/api/health`,
         reuseExistingServer: false,
         timeout: 180_000,

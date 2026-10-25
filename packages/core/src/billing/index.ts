@@ -22,6 +22,8 @@ import type { BusinessRecord } from "../db/types.js";
 import { getDb, setBusinessStatus } from "../shared/db.js";
 import { log } from "../shared/log.js";
 
+export * from "./lifecycle.js";
+
 /** The parts of a Stripe event this module reads; no Stripe SDK needed in core. */
 export interface StripeEventLike {
   id: string;
@@ -37,6 +39,7 @@ export type BillingOutcome =
   | "resumed"
   | "now_active"
   | "churned"
+  | "synced"
   | "invoice_failed_logged"
   | "duplicate"
   | "no_business"
@@ -106,6 +109,25 @@ async function activate(business: BusinessRecord, session: Record<string, unknow
   await db.logEvent(business.id, "checkout.completed", { plan, sessionId: session.id, termsConsent: consent, email });
 }
 
+/**
+ * Cancel-at-period-end and pause as Stripe now has them. The app sets both
+ * itself (lifecycle.ts) and Stripe echoes them back here; a change made in
+ * the Stripe dashboard by support lands the same way. True when the row changed.
+ */
+async function syncOwnerChoices(business: BusinessRecord, o: Record<string, unknown>): Promise<boolean> {
+  const ts = (v: unknown) => (typeof v === "number" ? new Date(v * 1000).toISOString() : null);
+  const items = o.items as { data?: { current_period_end?: number }[] } | undefined;
+  const periodEnd = ts(o.current_period_end) ?? ts(items?.data?.[0]?.current_period_end);
+  const cancelAt = o.cancel_at_period_end === true ? (ts(o.cancel_at) ?? periodEnd) : ts(o.cancel_at);
+  const pause = o.pause_collection as { resumes_at?: number | null } | null | undefined;
+  const pauseUntil = pause ? ts(pause.resumes_at) : null;
+  const same = (a: string | null, b: string | null) => (a && b ? new Date(a).getTime() === new Date(b).getTime() : a === b);
+  if (same(cancelAt, business.cancelAt) && same(pauseUntil, business.pauseUntil)) return false;
+  await getDb().upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, cancelAt, pauseUntil });
+  await getDb().logEvent(business.id, "subscription.synced", { cancelAt, pauseUntil, subscriptionId: o.id });
+  return true;
+}
+
 export async function handleStripeEvent(event: StripeEventLike): Promise<BillingOutcome> {
   const db = getDb();
   const o = event.data.object;
@@ -155,6 +177,7 @@ async function apply(business: BusinessRecord, event: StripeEventLike): Promise<
       await db.logEvent(business.id, "invoice.payment_failed", { invoiceId: o.id, attempt: o.attempt_count ?? null });
       return "invoice_failed_logged";
     case "customer.subscription.updated": {
+      const synced = await syncOwnerChoices(business, o);
       const status = String(o.status);
       if (status === "unpaid" && business.status !== "paused" && business.status !== "churned") {
         await setBusinessStatus(business.id, "paused", { via: "stripe", reason: "unpaid", subscriptionId: o.id });
@@ -168,7 +191,7 @@ async function apply(business: BusinessRecord, event: StripeEventLike): Promise<
         await setBusinessStatus(business.id, "churned", { via: "stripe", reason: "canceled", subscriptionId: o.id });
         return "churned";
       }
-      return "ignored";
+      return synced ? "synced" : "ignored";
     }
     case "customer.subscription.deleted":
       await setBusinessStatus(business.id, "churned", { via: "stripe", reason: "subscription.deleted", subscriptionId: o.id });

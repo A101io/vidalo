@@ -8,30 +8,29 @@
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint",
     "stripe:setup": "node scripts/stripe-setup.mjs",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
-    "@vidalo/core": "workspace:*",
     "@opennextjs/cloudflare": "1.20.13",
-    "@supabase/ssr": "^0.5.2",
+    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.47.10",
+    "@vidalo/core": "workspace:*",
     "next": "16.4.2",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "stripe": "^17.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
-    "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2",
+    "@types/react": "19",
+    "@types/react-dom": "19",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3",
-    "wrangler": "4.149.0"
+    "wrangler": "4.151.3"
   }
 }

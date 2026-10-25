@@ -52,6 +52,8 @@ export function organizationLd(copy: CopyShape) {
       { "@type": "ContactPoint", contactType: "customer service", telephone: CONTACT.phone, email: CONTACT.support, availableLanguage: ["nl", "en"], url: `${SITE}/contact` },
       { "@type": "ContactPoint", contactType: "customer service", telephone: CONTACT.whatsapp, url: waHref(CONTACT.whatsapp), name: "WhatsApp", availableLanguage: ["nl", "en"] },
     ],
+    // The logo Google shows in results and the knowledge panel: square, at least 112px, crawlable (public/logo-512.png, rendered from app/icon.svg).
+    logo: { "@type": "ImageObject", url: `${SITE}/logo-512.png`, width: 512, height: 512 },
     description: copy.tagline,
     identifier: { "@type": "PropertyValue", propertyID: "KvK", value: OWN_BUSINESS.kvk },
     subjectOf: OWN_FACTS_URL,

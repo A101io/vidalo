@@ -8,6 +8,7 @@ import postgres, { type Sql } from "postgres";
 import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
+import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
   BusinessUpsert,
@@ -45,6 +46,7 @@ function mapFacts(row: Row): Facts {
     version: row.version as number,
     provisional: row.provisional as boolean,
     verifiedAt: row.verifiedAt instanceof Date ? row.verifiedAt.toISOString() : ((row.verifiedAt as string | null) ?? null),
+    ...(row.createdAt ? { createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt) } : {}),
   };
 }
 
@@ -71,6 +73,9 @@ function mapBusiness(row: Row): BusinessRecord {
     ownerVerifiedAt: (r.ownerVerifiedAt as string | null) ?? null,
     ownerVerifiedVia: (r.ownerVerifiedVia as string | null) ?? null,
     language: r.language === "en" ? "en" : "nl",
+    cancelAt: (r.cancelAt as string | null) ?? null,
+    pauseUntil: (r.pauseUntil as string | null) ?? null,
+    mailPrefs: normalizeMailPrefs(r.mailPrefs),
     createdAt: r.createdAt as string,
   };
 }
@@ -186,6 +191,7 @@ const mapChannel = (row: Row): Channel => {
     url: (r.url as string | null) ?? null,
     status: r.status as Channel["status"],
     lastSyncedAt: (r.lastSyncedAt as string | null) ?? null,
+    meta: (r.meta as Record<string, unknown> | null) ?? {},
   };
 };
 
@@ -262,6 +268,9 @@ export class PgDb implements Db {
     for (const k of keys) if (input[k] !== undefined) cols[k] = input[k];
     if (input.factsHostVerifiedAt !== undefined) cols.factsHostVerifiedAt = toDate(input.factsHostVerifiedAt);
     if (input.ownerVerifiedAt !== undefined) cols.ownerVerifiedAt = toDate(input.ownerVerifiedAt);
+    if (input.cancelAt !== undefined) cols.cancelAt = toDate(input.cancelAt);
+    if (input.pauseUntil !== undefined) cols.pauseUntil = toDate(input.pauseUntil);
+    if (input.mailPrefs !== undefined) cols.mailPrefs = this.sql.json(normalizeMailPrefs(input.mailPrefs) as never);
     const insertRow = { ...cols, slug, ...(input.id ? { id: input.id } : {}) } as Row;
     const updateCols = Object.keys(cols) as string[];
     const rows = updateCols.length
@@ -275,6 +284,7 @@ export class PgDb implements Db {
     const rows = await this.sql`
       select * from business
       where status in ('trial','active') and anniversary_day is not null
+        and (pause_until is null or pause_until <= now())
         and (anniversary_day = ${dayOfMonth}
              or (${dayOfMonth} = extract(day from (date_trunc('month', now()) + interval '1 month - 1 day'))::int and anniversary_day > ${dayOfMonth}))
       order by created_at`;
@@ -310,6 +320,19 @@ export class PgDb implements Db {
   }
 
   // --- facts ---
+  async listFacts(businessId: string): Promise<Facts[]> {
+    const rows = await this.sql`select * from facts where business_id = ${businessId} order by version`;
+    return rows.map(mapFacts);
+  }
+
+  async deleteBusiness(id: string): Promise<void> {
+    // Every table that refers to business has on delete cascade (0001, 0007); jobs keep the id in their payload.
+    await this.sql.begin(async (tx) => {
+      await tx`delete from job where done_at is null and payload->>'businessId' = ${id}`;
+      await tx`delete from business where id = ${id}`;
+    });
+  }
+
   async latestFacts(businessId: string): Promise<Facts | null> {
     const rows = await this.sql`select * from facts where business_id = ${businessId} order by version desc limit 1`;
     return rows[0] ? mapFacts(rows[0]) : null;
@@ -319,7 +342,7 @@ export class PgDb implements Db {
     const provisional = opts.provisional ?? data.provisional ?? true;
     const verifiedAt = opts.verifiedAt ?? data.verifiedAt ?? null;
     // Strip the row-level fields from the jsonb payload; they live in columns.
-    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, ...payload } = data as Facts;
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...payload } = data as Facts;
     const rows = await this.sql`
       insert into facts (business_id, version, provisional, verified_at, data)
       values (${businessId},
@@ -561,6 +584,11 @@ export class PgDb implements Db {
   async countWaitlist(): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from waitlist where unsubscribed_at is null`;
     return Number(row?.n ?? 0);
+  }
+
+  async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {
+    const rows = await this.sql`select email, language from waitlist where unsubscribed_at is null order by created_at, email`;
+    return rows.map((r) => ({ email: String(r.email), language: r.language === "en" ? "en" : "nl" }));
   }
 
   // --- channels ---

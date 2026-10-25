@@ -8,9 +8,12 @@ import {
   sendFollowUp,
   sendMonthlyReport,
   sendResolutionNotice,
+  sendFactsReconfirm,
   sendUnfixableNotice,
   sendWelcome,
+  sendOwnerText,
   factsPageUrl,
+  textToHtml,
 } from "@vidalo/core/reporter";
 import { getDb, runScan } from "../compat.js";
 import { log } from "../log.js";
@@ -56,9 +59,18 @@ export const followup: Handler<"followup"> = async (p) => {
   return { sent: r !== null, mode: r?.mode ?? null };
 };
 
+/** Owner mails queued as plain text get the branded HTML; mails to directories and websites stay plain letters signed by the owner. */
+const OWNER_TEXT_KINDS = new Set(["owner_instruction", "owner_reminder", "site_instruction"]);
+
 export const email: Handler<"email"> = async (p) => {
   if (!("template" in p) || p.template === undefined) {
-    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html: p.html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
+    // Owner mails go through the reporter, which checks the owner's mail preferences and uses the current address.
+    if (p.businessId && p.kind && OWNER_TEXT_KINDS.has(p.kind)) {
+      const r = await sendOwnerText(p.businessId, p.kind, { subject: p.subject, text: p.text, html: p.html ?? textToHtml(p.text) }, { findingId: p.findingId ?? null, fixId: p.fixId ?? null });
+      return { mode: r?.mode ?? null, id: r?.id ?? null };
+    }
+    const html = p.html ?? (p.kind && OWNER_TEXT_KINDS.has(p.kind) ? textToHtml(p.text) : undefined);
+    const r = await sendMail({ to: p.to, subject: p.subject, text: p.text, html, replyTo: p.replyTo, tags: p.kind ? { kind: p.kind } : undefined });
     if (p.businessId) await getDb().logEvent(p.businessId, `email.${p.kind ?? "raw"}`, { to: p.to, subject: p.subject, mode: r.mode, id: r.id, findingId: p.findingId ?? null, fixId: p.fixId ?? null });
     return { mode: r.mode, id: r.id };
   }
@@ -75,16 +87,21 @@ export const email: Handler<"email"> = async (p) => {
       return { mode: (await sendMonthlyReport(p.businessId, { scanRunId: p.scanRunId }))?.mode ?? null };
     case "followup":
       return { mode: (await sendFollowUp(p.businessId, p.day))?.mode ?? null };
+    case "reconfirm":
+      return { mode: (await sendFactsReconfirm(p.businessId))?.mode ?? null };
     case "directory_correction": {
       const db = getDb();
       const business = await db.getBusiness(p.businessId);
       if (!business) throw new Error(`business ${p.businessId} not found`);
-      const m = directoryCorrectionEmail(p.directory, p.listingUrl ?? null, p.diff, {
-        business: { name: business.name, place: business.place, ownerEmail: business.ownerEmail, kvk: business.kvk },
-        factsPageUrl: factsPageUrl(business),
-      });
+      const m = directoryCorrectionEmail(
+        p.directory,
+        p.listingUrl ?? null,
+        p.diff,
+        { business: { name: business.name, place: business.place, ownerEmail: business.ownerEmail, kvk: business.kvk }, factsPageUrl: factsPageUrl(business) },
+        p.reminder ? { reminderOf: p.firstSentAt ?? null } : {},
+      );
       const r = await sendMail({ to: p.to, subject: m.subject, text: m.text, replyTo: business.ownerEmail ?? undefined, tags: { kind: "directory_correction" } });
-      await db.logEvent(business.id, "email.directory_correction", { to: p.to, directory: p.directory, channelId: p.channelId ?? null, mode: r.mode, id: r.id });
+      await db.logEvent(business.id, "email.directory_correction", { to: p.to, directory: p.directory, channelId: p.channelId ?? null, reminder: p.reminder ?? false, mode: r.mode, id: r.id });
       return { mode: r.mode, id: r.id };
     }
     default:
