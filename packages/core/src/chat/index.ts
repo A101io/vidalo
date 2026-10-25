@@ -37,6 +37,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   lines.push(`- ${L.prijs.setup.name}: €${PRICES.setupEur} ${L.prijs.setup.unit}. ${L.prijs.setup.audience} ${L.prijs.setup.includes.join(" ")}`);
   lines.push(`- ${L.prijs.monitor.name}: €${PRICES.setupEur} ${L.prijs.setup.unit} + €${PRICES.monitorEurPerMonth} ${L.prijs.monitor.unit}. ${L.prijs.monitor.audience} ${L.prijs.monitor.includes.join(" ")}`);
   lines.push(L.prijs.sub);
+  lines.push(`- ${L.prijs.website.simple.name}: ${L.prijs.website.simple.price} ${L.prijs.website.simple.unit}; ${L.prijs.website.custom.name}: ${L.prijs.website.custom.price} ${L.prijs.website.custom.unit}. ${L.prijs.website.note}`);
   lines.push(nl ? "Betalen en opzeggen:" : "Paying and cancelling:");
   for (const f of copy.pricing.faq) lines.push(`- ${f.q} ${f.a}`);
   lines.push(nl ? "Veelgestelde vragen:" : "Frequently asked questions:");
