@@ -12,8 +12,9 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
 | Resend | Processor: email | Owner email, report links | US | DPF / SCCs | open |
-| Cloudflare | Processor: facts pages, DNS | Visitor IPs of facts pages | Global edge | DPF / SCCs | open |
-| Vercel (planned, web) | Processor: hosting | Visitor IPs, request logs | EU region selectable | DPF / SCCs | open: **not yet in the privacy statement** |
-| Fly.io or Railway (planned, worker) | Processor: background jobs | Everything the database holds, in transit | EU region selectable | SCCs | open: **not yet in the privacy statement** |
+| Cloudflare | Processor: hosting of web and worker (Workers, queue), facts pages, DNS, Turnstile | Visitor IPs and request data; everything the database holds, in transit; browser signals (Turnstile, on the free check and sign-in) | Global edge (US company) | DPF / SCCs | open |
+| Google Workspace | Processor: the vidalo.io mailbox (hello@, support@) | Whatever people mail us | EU/US | DPF / SCCs | open: part of the Workspace terms |
+| WhatsApp (Meta) | Contact channel on /contact | Messages people send us there | EU/US | WhatsApp's own terms | n/a: only if the visitor chooses WhatsApp |
+| Sources with an error (sites, directories) | Recipients of correction requests | The business's confirmed facts | NL/EU | n/a | n/a |
 
-Open: hosting is not chosen yet; once it is, add it to `copy.legal.privacy` and here.
+Hosting is Cloudflare (decided 13 Oct 2026); Vercel and Fly/Railway were never used. The public list is the privacy statement's "Met wie we gegevens delen" (`copy.legal.privacy`, 26 Oct 2026).

@@ -77,7 +77,7 @@ What the site promises a customer exists for Vidalo itself, from one record: `pa
 ## Legal
 | # | Item | Status |
 |---|---|---|
-| L1 | Terms, privacy, cookie statement from the De Boer Legal masters, NL + EN, at `/legal/*` | blocked: masters not in this environment (upload) + counsel review |
+| L1 | Terms, privacy, cookie statement, NL + EN, at `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`) | written, awaiting Julian's approval of the PR `claude/legal-final`: final texts from Sonable's counsel-reviewed set, adapted to Vidalo (Julian, 26 Oct 2026: no outside counsel in this phase). Verified on the local dev server 26 Oct 2026: `/voorwaarden`, `/privacy`, `/cookies`, `/en/terms`, `/en/privacy`, `/en/cookies` answer 200 with 18/20/6 sections, no "Concept" notice, no noindex, all three in `sitemap.xml`; footer links go to the same routes in each language; terms render as numbered articles (1.1, 6.3 a–e); no horizontal scroll at 375px; `pnpm -r typecheck`, `pnpm -r test` (315 core + 15 worker) and `pnpm e2e:mock` green. Not verified on production (needs a deploy). Launch blockers named in the PR: the retention purge job the privacy text promises is not built; the Stripe Terms/Privacy URLs (B3) |
 | L2 | Processors, records of processing, DPIA screening | written (`docs/processors.md`, `docs/records-of-processing.md`, `docs/legal-compliance-guidelines.md`) |
 
 ## Domains (J2)
