@@ -70,6 +70,11 @@ export default async function GooglePage({ searchParams }: { searchParams: Promi
             <button type="submit" name="channel" value="sms" className="btn-sm">
               {P.sms}
             </button>
+            {(env.whatsappCodes || phoneMock) && (
+              <button type="submit" name="channel" value="whatsapp" className="btn-sm">
+                {P.whatsapp}
+              </button>
+            )}
           </form>
           {sp.telefoon === "verstuurd" && (
             <form action={checkOwnerPhoneCode} className="mt-4 flex flex-wrap items-end gap-3">

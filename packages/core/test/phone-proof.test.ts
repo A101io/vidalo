@@ -5,6 +5,7 @@ import {
   PHONE_CODE_SENT,
   checkPhoneCode,
   defaultChannel,
+  isMobile,
   maskPhone,
   phoneCheckBlocked,
   phoneSendBlocked,
@@ -19,6 +20,11 @@ describe("ownership by phone code", () => {
   it("calls landlines and texts mobiles", () => {
     expect(defaultChannel("+31201234567")).toBe("call");
     expect(defaultChannel("+31612345678")).toBe("sms");
+  });
+
+  it("knows mobiles from landlines", () => {
+    expect(isMobile("+31612345678")).toBe(true);
+    expect(isMobile("+31201234567")).toBe(false);
   });
 
   it("masks all but the area code and the last two digits", () => {

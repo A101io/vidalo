@@ -97,4 +97,8 @@ export const env = {
     const serviceSid = read("TWILIO_VERIFY_SERVICE_SID");
     return accountSid && authToken && serviceSid ? { accountSid, authToken, serviceSid } : undefined;
   },
+  /** On once Vidalo's own WhatsApp sender is linked to the Verify service; without it Twilio falls back to SMS. */
+  get whatsappCodes(): boolean {
+    return read("TWILIO_VERIFY_WHATSAPP") === "1";
+  },
 };

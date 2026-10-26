@@ -2127,13 +2127,15 @@ export const copy = {
     permissions: "We vragen alleen toegang tot je bedrijfsprofiel, niet tot je e-mail of andere Google-diensten.",
     phone: {
       h2: "Of bevestig met de telefoon van je bedrijf",
-      intro: "We bellen of sms'en een code naar het telefoonnummer dat Google voor je bedrijf toont. Wie die code kan teruglezen, neemt de telefoon van het bedrijf op. Een vast nummer bellen we, een mobiel nummer krijgt een sms.",
+      intro: "We bellen of sms'en een code naar het telefoonnummer dat Google voor je bedrijf toont. Wie die code kan teruglezen, neemt de telefoon van het bedrijf op. Een vast nummer bellen we, een mobiel nummer krijgt een sms of een WhatsApp-bericht.",
       call: "Bel me met een code",
       sms: "Stuur een sms",
-      sent: { call: "We bellen je nu. Een stem leest de code voor.", sms: "De sms is onderweg." } as Record<string, string>,
+      whatsapp: "Stuur via WhatsApp",
+      sent: { call: "We bellen je nu. Een stem leest de code voor.", sms: "De sms is onderweg.", whatsapp: "Het WhatsApp-bericht is onderweg." } as Record<string, string>,
       codeLabel: "Code",
       confirm: "Bevestig",
       errors: {
+        no_mobile: "Het nummer dat Google toont is een vast nummer. Kies \"Bel me met een code\".",
         no_phone: "Google toont geen telefoonnummer voor je bedrijf. Mail support@vidalo.io, dan helpen we je verder.",
         too_many_sends: "Je hebt vandaag al drie codes gevraagd. Probeer het morgen opnieuw.",
         too_many_tries: "Te vaak een verkeerde code. Probeer het over een uur opnieuw.",

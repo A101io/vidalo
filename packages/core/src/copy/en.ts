@@ -2088,13 +2088,15 @@ export const en: CopyShape = {
     permissions: "We only ask for access to your Business Profile, not to your email or other Google services.",
     phone: {
       h2: "Or confirm with your business phone",
-      intro: "We call or text a code to the phone number Google shows for your business. Whoever can read that code back answers the business phone. A landline gets a call, a mobile number gets a text.",
+      intro: "We call or text a code to the phone number Google shows for your business. Whoever can read that code back answers the business phone. A landline gets a call, a mobile number gets a text or a WhatsApp message.",
       call: "Call me with a code",
       sms: "Send a text",
-      sent: { call: "We are calling you now. A voice reads out the code.", sms: "The text is on its way." } as Record<string, string>,
+      whatsapp: "Send via WhatsApp",
+      sent: { call: "We are calling you now. A voice reads out the code.", sms: "The text is on its way.", whatsapp: "The WhatsApp message is on its way." } as Record<string, string>,
       codeLabel: "Code",
       confirm: "Confirm",
       errors: {
+        no_mobile: "The number Google shows is a landline. Choose \"Call me with a code\".",
         no_phone: "Google shows no phone number for your business. Mail support@vidalo.io and we will help you further.",
         too_many_sends: "You have already asked for three codes today. Try again tomorrow.",
         too_many_tries: "Too many wrong codes. Try again in an hour.",

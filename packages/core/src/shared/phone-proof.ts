@@ -4,8 +4,9 @@
  *
  * The number is never typed by the owner: it is the one Google Places lists for
  * the business's place id, so only whoever answers the business's own phone can
- * read the code back. Twilio Verify rings it (landlines) or texts it (mobiles),
- * makes and stores the code, and checks it.
+ * read the code back. Twilio Verify rings it (landlines), texts it or sends it
+ * on WhatsApp (mobiles), makes and stores the code, and checks it. WhatsApp
+ * needs Vidalo's own WhatsApp sender in Twilio (TWILIO_VERIFY_WHATSAPP=1).
  *
  * Limits on top of Twilio's own: 3 codes per business per 24 hours, 5 tries
  * per business per hour, counted from the event log.
@@ -13,7 +14,8 @@
 import { normalizePhone } from "../scanner/normalize.js";
 import type { EventRow } from "../db/types.js";
 
-export type PhoneChannel = "call" | "sms";
+export type PhoneChannel = "call" | "sms" | "whatsapp";
+export const PHONE_CHANNELS: PhoneChannel[] = ["call", "sms", "whatsapp"];
 
 export interface TwilioVerifyConfig {
   accountSid: string;
@@ -30,8 +32,12 @@ export const MOCK_PHONE_CODE = "123456";
 const MOCK_PHONE = "+31201234567";
 
 /** Dutch mobiles start with 6 after +31; everything else gets a call. */
+export function isMobile(phone: string): boolean {
+  return phone.startsWith("+316");
+}
+
 export function defaultChannel(phone: string): PhoneChannel {
-  return phone.startsWith("+316") ? "sms" : "call";
+  return isMobile(phone) ? "sms" : "call";
 }
 
 /** "+31201234567" -> "020 ••• ••67": enough to recognise, not enough to copy. */

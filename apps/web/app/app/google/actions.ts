@@ -6,7 +6,9 @@ import {
   PHONE_CODE_CHECKED,
   PHONE_CODE_SENT,
   checkPhoneCode,
+  PHONE_CHANNELS,
   defaultChannel,
+  isMobile,
   isVerifiedOwner,
   maskPhone,
   phoneCheckBlocked,
@@ -40,8 +42,10 @@ export async function sendOwnerPhoneCode(formData: FormData) {
   if (phoneSendBlocked(await db.listEvents(business.id, 200))) return back("telefoon=fout&reden=too_many_sends");
   const phone = await businessPhone(business.googlePlaceId);
   if (!phone) return back("telefoon=fout&reden=no_phone");
-  const asked = String(formData.get("channel") ?? "");
-  const channel: PhoneChannel = asked === "call" || asked === "sms" ? asked : defaultChannel(phone);
+  const asked = String(formData.get("channel") ?? "") as PhoneChannel;
+  const channel: PhoneChannel = PHONE_CHANNELS.includes(asked) && (asked !== "whatsapp" || env.whatsappCodes || !env.realEngines) ? asked : defaultChannel(phone);
+  // SMS and WhatsApp reach mobiles only; a landline gets the call.
+  if (channel !== "call" && !isMobile(phone)) return back("telefoon=fout&reden=no_mobile");
   const ok = await sendPhoneCode(phone, channel, (await getI18n()).lang, phoneOpts()).catch(() => false);
   await db.logEvent(business.id, PHONE_CODE_SENT, { channel, ok, phone: maskPhone(phone), userId: session.userId });
   return back(ok ? `telefoon=verstuurd&via=${channel}` : "telefoon=fout&reden=send_failed");
