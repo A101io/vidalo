@@ -7,6 +7,7 @@ import { type BusinessRecord, type Db } from "../db";
 import { getDb } from "../shared/db.js";
 import { generatePrompts } from "../prompts";
 import { normalizeWebsite, slugify } from "./normalize";
+import { scanLang, withCountry } from "../shared/country";
 import { draftProvisionalFacts, resolveBusiness, sectorForCandidate, type BusinessCandidate } from "./resolve";
 
 export interface PrepareOptions {
@@ -35,11 +36,15 @@ export async function prepareBusiness(opts: PrepareOptions): Promise<Prepared> {
   const existing = await db.getBusiness(slug);
   const candidate = opts.candidate ?? (await resolveBusiness(opts.name, opts.place))[0]!;
 
+  const country = existing?.country ?? candidate.country;
   const business = await db.upsertBusiness({
     id: existing?.id,
     slug,
     name: opts.name,
     place: opts.place,
+    country,
+    // A business abroad reads its report and account in English until the owner picks otherwise.
+    language: existing?.language ?? scanLang(country),
     domain: existing?.domain ?? normalizeWebsite(candidate.website),
     kvk: existing?.kvk ?? candidate.kvk,
     googlePlaceId: existing?.googlePlaceId ?? candidate.placeId,
@@ -51,6 +56,7 @@ export async function prepareBusiness(opts: PrepareOptions): Promise<Prepared> {
     const draft = await draftProvisionalFacts({ ...candidate, name: opts.name }, { place: opts.place });
     facts = await db.insertFacts(business.id, { ...draft, place: opts.place }, { provisional: true });
   }
+  facts = withCountry(facts, business);
   let prompts = await db.listPrompts(business.id, { activeOnly: true });
   if (!prompts.length) prompts = await db.insertPrompts(business.id, generatePrompts(facts, { sector: business.sector }));
 

@@ -206,9 +206,9 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             {v.plan.note && <p className="text-[13px] text-muted">{v.plan.note}</p>}
           </div>
           <div data-motion="stagger" className="flex flex-col gap-3 lg:col-span-5 print:hidden">
-            {(sp.betaling === "geannuleerd" || sp.betaling === "fout") && (
+            {(sp.betaling === "geannuleerd" || sp.betaling === "fout" || sp.betaling === "buitenland") && (
               <p className="rounded-xl border-[1.5px] border-line bg-white px-4 py-3 text-[14px] text-ink-2" aria-live="polite">
-                {sp.betaling === "fout" ? copy.checkout.error : copy.checkout.cancelled}
+                {sp.betaling === "fout" ? copy.checkout.error : sp.betaling === "buitenland" ? copy.checkout.abroad : copy.checkout.cancelled}
               </p>
             )}
             <form action="/api/checkout" method="post">

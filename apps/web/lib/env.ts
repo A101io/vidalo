@@ -67,6 +67,14 @@ export const env = {
   get stripePriceMonitor() {
     return read("STRIPE_PRICE_MONITOR");
   },
+  /**
+   * "1" = Stripe Tax works out the VAT per customer (automatic_tax): 21% in the Netherlands, reverse
+   * charge for an EU business with a valid VAT number, none outside the EU. Needs Stripe Tax set up on
+   * the account (origin address, NL registration). Off = the fixed 21% rate below, Dutch businesses only.
+   */
+  get stripeAutomaticTax() {
+    return read("VIDALO_STRIPE_TAX") === "1";
+  },
   /** The 21% BTW tax rate (scripts/stripe-setup.mjs). Prices are excl. btw, so live checkout refuses without it. */
   get stripeTaxRateId() {
     return read("STRIPE_TAX_RATE_ID");

@@ -57,6 +57,7 @@ function mapBusiness(row: Row): BusinessRecord {
     slug: r.slug as string,
     name: r.name as string,
     place: r.place as string,
+    country: (r.country as string | null) ?? "NL",
     domain: (r.domain as string | null) ?? null,
     kvk: (r.kvk as string | null) ?? null,
     googlePlaceId: (r.googlePlaceId as string | null) ?? null,
@@ -262,7 +263,7 @@ export class PgDb implements Db {
     const slug = input.slug ?? slugify(input.name, input.place);
     const cols: Row = {};
     const keys: (keyof BusinessUpsert)[] = [
-      "name", "place", "domain", "kvk", "googlePlaceId", "sector", "plan", "status", "ownerEmail", "ownerUserId",
+      "name", "place", "country", "domain", "kvk", "googlePlaceId", "sector", "plan", "status", "ownerEmail", "ownerUserId",
       "stripeCustomerId", "stripeSubscriptionId", "factsHost", "anniversaryDay", "ownerVerifiedVia", "language",
     ];
     for (const k of keys) if (input[k] !== undefined) cols[k] = input[k];

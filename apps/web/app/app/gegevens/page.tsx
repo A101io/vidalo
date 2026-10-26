@@ -3,6 +3,7 @@ import { requireVerifiedOwner } from "@/lib/owner";
 import { loadDashboard } from "@/lib/reads";
 import { dateShort } from "@/lib/format";
 import { FactsForm } from "./FactsForm";
+import { countryOptions } from "@vidalo/core/shared";
 
 export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string }> }) {
   const sp = await searchParams;
@@ -45,7 +46,7 @@ export default async function FactsPage({ searchParams }: { searchParams: Promis
         )}
         {sp.fout === "1" && <p className="mt-3 text-[14px] text-rood">{copy.errors.generic}</p>}
       </header>
-      <FactsForm facts={initial} lang={lang} />
+      <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} />
     </div>
   );
 }

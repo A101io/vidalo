@@ -27,16 +27,17 @@
     "scan": "tsx src/cli/scan.ts"
   },
   "dependencies": {
-    "postgres": "^3.4.5",
-    "zod": "^3.23.8",
-    "openai": "^4.73.0",
     "@google/generative-ai": "^0.21.0",
-    "nanoid": "^5.0.9"
+    "libphonenumber-js": "^1.13.15",
+    "nanoid": "^5.0.9",
+    "openai": "^4.73.0",
+    "postgres": "^3.4.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^22.10.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8",
-    "@types/node": "^22.10.1"
+    "vitest": "^2.1.8"
   }
 }

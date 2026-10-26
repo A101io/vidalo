@@ -4,7 +4,7 @@
  */
 import OpenAI from "openai";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
-import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
+import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
 import { withTimeout } from "../util";
 
 const MODEL = () => process.env.CHATGPT_MODEL ?? "gpt-4.1-mini";
@@ -33,14 +33,14 @@ export function openaiClient(): OpenAI {
 export const chatgptEngine: EngineClient = {
   engine: "chatgpt",
   available: () => Boolean(process.env.OPENAI_API_KEY),
-  async ask(promptNl: string, _ctx: AskContext): Promise<EngineAnswer> {
+  async ask(promptNl: string, ctx: AskContext): Promise<EngineAnswer> {
     const model = MODEL();
     const res = await withTimeout(
       openaiClient().responses.create({
         model,
-        instructions: SYSTEM_NL,
+        instructions: systemFor(ctx.business.country),
         input: promptNl,
-        tools: [{ type: "web_search_preview", user_location: { type: "approximate", country: "NL" }, search_context_size: "low" }],
+        tools: [{ type: "web_search_preview", user_location: { type: "approximate", country: ctx.business.country ?? "NL" }, search_context_size: "low" }],
         temperature: 0.7,
       }),
       ENGINE_TIMEOUT_MS,

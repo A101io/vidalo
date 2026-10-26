@@ -7,6 +7,7 @@
  * Mock mode (VIDALO_MOCK=1 or no keys) runs the whole pipeline offline with
  * deterministic synthetic answers.
  */
+import { withCountry } from "../shared/country";
 import { ENGINES, visibilityFor, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
@@ -174,8 +175,9 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
 
   const business = await db.getBusiness(opts.businessId);
   if (!business) throw new Error(`business ${opts.businessId} not found`);
-  const facts = await db.latestFacts(business.id);
-  if (!facts) throw new Error(`business ${business.id} has no facts yet`);
+  const stored = await db.latestFacts(business.id);
+  if (!stored) throw new Error(`business ${business.id} has no facts yet`);
+  const facts = withCountry(stored, business);
   const prompts = await loadPrompts(db, business.id, facts, opts.kind, business.sector, opts.promptIds);
   if (!prompts.length) throw new Error(`business ${business.id} has no prompts to scan`);
 
@@ -349,8 +351,10 @@ export async function buildSnapshot(scanRunId: string, dbOverride?: Db): Promise
   const db = dbOverride ?? getDb();
   const scanRun = await db.getScanRun(scanRunId);
   if (!scanRun || scanRun.status !== "done") return null;
-  const facts = await db.latestFacts(scanRun.businessId);
-  if (!facts) return null;
+  const business = await db.getBusiness(scanRun.businessId);
+  const stored = await db.latestFacts(scanRun.businessId);
+  if (!business || !stored) return null;
+  const facts = withCountry(stored, business);
   const samples = await db.listSamples(scanRunId);
   const claims = await db.listClaims(samples.map((s) => s.id));
   const prompts = await db.listPrompts(scanRun.businessId);
@@ -380,8 +384,9 @@ export async function buildReport(scanRunId: string, dbOverride?: Db): Promise<S
   if (!scanRun) throw new Error(`scan_run ${scanRunId} not found`);
   const business = await db.getBusiness(scanRun.businessId);
   if (!business) throw new Error(`business ${scanRun.businessId} not found`);
-  const facts = await db.latestFacts(business.id);
-  if (!facts) throw new Error(`business ${business.id} has no facts`);
+  const stored = await db.latestFacts(business.id);
+  if (!stored) throw new Error(`business ${business.id} has no facts`);
+  const facts = withCountry(stored, business);
   const samples = await db.listSamples(scanRunId);
   const claims = await db.listClaims(samples.map((s) => s.id));
   const prompts = await db.listPrompts(business.id);

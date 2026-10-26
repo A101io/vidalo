@@ -634,6 +634,7 @@ export const copy = {
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
+        { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple doen we wel. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
         { q: "Wat als AI mijn concurrent noemt?", a: "Dat kunnen we niet verbieden. Wel zorgen we dat de AI over jou de juiste feiten heeft, zodat je niet wegvalt omdat het denkt dat je dicht bent of iets niet doet." },
       ],
     },
@@ -1655,6 +1656,7 @@ export const copy = {
   checkout: {
     mockNotice: "Betaling gesimuleerd (geen Stripe-sleutel ingesteld).",
     cancelled: "Je betaling is niet afgerond. Er is niets afgeschreven. Je kunt het hieronder opnieuw proberen.",
+    abroad: "Betalen voor een bedrijf buiten Nederland kan nog niet. Er is niets afgeschreven. Mail support@vidalo.io, dan zetten we het voor je klaar.",
     error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op support@vidalo.io.",
     productSetup: "Vidalo Goed zetten (eenmalig)",
     productMonitor: "Vidalo Goed houden (per maand)",
@@ -1673,7 +1675,7 @@ export const copy = {
     faqTitle: "Betalen en opzeggen",
     faq: [
       { q: "Hoe betaal ik?", a: "Met iDEAL, creditcard of automatische incasso (SEPA). Je betaalt via Stripe; wij zien je betaalgegevens niet." },
-      { q: "Zijn de prijzen inclusief btw?", a: "Nee. Alle prijzen zijn exclusief 21% btw. Je krijgt bij elke betaling een factuur met de btw apart vermeld, met je btw-nummer als je dat invult." },
+      { q: "Zijn de prijzen inclusief btw?", a: "Nee. Alle prijzen zijn exclusief btw; voor een bedrijf in Nederland is dat 21%. Je krijgt bij elke betaling een factuur met de btw apart vermeld, met je btw-nummer als je dat invult." },
       { q: "Hoe zeg ik op?", a: "Wanneer je wilt, onder ‘Abonnement’ in je account. Er is geen opzegtermijn; de lopende maand loopt af." },
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
@@ -1970,6 +1972,8 @@ export const copy = {
       place: "Plaats",
       address: "Adres",
       postcode: "Postcode",
+      country: "Land",
+      countryHint: "Bepaalt in welke taal we de AI-systemen vragen. Buiten Nederland is dat Engels, en slaan we de Nederlandse gidsen over.",
       phone: "Telefoonnummer",
       email: "E-mailadres",
       website: "Website",

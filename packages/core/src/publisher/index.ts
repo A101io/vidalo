@@ -8,6 +8,7 @@
  *   ensureFactsHost(businessId)   pick feiten.{domain} or the fallback host
  *   discoverDirectories(businessId) find listings in the NL directories → channels
  */
+import { hasDirectorySync } from "../shared/country.js";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Channel, Facts } from "../types.js";
@@ -134,6 +135,8 @@ export async function discoverDirectories(businessId: string): Promise<Channel[]
   const db = getDb();
   const business = await db.getBusiness(businessId);
   if (!business) throw new Error(`business ${businessId} not found`);
+  // The directories are Dutch; a business abroad is not listed there.
+  if (!hasDirectorySync(business.country)) return [];
   const hits = await findAllListings(business);
   const known = await db.listChannels(business.id);
   const channels: Channel[] = [];
@@ -213,7 +216,7 @@ export async function syncAllChannels(businessId: string, opts: { facts?: Facts;
   const facts = opts.facts ?? (await db.latestFacts(businessId));
   if (!facts) throw new Error(`business ${businessId} has no facts yet`);
   await ensurePlatformChannels(businessId);
-  let channels = (await db.listChannels(businessId)).filter((c) => c.type !== "facts_page");
+  let channels = (await db.listChannels(businessId)).filter((c) => c.type !== "facts_page" && (c.type !== "directory" || hasDirectorySync(business.country)));
   if (opts.channelIds) channels = channels.filter((c) => opts.channelIds!.includes(c.id));
 
   const results: SyncResult[] = [];

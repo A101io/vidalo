@@ -61,9 +61,11 @@ async function serp(params: Record<string, string>): Promise<SerpResponse> {
 export const googleAiEngine: EngineClient = {
   engine: "google_ai",
   available: () => Boolean(process.env.SERPAPI_KEY),
-  async ask(promptNl: string, _ctx: AskContext): Promise<EngineAnswer> {
+  async ask(promptNl: string, ctx: AskContext): Promise<EngineAnswer> {
     let cost = SERPAPI_SEARCH_CENTS;
-    const first = await serp({ engine: "google", q: promptNl, hl: "nl", gl: "nl", google_domain: "google.nl" });
+    const country = ctx.business.country ?? "NL";
+    const local: Record<string, string> = country === "NL" ? { hl: "nl", gl: "nl", google_domain: "google.nl" } : { hl: "en", gl: country.toLowerCase() };
+    const first = await serp({ engine: "google", q: promptNl, ...local });
     let overview = first.ai_overview;
     if (overview?.page_token && !overview.text_blocks) {
       cost += SERPAPI_SEARCH_CENTS;
