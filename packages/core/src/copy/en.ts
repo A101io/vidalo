@@ -768,7 +768,7 @@ export const en: CopyShape = {
           p: [
             "You confirm the Details of your business yourself. You warrant that they are correct, that you may have them published, and that you will tell us when something changes.",
             "We publish and send only Details you have confirmed. Every change becomes a new version, which you confirm.",
-            "Before we record your Details, publish them or ask others for something on behalf of your business, we ask you to show that you manage the business. Your Account shows how. We may change that method, for example when another party changes its rules. If the proof does not succeed, those parts do not start.",
+            "Before we record your Details, publish them or ask others for something on behalf of your business, we ask you to show that you manage the business: with Google or with a code via the business's phone number. Your Account shows how. We may change those methods, for example when another party changes its rules. If the proof does not succeed, those parts do not start.",
             "An email address alone does not prove that you manage a business. Until there is proof, you can use the free check and your reports, but your Details are not published.",
             "You allow us to send correction requests on behalf of your business to sources containing an error, and to update your Google Business Profile or another profile if you connect it to your Account. We use only Details you have confirmed. You withdraw that permission by disconnecting the profile or emailing us.",
             "You remain responsible for your own website, your profiles with other parties and your arrangements with those parties.",
@@ -988,7 +988,8 @@ export const en: CopyShape = {
           p: [
             "Before we publish a business's details or ask for something on its behalf, you have to show that you manage the business. An email address alone is not proof.",
             [
-              "Data: at present we do this with your Google account. Google then gives us a number for your account and which business profiles you manage. If it matches, we keep when the proof was given and the access key Google gives us, so we can update your business profile. We never see your password.",
+              "With Google: Google gives us a number for your account and which business profiles you manage. If it matches, we keep when the proof was given and the access key Google gives us, so we can update your business profile. We never see your password.",
+              "With a code by phone: we call or text a code to the phone number Google Maps lists for the business; you do not type that number yourself. This goes through Twilio, which processes the number, the code and the details of the call or message. We keep only a partly hidden number (such as 020 ••• ••67), whether the code was right, when, and who asked.",
               "Basis: the performance of the agreement with you.",
               "Retention: as long as your account exists, or until you disconnect Google.",
             ],
@@ -1070,6 +1071,7 @@ export const en: CopyShape = {
               "Resend: sending our emails; United States.",
               "Google: our mailbox (Google Workspace), business details from Google Maps, Gemini, signing in with Google and your business profile; EU and United States.",
               "OpenAI: ChatGPT for the checks, and the assistant on our website; United States.",
+              "Twilio: calling or texting the code with which you show that you manage the business; United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
               "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",

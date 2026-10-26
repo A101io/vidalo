@@ -788,7 +788,7 @@ export const copy = {
           p: [
             "De Gegevens over je bedrijf bevestig je zelf. Je staat ervoor in dat ze kloppen, dat je ze mag laten publiceren en dat je ons laat weten als er iets verandert.",
             "We publiceren en versturen alleen Gegevens die jij bevestigd hebt. Elke wijziging wordt een nieuwe versie, die jij bevestigt.",
-            "Voordat we je Gegevens vastleggen, publiceren of namens je bedrijf iets aan anderen vragen, vragen we je aan te tonen dat je het bedrijf beheert. Hoe dat gaat, zie je in je Account. We kunnen die manier veranderen, bijvoorbeeld als een andere partij haar regels wijzigt. Lukt het bewijs niet, dan starten die onderdelen niet.",
+            "Voordat we je Gegevens vastleggen, publiceren of namens je bedrijf iets aan anderen vragen, vragen we je aan te tonen dat je het bedrijf beheert: met Google of met een code via het telefoonnummer van het bedrijf. Hoe dat gaat, zie je in je Account. We kunnen die manieren veranderen, bijvoorbeeld als een andere partij haar regels wijzigt. Lukt het bewijs niet, dan starten die onderdelen niet.",
             "Een e-mailadres alleen bewijst niet dat je een bedrijf beheert. Zolang het bewijs ontbreekt, kun je de gratis controle en je rapporten gebruiken, maar worden je Gegevens niet gepubliceerd.",
             "Je geeft ons toestemming om namens je bedrijf correctieverzoeken te sturen naar bronnen met een fout, en om je Google-bedrijfsprofiel of een ander profiel bij te werken als je dat aan je Account koppelt. We gebruiken daarvoor alleen Gegevens die jij bevestigd hebt. Je trekt die toestemming in door de koppeling te verbreken of ons te mailen.",
             "Je blijft zelf verantwoordelijk voor je eigen website, je profielen bij andere partijen en de afspraken die je met die partijen hebt.",
@@ -1008,7 +1008,8 @@ export const copy = {
           p: [
             "Voordat we gegevens van een bedrijf publiceren of namens dat bedrijf iets vragen, moet je aantonen dat je het bedrijf beheert. Een e-mailadres alleen is geen bewijs.",
             [
-              "Gegevens: nu doen we dat met je Google-account. We krijgen dan van Google een nummer voor je account en welke bedrijfsprofielen je beheert. Klopt het, dan bewaren we wanneer het bewijs is geleverd en de toegangssleutel die Google ons geeft, zodat we je bedrijfsprofiel kunnen bijwerken. Je wachtwoord zien we nooit.",
+              "Met Google: we krijgen van Google een nummer voor je account en welke bedrijfsprofielen je beheert. Klopt het, dan bewaren we wanneer het bewijs is geleverd en de toegangssleutel die Google ons geeft, zodat we je bedrijfsprofiel kunnen bijwerken. Je wachtwoord zien we nooit.",
+              "Met een code per telefoon: we bellen of sms'en een code naar het telefoonnummer dat Google Maps voor het bedrijf vermeldt; dat nummer typ je niet zelf. Dat gaat via Twilio, dat het nummer, de code en de gegevens van de oproep of het bericht verwerkt. Wij bewaren alleen een deels afgeschermd nummer (zoals 020 ••• ••67), of de code klopte, wanneer, en wie het vroeg.",
               "Grondslag: de uitvoering van de overeenkomst met jou.",
               "Hoe lang: zolang je account bestaat, of tot je de koppeling met Google verbreekt.",
             ],
@@ -1090,6 +1091,7 @@ export const copy = {
               "Resend: het versturen van onze e-mails; Verenigde Staten.",
               "Google: onze mailbox (Google Workspace), bedrijfsgegevens uit Google Maps, Gemini, inloggen met Google en je bedrijfsprofiel; EU en Verenigde Staten.",
               "OpenAI: ChatGPT voor de controles, en de assistent op onze website; Verenigde Staten.",
+              "Twilio: het bellen of sms'en van de code waarmee je aantoont dat je het bedrijf beheert; Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
               "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
