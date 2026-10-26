@@ -12,6 +12,7 @@ const ROUTES: { route: string; priority: number; changeFrequency: "weekly" | "mo
   { route: "/waarom", priority: 0.8, changeFrequency: "monthly" },
   { route: "/straks", priority: 0.7, changeFrequency: "monthly" },
   { route: "/feiten", priority: 0.6, changeFrequency: "monthly" },
+  { route: "/contact", priority: 0.4, changeFrequency: "yearly" },
   // The cookie statement describes the code, so it is never a draft.
   { route: "/cookies", priority: 0.2, changeFrequency: "yearly" },
   ...SECTOR_SLUGS.map((slug) => ({ route: `/vak/${slug}`, priority: 0.7, changeFrequency: "monthly" as const })),

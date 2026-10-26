@@ -635,10 +635,10 @@ export const en: CopyShape = {
       lang: "EN",
       columns: [
         { title: "Product", links: [{ label: "How it works", href: "/hoe-het-werkt" }, { label: "Why", href: "/waarom" }, { label: "AI agents and OKF", href: "/straks" }, { label: "Example report", href: "/#rapport" }, { label: "Pricing", href: "/prijzen" }, { label: "By trade", href: "/#vak" }] },
-        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
+        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · Prices excl. VAT",
+      legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · +31 85 109 1393 · Prices excl. VAT",
       copyright: "© 2026 Vidalo. All rights reserved.",
       reportNote: "This report link works for 30 days.",
     },
@@ -682,6 +682,19 @@ export const en: CopyShape = {
       h1: "Soon assistants will talk to each other",
       intro: "What changes when AI assistants do not just answer but also arrange things, and which agreements are being made for it now. Without jargon.",
     },
+    contact: {
+      crumb: "Contact",
+      title: "Contact Vidalo: WhatsApp, call or email",
+      description: "Message, call or email Vidalo. WhatsApp and phone on working days from 09:00 to 17:00; we answer email within two working days.",
+      h1: "Contact",
+      intro: "There is a small team behind Vidalo. You simply message, call or email us; no ticket number, no queue.",
+      whatsapp: { h: "WhatsApp", p: "The fastest way. Send a message; on working days between 09:00 and 17:00 we usually reply within the hour.", button: "Send a WhatsApp message" },
+      phone: { h: "Call", p: "Working days from 09:00 to 17:00. If you cannot reach us, send a message and we call you back.", button: "Call us" },
+      mail: { h: "Email", p: "For questions about Vidalo. About your account, a report or a payment, email support; we answer within two working days.", button: "Email us", supportLabel: "Support" },
+      include: { h: "Useful to include", items: ["The name and town of your business.", "If it is about a report: the link to that report.", "What you expected, and what happened instead."] },
+      never: "Never send a password or payment detail. We will never ask for those.",
+      company: "Our company details, our address and our KvK number are at the foot of this page. Post is welcome at that address; a message is faster.",
+    },
     home_crumb: "Vidalo",
   },
 
@@ -689,7 +702,7 @@ export const en: CopyShape = {
     draft: true,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
     updated: "Last updated: 9 October 2026",
-    contact: "Questions? Email us at hello@vidalo.io.",
+    contact: "Questions? Email us at hello@vidalo.io or call +31 85 109 1393.",
     terms: {
       title: "Terms and conditions",
       intro: "These terms apply to every check and every subscription from Vidalo, a trade name of A101 B.V. This is a translation; the Dutch text is the binding version.",
@@ -751,7 +764,7 @@ export const en: CopyShape = {
       label: "A chat field in which customer questions are typed, and which becomes the Vidalo logo",
       questions: ["Is the baker open on Sunday?", "How much for a haircut?", "Do they deliver in Haarlem?"],
     },
-    contact: "Questions? Email us at",
+    contact: { lead: "Questions? Message, call or email us.", whatsapp: "WhatsApp", phone: "Call", mail: "Email", more: "All contact details" },
     list: {
       h2: "Hear when we open",
       label: "Your email address",
@@ -1743,6 +1756,11 @@ export const en: CopyShape = {
     sent: "We have sent you a login link. Check your inbox.",
     mockHint: "No Supabase keys set: you are logged straight into the demo environment.",
     noBusiness: "We found no business for this email address. Start with a free check.",
+    rateLimited: "You asked for a login link a moment ago. Check your inbox, or try again in a few minutes.",
+    signedInH1: "You are logged in",
+    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Start with a free check and have the report emailed to this address: then you will find your business here.`,
+    startCheck: "Start a free check",
+    otherEmail: "Another email address? Log out",
   },
 
   dashboard: {

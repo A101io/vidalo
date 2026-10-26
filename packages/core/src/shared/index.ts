@@ -8,6 +8,7 @@ export * from "./own.js";
 export * from "./canonical.js";
 export * from "./origin.js";
 export * from "./waitlist.js";
+export * from "./contact.js";
 export * from "./my-data.js";
 export * from "./turnstile.js";
 export * from "./scan-limit.js";

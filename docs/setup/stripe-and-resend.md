@@ -152,8 +152,9 @@ Proof, not the dashboard: the business's event log has `checkout.completed` with
    EMAIL_FROM=Vidalo <controle@vidalo.io>
    ```
 4. Sign-in mail through Resend too. Supabase's built-in mailer sends only a few mails per hour, from Supabase's own address. https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/smtp, Custom SMTP: host `smtp.resend.com`, port `465`, user `resend`, password the same `re_` key, sender `inloggen@vidalo.io`, name `Vidalo`.
+5. Branded sign-in mail. https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/templates → Magic link: subject `Je inloglink voor Vidalo`, body the whole of `docs/brand/supabase-magic-link.html`.
 
-The code is ready: `packages/core/src/reporter/mail.ts` sends through Resend when `RESEND_API_KEY` is set and `VIDALO_MOCK` is not `1`; every template is in `packages/core/src/reporter/templates.ts`. E-mails are Dutch only for now.
+The code is ready: `packages/core/src/reporter/mail.ts` sends through Resend when `RESEND_API_KEY` is set and `VIDALO_MOCK` is not `1`; every template is in `packages/core/src/reporter/templates.ts`, and every mail goes out in the brand's shell with the logo attached inline (`textToHtml`; logo rebuilt by `node scripts/brand/email-logo.mjs`). E-mails are Dutch only for now.
 
 Proof: a report mail and a sign-in mail arrive at Julian's address, and Resend's log shows both as delivered.
 
