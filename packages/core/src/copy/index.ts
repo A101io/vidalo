@@ -630,7 +630,7 @@ export const copy = {
         { q: "Ik heb toch een website?", a: "AI leest die als één bron van vele. De boekwinkel die “permanent gesloten” werd genoemd had ook een website." },
         { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij herstellen de bronnen waar AI uit put, zodat ze allemaal hetzelfde zeggen." },
         { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie herstellen we meestal binnen weken. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
-        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer inloggen bij Google. Geen domein? Dan regelen wij er een." },
+        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een." },
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
@@ -1769,7 +1769,7 @@ export const copy = {
     failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op support@vidalo.io.",
     receipt: (amount: string, email: string | null) => `Je betaalde ${amount} incl. btw.${email ? ` De factuur staat in je mail (${email}).` : ""}`,
     steps: [
-      { title: "Log één keer in bij Google", body: "Met het account van je Google-bedrijfsprofiel. Zo weten we dat jij de eigenaar bent.", href: "/app/google", cta: "Inloggen bij Google" },
+      { title: "Laat zien dat jij de eigenaar bent", body: "Log in met het account van je Google-bedrijfsprofiel, of vraag een code via het telefoonnummer van je bedrijf.", href: "/app/google", cta: "Eigenaar bevestigen" },
       { title: "Bevestig je gegevens", body: "Controleer adres, telefoon, openingstijden en wat je wel en niet doet.", href: "/app/gegevens", cta: "Gegevens bevestigen" },
       { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein, of laat Vidalo een domein registreren.", href: "/app/domein", cta: "Domein instellen" },
       { title: "Wacht op de eerste controle", body: "Daarna krijg je elke maand een rapport. Je hoeft niets te installeren.", href: "/app", cta: "Naar je overzicht" },
@@ -1881,7 +1881,7 @@ export const copy = {
     ownerLabel: "Eigenaar",
     ownerVerified: (date: string) => `Bevestigd met Google op ${date}`,
     ownerNotVerified: "Nog niet bevestigd met Google",
-    verifyNow: "Bevestig met Google",
+    verifyNow: "Bevestig dat jij de eigenaar bent",
     logout: "Uitloggen",
     /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
     myData: {
@@ -2120,11 +2120,30 @@ export const copy = {
     intro: "Log één keer in met het Google-account van je bedrijfsprofiel. Zo weten we zeker dat jij de eigenaar bent, en kunnen we je openingstijden, telefoonnummer en website lezen en bijwerken.",
     button: "Inloggen bij Google",
     verified: (date: string) => `Eigenaar bevestigd op ${date}.`,
-    needsVerification: "Bevestig eerst met Google dat jij de eigenaar bent. Daarna kun je je gegevens en domein instellen.",
+    needsVerification: "Bevestig eerst dat jij de eigenaar bent, met Google of met de telefoon van je bedrijf. Daarna kun je je gegevens en domein instellen.",
     connected: (date: string) => `Gekoppeld op ${date}.`,
     disconnected: "Nog niet gekoppeld.",
     mockHint: "Geen Google-sleutels ingesteld: de koppeling wordt gesimuleerd.",
     permissions: "We vragen alleen toegang tot je bedrijfsprofiel, niet tot je e-mail of andere Google-diensten.",
+    phone: {
+      h2: "Of bevestig met de telefoon van je bedrijf",
+      intro: "We bellen of sms'en een code naar het telefoonnummer dat Google voor je bedrijf toont. Wie die code kan teruglezen, neemt de telefoon van het bedrijf op. Een vast nummer bellen we, een mobiel nummer krijgt een sms of een WhatsApp-bericht.",
+      call: "Bel me met een code",
+      sms: "Stuur een sms",
+      whatsapp: "Stuur via WhatsApp",
+      sent: { call: "We bellen je nu. Een stem leest de code voor.", sms: "De sms is onderweg.", whatsapp: "Het WhatsApp-bericht is onderweg." } as Record<string, string>,
+      codeLabel: "Code",
+      confirm: "Bevestig",
+      errors: {
+        no_mobile: "Het nummer dat Google toont is een vast nummer. Kies \"Bel me met een code\".",
+        no_phone: "Google toont geen telefoonnummer voor je bedrijf. Mail support@vidalo.io, dan helpen we je verder.",
+        too_many_sends: "Je hebt vandaag al drie codes gevraagd. Probeer het morgen opnieuw.",
+        too_many_tries: "Te vaak een verkeerde code. Probeer het over een uur opnieuw.",
+        send_failed: "Het versturen lukte niet. Probeer het zo opnieuw.",
+        wrong_code: "Die code klopt niet. Kijk hem nog eens na.",
+      } as Record<string, string>,
+      mockHint: "Geen Twilio-sleutels ingesteld: er gaat niets uit en code 123456 werkt.",
+    },
   },
 
   owner: {

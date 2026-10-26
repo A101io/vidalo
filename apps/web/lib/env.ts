@@ -87,4 +87,18 @@ export const env = {
   get hasGoogle(): boolean {
     return Boolean(this.googleClientId && this.googleClientSecret);
   },
+  get googlePlacesKey() {
+    return read("GOOGLE_PLACES_API_KEY");
+  },
+  /** Twilio Verify for the phone ownership proof (shared/phone-proof.ts); undefined = not configured. */
+  get twilioVerify() {
+    const accountSid = read("TWILIO_ACCOUNT_SID");
+    const authToken = read("TWILIO_AUTH_TOKEN");
+    const serviceSid = read("TWILIO_VERIFY_SERVICE_SID");
+    return accountSid && authToken && serviceSid ? { accountSid, authToken, serviceSid } : undefined;
+  },
+  /** On once Vidalo's own WhatsApp sender is linked to the Verify service; without it Twilio falls back to SMS. */
+  get whatsappCodes(): boolean {
+    return read("TWILIO_VERIFY_WHATSAPP") === "1";
+  },
 };
