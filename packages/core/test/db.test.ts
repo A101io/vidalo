@@ -167,6 +167,15 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(1);
   });
 
+  it("stores a real answer's fractional cost (cost_cents is an integer column)", async () => {
+    const b = await db.upsertBusiness({ name: "Bakkerij Feijenoord", place: "Rotterdam" });
+    const [p] = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
+    const run = await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    const [s] = await db.insertSamples([{ scanRunId: run.id, promptId: p!.id, engine: "chatgpt", answerText: "010-1234567", citations: [], costCents: 2.6 }]);
+    expect(s!.costCents).toBeCloseTo(3, 0);
+    expect((await db.updateScanRun(run.id, { status: "done", costCents: 46.7 })).costCents).toBeCloseTo(47, 0);
+  });
+
   it("job queue: claim, complete, fail with backoff", async () => {
     await db.enqueueJob("scan", { businessId: "x" });
     const later = await db.enqueueJob("report", {}, new Date(Date.now() + 60_000));
