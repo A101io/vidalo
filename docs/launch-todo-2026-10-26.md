@@ -93,3 +93,17 @@ Set a monthly budget at every AI provider when you create the key.
 
 ## Launch (one-way door, Julian's yes)
 Deploy `production` from `deploy.yml`, gate `VIDALO_COMING_SOON=0`, live Stripe (K10, S4), legal pages live (L1), then `pnpm launch:mail` to the waiting list and `delete from waitlist;` by hand (P8).
+
+## Spending caps (27 Oct 2026)
+"Cap" = the provider stops or alerts by itself. Vidalo's own brakes: `FREE_SCANS_PER_DAY=25` (site-wide, live engines; 0 stops free scans), 3 phone codes per business per day, waitlist 5 posts per IP per 10 min. Only Twilio was read by API; the others Julian checks.
+
+| Account | Cap possible | Set? | Where |
+|---|---|---|---|
+| OpenAI | hard monthly budget (stops) + alert | unknown; credit topped up 26 Oct | https://platform.openai.com/settings/organization/limits |
+| Google Cloud (Places, later Gemini) | budget **alert** only; Places API quota per day can be capped | unknown | https://console.cloud.google.com/billing/budgets · quota: https://console.cloud.google.com/apis/api/places.googleapis.com/quotas |
+| Twilio | prepaid balance **$20.00** (stops at 0 unless auto-recharge is on); usage trigger alert | balance yes; **no trigger** (read 27 Oct); auto-recharge unknown | https://console.twilio.com/us1/billing/manage-billing/usage-triggers · https://console.twilio.com/us1/billing/manage-billing/auto-recharge |
+| Resend | plan limit (free 3,000 mails/month, then refuses) | plan unknown | https://resend.com/settings/billing |
+| Cloudflare Workers | Workers Paid $5/month + usage; no hard cap, billing alerts only | plan unknown (Queues need Paid) | https://dash.cloudflare.com/37c9615a0d7d9629154eca03d7de59a6/billing |
+| Supabase | Free: no spend. Pro: spend cap toggle (on by default) | Free today | https://supabase.com/dashboard/org/_/billing |
+| Stripe | no spend; fees per payment | n/a | |
+| SerpAPI, Perplexity, Anthropic | per-plan or monthly limit | no key yet | set when the key is made |
