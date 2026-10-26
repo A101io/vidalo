@@ -27,9 +27,13 @@
 .li-qs { display: inline-grid; font-size: .18em; font-weight: 500; line-height: 1.4; color: #fff; }
 .li-q { grid-area: 1 / 1; display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; }
 .li-caret { display: none; flex: none; width: .02em; height: .24em; background: #fff; margin-left: .03em; }
+/* The right padding: the negative letter-spacing ends the box inside the "o", and overflow hidden
+   (the typing effect) then shaves the o's right edge flat. flex: none: the stage is fixed at the
+   still logo's width (--lw), which leaves out the cursor after the name; without it the name shrinks
+   by that much and loses the end of the "o". */
 .li-name {
-  display: inline-block; overflow: hidden; white-space: nowrap; font-weight: 800; font-size: .84em;
-  letter-spacing: -.0357em; padding: .12em 0 .16em; margin-bottom: -.16em; max-width: none;
+  flex: none; display: inline-block; overflow: hidden; white-space: nowrap; font-weight: 800; font-size: .84em;
+  letter-spacing: -.0357em; padding: .12em .06em .16em 0; margin-bottom: -.16em; max-width: none;
 }
 .li-caret2 { display: none; flex: none; width: .05em; height: .64em; background: var(--blue, #2563EB); margin: 0 0 .14em -.12em; }
 
