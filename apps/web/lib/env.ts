@@ -87,4 +87,14 @@ export const env = {
   get hasGoogle(): boolean {
     return Boolean(this.googleClientId && this.googleClientSecret);
   },
+  get googlePlacesKey() {
+    return read("GOOGLE_PLACES_API_KEY");
+  },
+  /** Twilio Verify for the phone ownership proof (shared/phone-proof.ts); undefined = not configured. */
+  get twilioVerify() {
+    const accountSid = read("TWILIO_ACCOUNT_SID");
+    const authToken = read("TWILIO_AUTH_TOKEN");
+    const serviceSid = read("TWILIO_VERIFY_SERVICE_SID");
+    return accountSid && authToken && serviceSid ? { accountSid, authToken, serviceSid } : undefined;
+  },
 };
