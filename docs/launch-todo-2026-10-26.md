@@ -20,7 +20,7 @@ Today: vidalo.io runs on Cloudflare behind the coming-soon gate, on the hosted d
 | K1 | `SERPAPI_KEY` | https://serpapi.com/manage-api-key | `.env` → K | Google AI answers; the site promises them | Julian |
 | K2 | `GEMINI_API_KEY` | https://aistudio.google.com/apikey | `.env` → K | Gemini answers | Julian |
 | K3 | `PERPLEXITY_API_KEY` | https://www.perplexity.ai/account/api/keys | `.env` → K | Perplexity answers | Julian |
-| K4 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | https://dash.cloudflare.com/profile/api-tokens → Create → Zone · DNS · Edit and Workers Routes · Edit on `vidalo.io`; zone id `5d39e2dacc81b8603d5dc69a163b6bca` | `.env` → K | Facts pages get a web address (`{slug}-feiten.vidalo.io`, decision D5) | Julian |
+| K4 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | https://dash.cloudflare.com/profile/api-tokens → Create Custom Token `vidalo-runtime (facts hosts)`: Zone · SSL and Certificates · Edit, Zone · DNS · Edit, zone `vidalo.io` only (`docs/secrets-and-keys.md`, runtime token); zone id `5d39e2dacc81b8603d5dc69a163b6bca` | `.env` → K | Cloudflare for SaaS hostnames for facts pages; the fallback origin on `vidalo-worker` (D6) is still to be built by Claude before pages have an address | Julian |
 | K5 | `INDEXNOW_KEY` | `openssl rand -hex 16` | `.env` → K | Tells Bing about new facts pages | Claude, on a yes |
 | K6 | `GOOGLE_SERVICE_ACCOUNT_JSON` | https://console.cloud.google.com/iam-admin/serviceaccounts (project Vidalo) → Create → key JSON; add it as owner in Search Console | `.env` → K | Google index check of facts pages | Julian |
 | K7 | `TWILIO_VERIFY_WHATSAPP=1` | after the WhatsApp sender is Online and linked (T2) | `.env` → W | Shows the WhatsApp button | Claude, after T2 |
