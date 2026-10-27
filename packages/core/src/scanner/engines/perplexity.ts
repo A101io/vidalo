@@ -4,6 +4,7 @@
  */
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
 import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
+import { perplexityUserLocation } from "./location";
 
 const MODEL = () => process.env.PERPLEXITY_MODEL ?? "sonar";
 
@@ -22,7 +23,7 @@ export function estimatePerplexityCost(inTok: number, outTok: number): number {
 export const perplexityEngine: EngineClient = {
   engine: "perplexity",
   available: () => Boolean(process.env.PERPLEXITY_API_KEY),
-  async ask(promptNl: string, _ctx: AskContext): Promise<EngineAnswer> {
+  async ask(promptNl: string, ctx: AskContext): Promise<EngineAnswer> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), ENGINE_TIMEOUT_MS);
     try {
@@ -38,7 +39,7 @@ export const perplexityEngine: EngineClient = {
           ],
           temperature: 0.7,
           search_domain_filter: undefined,
-          web_search_options: { search_context_size: "low", user_location: { country: "NL" } },
+          web_search_options: { search_context_size: "low", user_location: perplexityUserLocation(ctx.business) },
         }),
       });
       if (!res.ok) throw new Error(`perplexity ${res.status}: ${(await res.text()).slice(0, 200)}`);
