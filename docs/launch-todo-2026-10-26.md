@@ -14,7 +14,12 @@ Today: vidalo.io runs on Cloudflare behind the coming-soon gate, on the hosted d
 - W: `VIDALO_PREVIEW_KEY`, `OPENAI_API_KEY`, `GOOGLE_PLACES_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONITOR`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `UNSUBSCRIBE_SECRET`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`
 - K: `OPENAI_API_KEY`, `RESEND_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `UNSUBSCRIBE_SECRET`
 
-## Keys still missing
+## Pushed 27 Oct 2026 (names read back on the Workers)
+- K (`vidalo-worker`): `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `INDEXNOW_KEY` (generated), `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` (8/8)
+- W (`vidalo-web`): `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`
+- Still missing: `TWILIO_VERIFY_WHATSAPP` (after the WhatsApp sender), Stripe live values, `KVK_API_KEY` (optional). Secrets take effect on the next production deploy (`deploy.yml`), which has not run since 23 Oct.
+
+## Keys still missing (as of 26 Oct; see above for what landed since)
 | # | Key | From | To | Why | Who |
 |---|---|---|---|---|---|
 | K1 | `SERPAPI_KEY` | https://serpapi.com/manage-api-key | `.env` → K | Google AI answers; the site promises them | Julian |
