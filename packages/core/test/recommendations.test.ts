@@ -35,7 +35,7 @@ describe("summarizeRecommendations", () => {
     { id: "s5", promptId: "p3", answerText: "1. Fu Lu Shou", citations: [] },
     { id: "s6", promptId: "p2", answerText: "Ja, open.", citations: [] },
   ];
-  const verdicts = new Map([["s1", "correct"], ["s2", "wrong"], ["s3", "wrong"], ["s4", "wrong"], ["s5", "wrong"], ["s6", "correct"]]);
+  const verdicts = new Map([["s1", "named"], ["s2", "not_named"], ["s3", "not_named"], ["s4", "not_named"], ["s5", "not_named"], ["s6", "correct"]]);
   const summaries = summarizeRecommendations({ samples, prompts, verdicts, facts: { name: "Golden Dragon", place: "Rotterdam" } });
 
   it("counts named answers, other names and cited sites per recommendation question, core first", () => {

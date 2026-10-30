@@ -1,6 +1,13 @@
 /**
  * ChatGPT via the OpenAI Responses API with web search. Citations come from
  * the `url_citation` annotations on the output text.
+ *
+ * The tool is `web_search`, not `web_search_preview`: the preview tool kept
+ * the old $25 per 1,000 calls, the current one is $10 per 1,000 plus the
+ * search content as ordinary input tokens (a fixed block of about 8,000 for
+ * gpt-4.1-mini, which `usage.input_tokens` already carries). The SDK (4.x)
+ * types only the preview tool, hence the cast. Price checked 30 Oct 2026
+ * against https://platform.openai.com/docs/pricing; verify after a change.
  */
 import OpenAI from "openai";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
@@ -17,7 +24,7 @@ const PRICE: Record<string, { inCents: number; outCents: number }> = {
   "gpt-4o-mini": { inCents: 15, outCents: 60 },
   "gpt-4o": { inCents: 250, outCents: 1000 },
 };
-const WEB_SEARCH_CALL_CENTS = 2.5; // $25 / 1k calls
+const WEB_SEARCH_CALL_CENTS = 1; // $10 / 1k calls (web_search; the preview tool was $25 / 1k)
 
 export function estimateOpenAiCost(model: string, inputTokens: number, outputTokens: number, webSearchCalls = 0): number {
   const p = PRICE[model] ?? PRICE["gpt-4.1-mini"]!;
@@ -41,7 +48,7 @@ export const chatgptEngine: EngineClient = {
         model,
         instructions: systemFor(ctx.business.country),
         input: promptNl,
-        tools: [{ type: "web_search_preview", user_location: openAiUserLocation(ctx.business), search_context_size: "low" }],
+        tools: [{ type: "web_search", user_location: openAiUserLocation(ctx.business), search_context_size: "low" } as unknown as OpenAI.Responses.Tool],
         temperature: 0.7,
       }),
       ENGINE_TIMEOUT_MS,

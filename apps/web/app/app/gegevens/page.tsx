@@ -5,12 +5,14 @@ import { dateShort } from "@/lib/format";
 import { FactsForm } from "./FactsForm";
 import { countryOptions } from "@vidalo/core/shared";
 
-export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string }> }) {
+export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string; betwist?: string }> }) {
   const sp = await searchParams;
   const { business } = await requireVerifiedOwner("/app/gegevens");
-  const { facts } = await loadDashboard(business.id);
+  const { facts, findings } = await loadDashboard(business.id);
   const { copy, lang } = await getI18n();
   const F = copy.facts;
+  // "Dit klopt wél" on a finding: say which fact the owner is here to correct.
+  const disputed = sp.betwist ? findings.find((f) => f.id === sp.betwist) : undefined;
   const initial = facts ?? {
     businessId: business.id,
     version: 0,
@@ -45,6 +47,7 @@ export default async function FactsPage({ searchParams }: { searchParams: Promis
           <p className="mt-3 text-[14px] text-muted">{F.verifiedNotice(dateShort(initial.verifiedAt ?? new Date()))}</p>
         )}
         {sp.fout === "1" && <p className="mt-3 text-[14px] text-rood">{copy.errors.generic}</p>}
+        {disputed && <p className="mt-3 rounded-xl bg-panel px-4 py-3 text-[15px]">{F.disputedNotice(copy.factKey[disputed.factKey])}</p>}
       </header>
       <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} />
     </div>

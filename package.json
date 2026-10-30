@@ -24,7 +24,7 @@
     "e2e:stripe": "bash scripts/e2e-stripe.sh"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.13.0",
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.64.1",
     "@types/node": "^22.10.1",
     "@vidalo/core": "workspace:*",
