@@ -657,10 +657,6 @@ export const copy = {
     },
   },
 
-  /**
-   * Terms and privacy. DRAFT: written from what the code does, not reviewed by
-   * a lawyer. `draft` renders a visible notice on both pages until it is false.
-   */
   /** Titles and descriptions for search engines and AI assistants, per page. */
   pages: {
     /** /feiten: Vidalo's own facts page, the same page a customer gets, on our own site. */
@@ -713,58 +709,466 @@ export const copy = {
     home_crumb: "Vidalo",
   },
 
+  /**
+   * Terms, privacy and cookie statement (/voorwaarden, /privacy, /cookies; EN /en/terms,
+   * /en/privacy, /en/cookies). Built 26 Oct 2026 from Sonable's counsel-reviewed set
+   * (sonable/src/content/legal), adapted to Vidalo and checked against the code; the
+   * deviations are listed in the PR that introduced them. Dutch prevails (terms 2.8).
+   * `numbered` turns each section into an article and each string into a clause (1.1, 1.2);
+   * an array in `p` is a sub-list of the clause before it. Any wording change is a new
+   * version: update `updated` and keep en.ts in step.
+   */
   legal: {
-    draft: true,
+    draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Laatst bijgewerkt: 9 oktober 2026",
-    contact: "Vragen? Mail ons op hello@vidalo.io of bel +31 85 109 1393.",
+    updated: "Versie van 26 oktober 2026",
+    contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
-      intro: "Deze voorwaarden gelden voor elke controle en elk abonnement van Vidalo, een handelsnaam van A101 B.V.",
+      intro: "Deze voorwaarden gelden voor elke controle, elk plan en elk ander gebruik van Vidalo. Vidalo is er alleen voor bedrijven.",
+      numbered: true,
       sections: [
-        { h: "Wat we doen", p: ["We vragen AI-assistenten zoals ChatGPT, Google AI en Copilot wat ze over je bedrijf zeggen, vergelijken dat met de gegevens die jij bevestigt en laten zien waar een fout vandaan komt.", "Met een betaald plan publiceren we een feitenpagina, zetten we je gegevens in Google, Bing, Apple en Nederlandse gidsen, en vragen we bronnen met een fout om die te herstellen."] },
-        { h: "Wat we niet beloven", p: ["Niemand bepaalt wat een AI-assistent antwoordt. We herstellen de bronnen waar die antwoorden uit komen. Antwoorden uit het geheugen van een model veranderen pas bij een nieuwe modelversie.", "Herstel bij een andere website of gids hangt af van die partij en duurt meestal twee tot vier weken, soms langer."] },
-        { h: "Jouw gegevens, jouw verantwoordelijkheid", p: ["Je bevestigt zelf de gegevens van je bedrijf. Wij publiceren en versturen alleen wat jij bevestigd hebt.", "Je geeft ons toestemming om namens je bedrijf correctieverzoeken te sturen naar websites en gidsen, en om je Google-bedrijfsprofiel bij te werken als je dat koppelt."] },
-        { h: "Prijs en betalen", p: ["Goed zetten kost eenmalig €149. Goed houden kost €49 per maand. Alle prijzen zijn exclusief btw.", "Je betaalt via Stripe met iDEAL, kaart of SEPA-incasso. Je ontvangt een factuur per betaling."] },
-        { h: "Opzeggen", p: ["Er is geen opzegtermijn. Je zegt maandelijks op onder ‘Abonnement’ in je account; de lopende periode die je al betaald hebt loopt af. Je krijgt direct een bevestiging per e-mail. Tot de einddatum kun je de opzegging intrekken.", "Als je abonnement afloopt, stoppen we met controleren en bijwerken, en verwijst je feitenpagina door naar je eigen website."] },
-        { h: "Pauzeren", p: ["Je kunt je abonnement onder ‘Abonnement’ in je account 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je feitenpagina blijft online. Je krijgt direct een bevestiging per e-mail en een week voor het einde een herinnering.", "Op de einddatum loopt je abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen."] },
-        { h: "Aansprakelijkheid", p: ["We doen ons werk zorgvuldig, maar zijn niet aansprakelijk voor wat AI-assistenten of andere partijen over je bedrijf zeggen. Onze aansprakelijkheid is beperkt tot het bedrag dat je ons in de laatste twaalf maanden betaalde."] },
-        { h: "Toepasselijk recht", p: ["Op deze voorwaarden is Nederlands recht van toepassing."] },
+        {
+          h: "Begrippen",
+          p: [
+            "Vidalo, wij, we, ons: A101 B.V., gevestigd aan Factorij 80, 3071 AV Rotterdam, ingeschreven bij de Kamer van Koophandel onder nummer 42057858, handelend onder de naam Vidalo.",
+            "Jij, je: de onderneming of rechtspersoon die een controle aanvraagt, een plan afneemt of op een andere manier Vidalo gebruikt, en de persoon die namens die onderneming handelt.",
+            "Dienst: alles wat Vidalo je levert: de gratis controle, de plannen en wat daarbij hoort, je account en de assistent op onze website.",
+            "Gratis controle: een eenmalige controle zonder betaling van wat AI-assistenten over een bedrijf antwoorden, met een rapport dat 30 dagen via een link te zien is.",
+            "Plan: ‘Goed zetten’ (eenmalig) of ‘Goed houden’ (een abonnement per maand), zoals beschreven op vidalo.io/prijzen op het moment dat je bestelt.",
+            "AI-assistent: een dienst van een andere partij die vragen beantwoordt met kunstmatige intelligentie, zoals ChatGPT, Google AI, Gemini of Perplexity.",
+            "Bron: een website, gids, profiel of ander openbaar gegeven waaruit een AI-assistent zijn antwoord haalt.",
+            "Gegevens: de gegevens over je bedrijf die jij aan ons bevestigt, zoals naam, adres, openingstijden, telefoonnummer, diensten en prijzen.",
+            "Feitenpagina: de pagina die wij met jouw bevestigde gegevens publiceren, in een vorm die mensen en AI-assistenten kunnen lezen.",
+            "Account: je eigen omgeving op vidalo.io, waar je inlogt met een link per e-mail.",
+            "Overeenkomst: de afspraken tussen jou en Vidalo over de Dienst, met deze voorwaarden.",
+            "Schriftelijk: op papier of per e-mail.",
+          ],
+        },
+        {
+          h: "Wanneer deze voorwaarden gelden",
+          p: [
+            "Deze voorwaarden gelden voor elk aanbod van Vidalo, elke Overeenkomst en elk gebruik van de Dienst, ook voor de gratis controle.",
+            "Vidalo is er alleen voor bedrijven. Je gebruikt de Dienst in de uitoefening van je beroep of bedrijf, en bij het afrekenen bevestig je dat je namens een bedrijf handelt. De regels voor consumenten, zoals het herroepingsrecht, gelden daarom niet.",
+            "Inkoopvoorwaarden of andere voorwaarden van jou gelden niet.",
+            "Afwijken van deze voorwaarden kan alleen als we dat schriftelijk met elkaar afspreken.",
+            "Ons aanbod is vrijblijvend. Een kennelijke vergissing of verschrijving in een aanbod, op de website of in een e-mail bindt ons niet.",
+            "Is een bepaling ongeldig of wordt ze vernietigd, dan blijven de andere bepalingen gelden. We spreken dan samen een vervangende bepaling af die zo dicht mogelijk bij de bedoeling van de oude ligt.",
+            "We mogen deze voorwaarden wijzigen. Een wijziging melden we je ten minste dertig dagen voordat ze ingaat, per e-mail en op deze pagina, tenzij een wet, een uitspraak of een autoriteit een kortere termijn nodig maakt. Ben je het niet eens met een wijziging in je nadeel, dan kun je je abonnement opzeggen tegen de dag waarop de wijziging ingaat.",
+            "Deze voorwaarden bestaan in het Nederlands en het Engels. Verschillen de twee, dan gaat de Nederlandse tekst voor.",
+          ],
+        },
+        {
+          h: "Wat Vidalo doet",
+          p: [
+            "Met de gratis controle stellen we AI-assistenten vragen die een klant over je bedrijf zou kunnen stellen. We vergelijken de antwoorden met de gegevens die we over je bedrijf vinden of die jij bevestigt, en laten zien welke antwoorden niet kloppen en uit welke bron een fout lijkt te komen.",
+            "Welke onderdelen bij een Plan horen, staat op de prijspagina op het moment dat je bestelt. Een onderdeel dat afhangt van een andere partij, zoals het bijwerken van je Google-bedrijfsprofiel, leveren we alleen als die partij dat toestaat.",
+            "Welke AI-assistenten we vragen, welke vragen we stellen en hoe vaak, kiezen wij. In elk rapport staat welke AI-assistenten we gevraagd hebben.",
+            "We doen ons werk zorgvuldig en met vakkennis. Onze verplichting is een inspanningsverplichting: we doen wat redelijkerwijs kan, maar beloven geen bepaald resultaat.",
+            "We mogen de Dienst veranderen en verbeteren, zolang de kern van wat je afnam blijft. Verdwijnt er iets wezenlijks uit je Plan, dan laten we je dat vooraf weten en kun je opzeggen tegen de dag van de wijziging.",
+            "We mogen andere partijen inschakelen, zoals diensten voor hosting, betalen, e-mail en AI. Welke partijen daarbij persoonsgegevens verwerken, staat in ons privacybeleid.",
+            "Voor onderhoud of bij een storing kan de Dienst tijdelijk niet beschikbaar zijn. Merkbaar onderhoud kondigen we vooraf aan als dat kan.",
+            "Een website bouwen we alleen na een aparte afspraak over wat we maken en wat het kost. Deze voorwaarden gelden daar ook voor.",
+          ],
+        },
+        {
+          h: "Wat we niet beloven",
+          p: [
+            "Niemand bepaalt wat een AI-assistent antwoordt, ook wij niet. Wij herstellen de bronnen waar die antwoorden uit komen, of laten zien hoe jij dat doet. Wat een AI-assistent daarna antwoordt, beslist die assistent zelf.",
+            "AI-assistenten geven op dezelfde vraag niet altijd hetzelfde antwoord. Een rapport laat zien wat ze antwoordden op het moment van de controle; een volgende keer kan het anders zijn.",
+            "Antwoorden die een AI-assistent uit het geheugen van zijn model haalt, veranderen pas bij een nieuwe modelversie. Daar hebben wij geen invloed op.",
+            "Herstel bij een andere website, gids of platform hangt af van die partij. Het duurt meestal enkele weken en soms lukt het niet. Bij veel grote platforms kan alleen de eigenaar zelf iets wijzigen; dan laten we je zien wat je moet doen.",
+            "We beloven niet dat een AI-assistent je bedrijf noemt, aanbeveelt of op een bepaalde plaats zet.",
+            "Of een antwoord klopt, beoordelen we met hulp van automatische vergelijking. Dat doen we zorgvuldig, maar het kan een keer mis zijn. Zie je iets wat niet klopt, laat het ons weten, dan kijken we het na.",
+            "Een rapport is informatie, geen advies. Wat je ermee doet, beslis je zelf.",
+          ],
+        },
+        {
+          h: "Jouw gegevens en het bewijs van beheer",
+          p: [
+            "De Gegevens over je bedrijf bevestig je zelf. Je staat ervoor in dat ze kloppen, dat je ze mag laten publiceren en dat je ons laat weten als er iets verandert.",
+            "We publiceren en versturen alleen Gegevens die jij bevestigd hebt. Elke wijziging wordt een nieuwe versie, die jij bevestigt.",
+            "Voordat we je Gegevens vastleggen, publiceren of namens je bedrijf iets aan anderen vragen, vragen we je aan te tonen dat je het bedrijf beheert: met Google of met een code via het telefoonnummer van het bedrijf. Hoe dat gaat, zie je in je Account. We kunnen die manieren veranderen, bijvoorbeeld als een andere partij haar regels wijzigt. Lukt het bewijs niet, dan starten die onderdelen niet.",
+            "Een e-mailadres alleen bewijst niet dat je een bedrijf beheert. Zolang het bewijs ontbreekt, kun je de gratis controle en je rapporten gebruiken, maar worden je Gegevens niet gepubliceerd.",
+            "Je geeft ons toestemming om namens je bedrijf correctieverzoeken te sturen naar bronnen met een fout, en om je Google-bedrijfsprofiel of een ander profiel bij te werken als je dat aan je Account koppelt. We gebruiken daarvoor alleen Gegevens die jij bevestigd hebt. Je trekt die toestemming in door de koppeling te verbreken of ons te mailen.",
+            "Je blijft zelf verantwoordelijk voor je eigen website, je profielen bij andere partijen en de afspraken die je met die partijen hebt.",
+            "Een gratis controle van een ander bedrijf mag. Je gebruikt het rapport dan niet om dat bedrijf of anderen te misleiden of te schaden.",
+          ],
+        },
+        {
+          h: "Je account en eerlijk gebruik",
+          p: [
+            "Je logt in met een link die we naar je e-mailadres sturen. Houd de toegang tot dat e-mailadres voor jezelf en laat het ons direct weten als iemand anders toegang tot je Account lijkt te hebben.",
+            "Je bent verantwoordelijk voor wat er via je Account gebeurt, ook als een medewerker het namens je bedrijf doet.",
+            "Het is niet toegestaan om:",
+            [
+              "de Dienst te gebruiken in strijd met de wet of met rechten van anderen;",
+              "automatisch of in grote aantallen controles aan te vragen, of onze beveiliging of limieten te omzeilen;",
+              "de software achter Vidalo te kopiëren, te ontleden of na te bouwen, of de Dienst te gebruiken om een concurrerende dienst te maken;",
+              "de Dienst of je Account door te verkopen of aan anderen ter beschikking te stellen; je eigen rapporten delen mag wel;",
+              "onjuiste of misleidende Gegevens te laten publiceren.",
+            ],
+            "We mogen nagaan of je je aan deze voorwaarden houdt. Doe je dat niet, dan mogen we je Account of een deel van de Dienst blokkeren. We laten je dat vooraf weten, behalve als direct ingrijpen nodig is, bijvoorbeeld bij fraude, misbruik of een beveiligingsrisico.",
+          ],
+        },
+        {
+          h: "Feitenpagina, gepubliceerde inhoud en meldingen",
+          p: [
+            "Op de Feitenpagina staan alleen Gegevens die jij bevestigd hebt, met de datum waarop je ze bevestigde. De pagina staat op je eigen domein of op een ander adres dat we je laten zien.",
+            "We bewaren en publiceren die inhoud voor jou. Inhoud die onrechtmatig is of in strijd met deze voorwaarden, zoals onjuiste gegevens over een ander bedrijf of inbreuk op rechten van anderen, mogen we weigeren, aanpassen of offline halen. We doen dat zorgvuldig en in verhouding tot het probleem.",
+            "Iedereen kan inhoud melden die hij onrechtmatig vindt, via support@vidalo.io. Vermeld in de melding:",
+            [
+              "waarom de inhoud volgens jou onrechtmatig is;",
+              "het precieze webadres van de inhoud;",
+              "je naam en e-mailadres, behalve bij een melding over seksueel misbruik van kinderen;",
+              "dat je de melding te goeder trouw doet en dat de gegevens erin juist en volledig zijn.",
+            ],
+            "We bevestigen dat we een melding hebben ontvangen, beoordelen haar zorgvuldig en laten de melder weten wat we besluiten. We gebruiken daarvoor geen automatische besluitvorming.",
+            "Halen we inhoud van jou weg of beperken we je Account, dan laten we je weten wat we deden, waarom, op grond van welke regel en hoe je bezwaar maakt. Bezwaar maak je via support@vidalo.io; een mens beoordeelt het.",
+            "support@vidalo.io is ook ons contactpunt voor autoriteiten en gebruikers in de zin van de Digitaledienstenverordening (DSA). Je bereikt ons daar in het Nederlands en het Engels.",
+            "Eindigt je Plan, dan verwijst de Feitenpagina door naar je eigen website. Verwijder je je gegevens, dan verdwijnt de pagina.",
+          ],
+        },
+        {
+          h: "Prijzen en betalen",
+          p: [
+            "Goed zetten kost eenmalig €149. Goed houden kost €49 per maand. Alle prijzen zijn in euro, exclusief 21% btw en andere heffingen van de overheid. De gratis controle kost niets.",
+            "Je betaalt vooraf via onze betaaldienst Stripe, met iDEAL, kaart of SEPA-incasso. Goed houden schrijven we elke maand automatisch af. Je krijgt per betaling een factuur.",
+            "Een betaald onderdeel begint pas als je betaling binnen is. Bij een SEPA-incasso kan dat enkele werkdagen duren.",
+            "Mislukt een betaling, dan probeert Stripe het nog een paar keer en krijg je bericht. Lukt het niet, dan mogen we het abonnement opschorten tot er betaald is. Staat een betaling na zestig dagen nog open, dan mogen we het abonnement beëindigen.",
+            "Betaal je niet op tijd, dan ben je zonder aanmaning in verzuim en mogen we de wettelijke handelsrente en de redelijke kosten van invordering in rekening brengen.",
+            "We mogen onze prijzen wijzigen. Een nieuwe prijs voor een lopend abonnement melden we je ten minste dertig dagen vooraf. Ben je het er niet mee eens, dan kun je opzeggen voordat de nieuwe prijs ingaat.",
+            "Je mag een bedrag dat je ons verschuldigd bent niet verrekenen met een bedrag dat je van ons zegt te krijgen, en je betaling niet opschorten.",
+          ],
+        },
+        {
+          h: "Looptijd, opzeggen en pauzeren",
+          p: [
+            "Goed zetten is een eenmalige opdracht. Goed houden is een abonnement per maand dat elke maand vanzelf verlengt, tot je opzegt.",
+            "Je zegt Goed houden op wanneer je wilt, online onder ‘Abonnement’ in je Account. Er is geen opzegtermijn: de maand die je al betaalde loopt af, daarna betaal je niets meer. Je krijgt direct een bevestiging per e-mail met de einddatum. Tot die datum kun je de opzegging intrekken.",
+            "Bij opzeggen krijg je het bedrag voor de lopende maand niet terug: de Dienst loopt tot de einddatum door. Het bedrag voor Goed zetten krijg je niet terug zodra we ermee begonnen zijn.",
+            "Kunnen we binnen dertig dagen na je betaling niet aan Goed zetten beginnen, omdat het bewijs van beheer uit artikel 5 niet lukt, dan mag je de Overeenkomst ontbinden. We betalen je dan terug wat je voor het Plan betaalde.",
+            "Je kunt Goed houden onder ‘Abonnement’ 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je Feitenpagina blijft online. Je krijgt een bevestiging per e-mail en een week voor het einde een herinnering. Op de einddatum loopt het abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen. Pauzeren kan niet zolang een betaling openstaat.",
+            "Eindigt je abonnement, dan stoppen we met controleren en herstellen, en verwijst je Feitenpagina door naar je eigen website. Wat bij andere partijen al hersteld is, blijft daar staan. Wat we daarna met je gegevens doen, staat in ons privacybeleid.",
+            "Opzeggen kan ook per e-mail naar support@vidalo.io. Je krijgt dan dezelfde bevestiging.",
+          ],
+        },
+        {
+          h: "Opschorten en beëindigen door Vidalo",
+          p: [
+            "We mogen de Dienst geheel of gedeeltelijk opschorten als:",
+            [
+              "je niet op tijd betaalt;",
+              "je deze voorwaarden schendt, in het bijzonder artikel 6 of 7;",
+              "er een beveiligingsrisico is;",
+              "een wet of een autoriteit dat vraagt.",
+            ],
+            "We laten je dat zo snel mogelijk schriftelijk weten.",
+            "We mogen de Overeenkomst zonder tussenkomst van de rechter ontbinden als:",
+            [
+              "je een wezenlijke verplichting niet nakomt en dat niet herstelt binnen veertien dagen nadat we je schriftelijk in gebreke stelden;",
+              "je failliet wordt verklaard of surseance van betaling krijgt, of anderszins niet meer over je vermogen kunt beschikken;",
+              "je onderneming stopt of wordt geliquideerd.",
+            ],
+            "Wat we vóór de ontbinding al geleverd en gefactureerd hebben, blijf je verschuldigd.",
+            "Stoppen we met Vidalo als geheel, dan laten we je dat ten minste twee maanden vooraf weten en betalen we terug wat je vooruit betaalde voor de tijd daarna.",
+          ],
+        },
+        {
+          h: "Intellectuele eigendom",
+          p: [
+            "De software, de opzet van de rapporten, de vragen, de teksten en het merk Vidalo zijn van ons of van onze licentiegevers. Je krijgt zolang de Overeenkomst loopt een niet-exclusief, niet-overdraagbaar recht om de Dienst te gebruiken volgens deze voorwaarden.",
+            "Je mag je rapporten gebruiken, bewaren, printen en delen voor je eigen bedrijf, ook na het einde van de Overeenkomst.",
+            "Je geeft ons zolang de Overeenkomst loopt het recht om de Gegevens, je bedrijfsnaam en je logo te gebruiken, te publiceren en aan bronnen te sturen, voor zover dat voor de Dienst nodig is.",
+            "We mogen uit controles algemene cijfers afleiden, bijvoorbeeld hoe vaak AI-assistenten bij een bepaald soort vraag fout zitten, om de Dienst te verbeteren en erover te publiceren. Zulke cijfers zijn niet terug te voeren op jou of je bedrijf.",
+            "We vrijwaren je voor aanspraken van anderen die stellen dat de software van Vidalo inbreuk maakt op hun intellectuele eigendom in de Europese Unie, als je ons direct schriftelijk inlicht en de afhandeling, ook een schikking, aan ons overlaat. Dat geldt niet als de inbreuk komt door een wijziging of door gebruik in strijd met deze voorwaarden, en niet voor antwoorden van AI-assistenten die we in een rapport laten zien: die zijn van de partij die ze geeft.",
+          ],
+        },
+        {
+          h: "De assistent op onze website",
+          p: [
+            "Op vidalo.io kun je vragen stellen aan een assistent. Die assistent is een AI-systeem, geen mens; dat staat ook in het chatvenster.",
+            "De assistent beantwoordt alleen vragen over Vidalo, met informatie van onze eigen website. Een antwoord kan onvolledig of fout zijn en bindt ons niet. Wat in deze voorwaarden, op de prijspagina en in je bevestiging staat, gaat voor.",
+            "De assistent geeft geen juridisch, fiscaal of ander persoonlijk advies. Typ geen persoonsgegevens of vertrouwelijke informatie in het chatvenster. Wil je een mens spreken, mail dan support@vidalo.io.",
+          ],
+        },
+        {
+          h: "Persoonsgegevens",
+          p: [
+            "Voor zover we bij de Dienst persoonsgegevens verwerken, doen we dat als zelfstandig verwerkingsverantwoordelijke in de zin van de Algemene verordening gegevensbescherming (AVG), volgens ons privacybeleid op vidalo.io/privacy.",
+            "Bevestig je Gegevens waarin persoonsgegevens staan, zoals de naam of het telefoonnummer van een medewerker, dan zorg jij dat je die mag delen en laten publiceren.",
+            "We beveiligen persoonsgegevens met passende technische en organisatorische maatregelen. Dat verwachten we ook van jou.",
+          ],
+        },
+        {
+          h: "Vertrouwelijkheid",
+          p: [
+            "We houden vertrouwelijke informatie die we in het kader van de Overeenkomst van elkaar krijgen geheim. Vertrouwelijk is informatie die zo is aangeduid, of waarvan je redelijkerwijs begrijpt dat ze vertrouwelijk is.",
+            "Dat geldt niet voor informatie:",
+            [
+              "die met toestemming van de ander openbaar wordt gemaakt;",
+              "die al algemeen bekend is;",
+              "die openbaar moet worden op grond van de wet, een rechter of een toezichthouder; de ontvanger laat dat dan vooraf weten, als dat mag;",
+              "die rechtmatig van een derde is verkregen zonder geheimhoudingsplicht.",
+            ],
+            "Je gebruikt vertrouwelijke informatie alleen voor het doel waarvoor ze gegeven is.",
+          ],
+        },
+        {
+          h: "Aansprakelijkheid",
+          p: [
+            "Onze totale aansprakelijkheid, op welke grond ook, is beperkt tot vergoeding van directe schade, tot hoogstens het bedrag (exclusief btw) dat je ons in de twaalf maanden voor het ontstaan van de schade voor de Dienst betaalde.",
+            "Voor indirecte schade zijn we niet aansprakelijk. Daaronder valt in elk geval: gevolgschade, gederfde winst of omzet, gemiste besparingen, verminderde goodwill, schade door bedrijfsstagnatie, schade door aanspraken of boetes van anderen, en verlies of beschadiging van gegevens.",
+            "We zijn niet aansprakelijk voor wat AI-assistenten, zoekmachines, gidsen of andere partijen over je bedrijf zeggen of doen, voor beslissingen die je op een rapport baseert, of voor schade doordat Gegevens die je bevestigde niet klopten.",
+            "Voor de gratis controle en de assistent op onze website, die niets kosten, zijn we niet aansprakelijk.",
+            "Aansprakelijkheid ontstaat alleen als je ons direct schriftelijk in gebreke stelt, met een redelijke termijn om de tekortkoming te herstellen, en we ook daarna tekortschieten. Beschrijf de tekortkoming zo precies mogelijk, zodat we goed kunnen reageren.",
+            "Een vordering tot schadevergoeding vervalt als je ons niet binnen twaalf maanden nadat je de schade ontdekte, of redelijkerwijs kon ontdekken, schriftelijk aansprakelijk hebt gesteld.",
+            "De beperkingen in dit artikel gelden niet bij opzet of bewuste roekeloosheid van Vidalo of haar leidinggevenden.",
+            "Je vrijwaart ons voor aanspraken en boetes van anderen die het gevolg zijn van Gegevens die jij liet publiceren, of van gebruik van de Dienst in strijd met de wet of deze voorwaarden.",
+          ],
+        },
+        {
+          h: "Overmacht",
+          p: [
+            "We zijn niet aansprakelijk als we onze verplichtingen niet kunnen nakomen door overmacht: een omstandigheid buiten onze invloed, zoals een storing of wijziging bij een AI-assistent of bij een dienst voor hosting, betalen of e-mail, een wijziging in hun voorwaarden of toegang, een storing in internet of stroom, een cyberaanval, een overheidsmaatregel, een natuurramp of een pandemie.",
+            "Bij overmacht schorten we onze verplichtingen op zolang die duurt. Duurt het langer dan zestig dagen, dan mogen we allebei de Overeenkomst ontbinden. Wat je vooruit betaalde voor de tijd na de ontbinding, betalen we terug.",
+          ],
+        },
+        {
+          h: "Overige bepalingen",
+          p: [
+            "Je draagt je rechten en plichten uit de Overeenkomst niet over zonder onze schriftelijke toestemming.",
+            "We mogen onze rechten en plichten uit de Overeenkomst overdragen aan een andere onderneming die de Dienst voortzet. We laten je dat vooraf weten; je kunt dan opzeggen tegen de dag van de overdracht.",
+            "We communiceren met je via het e-mailadres van je Account. Een e-mail daarheen geldt als schriftelijk.",
+          ],
+        },
+        {
+          h: "Toepasselijk recht en geschillen",
+          p: [
+            "Op de Overeenkomst en deze voorwaarden is uitsluitend Nederlands recht van toepassing. Het Weens Koopverdrag (CISG) geldt niet.",
+            "Komen we er samen niet uit, dan beslist de bevoegde rechter van de rechtbank Rotterdam.",
+          ],
+        },
       ],
     },
     privacy: {
       title: "Privacybeleid",
-      intro: "Vidalo is een handelsnaam van A101 B.V. Hier staat welke gegevens we gebruiken, waarom, en met wie we ze delen.",
+      intro: "Dit privacybeleid geldt voor de persoonsgegevens die A101 B.V., handelend onder de naam Vidalo, verwerkt: op vidalo.io, bij de gratis controle, in je account, bij de plannen en de feitenpagina's, in onze e-mails en bij de assistent op onze website.",
       sections: [
-        { h: "Welke gegevens", p: ["Over je bedrijf: naam, plaats, adres, telefoonnummer, website, openingstijden, diensten en andere gegevens die je bevestigt. Dit zijn meestal geen persoonsgegevens, behalve als je bedrijf je eigen naam draagt.", "Over jou: je e-mailadres, om in te loggen en je rapporten te sturen. Bij betalen verwerkt Stripe je betaalgegevens; wij zien die niet.", "Over de controle: de vragen die we stellen, de antwoorden van AI-assistenten en de bronnen die ze noemen.", "Op de lijst ‘Binnenkort’: je e-mailadres, de taal van de pagina, het moment van aanmelden en de zin waarmee je toestemming gaf."] },
-        { h: "Waarom", p: ["Om de controle uit te voeren, fouten te herstellen, je te mailen over je rapport en je abonnement te factureren. Na een gratis controle sturen we je na 7 en na 21 dagen nog een herinnering. Elke mail heeft een afmeldlink; na afmelden sturen we niets meer. De grondslag is de overeenkomst met jou, en voor een gratis controle ons gerechtvaardigd belang om je een rapport te kunnen geven.", "Zet je je op de lijst ‘Binnenkort’, dan mailen we je wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders. De grondslag is je toestemming; die trek je in met een mail naar hello@vidalo.io, en dan halen we je adres van de lijst."] },
-        { h: "Met wie we gegevens delen", p: ["Supabase (database en inloggen, opslag in de EU). OpenAI, Google, Perplexity en SerpAPI om de vragen te stellen; we sturen alleen bedrijfsgegevens, geen e-mailadressen. Google en de KvK om je bedrijf te vinden. Stripe voor betalingen. Resend voor e-mail. Cloudflare voor je feitenpagina.", "Sommige van deze partijen verwerken gegevens buiten de EU. Dat gebeurt op basis van de standaardcontractbepalingen van de Europese Commissie of het EU-VS-gegevensprivacykader."] },
-        { h: "Hoe lang", p: ["Een rapport van een gratis controle is 30 dagen via de link te zien. Gegevens van een betaald plan bewaren we zolang je klant bent. 90 dagen na het einde van je abonnement doen we nog één gratis controle; daarna bewaren we alleen wat de wet voor facturen vraagt.", "De lijst ‘Binnenkort’ bewaren we tot we iedereen over de opening hebben gemaild; daarna verwijderen we hem. Wie zich eerder afmeldt, halen we er direct af."] },
-        { h: "Jouw rechten", p: ["Je mag je gegevens inzien, laten verbeteren of laten verwijderen, en bezwaar maken. Mail ons; we reageren binnen een maand. Ben je het niet met ons eens, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens."] },
+        {
+          h: "Wie verantwoordelijk is",
+          p: [
+            "Verwerkingsverantwoordelijke is A101 B.V., handelend onder de naam Vidalo, Factorij 80, 3071 AV Rotterdam, KvK 42057858.",
+            "Voor vragen en verzoeken over je gegevens mail je support@vidalo.io, bel je +31 85 109 1393 of schrijf je naar het adres hierboven. We hebben geen functionaris voor gegevensbescherming; dat is voor ons niet verplicht.",
+          ],
+        },
+        {
+          h: "Over wie het gaat",
+          p: [
+            "Vidalo is er voor bedrijven. Meestal verwerken we gegevens over een bedrijf, zoals naam, adres en openingstijden. Dat zijn persoonsgegevens als ze over een persoon gaan, bijvoorbeeld bij een eenmanszaak met de naam van de eigenaar.",
+            "Daarnaast verwerken we gegevens over de mensen die met ons te maken hebben: wie een controle aanvraagt, wie een account heeft of klant is, wie ons mailt of belt, wie zich op de lijst ‘Binnenkort’ zet en wie onze website bezoekt.",
+          ],
+        },
+        {
+          h: "De gratis controle",
+          p: [
+            "Vraag je een gratis controle aan, dan zoeken we het bedrijf op en stellen we AI-assistenten vragen erover.",
+            [
+              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, als je het rapport per e-mail wilt. Om misbruik te beperken bewaren we per dag een onomkeerbaar versleutelde vorm van je IP-adres.",
+              "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf en de bronnen die AI-assistenten noemen.",
+              "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
+              "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan gelden de termijnen bij ‘Een betaald plan’.",
+            ],
+            "Heeft iemand anders jouw bedrijf gecontroleerd, dan gebruiken we alleen openbare zakelijke gegevens. Wil je dat niet, mail ons; dan verwijderen we die controle.",
+          ],
+        },
+        {
+          h: "Herinneringen na een gratis controle",
+          p: [
+            "Gaf je je e-mailadres voor het rapport, dan sturen we je 7 en 21 dagen later nog een korte herinnering over de uitkomst.",
+            [
+              "Gegevens: je e-mailadres en de naam van het bedrijf.",
+              "Grondslag: ons gerechtvaardigd belang om je te helpen met de uitkomst van een controle die je zelf aanvroeg.",
+              "Hoe lang: tot je je afmeldt of tot de tweede herinnering. Elke e-mail heeft een afmeldlink die met één klik werkt; daarna sturen we je deze e-mails niet meer.",
+            ],
+          ],
+        },
+        {
+          h: "Je account en inloggen",
+          p: [
+            [
+              "Gegevens: je e-mailadres, een nummer voor je account, wanneer je inlogde, je taal en welke e-mails je wilt ontvangen.",
+              "Grondslag: de uitvoering van de overeenkomst met jou (artikel 6 lid 1 onder b AVG).",
+              "Hoe lang: zolang je account bestaat. Je verwijdert je account zelf, zie ‘Je rechten’.",
+            ],
+          ],
+        },
+        {
+          h: "Bewijs dat je het bedrijf beheert",
+          p: [
+            "Voordat we gegevens van een bedrijf publiceren of namens dat bedrijf iets vragen, moet je aantonen dat je het bedrijf beheert. Een e-mailadres alleen is geen bewijs.",
+            [
+              "Met Google: we krijgen van Google een nummer voor je account en welke bedrijfsprofielen je beheert. Klopt het, dan bewaren we wanneer het bewijs is geleverd en de toegangssleutel die Google ons geeft, zodat we je bedrijfsprofiel kunnen bijwerken. Je wachtwoord zien we nooit.",
+              "Met een code per telefoon: we bellen of sms'en een code naar het telefoonnummer dat Google Maps voor het bedrijf vermeldt; dat nummer typ je niet zelf. Dat gaat via Twilio, dat het nummer, de code en de gegevens van de oproep of het bericht verwerkt. Wij bewaren alleen een deels afgeschermd nummer (zoals 020 ••• ••67), of de code klopte, wanneer, en wie het vroeg.",
+              "Grondslag: de uitvoering van de overeenkomst met jou.",
+              "Hoe lang: zolang je account bestaat, of tot je de koppeling met Google verbreekt.",
+            ],
+            "Voegen we een andere manier toe om het bewijs te leveren, dan vullen we dit privacybeleid aan voordat we die gebruiken.",
+          ],
+        },
+        {
+          h: "Een betaald plan",
+          p: [
+            [
+              "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel.",
+              "Wat we ermee doen: we publiceren je bevestigde gegevens op je feitenpagina, die voor iedereen te zien is. We sturen ze naar bronnen met een fout om herstel te vragen, en naar je Google-bedrijfsprofiel als je dat koppelt. AI-assistenten krijgen alleen bedrijfsgegevens, nooit je e-mailadres.",
+              "Grondslag: de uitvoering van de overeenkomst met jou.",
+              "Hoe lang: zolang je klant bent. Na het einde van je abonnement bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle en verwijderen we binnen 30 dagen daarna je gegevens. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar. Wat bij een andere partij is hersteld, blijft daar staan.",
+            ],
+          ],
+        },
+        {
+          h: "Betalen en facturen",
+          p: [
+            "Je betaalt via Stripe. Stripe verwerkt je betaalgegevens als zelfstandig verantwoordelijke, volgens zijn eigen privacybeleid; je kaart- of rekeningnummer zien wij niet.",
+            [
+              "Gegevens: je naam, factuuradres, btw-nummer, e-mailadres, een klantnummer van Stripe en of je betaling gelukt is.",
+              "Grondslag: de uitvoering van de overeenkomst en onze wettelijke plicht om een administratie te bewaren (artikel 6 lid 1 onder b en c AVG).",
+              "Hoe lang: facturen en de gegevens daarop 7 jaar, omdat de belastingwet dat vraagt.",
+            ],
+          ],
+        },
+        {
+          h: "Contact en support",
+          p: [
+            "Mail, bel of app je ons, dan gebruiken we je gegevens om je te helpen.",
+            [
+              "Gegevens: je naam, e-mailadres of telefoonnummer, je bericht en wat we antwoorden.",
+              "Grondslag: ons gerechtvaardigd belang om je vraag te beantwoorden, of de uitvoering van de overeenkomst als je klant bent.",
+              "Hoe lang: tot 2 jaar na het laatste contact, tenzij het bericht bij je klantgegevens of onze administratie hoort.",
+            ],
+            "Stuur je ons een WhatsApp-bericht, dan verwerkt WhatsApp (Meta) dat bericht ook volgens zijn eigen voorwaarden.",
+          ],
+        },
+        {
+          h: "De assistent op onze website",
+          p: [
+            "De assistent op vidalo.io is een AI-systeem. Om te antwoorden sturen we je vraag en de eerdere berichten van hetzelfde gesprek naar OpenAI.",
+            [
+              "Gegevens: wat je in het chatvenster typt. Wij slaan het gesprek niet op; het staat alleen in je browsertabblad. Om misbruik te beperken houden we je IP-adres een paar minuten in het geheugen bij.",
+              "Grondslag: ons gerechtvaardigd belang om vragen over Vidalo snel te beantwoorden.",
+              "Typ geen persoonsgegevens of vertrouwelijke informatie in het chatvenster.",
+            ],
+          ],
+        },
+        {
+          h: "De lijst ‘Binnenkort’",
+          p: [
+            "Zet je je op de lijst op de pagina ‘Binnenkort’, dan mailen we je één keer wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders.",
+            [
+              "Gegevens: je e-mailadres, de taal van de pagina, het moment van aanmelden en de zin waarmee je toestemming gaf.",
+              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG). Je trekt die in met een mail naar hello@vidalo.io; dan halen we je adres direct van de lijst.",
+              "Hoe lang: tot we iedereen over de opening hebben gemaild; daarna verwijderen we de lijst.",
+            ],
+          ],
+        },
+        {
+          h: "Je bezoek aan de website",
+          p: [
+            "Onze website draait bij Cloudflare. Cloudflare ontvangt bij elk bezoek je IP-adres, je browser en de pagina die je opvraagt, om de pagina te leveren en de site te beveiligen.",
+            "Bij de gratis controle en bij inloggen gebruiken we Cloudflare Turnstile om mensen van robots te onderscheiden. Turnstile leest daarvoor kenmerken van je browser en apparaat.",
+            "Grondslag: ons gerechtvaardigd belang bij een website die werkt en veilig is. We meten geen bezoekersstatistieken, plaatsen geen advertentiecookies en volgen je niet over andere websites. Welke cookies we gebruiken, staat in ons cookiebeleid.",
+          ],
+        },
+        {
+          h: "Met wie we gegevens delen",
+          p: [
+            "We verkopen geen gegevens. We delen ze alleen met partijen die we nodig hebben voor de Dienst, en met wie we afspraken hebben gemaakt over beveiliging en geheimhouding:",
+            [
+              "Supabase: database en inloggen; opslag in de EU (Ierland).",
+              "Cloudflare: hosting van de website en de feitenpagina's, beveiliging en Turnstile; een wereldwijd netwerk van een Amerikaans bedrijf.",
+              "Stripe: betalen en facturen; EU en Verenigde Staten.",
+              "Resend: het versturen van onze e-mails; Verenigde Staten.",
+              "Google: onze mailbox (Google Workspace), bedrijfsgegevens uit Google Maps, Gemini, inloggen met Google en je bedrijfsprofiel; EU en Verenigde Staten.",
+              "OpenAI: ChatGPT voor de controles, en de assistent op onze website; Verenigde Staten.",
+              "Twilio: het bellen of sms'en van de code waarmee je aantoont dat je het bedrijf beheert; Verenigde Staten.",
+              "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
+              "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
+              "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
+            ],
+            "Verder geven we gegevens alleen aan anderen als je daar toestemming voor geeft, of als de wet ons dat verplicht.",
+          ],
+        },
+        {
+          h: "Gegevens buiten de Europese Economische Ruimte",
+          p: [
+            "Een aantal van deze partijen verwerkt gegevens in de Verenigde Staten. Die doorgifte baseren we op het besluit van de Europese Commissie over het EU-VS-gegevensprivacykader, als de partij daarvoor gecertificeerd is, en anders op de standaardcontractbepalingen van de Europese Commissie, met aanvullende maatregelen waar dat nodig is. Wil je weten welke waarborg bij een partij geldt, mail ons.",
+          ],
+        },
+        {
+          h: "Automatische beoordeling",
+          p: [
+            "We vergelijken antwoorden van AI-assistenten automatisch met de gegevens van een bedrijf. Dat is een beoordeling van een antwoord, geen besluit over jou. We nemen geen besluiten die alleen op automatische verwerking berusten en die rechtsgevolgen of vergelijkbare gevolgen voor je hebben, en we maken geen profielen van personen.",
+          ],
+        },
+        {
+          h: "Beveiliging",
+          p: [
+            "We beveiligen gegevens met passende technische en organisatorische maatregelen: versleutelde verbindingen, inloggen zonder wachtwoord, toegang per account tot alleen je eigen gegevens, zo weinig mogelijk mensen met toegang, en controles tegen misbruik. Merken we een datalek dat risico voor je oplevert, dan laten we het je en de Autoriteit Persoonsgegevens weten zoals de wet voorschrijft.",
+          ],
+        },
+        {
+          h: "Je rechten",
+          p: [
+            "Je hebt het recht om je gegevens in te zien, te laten verbeteren of te laten verwijderen, de verwerking te laten beperken, je gegevens in een gangbaar bestandsformaat te krijgen, en een toestemming in te trekken. Intrekken werkt voor de toekomst.",
+            "Veel kun je zelf, onder ‘Account’ in je account: bij ‘Je gegevens’ download je alles wat we over je bedrijf bewaren, en verwijder je alles zodra je abonnement is afgelopen. Je kiest daar ook welke e-mails je wilt krijgen.",
+            "Voor de rest mail je support@vidalo.io. We reageren binnen een maand. Soms vragen we je eerst te laten zien dat het verzoek van jou komt.",
+            "Gegevens geven is niet wettelijk verplicht. Zonder e-mailadres kunnen we je geen rapport sturen of account geven, en zonder betaal- en bedrijfsgegevens kunnen we een plan niet leveren.",
+          ],
+        },
+        {
+          h: "Je recht van bezwaar",
+          p: [
+            "Verwerken we je gegevens op grond van ons gerechtvaardigd belang, dan kun je daar op elk moment bezwaar tegen maken vanwege je persoonlijke situatie. We stoppen dan, tenzij we zwaarwegende redenen hebben die voorgaan. Tegen e-mails die je kunt uitzetten werkt je bezwaar altijd: afmelden kan met één klik.",
+          ],
+        },
+        {
+          h: "Een klacht",
+          p: [
+            "Ben je het niet met ons eens, laat het ons dan eerst weten; dan zoeken we samen een oplossing. Je kunt ook altijd een klacht indienen bij de Autoriteit Persoonsgegevens, via autoriteitpersoonsgegevens.nl.",
+          ],
+        },
+        {
+          h: "Wijzigingen",
+          p: [
+            "We passen dit privacybeleid aan als de Dienst of de wet verandert. De nieuwe versie staat op deze pagina, met de datum. Gaan we gegevens voor een nieuw doel gebruiken, dan laten we je dat vooraf weten, zodat je bezwaar kunt maken.",
+          ],
+        },
       ],
     },
     cookies: {
       title: "Cookies",
-      intro: "Vidalo gebruikt alleen cookies die nodig zijn om de site te laten werken. Geen volgcookies, geen advertentiecookies. Hier staat precies wat we op je apparaat zetten.",
+      intro: "Vidalo gebruikt alleen cookies die nodig zijn om de website te laten werken. Geen volgcookies, geen advertentiecookies, geen statistieken. Hier staat precies wat we op je apparaat zetten en wat andere partijen doen.",
       sections: [
-        { h: "Wat een cookie is", p: ["Een cookie is een klein bestand dat een website op je apparaat zet, zodat de site je herkent als je van pagina wisselt of terugkomt. Hetzelfde geldt voor opslag in je browser (local storage); daar gebruiken we niets van."] },
+        { h: "Wat een cookie is", p: ["Een cookie is een klein bestand dat een website op je apparaat zet, zodat de site je herkent als je van pagina wisselt of terugkomt. Waar we in dit cookiebeleid over cookies spreken, bedoelen we ook vergelijkbare technieken om gegevens op je apparaat op te slaan of uit te lezen, zoals opslag in je browser (local storage). Die opslag gebruiken we niet."] },
+        { h: "Toestemming", p: ["Cookies die nodig zijn om de site te laten werken, mogen we zonder toestemming plaatsen (artikel 11.7a Telecommunicatiewet); we vertellen je wel dat ze er zijn. Andere cookies gebruiken we niet. Gaan we dat ooit wel doen, bijvoorbeeld voor bezoekersstatistieken, dan vragen we eerst je toestemming, met een knop om te weigeren die net zo makkelijk is als de knop om te accepteren, en plaatsen we niets voordat je kiest."] },
         {
           h: "Welke cookies we zetten",
-          p: ["Alle cookies hieronder zijn noodzakelijk. Daar is geen toestemming voor nodig; we vertellen je wel dat ze er zijn."],
+          p: ["Alle cookies hieronder zijn noodzakelijk en komen van vidalo.io zelf."],
           table: {
             head: ["Naam", "Waarvoor", "Hoe lang"],
             rows: [
               ["vidalo_consent", "Onthoudt dat je de cookiemelding hebt gezien en welke keuze je maakte.", "12 maanden"],
-              ["sb-…-auth-token", "Houdt je ingelogd in je account (Supabase, inloggen zonder wachtwoord).", "Tot je uitlogt, hoogstens 400 dagen"],
-              ["sb-…-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 400 dagen"],
-              ["vidalo_google_state", "Tijdens het koppelen van je Google-bedrijfsprofiel: beschermt die stap tegen misbruik.", "10 minuten"],
-              ["vidalo_preview", "Alleen tijdens de bouwfase: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
+              ["sb-…-auth-token", "Houdt je ingelogd in je account (via Supabase, inloggen zonder wachtwoord).", "Tot je uitlogt, hoogstens 400 dagen"],
+              ["sb-…-auth-token-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 400 dagen"],
+              ["vidalo_google_state", "Tijdens het koppelen van je Google-account: beschermt die stap tegen misbruik.", "10 minuten"],
+              ["vidalo_preview", "Alleen zolang de site nog niet open is: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
             ],
           },
         },
-        { h: "Statistieken en marketing", p: ["We meten op dit moment niets en zetten geen cookies van andere partijen. Gaan we ooit bezoekersstatistieken bijhouden, dan vragen we daar eerst je toestemming voor, met een knop om te weigeren die even groot is als de knop om te accepteren. Tot die tijd staat er niets uit te zetten."] },
-        { h: "Andere partijen", p: ["Betaal je, dan ga je naar een pagina van Stripe; daar gelden de cookies en het privacybeleid van Stripe. Koppel je je Google-bedrijfsprofiel, dan log je in bij Google; daar gelden de regels van Google. Op vidalo.io zelf laden we geen scripts, lettertypen of knoppen van andere partijen."] },
-        { h: "Jouw keuze aanpassen", p: ["Zodra er iets te kiezen valt, staat onderaan elke pagina ‘Cookie-instellingen’. Daar zie je je keuze en pas je die aan. Cookies verwijderen kan ook via de instellingen van je browser."] },
+        { h: "Andere partijen", p: ["Bij de gratis controle en bij inloggen laden we Cloudflare Turnstile van challenges.cloudflare.com. Turnstile leest kenmerken van je browser en apparaat om mensen van robots te onderscheiden. Dat is nodig om de controle en het inloggen te beschermen tegen misbruik. Zie het privacybeleid van Cloudflare op cloudflare.com/privacypolicy.", "Betaal je, dan ga je naar een pagina van Stripe; daar gelden het cookiebeleid en het privacybeleid van Stripe. Koppel je je Google-account, dan log je in bij Google; daar gelden de regels van Google.", "Verder laden we op vidalo.io geen scripts, lettertypen, knoppen of advertenties van andere partijen. Voegen we een dienst van een andere partij toe, dan staat die hier voordat we hem gebruiken."] },
+        { h: "Jouw keuze aanpassen", p: ["Zodra er iets te kiezen valt, staat onderaan elke pagina ‘Cookie-instellingen’. Daar zie je je keuze en pas je die aan. Cookies verwijderen kan ook altijd via de instellingen van je browser; je wordt dan uitgelogd."] },
+        { h: "Meer weten", p: ["Hoe we met je gegevens omgaan en welke rechten je hebt, staat in ons privacybeleid op vidalo.io/privacy. We passen dit cookiebeleid aan als de site verandert; de datum bovenaan zegt welke versie je leest."] },
       ],
     },
   },
