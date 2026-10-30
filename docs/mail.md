@@ -114,5 +114,14 @@ Then flip `SETUP_STATUS.md` G1 to done and record the date in `A101/_OS/VIDALO.m
 - Resend (`send.vidalo.io`, `resend._domainkey`): `docs/setup/stripe-and-resend.md`.
   Resend signs `d=vidalo.io`, so it aligns strictly, same as Sonable.
 - Supabase custom SMTP for `inloggen@vidalo.io`: go-live A2, after Resend.
-- An auto-reply on `support@`: Sonable has one (`sonable/docs/support-autoreply.md`); decide
-  after the first real support mail, not before.
+- An auto-reply on `support@`: **wired, off until Julian turns it on** (23 Oct 2026). The A101 kit's
+  support brain is vendored at `packages/core/src/support/kit-support.ts`, configured in
+  `packages/core/src/support/index.ts` (same knowledge and rules as the website assistant),
+  and served at `POST /api/support-autoreply` (log: migration `0010_support_autoreply_log.sql`).
+  The ONE Apps Script in the Workspace mailbox — `A101/kit/adopt/support/support-inbox-relay.gs`,
+  shared with Sonable and Sitty — routes mail to `support@vidalo.io` there and sends the answer
+  in-thread as `Vidalo Support <support@vidalo.io>` (needs the Send-mail-as alias from step 6).
+  To switch on: `SUPPORT_RELAY_SECRET` (`openssl rand -hex 32`) as a `vidalo-web` secret and as
+  `RELAY_SECRET_VIDALO` in the script's properties, `OPENAI_API_KEY` on the Worker (without it
+  every real mail is only labelled `Vidalo/Needs-human`), `DRY_RUN=true` for a day, read
+  `support_autoreply_log`, then `DRY_RUN=false`. Runbook: `A101/kit/adopt/support/README.md`.
