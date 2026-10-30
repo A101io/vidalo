@@ -4,6 +4,7 @@
  */
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
 import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
+import { perplexityUserLocation } from "./location";
 
 const MODEL = () => process.env.PERPLEXITY_MODEL ?? "sonar";
 
@@ -38,7 +39,7 @@ export const perplexityEngine: EngineClient = {
           ],
           temperature: 0.7,
           search_domain_filter: undefined,
-          web_search_options: { search_context_size: "low", user_location: { country: ctx.business.country ?? "NL" } },
+          web_search_options: { search_context_size: "low", user_location: perplexityUserLocation(ctx.business) },
         }),
       });
       if (!res.ok) throw new Error(`perplexity ${res.status}: ${(await res.text()).slice(0, 200)}`);

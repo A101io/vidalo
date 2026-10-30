@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
 import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
 import { withTimeout } from "../util";
+import { openAiUserLocation } from "./location";
 
 const MODEL = () => process.env.CHATGPT_MODEL ?? "gpt-4.1-mini";
 
@@ -40,7 +41,7 @@ export const chatgptEngine: EngineClient = {
         model,
         instructions: systemFor(ctx.business.country),
         input: promptNl,
-        tools: [{ type: "web_search_preview", user_location: { type: "approximate", country: ctx.business.country ?? "NL" }, search_context_size: "low" }],
+        tools: [{ type: "web_search_preview", user_location: openAiUserLocation(ctx.business), search_context_size: "low" }],
         temperature: 0.7,
       }),
       ENGINE_TIMEOUT_MS,

@@ -2,6 +2,7 @@ export * from "./db.js";
 export * from "./log.js";
 export * from "./facts-nl.js";
 export * from "./ownership.js";
+export * from "./phone-proof.js";
 export * from "./unsubscribe.js";
 export * from "./mail-prefs.js";
 export * from "./own.js";
