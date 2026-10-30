@@ -182,7 +182,10 @@ export async function sendBaselineSummary(scanRunId: string): Promise<MailResult
     recommendations: nf?.recommendations,
     findings,
     engines: run.engines,
-    links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business) },
+    // A paying owner's button goes to the account; before that, to the report page, with the offer.
+    paying: business.status === "trial" || business.status === "active",
+    offer: { setupEur: PRICE_SETUP, monitorEur: PRICE_MONITOR },
+    links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business), resultUrl: resultUrl(scanRunId) },
   });
   return deliver(business, m, "baseline", { scanRunId, stip: nf?.stip ?? null });
 }
