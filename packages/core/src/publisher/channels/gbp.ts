@@ -35,7 +35,37 @@ interface GbpLocation {
   storefrontAddress?: { addressLines?: string[]; postalCode?: string; locality?: string };
 }
 
-type ChannelWithMeta = Channel & { meta?: { refreshToken?: string; accessToken?: string } };
+type ChannelWithMeta = Channel & { meta?: { refreshToken?: string; accessToken?: string; diffApproval?: DiffApproval } };
+
+/**
+ * The owner's decision on one set of changes (docs/ARCHITECTURE.md, Workflow
+ * B: "approve diff"). A live Business Profile is never changed before the
+ * owner has seen the diff; `key` ties the decision to exactly those changes,
+ * so a later, different diff waits for a new decision.
+ */
+export interface DiffApproval {
+  key: string;
+  decision: "approved" | "declined";
+  at: string;
+}
+
+/** Stable identity of a diff: the fields and both values, order-free. */
+export function diffKey(diff: ChannelDiffEntry[]): string {
+  return JSON.stringify(diff.map((d) => [d.field, d.current, d.expected]).sort((a, b) => String(a[0]).localeCompare(String(b[0]))));
+}
+
+export type DiffDecision = "approved" | "declined" | "pending";
+
+/** What the owner said about this diff: approved, declined, or nothing yet. */
+export function diffDecision(meta: { diffApproval?: DiffApproval } | undefined, diff: ChannelDiffEntry[]): DiffDecision {
+  const a = meta?.diffApproval;
+  if (!a || a.key !== diffKey(diff)) return "pending";
+  return a.decision;
+}
+
+/** Notes the sync writes when it holds a change for the owner (publisher/index.ts stores the diff as meta.pendingDiff on the first). */
+export const NOTE_AWAITING_APPROVAL = "awaiting_owner_approval";
+export const NOTE_DECLINED = "declined_by_owner";
 
 function oauthConfig(): { clientId: string; clientSecret: string } | null {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
@@ -151,6 +181,25 @@ async function patchLocation(accessToken: string, locationName: string, body: Pa
   return res.json();
 }
 
+/**
+ * A diff the owner has not approved is not applied: the sync reports
+ * "mismatch" and carries the diff, so the dashboard can show it and ask.
+ * Returns null when there is nothing to hold (no diff, or approved).
+ */
+function holdForOwner(base: { channelId: string; channelType: Channel["type"] }, meta: ChannelWithMeta["meta"], diff: ChannelDiffEntry[], evidence: Record<string, unknown>): SyncResult | null {
+  if (!diff.length) return null;
+  const decision = diffDecision(meta, diff);
+  if (decision === "approved") return null;
+  log.info("gbp.sync.held", { channelId: base.channelId, decision, fields: diff.map((d) => d.field) });
+  return {
+    ...base,
+    status: "mismatch",
+    diff,
+    evidence: { ...evidence, held: decision, at: new Date().toISOString() },
+    note: decision === "declined" ? NOTE_DECLINED : NOTE_AWAITING_APPROVAL,
+  };
+}
+
 export const gbpAdapter: ChannelAdapter = {
   type: "gbp",
   async syncChannel(channel: Channel, facts: Facts): Promise<SyncResult> {
@@ -163,12 +212,17 @@ export const gbpAdapter: ChannelAdapter = {
       const diff = diffFacts(gbpToCurrent(loc), facts);
       const patch = buildGbpPatch(diff, facts);
       log.info("gbp.sync.mock", { channelId: channel.id, diff, updateMask: patch.updateMask, reason: cfg ? "no refresh token / location" : "no GOOGLE_OAUTH_* or mock" });
+      if (cfg) {
+        return { ...base, status: "pending", diff, evidence: { mode: "mock", diff, patch, at: new Date().toISOString() }, note: "Google-koppeling nog niet gemaakt door de eigenaar." };
+      }
+      const held = holdForOwner(base, meta, diff, { mode: "mock", diff, patch });
+      if (held) return held;
       return {
         ...base,
-        status: cfg ? "pending" : "synced",
+        status: "synced",
         diff,
-        evidence: { mode: "mock", diff, patch, at: new Date().toISOString() },
-        note: cfg ? "Google-koppeling nog niet gemaakt door de eigenaar." : "mock",
+        evidence: { mode: "mock", diff, patch, applied: diff.length > 0, at: new Date().toISOString() },
+        note: "mock",
       };
     }
 
@@ -180,6 +234,8 @@ export const gbpAdapter: ChannelAdapter = {
         return { ...base, status: "synced", diff, evidence: { mode: "live", before: loc, at: new Date().toISOString() } };
       }
       const patch = buildGbpPatch(diff, facts);
+      const held = holdForOwner(base, meta, diff, { mode: "live", before: loc, patch });
+      if (held) return held;
       const after = patch.updateMask.length ? await patchLocation(token, channel.externalId, patch.body, patch.updateMask) : null;
       log.info("gbp.sync.patched", { channelId: channel.id, updateMask: patch.updateMask });
       return {
