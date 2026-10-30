@@ -504,7 +504,7 @@ export const copy = {
       },
       controle: {
         h3: "Eén keer vragen zegt niets",
-        body: "AI geeft zelden twee keer hetzelfde antwoord. Wie één keer kijkt, ziet “alles klopt” en mist de fout die elke derde klant krijgt. Daarom stellen we elke vraag tien keer aan elke assistent, en tellen we.",
+        body: "AI geeft zelden twee keer hetzelfde antwoord. Wie één keer kijkt, ziet “alles klopt” en mist de fout die elke derde klant krijgt. Daarom stellen we elke vraag tot tien keer aan elke assistent, en tellen we.",
         label: "Voorbeeld: dezelfde vraag tien keer gesteld aan ChatGPT, Google AI en Copilot. De eerste keer klopt alles. Over tien keer geeft Copilot drie keer een oud nummer, ChatGPT één keer. Eén keer vragen had die fout gemist.",
         ask: "Wat is het nummer van Fysiotherapie Van Dijk?",
         once: "Eén keer gevraagd: alles klopt",
@@ -685,7 +685,7 @@ export const copy = {
     how: {
       crumb: "Zo werkt het",
       title: "Zo werkt Vidalo: vastleggen, publiceren, controleren, herstellen",
-      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tien keer per vraag controleren bij ChatGPT, Google AI, Gemini en Perplexity, en fouten aan de bron herstellen met bewijs.",
+      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tot tien keer per vraag controleren bij ChatGPT, Google AI, Gemini en Perplexity, en fouten aan de bron herstellen met bewijs.",
       h1: "Zo werkt Vidalo",
       intro: "Vijf minuten werk voor jou bij de start. Daarna controleren we elke maand wat AI-assistenten over je zeggen, en herstellen we elke fout bij de bron.",
     },

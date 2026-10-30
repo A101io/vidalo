@@ -491,7 +491,7 @@ export const en: CopyShape = {
       },
       controle: {
         h3: "Asking once tells you nothing",
-        body: "AI rarely gives the same answer twice. Whoever looks once sees “everything is right” and misses the error every third customer gets. That is why we ask every question ten times to every assistant, and count.",
+        body: "AI rarely gives the same answer twice. Whoever looks once sees “everything is right” and misses the error every third customer gets. That is why we ask every question up to ten times to every assistant, and count.",
         label: "Example: the same question asked ten times to ChatGPT, Google AI and Copilot. The first time everything is right. Over ten times, Copilot gives an old number three times, ChatGPT once. Asking once would have missed that error.",
         ask: "What is the number of Fysiotherapie Van Dijk?",
         once: "Asked once: everything is right",
@@ -671,7 +671,7 @@ export const en: CopyShape = {
     how: {
       crumb: "How it works",
       title: "How Vidalo works: record, publish, check, fix",
-      description: "Record your details once, publish them the same everywhere, check every question ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
+      description: "Record your details once, publish them the same everywhere, check every question up to ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
       h1: "How Vidalo works",
       intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and fix every error at its source.",
     },
