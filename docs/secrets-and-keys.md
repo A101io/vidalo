@@ -63,6 +63,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `STRIPE_SECRET_KEY` | Vidalo's own Stripe account (not Sitty `acct_1UA8rHEGTq7D30VV`, not Sonable `acct_1TyIM8EQK4LIWEDd`) | Web env; GitHub environment secret for setup | `pnpm stripe:setup` prints the account id; pin it as `VIDALO_STRIPE_ACCOUNT` |
 | `STRIPE_WEBHOOK_SECRET` | Printed once by `pnpm stripe:setup --apply` | Web env | A test event reaches `/api/stripe/webhook` with 200 |
 | `STRIPE_PRICE_SETUP/MONITOR`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION` | `pnpm stripe:setup` output | Web env | Checkout opens with €149 + 21% btw |
+| `VIDALO_STRIPE_TAX` | `1` after the accountant's yes and Stripe Tax set up (`docs/PAYMENTS.md`) | Web env (plain variable) | A checkout for a business abroad opens with the VAT Stripe Tax picks; unset = refused |
 | `RESEND_API_KEY` | Resend | Worker + web env | A report mail arrives |
 | `UNSUBSCRIBE_SECRET` | `openssl rand -hex 32` | Worker + web env | Unsubscribe link works; without it follow-ups are not sent |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |

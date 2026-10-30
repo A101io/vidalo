@@ -13,6 +13,7 @@
 import type { Facts, Hours, SectorSlug, ServiceArea, Urgency } from "../types";
 import { inferSector } from "../prompts/sectors";
 import { DAY_NAMES_NL, normalizePhone, normalizeTime, slugify } from "./normalize";
+import { HOME_COUNTRY, normalizeCountry } from "../shared/country";
 import { fetchText, hashString, htmlToText, seededRandom } from "./util";
 
 export interface BusinessCandidate {
@@ -27,6 +28,8 @@ export interface BusinessCandidate {
   openStatus: Facts["openStatus"];
   hours: Hours[];
   source: "google" | "kvk" | "mock";
+  /** ISO 3166-1 alpha-2 of the business ("NL", "GB"); from Google's address, NL for KvK. */
+  country: string;
   /** Google Places primary type ("plumber") or a Dutch category word; picks the sector pack. */
   googleCategory?: string | null;
   /** Every Google Places type, primary first; the sector and the question word try each in turn. */
@@ -66,6 +69,7 @@ interface GPlace {
   businessStatus?: "OPERATIONAL" | "CLOSED_TEMPORARILY" | "CLOSED_PERMANENTLY";
   primaryType?: string;
   types?: string[];
+  addressComponents?: { longText?: string; shortText?: string; types?: string[] }[];
   regularOpeningHours?: { periods?: { open?: { day?: number; hour?: number; minute?: number }; close?: { day?: number; hour?: number; minute?: number } }[] };
 }
 
@@ -96,6 +100,31 @@ function splitAddress(formatted: string | undefined): { address: string | null; 
   return { address: parts[0] ?? null, postcode: null, place: parts[1] ?? null };
 }
 
+const component = (p: GPlace, type: string, short = false) => {
+  const c = p.addressComponents?.find((x) => x.types?.includes(type));
+  return (short ? c?.shortText : c?.longText) ?? null;
+};
+
+/** Street, postcode and town from Google's address parts (any country); the street line as Google formats it. */
+function addressFromComponents(p: GPlace): { address: string | null; postcode: string | null; place: string | null } {
+  return {
+    address: p.formattedAddress?.split(",")[0]?.trim() ?? null,
+    postcode: component(p, "postal_code"),
+    place: component(p, "locality") ?? component(p, "postal_town") ?? component(p, "administrative_area_level_2"),
+  };
+}
+
+/**
+ * A business outside the Netherlands, asked for again in English. The search runs in Dutch, which
+ * turns "London" into "Londen"; its scan asks in English, so its town must be the English name.
+ */
+async function placeInEnglish(key: string, id: string): Promise<GPlace | null> {
+  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=en`, {
+    headers: { "x-goog-api-key": key, "x-goog-fieldmask": "id,displayName,formattedAddress,addressComponents" },
+  });
+  return res.ok ? ((await res.json()) as GPlace) : null;
+}
+
 async function googlePlaces(query: string, place?: string): Promise<BusinessCandidate[]> {
   const key = process.env.GOOGLE_PLACES_API_KEY;
   if (!key) return [];
@@ -105,14 +134,21 @@ async function googlePlaces(query: string, place?: string): Promise<BusinessCand
       "content-type": "application/json",
       "x-goog-api-key": key,
       "x-goog-fieldmask":
-        "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber,places.businessStatus,places.regularOpeningHours,places.primaryType,places.types",
+        "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber,places.businessStatus,places.regularOpeningHours,places.primaryType,places.types,places.addressComponents",
     },
     body: JSON.stringify({ textQuery: place ? `${query} ${place}` : query, languageCode: "nl", regionCode: "NL", maxResultCount: 3 }),
   });
   if (!res.ok) throw new Error(`google places ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = (await res.json()) as { places?: GPlace[] };
-  return (data.places ?? []).slice(0, 3).map((p) => {
-    const addr = splitAddress(p.formattedAddress);
+  const places = await Promise.all(
+    (data.places ?? []).slice(0, 3).map(async (p) => {
+      const country = normalizeCountry(component(p, "country", true));
+      if (country === HOME_COUNTRY || !p.id) return { p, country, addr: splitAddress(p.formattedAddress) };
+      const en = await placeInEnglish(key, p.id).catch(() => null);
+      return { p: en ? { ...p, ...en } : p, country, addr: addressFromComponents(en ? { ...p, ...en } : p) };
+    }),
+  );
+  return places.map(({ p, country, addr }) => {
     return {
       name: p.displayName?.text ?? query,
       address: addr.address,
@@ -121,10 +157,11 @@ async function googlePlaces(query: string, place?: string): Promise<BusinessCand
       placeId: p.id ?? null,
       kvk: null,
       website: p.websiteUri ?? null,
-      phone: normalizePhone(p.internationalPhoneNumber ?? p.nationalPhoneNumber) ?? p.nationalPhoneNumber ?? null,
+      phone: normalizePhone(p.internationalPhoneNumber ?? p.nationalPhoneNumber, country) ?? p.nationalPhoneNumber ?? null,
       openStatus: p.businessStatus === "CLOSED_PERMANENTLY" ? "permanently_closed" : p.businessStatus === "CLOSED_TEMPORARILY" ? "temporarily_closed" : "open",
       hours: hoursFromGoogle(p),
       source: "google",
+      country,
       googleCategory: p.primaryType ?? p.types?.[0] ?? null,
       googleTypes: [...new Set([p.primaryType, ...(p.types ?? [])].filter((t): t is string => Boolean(t)))],
     };
@@ -168,6 +205,7 @@ async function kvkSearch(query: string, place?: string): Promise<BusinessCandida
       openStatus: "open",
       hours: [],
       source: "kvk",
+      country: HOME_COUNTRY,
       sbi: r.sbiActiviteiten?.find((a) => a.indHoofdactiviteit === "Ja")?.sbiCode ?? r.sbiActiviteiten?.[0]?.sbiCode ?? null,
     };
   });
@@ -241,6 +279,7 @@ export function mockCandidate(query: string, place?: string): BusinessCandidate 
       { day: 6, open: null, close: null, closed: true },
     ],
     source: "mock",
+    country: HOME_COUNTRY,
     googleCategory: mockProfile(query).category || null,
   };
 }
@@ -347,7 +386,8 @@ export async function draftProvisionalFacts(candidate: BusinessCandidate, opts: 
   const place = candidate.place ?? opts.place ?? "";
   const profile = mockProfile(candidate.name);
   let scraped: Awaited<ReturnType<typeof scrapeSite>> = { phone: null, address: null, postcode: null, place: null, hours: [] };
-  if (!isMock() && candidate.website) {
+  // The site scraper reads Dutch pages (postcode, "maandag 9:00", 06-numbers); abroad Google's data stands alone.
+  if (!isMock() && candidate.website && candidate.country === HOME_COUNTRY) {
     try {
       scraped = await scrapeSite(candidate.website);
     } catch (err) {
@@ -360,6 +400,7 @@ export async function draftProvisionalFacts(candidate: BusinessCandidate, opts: 
     provisional: true,
     name: candidate.name,
     place,
+    country: candidate.country,
     address: candidate.address ?? scraped.address,
     postcode: candidate.postcode ?? scraped.postcode,
     phone: candidate.phone ?? scraped.phone,

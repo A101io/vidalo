@@ -6,6 +6,7 @@ export const business: BusinessRecord & Business = {
   slug: "bakkerij-jansen-haarlem",
   name: "Bakkerij Jansen",
   place: "Haarlem",
+  country: "NL",
   domain: "bakkerijjansen.nl",
   kvk: "12345678",
   googlePlaceId: "ChIJtest",

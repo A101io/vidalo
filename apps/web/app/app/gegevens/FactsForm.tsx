@@ -139,7 +139,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export function FactsForm({ facts, lang }: { facts: Facts; lang: Lang }) {
+export function FactsForm({ facts, lang, country, countries }: { facts: Facts; lang: Lang; country: string; countries: { code: string; name: string }[] }) {
   const copy = copyFor(lang);
   const F = copy.facts;
   const f = F.fields;
@@ -162,6 +162,15 @@ export function FactsForm({ facts, lang }: { facts: Facts; lang: Lang }) {
           <div>
             <label htmlFor="postcode" className="field-label">{f.postcode}</label>
             <input id="postcode" name="postcode" defaultValue={facts.postcode ?? ""} className="field-sm" />
+          </div>
+          <div>
+            <label htmlFor="country" className="field-label">{f.country}</label>
+            <select id="country" name="country" defaultValue={country} aria-describedby="country-hint" className="field-sm">
+              {countries.map((c) => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
+            <p id="country-hint" className="mt-1 text-[13px] text-muted">{f.countryHint}</p>
           </div>
           <div>
             <label htmlFor="openStatus" className="field-label">{f.openStatus}</label>

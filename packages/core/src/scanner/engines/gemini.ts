@@ -8,7 +8,7 @@
  */
 import { GoogleGenerativeAI, type Tool } from "@google/generative-ai";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
-import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
+import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
 import { withTimeout } from "../util";
 
 const MODEL = () => process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
@@ -25,11 +25,11 @@ interface GroundingChunkLike {
 export const geminiEngine: EngineClient = {
   engine: "gemini",
   available: () => Boolean(process.env.GEMINI_API_KEY),
-  async ask(promptNl: string, _ctx: AskContext): Promise<EngineAnswer> {
+  async ask(promptNl: string, ctx: AskContext): Promise<EngineAnswer> {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     const model = genAI.getGenerativeModel({
       model: MODEL(),
-      systemInstruction: SYSTEM_NL,
+      systemInstruction: systemFor(ctx.business.country),
       tools: [{ googleSearch: {} } as unknown as Tool],
     });
     const result = await withTimeout(

@@ -8,6 +8,7 @@ import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
 import { requireVerifiedOwner } from "@/lib/owner";
 import { lastConfirmed } from "@vidalo/core/facts-history";
+import { isCountryCode } from "@vidalo/core/shared";
 
 const str = (form: FormData, k: string): string | null => {
   const v = String(form.get(k) ?? "").trim();
@@ -67,17 +68,21 @@ export async function saveFacts(form: FormData) {
   data.googleTypes = (await db.latestFacts(business.id))?.googleTypes;
   const now = new Date().toISOString();
   const facts = await db.insertFacts(business.id, data, { provisional: false, verifiedAt: now });
+  const countryRaw = str(form, "country");
+  const country = isCountryCode(countryRaw) ? countryRaw : business.country;
   await db.upsertBusiness({
     id: business.id,
     slug: business.slug,
     name: data.name,
     place: data.place,
+    country,
     domain: business.domain ?? (data.website ? data.website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]! : null),
     ...(data.sector ? { sector: data.sector } : {}),
   });
   await db.enqueueJob("publish", { businessId: business.id, reason: `facts v${facts.version} confirmed` });
+  // Google, Bing and Apple everywhere; the Dutch directories only for a business in the Netherlands (syncAllChannels).
   await db.enqueueJob("sync", { businessId: business.id }, new Date(Date.now() + 1000));
-  await db.logEvent(business.id, "facts.confirmed", { version: facts.version });
+  await db.logEvent(business.id, "facts.confirmed", { version: facts.version, ...(country !== business.country ? { country } : {}) });
   revalidatePath("/app");
   revalidatePath("/app/gegevens");
   redirect((await getI18n()).href("/app/gegevens?opgeslagen=1"));

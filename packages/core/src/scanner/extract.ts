@@ -10,6 +10,8 @@
  *    in mock mode, so the pipeline works offline. Also the fallback when the
  *    LLM call fails.
  */
+import { findPhoneNumbersInText, type CountryCode } from "libphonenumber-js";
+import { HOME_COUNTRY } from "../shared/country";
 import { z } from "zod";
 import { ABSENT_VALUE, FACT_KEYS, NOT_FOUND_VALUE, PRESENT_VALUE, type Claim, type FactKey, type Facts, type Prompt } from "../types";
 import {
@@ -186,19 +188,31 @@ export function detectOtherEntity(answer: string, facts: Facts): boolean {
   return false;
 }
 
-const TIME = String.raw`(\d{1,2}(?:[:.]\d{2})?)\s*(?:uur)?`;
-const TIME_RANGE = new RegExp(`${TIME}\\s*(?:tot(?: en met)?|-|–|t/m)\\s*${TIME}`, "i");
+const TIME = String.raw`(\d{1,2}(?:[:.]\d{2})?\s*(?:[ap]\.?m\.?)?)\s*(?:uur)?`;
+const TIME_RANGE = new RegExp(`${TIME}\\s*(?:tot(?: en met)?|-|–|t/m|to|until|till)\\s*${TIME}`, "i");
 const PHONE_RE = /(?:\+31|0031|0)\s?[1-9](?:[\s-]?\d){8}\b/;
+
+/** The first phone number in an answer: Dutch notation for NL businesses, any notation of the country elsewhere. */
+function findPhone(text: string, country: string | undefined): { number: string; quote: string } | null {
+  if ((country ?? HOME_COUNTRY) === HOME_COUNTRY) {
+    const m = text.match(PHONE_RE);
+    const n = m ? normalizePhone(m[0]) : null;
+    return n ? { number: n, quote: m![0] } : null;
+  }
+  const found = findPhoneNumbersInText(text, country as CountryCode)[0];
+  return found ? { number: found.number.number, quote: text.slice(found.startsAt, found.endsAt) } : null;
+}
 const PRICE_RE = /€\s?(\d+(?:[.,]\d{1,2})?)/;
 const STREET_RE = /([A-Z][\p{L}.'-]*(?:\s(?:[A-Z][\p{L}.'-]*|de|van|der|den|het|'t|aan|op))*\s\d+[a-zA-Z]?(?:-\d+)?)(?:,?\s*(\d{4}\s?[A-Z]{2}))?(?:,?\s*([A-Z][\p{L}-]+))?/u;
-const NO_RE = /^\s*nee\b|\bgeen\b|\bniet\b|alleen contant|\bnee,/i;
-const YES_RE = /^\s*ja\b|\bja,|\book\b|\bwel\b|\bgewoon\b|\bbiedt\b|\bdoet\b|\bmogelijk\b|\bkun je\b/i;
+const NO_RE = /^\s*nee\b|\bgeen\b|\bniet\b|alleen contant|\bnee,|^\s*no\b|\bnot\b|\bdoes(?:n't| not)\b|cash only/i;
+const YES_RE = /^\s*ja\b|\bja,|\book\b|\bwel\b|\bgewoon\b|\bbiedt\b|\bdoet\b|\bmogelijk\b|\bkun je\b|^\s*yes\b|\boffers\b|\byou can\b|\bavailable\b/i;
+const DAY_NAMES_EN = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 /** The sentence(s) of the answer that mention a given day. */
 function daySegment(answer: string, day: number): string | null {
-  const name = DAY_NAMES_NL[day]!;
-  const parts = answer.split(/(?<=[.;\n])|,\s*(?=op\s)/i);
-  const seg = parts.find((p) => p.toLowerCase().includes(name));
+  const names = [DAY_NAMES_NL[day]!, DAY_NAMES_EN[day]!];
+  const parts = answer.split(/(?<=[.;\n])|,\s*(?=(?:op|on)\s)/i);
+  const seg = parts.find((p) => names.some((n) => p.toLowerCase().includes(n)));
   return seg ?? null;
 }
 
@@ -209,7 +223,7 @@ function hoursFromSegment(seg: string): string | null {
     const b = normalizeTime(range[2]!);
     if (a && b) return `${a}-${b}`;
   }
-  if (/gesloten|dicht/i.test(seg)) return "closed";
+  if (/gesloten|dicht|\bclosed\b/i.test(seg)) return "closed";
   return null;
 }
 
@@ -236,13 +250,13 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
     const { factKey, subject } = parseProbe(probe);
     switch (factKey) {
       case "existence": {
-        if (/permanent gesloten|definitief gesloten|voorgoed gesloten|bestaat niet meer|niet meer actief|is gesloten\b(?! op)|gestopt|failliet/.test(lower)) {
+        if (/permanent gesloten|definitief gesloten|voorgoed gesloten|bestaat niet meer|niet meer actief|is gesloten\b(?! op)|gestopt|failliet|permanently closed|closed down|no longer (?:exists|operating|in business)|has closed\b|went bankrupt/.test(lower)) {
           push("existence", null, "permanently_closed", answerText);
-        } else if (/tijdelijk gesloten|tijdelijk dicht/.test(lower)) {
+        } else if (/tijdelijk gesloten|tijdelijk dicht|temporarily closed/.test(lower)) {
           push("existence", null, "temporarily_closed", answerText);
-        } else if (/nog (gewoon |steeds )?open|is (gewoon )?open|bestaat nog|ontvangt klanten|nog actief|gewoon geopend/.test(lower) || (/^\s*ja\b/.test(lower) && !/permanent/.test(prompt.textNl.toLowerCase()))) {
+        } else if (/nog (gewoon |steeds )?open|is (gewoon )?open|bestaat nog|ontvangt klanten|nog actief|gewoon geopend|is still open|still exists|still operating|is open\b/.test(lower) || (/^\s*(?:ja|yes)\b/.test(lower) && !/permanent/.test(prompt.textNl.toLowerCase()))) {
           push("existence", null, "open", answerText);
-        } else if (/^\s*nee\b/.test(lower)) {
+        } else if (/^\s*(?:nee|no)\b/.test(lower)) {
           // "Nee" to "Is X permanent gesloten?" means open; "Nee" to "Is X nog open?" means closed.
           push("existence", null, /permanent/.test(prompt.textNl.toLowerCase()) ? "open" : "permanently_closed", answerText);
         }
@@ -258,8 +272,8 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
           else if (subject != null && days.length === 1) {
             // Single-day prompt whose answer does not repeat the day name.
             value = hoursFromSegment(answerText);
-            if (!value && /^\s*nee\b/.test(lower)) value = "closed";
-            if (!value && /^\s*ja\b/.test(lower)) value = null; // "ja, open" without times is not a checkable claim
+            if (!value && /^\s*(?:nee|no)\b/.test(lower)) value = "closed";
+            if (!value && /^\s*(?:ja|yes)\b/.test(lower)) value = null; // "ja, open" without times is not a checkable claim
             quote = answerText;
           }
           if (value) push("hours", String(day), value, quote);
@@ -267,9 +281,8 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
         break;
       }
       case "phone": {
-        const m = answerText.match(PHONE_RE);
-        const norm = m ? normalizePhone(m[0]) : null;
-        if (norm) push("phone", null, norm, m![0], 0.9);
+        const m = findPhone(answerText, facts.country);
+        if (m) push("phone", null, m.number, m.quote, 0.9);
         break;
       }
       case "address": {
@@ -344,7 +357,7 @@ const EXTRACTION_JSON_SCHEMA = {
           value: {
             type: "string",
             description:
-              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone "+31XXXXXXXXX"; address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); price decimal number.',
+              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone in E.164 ("+31201234567", "+442079460000"); address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); price decimal number.',
           },
           confidence: { type: "number" },
           otherEntity: { type: "boolean", description: "True when the answer is about a business with the same name in a different place." },
@@ -365,7 +378,7 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
   const model = process.env.EXTRACTION_MODEL ?? "gpt-4.1-mini";
   const user = JSON.stringify(
     {
-      bedrijf: { naam: facts.name, plaats: facts.place },
+      bedrijf: { naam: facts.name, plaats: facts.place, land: facts.country ?? "NL" },
       vraag: prompt.textNl,
       probes: prompt.probes,
       antwoord: answerText,
@@ -398,7 +411,7 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
     sampleId,
     factKey: c.factKey,
     subject: c.subject,
-    value: postNormalise(c.factKey, c.value),
+    value: postNormalise(c.factKey, c.value, facts.country),
     confidence: c.confidence,
     otherEntity: c.otherEntity || otherEntityHint,
     rawQuote: c.rawQuote.slice(0, 300),
@@ -406,10 +419,10 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
 }
 
 /** Second pass over LLM values so they land in the same value space as facts. */
-function postNormalise(factKey: FactKey, value: string): string {
+function postNormalise(factKey: FactKey, value: string, country?: string): string {
   switch (factKey) {
     case "phone":
-      return normalizePhone(value) ?? value;
+      return normalizePhone(value, country) ?? value;
     case "address":
       return normalizeAddress(value) ?? value;
     case "website":

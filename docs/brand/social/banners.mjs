@@ -27,8 +27,8 @@ const font = readFileSync(join(DIR, "fonts/PlusJakartaSans-latin.woff2")).toStri
 // card: show the question-and-answer card next to the tagline (needs the height).
 const SIZES = {
   "linkedin-company": { w: 2100, h: 350, scale: 2, type: 54, card: false, safe: [0.2, 0.8, 0.1, 0.9] },
-  "linkedin-personal": { w: 1584, h: 396, scale: 2, type: 32, card: true, safe: [0.34, 0.96, 0.12, 0.88] },
-  facebook: { w: 1640, h: 624, scale: 1, type: 36, card: true, safe: [0.17, 0.83, 0.12, 0.88] },
+  "linkedin-personal": { w: 1584, h: 396, scale: 2, type: 42, card: false, safe: [0.34, 0.96, 0.12, 0.88] },
+  facebook: { w: 1640, h: 624, scale: 1, type: 44, card: false, safe: [0.17, 0.83, 0.12, 0.88] },
 };
 
 const page = (s, t) => `<!doctype html><html><head><meta charset="utf-8"><style>

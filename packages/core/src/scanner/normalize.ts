@@ -18,6 +18,9 @@
  */
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Facts, type Hours } from "../types";
 
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
+import { HOME_COUNTRY } from "../shared/country";
+
 export const DAY_NAMES_NL = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"] as const;
 
 /** Day index (0 = Monday) for a Dutch day name, or null. */
@@ -26,9 +29,19 @@ export function dayIndexFromName(name: string): number | null {
   return i === -1 ? null : i;
 }
 
-/** Normalise any Dutch phone notation to "+31XXXXXXXXX". Returns null if it does not look like a phone number. */
-export function normalizePhone(raw: string | null | undefined): string | null {
+/**
+ * Normalise a phone number to E.164 ("+31XXXXXXXXX", "+442079460000"). A number written with its
+ * country code is read as such; a national one ("020-...", "030 1234 5678") is read in `country`
+ * (the business's, default NL). Returns null if it does not look like a phone number.
+ * Dutch numbers keep their own reader, which also accepts the "+31 (0)23" habit.
+ */
+export function normalizePhone(raw: string | null | undefined, country: string = HOME_COUNTRY): string | null {
   if (!raw) return null;
+  const international = /^\s*(\+|00)/.test(raw) && !/^\s*(\+|00)\s*31/.test(raw);
+  if (international || country !== HOME_COUNTRY) {
+    const n = parsePhoneNumberFromString(raw.replace(/^\s*00/, "+").replace(/\(0\)/, ""), country as CountryCode);
+    return n?.isValid() ? n.number : null;
+  }
   let digits = raw.replace(/[^\d+]/g, "");
   if (digits.startsWith("+")) digits = digits.slice(1);
   if (digits.startsWith("00")) digits = digits.slice(2);
@@ -38,6 +51,12 @@ export function normalizePhone(raw: string | null | undefined): string | null {
   // Dutch national significant number is 9 digits (landline + mobile).
   if (digits.length !== 9) return null;
   return `+31${digits}`;
+}
+
+/** Human-friendly display of a normalised phone: Dutch style for +31, international style otherwise. */
+export function formatPhone(normalised: string): string {
+  if (normalised.startsWith("+31")) return formatPhoneNl(normalised);
+  return parsePhoneNumberFromString(normalised)?.formatInternational() ?? normalised;
 }
 
 /** Human-friendly Dutch display of a normalised phone ("+31231234567" -> "023-1234567"). */
@@ -50,11 +69,15 @@ export function formatPhoneNl(normalised: string): string {
   return `0${d.slice(0, 3)}-${d.slice(3)}`;
 }
 
-/** "9:00" / "09.00" / "9 uur" -> "09:00". */
+/** "9:00" / "09.00" / "9 uur" / "9am" / "5:30 p.m." -> "09:00", "17:30". */
 export function normalizeTime(raw: string): string | null {
-  const m = raw.trim().match(/^(\d{1,2})(?:[:.](\d{2}))?(?:\s*uur)?$/);
+  const m = raw.trim().match(/^(\d{1,2})(?:[:.](\d{2}))?\s*(?:uur|([ap])\.?m\.?)?$/i);
   if (!m) return null;
-  const h = Number(m[1]);
+  let h = Number(m[1]);
+  if (m[3]) {
+    if (h < 1 || h > 12) return null;
+    h = (h % 12) + (m[3].toLowerCase() === "p" ? 12 : 0);
+  }
   const min = m[2] ? Number(m[2]) : 0;
   if (h > 24 || min > 59) return null;
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
@@ -115,7 +138,7 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
       return h ? normalizeHours(h) : null;
     }
     case "phone":
-      return normalizePhone(facts.phone);
+      return normalizePhone(facts.phone, facts.country);
     case "address":
       return normalizeAddress([facts.address, facts.postcode, facts.place].filter(Boolean).join(" "));
     case "website":
@@ -218,7 +241,7 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
       return value === "closed" ? `${day} gesloten` : `${day} ${value.replace("-", " tot ")}`;
     }
     case "phone":
-      return value.startsWith("+31") ? formatPhoneNl(value) : value;
+      return value.startsWith("+") ? formatPhone(value) : value;
     case "service":
     case "policy":
     case "payment":

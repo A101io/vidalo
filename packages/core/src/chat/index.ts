@@ -34,7 +34,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   lines.push(nl ? "Wat Vidalo doet, in vier stappen:" : "What Vidalo does, in four steps:");
   for (const s of L.werkt.steps) lines.push(`- ${s.title}: ${s.body}`);
   lines.push(L.werkt.note);
-  lines.push(nl ? "Prijzen (alle prijzen exclusief 21% btw):" : "Prices (all prices excluding 21% VAT):");
+  lines.push(nl ? "Prijzen (alle prijzen exclusief btw, 21% voor een bedrijf in Nederland):" : "Prices (all prices excluding VAT, 21% for a business in the Netherlands):");
   lines.push(`- ${L.prijs.setup.name}: €${PRICES.setupEur} ${L.prijs.setup.unit}. ${L.prijs.setup.audience} ${L.prijs.setup.includes.join(" ")}`);
   lines.push(`- ${L.prijs.monitor.name}: €${PRICES.setupEur} ${L.prijs.setup.unit} + €${PRICES.monitorEurPerMonth} ${L.prijs.monitor.unit}. ${L.prijs.monitor.audience} ${L.prijs.monitor.includes.join(" ")}`);
   lines.push(L.prijs.sub);

@@ -73,6 +73,13 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 - **Owner answers on a finding**: `markFixedByOwner` pulls the open fix's recheck to now and queues it; `disputeFinding` records the dispute and the web sends the owner to `/app/gegevens?betwist=<id>`. Both in `fixer/index.ts`.
 - **Mock seed** (`apps/web/lib/demo.ts`): the demo owner is verified, has confirmed facts (version 2) and a fix round has run, so fixes with evidence, events and the held Google change exist. Prices for "Uitbreiden" are not decided; the rail links to support mail.
 
+## Added 26 Oct 2026: businesses outside the Netherlands
+- **`business.country`** (ISO alpha-2, migration `0013_country.sql`, default `NL`; not yet applied to the hosted project) decides everything through `core/shared/country.ts`: `scanLang` (Dutch for NL, English elsewhere), engines' system prompt and user location (`engines/types.ts systemFor`, SerpApi `hl`/`gl`), phone reading (`normalizePhone(raw, country)`, libphonenumber-js outside NL), the facts page's language, `addressCountry` and currency (`publisher/render.ts`), and `hasDirectorySync` (Dutch directories only for NL; Google, Bing, Apple everywhere). Set from Google's address on lookup (`scanner/resolve.ts`; a foreign place is fetched again in English so the town is "London", not "Londen"), changeable on `/app/gegevens`. A new business abroad gets `language: "en"`.
+- **`Facts.country`** is a copy of `business.country` put in by `withCountry()` wherever facts meet the scanner or the facts page; never owner-entered. `Prompt.textNl` holds the question in the scan language (the name stayed).
+- **English questions**: base and free-scan prompts in `prompts/index.ts` (`say(ctx, nl, en)`), the sector packs in `prompts/sectors.en.ts`, kept item for item in step with `sectors.ts` by `test/sectors-en.test.ts`: change both files together. Which policies and seasonal services produce a question is still decided by the Dutch patterns, so English owner policies ("Free quotes") produce none yet.
+- **VAT**: `VIDALO_STRIPE_TAX=1` turns on Stripe Tax; unset, checkout refuses a business abroad (`?betaling=buitenland`). Go-live B6, `docs/PAYMENTS.md`.
+- E-mails to an owner abroad are Dutch until #65 (owner mails in the owner's language) is merged.
+
 ## Read first
 - `docs/CONTRACT.md` — module layout and rules (facts are owner-asserted; never claim "control"; no jargon).
 - `docs/ARCHITECTURE.md` — workflows A–E and the fix-path table.

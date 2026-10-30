@@ -14,16 +14,18 @@ Link: https://vidalo.io/binnenkort
 Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.
 ```
 
-### Overview (998/2000)
+### Overview (1214/2000)
 
 ```
-Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.
+Maak je bedrijf klaar voor AI-agents.
 
-Klanten googelen steeds minder. Ze vragen het aan AI: hoe laat ben je open, wat is je telefoonnummer, waar zit je. Ze krijgen één antwoord, geen tien links. Dat antwoord bouwt de AI uit wat het online vindt: oude gidsen, Wikipedia, nieuwsberichten, soms een bedrijf met dezelfde naam. Klopt het niet, dan hoor je het als laatste.
+Je klanten vragen het steeds vaker aan AI. Straks laten ze een AI-agent het regelen: een tafel reserveren, een afspraak maken, croissants bestellen voor zondag. Zo'n agent kiest op basis van de gegevens die hij kan lezen. Staat er ergens dat je dicht bent, of vindt hij niets, dan gaat hij door naar de volgende. Je merkt het niet.
 
-Vidalo controleert elke maand wat ChatGPT, Gemini, Perplexity en Google AI over je bedrijf zeggen. We vinden de antwoorden die niet kloppen en de bron waar ze vandaan komen. Je legt je gegevens één keer goed vast. Wij publiceren ze op een feitenpagina op je eigen domein, zetten ze goed in de Nederlandse bedrijvengidsen en herstellen fouten bij de bron, met bewijs.
+Vidalo zet je gegevens op één plek die agents kunnen lezen: een feitenpagina op je eigen domein, als gewone pagina, als schema.org-gegevens en als llms.txt. Wat erop staat, heb jij bevestigd, met datum. In Nederland houden we dezelfde gegevens ook gelijk in de bedrijvengidsen. We controleren elke maand wat ChatGPT, Gemini, Perplexity en Google AI over je zeggen, zodat je ziet waar het nog niet klopt en waar dat vandaan komt.
 
-Voor Nederlandse ondernemers met een zaak waar klanten naar vragen: bakkers, kappers, garages, restaurants, praktijken en installateurs.
+Nieuwe afspraken voor agents, zoals OKF, MCP en A2A, volgen we. Wordt er een echt gebruikt, dan zetten we je gegevens er ook in.
+
+Voor ondernemers met een zaak waar klanten naar vragen: bakkers, kappers, garages, restaurants, praktijken en installateurs. We beginnen in Nederland en werken ook voor bedrijven daarbuiten.
 
 We starten binnenkort. Zet je op de lijst op vidalo.io.
 
@@ -33,23 +35,23 @@ Vidalo is onderdeel van A101 B.V.
 ### Specialties (7/20 items)
 
 ```
-AI-antwoordcontrole
-```
-
-```
-ChatGPT
-```
-
-```
-Google AI
-```
-
-```
-Bedrijfsgegevens
+AI-agents
 ```
 
 ```
 Feitenpagina
+```
+
+```
+schema.org
+```
+
+```
+llms.txt
+```
+
+```
+Bedrijfsgegevens
 ```
 
 ```
@@ -80,18 +82,18 @@ Vidalo
 Softwarebedrijf
 ```
 
-### Bio (83/101)
+### Bio (92/101)
 
 ```
-Wat zegt ChatGPT over jouw zaak? Wij vinden de fouten en herstellen ze bij de bron.
+Straks regelen AI-agents de klantvraag. Wij zorgen dat ze jouw juiste gegevens kunnen lezen.
 ```
 
 ## instagram
 
-### Name (28/30)
+### Name (29/30)
 
 ```
-Vidalo · AI-antwoordcontrole
+Vidalo · klaar voor AI-agents
 ```
 
 ### Category (8/100)
@@ -100,12 +102,12 @@ Vidalo · AI-antwoordcontrole
 Software
 ```
 
-### Bio (119/150)
+### Bio (137/150)
 
 ```
-Je klanten vragen het aan ChatGPT.
-Wij zorgen dat het antwoord klopt.
-Voor Nederlandse ondernemers. Zet je op de lijst:
+AI-agents gaan namens je klanten zoeken en boeken.
+Wij zorgen dat ze jouw juiste gegevens lezen.
+In NL en daarbuiten. Zet je op de lijst:
 ```
 
 ## tiktok
@@ -116,10 +118,10 @@ Voor Nederlandse ondernemers. Zet je op de lijst:
 Vidalo
 ```
 
-### Bio (73/80)
+### Bio (69/80)
 
 ```
-Vraag ChatGPT naar je openingstijden. Klopt het niet? Wij herstellen het.
+Straks boekt een AI-agent voor je klant. Kan hij jouw gegevens lezen?
 ```
 
 ## Banner alt text

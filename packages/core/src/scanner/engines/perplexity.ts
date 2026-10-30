@@ -3,7 +3,7 @@
  * Citations come back as `citations: string[]` on the response.
  */
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
-import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
+import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
 import { perplexityUserLocation } from "./location";
 
 const MODEL = () => process.env.PERPLEXITY_MODEL ?? "sonar";
@@ -34,7 +34,7 @@ export const perplexityEngine: EngineClient = {
         body: JSON.stringify({
           model: MODEL(),
           messages: [
-            { role: "system", content: SYSTEM_NL },
+            { role: "system", content: systemFor(ctx.business.country) },
             { role: "user", content: promptNl },
           ],
           temperature: 0.7,
