@@ -56,7 +56,7 @@ Waarom niet een score van 0 tot 100: een score suggereert dat 78 beter is dan 71
 
 **Welke AI-systemen.** ChatGPT (ruim 75% van het Nederlandse chatbotverkeer, StatCounter, juni 2026), Google AI Overviews en AI Mode (verschijnt boven Google-zoekresultaten, dus bij vrijwel elke lokale zoekopdracht), Copilot (standaard in Windows en Edge), Gemini, Perplexity en Claude (sinds 24 oktober 2026; vooral relevant voor zakelijke dienstverleners, waar het gebruik hoger ligt). De gratis scan doet de eerste drie; de maandcontrole alle zes.
 
-**Hoe vaak.** Gratis scan: 6 vragen × 3 systemen × 3 keer = 54 antwoorden. Maandcontrole: 20 tot 30 vragen × 6 systemen × 10 keer, rond de 1.200 tot 1.800 antwoorden. Tien herhalingen is het minimum om een frequentie van 30% betrouwbaar te onderscheiden van ruis.
+**Hoe vaak.** Gratis scan: 6 vragen × 3 systemen × 3 keer = 54 antwoorden. Maandcontrole: 20 tot 38 vragen × 6 systemen; elke vraag eerst 5 keer, en 10 keer zodra één van die antwoorden fout is, "niet gevonden" zegt, over een naamgenoot gaat of het bedrijf niet noemt (sinds 30 oktober 2026). Google AI Overview krijgt 1 keer: dezelfde zoekopdracht geeft hetzelfde overzicht. Tien herhalingen is het minimum om een frequentie van 30% betrouwbaar te onderscheiden van ruis; vijf foutloze antwoorden volstaan om te stoppen, omdat de criteria met drempel "één" (1, 2, 8, 11) al bij één fout antwoord melden.
 
 **In welke taal en vanuit welke plek.** Nederlandse vragen, geformuleerd zoals een klant ze typt ("is bakkerij de vries zondag open"), met Nederland als locatie en zonder gespreksgeschiedenis. Elke vraag staat op zichzelf, zodat het ene antwoord het andere niet kleurt.
 

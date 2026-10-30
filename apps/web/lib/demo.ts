@@ -13,6 +13,7 @@ import type { CriteriumId, Engine, EngineStip, Finding, ScanReport } from "@vida
 import { ABSENT_LABEL, NOT_FOUND_LABEL } from "@vidalo/core/types";
 import { prepareBusiness, runScan, groupBySeverity, createMockEngine } from "@vidalo/core/scanner";
 import { ENGINES } from "@vidalo/core/types";
+import { openFixesForScan } from "@vidalo/core/fixer";
 import type { SourceRowData } from "./report";
 import type { CopyShape } from "@vidalo/core/copy";
 
@@ -238,4 +239,34 @@ export async function seedDemo(db: Db): Promise<void> {
   await db.upsertChannel({ businessId: business.id, type: "facts_page", name: "Feitenpagina", externalId: null, url: `https://feiten.${business.domain ?? "bakkerijdevries.nl"}`, status: "pending" });
   await db.upsertChannel({ businessId: business.id, type: "gbp", name: "Google Bedrijfsprofiel", externalId: null, url: null, status: "pending" });
   await db.upsertChannel({ businessId: business.id, type: "bing", name: "Bing Places", externalId: null, url: null, status: "synced", lastSyncedAt: new Date().toISOString() });
+  if (db.kind === "mem") {
+    // The demo owner has proven ownership (what /api/google/callback does) and confirmed the facts (what
+    // /app/gegevens does), so the owner's buttons work in mock mode and the Google sync has something to compare.
+    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "mock" });
+    const provisional = await db.latestFacts(business.id);
+    await db.insertFacts(
+      business.id,
+      {
+        ...provisional!,
+        address: "Grote Houtstraat 112",
+        postcode: "2011 SR",
+        phone: "+31235352218",
+        website: "https://bakkerijdevries.nl",
+        openStatus: "open",
+        hours: [
+          ...([0, 1, 2, 3, 4] as const).map((day) => ({ day, open: "08:00", close: "18:00", closed: false })),
+          { day: 5 as const, open: "08:00", close: "17:00", closed: false },
+          { day: 6 as const, open: null, close: null, closed: true },
+        ],
+        servicesYes: ["taarten op bestelling", "glutenvrij brood op bestelling"],
+        paymentMethods: ["pin", "contant"],
+        notConfusedWith: ["Bakkerij De Vries in Heemstede"],
+      },
+      { provisional: false, verifiedAt: new Date().toISOString() },
+    );
+    // The fix round the worker runs after a check: one fix per open finding, with its evidence, the owner mail,
+    // the republished facts page and a sync of every channel. The Google sync then holds its change for the owner.
+    const latest = [...runDates.entries()].sort((a, b) => a[1].localeCompare(b[1])).pop()?.[0];
+    if (latest) await openFixesForScan(latest);
+  }
 }
