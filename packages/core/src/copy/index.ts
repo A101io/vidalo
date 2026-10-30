@@ -2199,6 +2199,12 @@ export const copy = {
     noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Start met een gratis controle en laat het rapport naar dit adres mailen: daarna vind je je bedrijf hier.`,
     startCheck: "Start een gratis controle",
     otherEmail: "Ander e-mailadres? Log uit",
+    linkExpired: "Deze inloglink werkt niet meer: hij is al gebruikt of verlopen. Vraag hieronder een nieuwe aan.",
+    signedInAs: (email: string) => `Je bent ingelogd als ${email}.`,
+    /** From /welkom after checkout, while already signed in: link that business to this account. */
+    linkBusiness: (name: string, place: string) => `Koppel ${name} (${place}) aan dit account?`,
+    linkButton: "Ja, koppel dit bedrijf",
+    linkTaken: "Dit bedrijf is al aan een ander account gekoppeld. Mail support@vidalo.io als dat niet klopt.",
   },
 
   dashboard: {

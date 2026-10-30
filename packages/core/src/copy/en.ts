@@ -2165,6 +2165,11 @@ export const en: CopyShape = {
     noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Start with a free check and have the report emailed to this address: then you will find your business here.`,
     startCheck: "Start a free check",
     otherEmail: "Another email address? Log out",
+    linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
+    signedInAs: (email: string) => `You are signed in as ${email}.`,
+    linkBusiness: (name: string, place: string) => `Link ${name} (${place}) to this account?`,
+    linkButton: "Yes, link this business",
+    linkTaken: "This business is already linked to another account. Email support@vidalo.io if that is wrong.",
   },
 
   dashboard: {
