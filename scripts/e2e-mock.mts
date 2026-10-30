@@ -128,6 +128,7 @@ const full = await buildReport(scans[0]!.id, db);
 console.log(`latest scan ${full.kind}: stip ${full.stip}, ${full.findings.length} findings, ${full.instable.length} instable, ${full.criteriaNotFound.length} criteria not found`);
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(full.stip), "full scan carries a stip colour");
 assert.ok((full.recommendations ?? []).some((r) => r.named < r.answers), "the report still shows the questions where the business was not named");
+assert.ok((full.recommendations ?? []).some((r) => r.named > 0), "the report counts the answers where the business was named");
 assert.ok(full.engineStips.filter((e) => e.counts).length === 4, "chatgpt, google_ai, copilot and gemini count for the stip; perplexity does not");
 let fixes = 0;
 for (const f of findings) fixes += (await db.listFixes(f.id)).length;

@@ -44,6 +44,7 @@ describe("runScan (mock pipeline)", () => {
     expect(recs.filter((r) => r.pool === "bank").length).toBeLessThanOrEqual(6);
     // The mock leaves the business out of part of the lists and names three others.
     expect(recs.some((r) => r.named < r.answers)).toBe(true);
+    expect(recs.some((r) => r.named > 0)).toBe(true);
     expect(recs.every((r) => r.others.every((o) => !o.name.includes("De Vries")))).toBe(true);
     expect(recs.some((r) => r.others.length > 0)).toBe(true);
     expect(["rood", "oranje", "groen", "grijs"]).toContain(report.stip);
