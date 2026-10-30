@@ -39,8 +39,9 @@ right versus wrong, add the Places key first (step 3 in CLAUDE.md).
 
 A free scan is 6 questions x 3 samples = 18 ChatGPT calls with web search,
 plus 18 small extraction calls. At the prices in
-`packages/core/src/scanner/engines/chatgpt.ts` (gpt-4.1-mini, web search at
-$25 per 1,000 calls) that is roughly **$0.50 per business, about $10 for 20**.
+`packages/core/src/scanner/engines/chatgpt.ts` (gpt-4.1-mini, the `web_search`
+tool at $10 per 1,000 calls plus about 8,000 input tokens of search content
+per call) that is roughly **$0.25 per business, about $5 for 20**.
 Check the table against OpenAI's current pricing page. The CLI prints the
 estimated cost of each business's answers and a running total; the small
 extraction calls are not in that figure.
