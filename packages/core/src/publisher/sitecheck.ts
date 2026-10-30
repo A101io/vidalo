@@ -33,6 +33,9 @@ export const ANSWER_ROBOTS: { token: string; engines: Engine[] }[] = [
   { token: "Google-Extended", engines: ["gemini"] },
   { token: "Bingbot", engines: ["copilot"] },
   { token: "PerplexityBot", engines: ["perplexity"] },
+  // Anthropic: Claude-User fetches a page when a user asks; Claude-SearchBot fills the search index Claude cites.
+  { token: "Claude-User", engines: ["claude"] },
+  { token: "Claude-SearchBot", engines: ["claude"] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -280,7 +283,7 @@ export function issueKey(issue: SiteIssue): string {
 // ---------------------------------------------------------------------------
 
 /** Engine names as the owner mail and the domain page say them. */
-export const ENGINE_NAMES: Record<Engine, string> = { chatgpt: "ChatGPT", google_ai: "Google", gemini: "Gemini", copilot: "Copilot", perplexity: "Perplexity" };
+export const ENGINE_NAMES: Record<Engine, string> = { chatgpt: "ChatGPT", google_ai: "Google", gemini: "Gemini", copilot: "Copilot", perplexity: "Perplexity", claude: "Claude" };
 
 function joinNl(items: string[]): string {
   if (items.length <= 1) return items.join("");

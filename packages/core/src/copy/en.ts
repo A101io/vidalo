@@ -15,6 +15,7 @@ export const en: CopyShape = {
     copilot: "Copilot",
     gemini: "Gemini",
     perplexity: "Perplexity",
+    claude: "Claude",
   },
 
   nav: {
@@ -147,11 +148,11 @@ export const en: CopyShape = {
       steps: [
         { n: "1", tone: "ink", title: "Record", body: "Your details right, once: address, phone, opening hours, what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
         { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. The same details to Google, Bing, Apple and the business directories.", meta: "Live as soon as your DNS record is in place" },
-        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini and Perplexity, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
+        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
         { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Fixed where we can reach the source, requested in writing where we cannot, on your behalf. Then we ask again and you see before and after.", meta: "Proof for every error" },
       ],
       note: "Asking several times is necessary: AI rarely gives exactly the same answer twice. That is why we count how often an error comes back.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twelve facts that make a customer come, or drop out",
@@ -568,7 +569,7 @@ export const en: CopyShape = {
         price: "€49",
         unit: "per month",
         includes: [
-          "A new check with ChatGPT, Google AI, Gemini and Perplexity every month.",
+          "A new check with ChatGPT, Google AI, Gemini, Perplexity and Claude every month.",
           "A fix at the source for every new error.¹",
           "A monthly report with proof of what was fixed.",
         ],
@@ -676,7 +677,7 @@ export const en: CopyShape = {
     how: {
       crumb: "How it works",
       title: "How Vidalo works: record, publish, check, fix",
-      description: "Record your details once, publish them the same everywhere, check every question up to ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
+      description: "Record your details once, publish them the same everywhere, check every question up to ten times a month with ChatGPT, Google AI, Gemini, Perplexity and Claude, and fix errors at the source with proof.",
       h1: "How Vidalo works",
       intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and fix every error at its source.",
     },
@@ -1076,6 +1077,7 @@ export const en: CopyShape = {
               "Resend: sending our emails; United States.",
               "Google: our mailbox (Google Workspace), business details from Google Maps, Gemini, signing in with Google and your business profile; EU and United States.",
               "OpenAI: ChatGPT for the checks, and the assistant on our website; United States.",
+              "Anthropic: Claude for the checks; United States.",
               "Twilio: calling or texting the code with which you show that you manage the business; United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
@@ -1427,7 +1429,7 @@ export const en: CopyShape = {
     factsH2: (noun: string) => `Three facts that make the difference for a ${noun}`,
     factQuestion: "Check question:",
     checkH2: (nounPlural: string) => `What we check for ${nounPlural}`,
-    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Copilot, Gemini and Perplexity.`,
+    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Copilot, Gemini, Perplexity and Claude.`,
     table: { question: "Question a customer asks", criterium: "Fact", severity: "Severity if it is wrong" },
     why: {
       h2: "Why you do not notice this on your phone",

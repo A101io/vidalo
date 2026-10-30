@@ -28,6 +28,7 @@ export const copy = {
     copilot: "Copilot",
     gemini: "Gemini",
     perplexity: "Perplexity",
+    claude: "Claude",
   },
 
   nav: {
@@ -160,11 +161,11 @@ export const copy = {
       steps: [
         { n: "1", tone: "ink", title: "Vastleggen", body: "Je gegevens één keer goed: adres, telefoon, openingstijden, wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
         { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Dezelfde gegevens naar Google, Bing, Apple en de bedrijvengidsen.", meta: "Live zodra je DNS-regel staat" },
-        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini en Perplexity in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
+        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
         { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Hersteld waar wij bij kunnen, aangeschreven waar het moet, namens jou. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
       ],
       note: "Meerdere keren vragen is nodig: AI geeft zelden twee keer precies hetzelfde antwoord. Daarom tellen we hoe vaak een fout terugkomt.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twaalf feiten die een klant laten komen, of afhaken",
@@ -581,7 +582,7 @@ export const copy = {
         price: "€49",
         unit: "per maand",
         includes: [
-          "Elke maand een nieuwe controle bij ChatGPT, Google AI, Gemini en Perplexity.",
+          "Elke maand een nieuwe controle bij ChatGPT, Google AI, Gemini, Perplexity en Claude.",
           "Herstel aan de bron bij elke nieuwe fout.¹",
           "Een maandelijks rapport met bewijs van wat er is hersteld.",
         ],
@@ -686,7 +687,7 @@ export const copy = {
     how: {
       crumb: "Zo werkt het",
       title: "Zo werkt Vidalo: vastleggen, publiceren, controleren, herstellen",
-      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tot tien keer per vraag controleren bij ChatGPT, Google AI, Gemini en Perplexity, en fouten aan de bron herstellen met bewijs.",
+      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tot tien keer per vraag controleren bij ChatGPT, Google AI, Gemini, Perplexity en Claude, en fouten aan de bron herstellen met bewijs.",
       h1: "Zo werkt Vidalo",
       intro: "Vijf minuten werk voor jou bij de start. Daarna controleren we elke maand wat AI-assistenten over je zeggen, en herstellen we elke fout bij de bron.",
     },
@@ -1096,6 +1097,7 @@ export const copy = {
               "Resend: het versturen van onze e-mails; Verenigde Staten.",
               "Google: onze mailbox (Google Workspace), bedrijfsgegevens uit Google Maps, Gemini, inloggen met Google en je bedrijfsprofiel; EU en Verenigde Staten.",
               "OpenAI: ChatGPT voor de controles, en de assistent op onze website; Verenigde Staten.",
+              "Anthropic: Claude voor de controles; Verenigde Staten.",
               "Twilio: het bellen of sms'en van de code waarmee je aantoont dat je het bedrijf beheert; Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
@@ -1452,7 +1454,7 @@ export const copy = {
     factsH2: (noun: string) => `Drie feiten die voor een ${noun} de doorslag geven`,
     factQuestion: "Controlevraag:",
     checkH2: (nounPlural: string) => `Wat we voor ${nounPlural} controleren`,
-    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Copilot, Gemini en Perplexity.`,
+    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Copilot, Gemini, Perplexity en Claude.`,
     table: { question: "Vraag die een klant stelt", criterium: "Feit", severity: "Ernst als het fout is" },
     why: {
       h2: "Waarom je dit niet ziet aan je telefoon",

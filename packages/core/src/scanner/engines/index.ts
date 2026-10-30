@@ -8,6 +8,7 @@ import { geminiEngine } from "./gemini";
 import { perplexityEngine } from "./perplexity";
 import { googleAiEngine } from "./google_ai";
 import { copilotEngine } from "./copilot";
+import { claudeEngine } from "./claude";
 import { createMockEngine } from "./mock";
 import type { EngineClient } from "./types";
 
@@ -21,6 +22,7 @@ const REAL: Record<Engine, EngineClient> = {
   perplexity: perplexityEngine,
   google_ai: googleAiEngine,
   copilot: copilotEngine,
+  claude: claudeEngine,
 };
 
 /** True when engines must not call any external API. */
