@@ -69,6 +69,7 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 - `docs/ARCHITECTURE.md` — workflows A–E and the fix-path table.
 - `docs/CRITERIA.md` — the twelve criteria, severities, thresholds, the stipregel and the sector question sets (the scanner follows this literally).
 - `docs/MESSAGING.md` — every customer-facing rule and the Dutch copy. All strings live in `packages/core/src/copy/index.ts`.
+- `docs/BRAIN.md` — the product-side research design (worker job, Tier 0 from scan data); its company-wide half is live as `A101/_OS/research/` (25 Oct 2026): `BASELINE.md` rows V1–V7, S1–S4, W1–W3 describe what this repo does for AI answers and are challenged weekly; proposals arrive as PRs titled `research: …`.
 - `docs/DESIGN_G.md` — the visual spec (design G: Plus Jakarta Sans, white/ink/one blue accent, 1.5px borders, status colours only in dots, pills and report rows; reference boards in `docs/design-g/*.html` are the source of truth for copy, order and layout). `docs/DESIGN_RESEARCH.md` §3–4 (serif/paper) is superseded.
 
 ## Commands
@@ -76,6 +77,8 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 pnpm install
 pnpm -r typecheck && pnpm -r test          # must stay green
 pnpm e2e:mock                              # whole pipeline in one process, no keys
+pnpm mail:lab                              # every e-mail, real code paths, checked → out/mail-lab/index.html (docs/mail-lab.md)
+pnpm mail:send --to you@x.nl [--send]      # one of each to your inbox through Resend; dry run without --send
 pnpm verify:pg                             # migrations + PgDb + whole pipeline on a real local Postgres (PG_ADMIN_URL)
 VIDALO_MOCK=1 pnpm dev                     # web on :3000 (demo owner eigenaar@bakkerijdevries.nl)
 VIDALO_MOCK=1 pnpm worker                  # job loop + cron + facts pages on :8787

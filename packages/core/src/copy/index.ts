@@ -585,6 +585,32 @@ export const copy = {
       },
       footnote: "¹ Herstel bij bronnen van derden duurt meestal twee tot vier weken, soms langer. Je ziet in je rapport waar het staat.",
       multi: "Meer dan 10 vestigingen? Neem contact op.",
+      /** Websites built from the facts page; by request, no checkout. */
+      website: {
+        h3: "Nog geen website?",
+        sub: "Dan maken we er een, uit dezelfde gegevens als je feitenpagina. Goed leesbaar voor je klanten en voor AI.",
+        simple: {
+          name: "Eenvoudige website",
+          price: "€249",
+          unit: "eenmalig",
+          includes: [
+            "Eén pagina op je eigen domein, met je gegevens, openingstijden en een bel- en routeknop.",
+            "Foto's, je menukaart of prijslijst en een korte beschrijving.",
+            "Werkt vanzelf mee als je je gegevens bijwerkt.",
+          ],
+        },
+        custom: {
+          name: "Uitgebreide website",
+          price: "vanaf €750",
+          unit: "eenmalig",
+          includes: [
+            "Meer pagina's, je eigen logo en kleuren.",
+            "Teksten die we samen met je schrijven.",
+          ],
+        },
+        note: "Bij een plan van Vidalo. Het domein staat op jouw naam. Bestellen en betalen op de website zitten er niet in.",
+        ask: "Vraag een website aan",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -604,7 +630,7 @@ export const copy = {
         { q: "Ik heb toch een website?", a: "AI leest die als één bron van vele. De boekwinkel die “permanent gesloten” werd genoemd had ook een website." },
         { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij herstellen de bronnen waar AI uit put, zodat ze allemaal hetzelfde zeggen." },
         { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie herstellen we meestal binnen weken. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
-        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer inloggen bij Google. Geen domein? Dan regelen wij er een." },
+        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een." },
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
@@ -622,10 +648,10 @@ export const copy = {
       lang: "NL",
       columns: [
         { title: "Product", links: [{ label: "Hoe het werkt", href: "/hoe-het-werkt" }, { label: "Waarom", href: "/waarom" }, { label: "AI-agents en OKF", href: "/straks" }, { label: "Voorbeeldrapport", href: "/#rapport" }, { label: "Prijs", href: "/prijzen" }, { label: "Per vak", href: "/#vak" }] },
-        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "mailto:hello@vidalo.io" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
+        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · Prijzen excl. btw",
+      legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · +31 85 109 1393 · Prijzen excl. btw",
       copyright: "© 2026 Vidalo. Alle rechten voorbehouden.",
       reportNote: "Deze rapportlink werkt 30 dagen.",
     },
@@ -670,6 +696,20 @@ export const copy = {
       h1: "Straks praten assistenten met elkaar",
       intro: "Wat er verandert als AI-assistenten niet alleen antwoorden maar ook regelen, en welke afspraken daarvoor nu gemaakt worden. Zonder vakjargon.",
     },
+    /** /contact: WhatsApp, phone and mail, with when we answer. */
+    contact: {
+      crumb: "Contact",
+      title: "Contact met Vidalo: WhatsApp, bellen of mailen",
+      description: "App, bel of mail Vidalo. WhatsApp en telefoon op werkdagen van 09:00 tot 17:00; een mail beantwoorden we binnen twee werkdagen.",
+      h1: "Contact",
+      intro: "Er zit een klein team achter Vidalo. Je appt, belt of mailt gewoon met ons; geen ticketnummer, geen wachtrij.",
+      whatsapp: { h: "WhatsApp", p: "Het snelst. Stuur een berichtje; op werkdagen tussen 09:00 en 17:00 reageren we meestal binnen een uur.", button: "Stuur een WhatsApp-bericht" },
+      phone: { h: "Bellen", p: "Werkdagen van 09:00 tot 17:00. Krijg je ons niet te pakken, stuur dan een berichtje, dan bellen we terug.", button: "Bel ons" },
+      mail: { h: "Mailen", p: "Voor vragen over Vidalo. Over je account, een rapport of een betaling mail je support; we antwoorden binnen twee werkdagen.", button: "Mail ons", supportLabel: "Support" },
+      include: { h: "Handig om mee te sturen", items: ["De naam en plaats van je bedrijf.", "Als het over een rapport gaat: de link van dat rapport.", "Wat je verwachtte, en wat er in plaats daarvan gebeurde."] },
+      never: "Stuur nooit een wachtwoord of betaalgegeven mee. Daar vragen we nooit om.",
+      company: "Onze bedrijfsgegevens, ons adres en ons KvK-nummer staan onderaan deze pagina. Post mag naar dat adres; een berichtje is sneller.",
+    },
     home_crumb: "Vidalo",
   },
 
@@ -677,7 +717,7 @@ export const copy = {
     draft: true,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
     updated: "Laatst bijgewerkt: 9 oktober 2026",
-    contact: "Vragen? Mail ons op hello@vidalo.io.",
+    contact: "Vragen? Mail ons op hello@vidalo.io of bel +31 85 109 1393.",
     terms: {
       title: "Algemene voorwaarden",
       intro: "Deze voorwaarden gelden voor elke controle en elk abonnement van Vidalo, een handelsnaam van A101 B.V.",
@@ -686,7 +726,8 @@ export const copy = {
         { h: "Wat we niet beloven", p: ["Niemand bepaalt wat een AI-assistent antwoordt. We herstellen de bronnen waar die antwoorden uit komen. Antwoorden uit het geheugen van een model veranderen pas bij een nieuwe modelversie.", "Herstel bij een andere website of gids hangt af van die partij en duurt meestal twee tot vier weken, soms langer."] },
         { h: "Jouw gegevens, jouw verantwoordelijkheid", p: ["Je bevestigt zelf de gegevens van je bedrijf. Wij publiceren en versturen alleen wat jij bevestigd hebt.", "Je geeft ons toestemming om namens je bedrijf correctieverzoeken te sturen naar websites en gidsen, en om je Google-bedrijfsprofiel bij te werken als je dat koppelt."] },
         { h: "Prijs en betalen", p: ["Goed zetten kost eenmalig €149. Goed houden kost €49 per maand. Alle prijzen zijn exclusief btw.", "Je betaalt via Stripe met iDEAL, kaart of SEPA-incasso. Je ontvangt een factuur per betaling."] },
-        { h: "Opzeggen", p: ["Er is geen opzegtermijn. Je zegt maandelijks op onder ‘Abonnement’ in je account; de lopende maand loopt af.", "Als je abonnement afloopt, stoppen we met controleren en bijwerken, en verwijst je feitenpagina door naar je eigen website."] },
+        { h: "Opzeggen", p: ["Er is geen opzegtermijn. Je zegt maandelijks op onder ‘Abonnement’ in je account; de lopende periode die je al betaald hebt loopt af. Je krijgt direct een bevestiging per e-mail. Tot de einddatum kun je de opzegging intrekken.", "Als je abonnement afloopt, stoppen we met controleren en bijwerken, en verwijst je feitenpagina door naar je eigen website."] },
+        { h: "Pauzeren", p: ["Je kunt je abonnement onder ‘Abonnement’ in je account 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je feitenpagina blijft online. Je krijgt direct een bevestiging per e-mail en een week voor het einde een herinnering.", "Op de einddatum loopt je abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen."] },
         { h: "Aansprakelijkheid", p: ["We doen ons werk zorgvuldig, maar zijn niet aansprakelijk voor wat AI-assistenten of andere partijen over je bedrijf zeggen. Onze aansprakelijkheid is beperkt tot het bedrag dat je ons in de laatste twaalf maanden betaalde."] },
         { h: "Toepasselijk recht", p: ["Op deze voorwaarden is Nederlands recht van toepassing."] },
       ],
@@ -740,7 +781,7 @@ export const copy = {
       label: "Een chatveld waarin klantvragen worden getypt, en dat het Vidalo-logo wordt",
       questions: ["Is de bakker op zondag open?", "Wat kost een knipbeurt?", "Bezorgen ze ook in Haarlem?"],
     },
-    contact: "Vragen? Mail ons op",
+    contact: { lead: "Vragen? App, bel of mail ons.", whatsapp: "WhatsApp", phone: "Bellen", mail: "Mailen", more: "Alle contactgegevens" },
     list: {
       h2: "Hoor het als we opengaan",
       label: "Je e-mailadres",
@@ -749,6 +790,7 @@ export const copy = {
       consent: "Ja, mail me één keer wanneer Vidalo opengaat. Afmelden kan altijd via hello@vidalo.io.",
       thanks: "Dank je. Je staat op de lijst; we mailen je zodra Vidalo opengaat.",
       invalid: "Dat e-mailadres lijkt niet te kloppen. Kijk het nog even na.",
+      noConsent: "Vink het vakje aan, dan zetten we je op de lijst.",
       busy: "Het is even druk. Probeer het over een paar minuten opnieuw.",
       failed: "Dat lukte niet. Probeer het later opnieuw, of mail ons.",
     },
@@ -765,6 +807,15 @@ export const copy = {
       { label: "Inloggen", href: "/inloggen" },
     ],
     barExit: "Terug naar Binnenkort",
+    /** /voorvertoning: the key form for the full site behind the gate. Not linked anywhere; noindex. */
+    previewPage: {
+      title: "Voorvertoning",
+      h1: "Bekijk de hele site",
+      body: "Voer de voorvertoningssleutel in. Je ziet de site dan zoals hij wordt na de lancering, tot je de browser sluit.",
+      label: "Voorvertoningssleutel",
+      button: "Open de site",
+      wrong: "Die sleutel klopt niet. Kijk hem nog even na.",
+    },
   },
 
   /** The website assistant (components/ChatWidget.tsx, /api/chat, core/chat). */
@@ -806,10 +857,10 @@ export const copy = {
 
   unsubscribe: {
     h1: "Afmelden",
-    body: (name: string) => `Je krijgt dan geen mails meer van ons over de controle van ${name}. Je rapport blijft gewoon bereikbaar via de link.`,
+    body: (name: string) => `Je krijgt dan geen maandrapporten, herinneringen en andere berichten meer die je zelf kunt uitzetten, over de controle van ${name}. Mails die nodig zijn voor je abonnement of je inlog blijven komen. Je rapport blijft gewoon bereikbaar via de link.`,
     button: "Afmelden",
     doneH1: "Je bent afgemeld",
-    doneBody: "We sturen je hierover geen mails meer.",
+    doneBody: "We sturen je alleen nog mails die nodig zijn voor je abonnement of je inlog. Ingelogd kun je bij Account kiezen wat je weer wilt krijgen.",
     invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op support@vidalo.io, dan regelen we het.",
   },
 
@@ -841,6 +892,8 @@ export const copy = {
       placeLabel: "Plaats",
       placeHint: "In welke plaats zit het bedrijf?",
       back: "Terug",
+      /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
+      again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },
@@ -848,6 +901,8 @@ export const copy = {
   /** Result page (docs/design-g/ResultG.dc.html and ResultGGrey.dc.html). Three states: rood/oranje, groen, grijs. */
   result: {
     checkedAt: (dateTime: string) => `Gecontroleerd op ${dateTime}`,
+    /** Secondary text button on the report: opens the print dialog (print or save as PDF). */
+    print: "Print of bewaar als PDF",
     /** Hero: the number inside the dot and its two-line label. */
     hero: {
       wrongLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "fout beantwoord"],
@@ -1620,8 +1675,10 @@ export const copy = {
       { q: "Hoe betaal ik?", a: "Met iDEAL, creditcard of automatische incasso (SEPA). Je betaalt via Stripe; wij zien je betaalgegevens niet." },
       { q: "Zijn de prijzen inclusief btw?", a: "Nee. Alle prijzen zijn exclusief 21% btw. Je krijgt bij elke betaling een factuur met de btw apart vermeld, met je btw-nummer als je dat invult." },
       { q: "Hoe zeg ik op?", a: "Wanneer je wilt, onder ‘Abonnement’ in je account. Er is geen opzegtermijn; de lopende maand loopt af." },
+      { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Goed zetten’ gekozen, dan voeg je ‘Goed houden’ later toe onder ‘Abonnement’ in je account." },
+      { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
   },
 
@@ -1634,12 +1691,73 @@ export const copy = {
     statuses: { scanned: "Nog niet betaald", trial: "Betaald, we zijn bezig", active: "Actief", paused: "Stilgezet: betaling niet gelukt", churned: "Opgezegd" },
     pausedNote: "Je laatste betaling is niet gelukt. Werk je betaalgegevens bij, dan gaat de bewaking direct weer verder.",
     portal: "Facturen en betaalgegevens",
-    portalNote: "Bekijk en download je facturen, wijzig je betaalmethode of zeg op. Dit opent een pagina van Stripe.",
+    portalNote: "Bekijk en download je facturen of wijzig je betaalmethode. Dit opent een pagina van Stripe.",
     addonTitle: "Bewaking toevoegen",
     addonBody: "Elke maand dezelfde vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport. €49 per maand excl. btw, maandelijks opzegbaar.",
     addonButton: "Goed houden toevoegen",
     addonDone: "Bewaking toegevoegd. We controleren je bedrijf voortaan elke maand.",
     processing: "Je betaling wordt nog verwerkt. Bij een incasso duurt dat een paar werkdagen; daarna starten we vanzelf.",
+    /** Pause and cancel (core/billing/lifecycle.ts, docs/CANCEL-PAUSE.md). */
+    manage: {
+      title: "Pauzeren of opzeggen",
+      body: "Even geen controles nodig? Zet je abonnement 1 tot 3 maanden stil. Of zeg op: er is geen opzegtermijn, de betaalde maand loopt af.",
+      pauseLink: "Pauzeren",
+      cancelLink: "Opzeggen",
+      cancelledRow: "Opgezegd per",
+      cancelledNote: (date: string) => `Je abonnement stopt op ${date}. Tot dan loopt alles door. Tot die dag kun je de opzegging intrekken.`,
+      undo: "Toch doorgaan",
+      pausedRow: "Gepauzeerd tot",
+      pausedNote: (date: string) => `Tot ${date} controleren we niets en betaal je niets. Daarna gaat alles vanzelf verder.`,
+      resume: "Nu hervatten",
+      done: {
+        opgezegd: "Je opzegging is verwerkt. De bevestiging staat in je mail.",
+        doorgaan: "Je abonnement loopt door. De bevestiging staat in je mail.",
+        gepauzeerd: "Je abonnement staat stil. De bevestiging staat in je mail.",
+        hervat: "Je abonnement loopt weer. De bevestiging staat in je mail.",
+      },
+      error: "Dat lukte niet. Probeer het opnieuw of mail support@vidalo.io.",
+      pause: {
+        h1: "Abonnement pauzeren",
+        intro: "Zet je abonnement stil. In die tijd betaal je niets.",
+        stops: "Wat stilstaat: de maandelijkse controle, het herstellen van fouten en het bijwerken van gidsen.",
+        stays: "Wat blijft: je feitenpagina blijft online en je gegevens blijven bewaard.",
+        restart: "Op de einddatum gaat alles vanzelf weer verder en betaal je weer per maand. Een week vooraf krijg je een herinnering. Eerder verder kan altijd.",
+        label: "Hoe lang?",
+        option: (months: number, date: string) => `${months} ${months === 1 ? "maand" : "maanden"}, tot ${date}`,
+        button: "Pauzeer mijn abonnement",
+        back: "Terug naar je abonnement",
+      },
+      cancel: {
+        h1: "Abonnement opzeggen",
+        intro: (date: string) => `Er is geen opzegtermijn. Je abonnement stopt op ${date}, aan het eind van de periode die je al betaald hebt. Daarna schrijven we niets meer af.`,
+        whatTitle: (date: string) => `Wat er op ${date} gebeurt`,
+        what: [
+          "We controleren niet meer wat AI over je bedrijf zegt en werken je gegevens niet meer bij.",
+          "Je feitenpagina verwijst door naar je eigen website.",
+          "Wat al is aangepast bij Google, gidsen en andere websites, blijft daar staan.",
+          "Je facturen blijven te downloaden.",
+          "90 dagen later doen we nog één gratis controle. Daarna bewaren we alleen wat de wet voor facturen vraagt.",
+        ],
+        undo: "Tot die datum kun je de opzegging met één klik intrekken. Je krijgt meteen een bevestiging per mail.",
+        pauseAlt: "Liever even stilzetten in plaats van opzeggen?",
+        pauseAltLink: "Pauzeer 1 tot 3 maanden",
+        reasonLabel: "Waarom zeg je op? (niet verplicht)",
+        reasons: {
+          too_expensive: "Te duur",
+          unused: "Ik gebruik het niet genoeg",
+          missing_features: "Ik mis iets",
+          switched_service: "Ik ga naar een andere dienst",
+          low_quality: "Het werkt niet goed genoeg",
+          too_complex: "Te ingewikkeld",
+          customer_service: "Niet tevreden over de hulp",
+          other: "Iets anders",
+        },
+        noReason: "Zeg ik liever niet",
+        commentLabel: "Wil je nog iets kwijt? (niet verplicht)",
+        button: (date: string) => `Zeg op per ${date}`,
+        back: "Terug naar je abonnement",
+      },
+    },
   },
 
   welcome: {
@@ -1651,7 +1769,7 @@ export const copy = {
     failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op support@vidalo.io.",
     receipt: (amount: string, email: string | null) => `Je betaalde ${amount} incl. btw.${email ? ` De factuur staat in je mail (${email}).` : ""}`,
     steps: [
-      { title: "Log één keer in bij Google", body: "Met het account van je Google-bedrijfsprofiel. Zo weten we dat jij de eigenaar bent.", href: "/app/google", cta: "Inloggen bij Google" },
+      { title: "Laat zien dat jij de eigenaar bent", body: "Log in met het account van je Google-bedrijfsprofiel, of vraag een code via het telefoonnummer van je bedrijf.", href: "/app/google", cta: "Eigenaar bevestigen" },
       { title: "Bevestig je gegevens", body: "Controleer adres, telefoon, openingstijden en wat je wel en niet doet.", href: "/app/gegevens", cta: "Gegevens bevestigen" },
       { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein, of laat Vidalo een domein registreren.", href: "/app/domein", cta: "Domein instellen" },
       { title: "Wacht op de eerste controle", body: "Daarna krijg je elke maand een rapport. Je hoeft niets te installeren.", href: "/app", cta: "Naar je overzicht" },
@@ -1667,6 +1785,11 @@ export const copy = {
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",
     mockHint: "Geen Supabase-sleutels ingesteld: je wordt direct ingelogd in de voorbeeldomgeving.",
     noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
+    rateLimited: "Je hebt net al een inloglink gevraagd. Kijk in je mailbox, of probeer het over een paar minuten opnieuw.",
+    signedInH1: "Je bent ingelogd",
+    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Start met een gratis controle en laat het rapport naar dit adres mailen: daarna vind je je bedrijf hier.`,
+    startCheck: "Start een gratis controle",
+    otherEmail: "Ander e-mailadres? Log uit",
   },
 
   dashboard: {
@@ -1758,9 +1881,49 @@ export const copy = {
     ownerLabel: "Eigenaar",
     ownerVerified: (date: string) => `Bevestigd met Google op ${date}`,
     ownerNotVerified: "Nog niet bevestigd met Google",
-    verifyNow: "Bevestig met Google",
+    verifyNow: "Bevestig dat jij de eigenaar bent",
     logout: "Uitloggen",
+    /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
+    myData: {
+      h: "Je gegevens",
+      body: "Download alles wat Vidalo over je bedrijf bewaart, of laat het verwijderen.",
+      download: "Download je gegevens (JSON)",
+      deleteBody: "We verwijderen je bedrijf, je gegevens, je controles, je rapporten en je inlog. Facturen blijven 7 jaar bij Stripe, omdat de wet dat vraagt. Wat we bij andere sites hebben aangepast, blijft daar staan. Dit kun je niet terugdraaien.",
+      confirm: "Ja, verwijder alles van mijn bedrijf",
+      deleteButton: "Verwijder alles",
+      blocked: "Zeg eerst je abonnement op. Is het afgelopen, dan kun je hier alles verwijderen.",
+      deleted: "Je gegevens zijn verwijderd.",
+    },
     /** The language row: the dashboard, the report and the e-mails follow it. */
+    /** Change the sign-in address (account/actions.ts changeEmail). */
+    changeEmail: {
+      label: "Nieuw e-mailadres",
+      button: "Wijzig",
+      body: "We sturen een bevestigingslink naar het nieuwe adres. Pas als je op die link klikt, wordt het je inlog en krijg je daar onze mails. Soms vragen we het oude adres ook om te bevestigen.",
+      status: {
+        verstuurd: "Bevestigingslink verstuurd. Klik op de link in die mail om de wijziging af te ronden. Tot dan blijft je oude adres je inlog.",
+        gewijzigd: "Je e-mailadres is gewijzigd.",
+        bevestigd: "Je nieuwe e-mailadres is bevestigd.",
+        zelfde: "Dit is al je e-mailadres.",
+        bezet: "Dit adres kun je hier niet gebruiken. Mail support@vidalo.io als het wel van jou is.",
+        fout: "Dat lukte niet. Controleer het adres en probeer het opnieuw.",
+      } as Record<string, string>,
+    },
+    /** Mail preferences (shared/mail-prefs.ts): optional groups have a box, required mails are listed. */
+    mails: {
+      h: "Mails die je krijgt",
+      body: "Kies welke berichten je wilt krijgen. Je rapporten en alles wat we doen staan ook altijd in je dashboard.",
+      optional: {
+        report: { label: "Maandrapport", body: "Elke maand hoe AI over je bedrijf praat." },
+        resolution: { label: "Fout opgelost", body: "Een bericht zodra een fout antwoord goed is." },
+        reminder: { label: "Herinneringen", body: "Een herinnering als een stap op je website nog openstaat." },
+        followup: { label: "Na de gratis controle", body: "Twee berichten na je gratis controle over wat we voor je kunnen doen." },
+      },
+      requiredH: "Deze krijg je altijd",
+      required: "Je welkomstmail, je eerste rapport, stappen die alleen jij kunt zetten, een bericht als we een fout niet kunnen oplossen, en mails over je abonnement en je inlog.",
+      save: "Opslaan",
+      saved: "Je keuze is opgeslagen.",
+    },
     language: { label: "Taal", names: { nl: "Nederlands", en: "English" }, save: "Opslaan", saved: "Taal opgeslagen.", body: "Je dashboard en je rapport volgen deze taal. De NL · EN-knop onderaan elke pagina past hem ook aan." },
     fields: { name: "Naam", place: "Plaats", address: "Adres", phone: "Telefoon", email: "E-mail", website: "Website", kvk: "KvK", factsHost: "Feitenpagina", factsVersion: "Gegevens" },
     empty: "nog niet ingevuld",
@@ -1768,6 +1931,7 @@ export const copy = {
     factsConfirmed: (version: number, date: string) => `versie ${version}, bevestigd op ${date}`,
     factsProvisional: "nog niet door jou bevestigd",
     editFacts: "Gegevens bewerken",
+    factsHistory: "Alle versies",
     setDomain: "Domein instellen",
     reportLine: (ok: number, total: number) => `${ok} van ${total} antwoorden kloppen`,
     reportDate: (date: string) => `Gecontroleerd op ${date}`,
@@ -1844,6 +2008,42 @@ export const copy = {
     saved: "Gegevens bevestigd. We publiceren je feitenpagina en werken de bronnen bij.",
   },
 
+  /** /app/gegevens/versies: every facts version, what changed, which checks ran on it (core/facts-history.ts). */
+  factsHistory: {
+    h1: "Versies van je gegevens",
+    intro: "Elke keer dat je gegevens veranderen of dat je ze bevestigt, bewaren we een nieuwe versie. Hier zie je wat er veranderde en welke controles op welke versie draaiden.",
+    back: "Terug naar je account",
+    edit: "Gegevens bewerken",
+    empty: "Er zijn nog geen gegevens bewaard.",
+    version: (n: number) => `Versie ${n}`,
+    current: "huidige",
+    confirmed: (date: string) => `Bevestigd op ${date}`,
+    provisional: (date: string | null) => (date ? `Voorlopig, opgehaald op ${date}` : "Voorlopig"),
+    provisionalNote: "Opgehaald van je website en Google, nog niet door jou bevestigd.",
+    first: "Eerste versie.",
+    unchanged: "Niets gewijzigd.",
+    reconfirmed: "Niets gewijzigd, opnieuw bevestigd.",
+    changesH: "Wat er veranderde",
+    runsH: "Controles op deze versie",
+    noRuns: "Geen controles op deze versie.",
+    reconfirmedNotice: "Bedankt. Je gegevens zijn opnieuw bevestigd.",
+    none: "leeg",
+    from: "was",
+    to: "nu",
+    added: "erbij",
+    removed: "eraf",
+    closed: "gesloten",
+    km: (n: string) => `${n} km`,
+  },
+
+  /** The yearly "Klopt dit nog?" banner on every /app page (app/app/layout.tsx). */
+  reconfirm: {
+    h: "Klopt dit nog?",
+    body: (date: string, years: number) => `Je hebt je gegevens op ${date} bevestigd. Dat is ${years === 1 ? "een jaar" : `${years} jaar`} geleden. Kijk even of alles nog klopt.`,
+    confirm: "Alles klopt nog",
+    edit: "Aanpassen",
+  },
+
   domain: {
     h1: "Je domein",
     intro: "Je feitenpagina komt op een subdomein van je eigen website, zodat AI ziet dat de informatie van jou komt.",
@@ -1860,6 +2060,59 @@ export const copy = {
     optionBButton: "Registreer voor mij",
     optionBQueued: "We registreren het domein en laten je weten als het live is.",
     noDomain: "We kennen je website nog niet. Vul die eerst in bij je gegevens.",
+    /** Facts page status: channel facts_page + table google_index (core/publisher/status.ts). */
+    factsStatus: {
+      h2: "Je feitenpagina",
+      pageLabel: "Online",
+      googleLabel: "Google",
+      published: (date: string) => `Gepubliceerd, laatst bijgewerkt op ${date}.`,
+      waitingDns: (date: string) => `Klaargezet op ${date}. Te zien zodra je DNS-regel staat.`,
+      notPublished: "Nog niet gepubliceerd.",
+      indexed: (since: string, checked: string) => `Opgenomen door Google sinds ${since}. Laatst gecontroleerd op ${checked}.`,
+      notIndexed: (checked: string) => `Nog niet opgenomen door Google. Gecontroleerd op ${checked}. Dat duurt vaak een paar weken; we controleren het opnieuw.`,
+      notChecked: "Nog niet gecontroleerd of Google je feitenpagina heeft opgenomen.",
+    },
+    /** Own-website check: the last sitecheck.done event. Fix texts follow sitecheckEmail (core/publisher/sitecheck.ts). */
+    site: {
+      h2: "Je eigen website",
+      intro: (domain: string) => `We kijken of AI-assistenten je eigen website ${domain} goed kunnen lezen.`,
+      notChecked: "Nog niet gecontroleerd.",
+      noDomain: (date: string) => `Niet gecontroleerd op ${date}: we kennen je website nog niet. Vul die eerst in bij je gegevens.`,
+      checkedAt: (date: string) => `Laatst gecontroleerd op ${date}.`,
+      robotsH: "Mag de zoekrobot je website lezen?",
+      robotFor: (who: string) => `voor ${who}`,
+      and: "en",
+      allowed: "Mag lezen",
+      blocked: "Buitengesloten",
+      unknown: "Kon niet worden gelezen",
+      pageH: "Je homepage",
+      noindexLabel: "Zoekmachines mogen haar opnemen",
+      noindexOk: "Ja",
+      noindexBad: "Nee, er staat \"noindex\"",
+      dataLabel: "Bedrijfsgegevens in de vaste vorm die zoekmachines lezen",
+      present: "Aanwezig",
+      absent: "Ontbreekt",
+      phoneLabel: "Telefoonnummer in die gegevens",
+      phoneOk: "Geen afwijkend nummer",
+      phoneBad: "Ander nummer dan in je gegevens",
+      phoneNa: "Niet te vergelijken",
+      changesH: "Dit kan beter",
+      noChanges: "Niets aan te passen.",
+      forward: "Lukt het niet zelf? Stuur dit door naar wie je website bouwt, dit is alles wat er moet gebeuren. Wij controleren het over een maand opnieuw.",
+      fix: {
+        robotsTitle: (who: string, one: boolean) => `${who} ${one ? "mag" : "mogen"} je website niet lezen`,
+        robotsBody: (robotsUrl: string, who: string) => `In het bestand ${robotsUrl} staat een regel die de zoekrobot van ${who} buitensluit. Daardoor kan ${who} je openingstijden en telefoonnummer niet van je eigen website halen, en neemt het ze over van andere sites.`,
+        robotsFix: "Haal die regel weg, of zet dit bovenaan het bestand:",
+        noindexTitle: "Je homepage vraagt zoekmachines om haar over te slaan",
+        noindexBody: (via: "meta" | "header") => `${via === "header" ? "Je webserver stuurt bij de homepage de instructie \"noindex\" mee." : "In de code van je homepage staat de instructie \"noindex\"."} Google, Bing en de AI-assistenten die daarop zoeken, nemen de pagina dan niet op.`,
+        noindexFix: "Haal \"noindex\" weg. Werk je met WordPress, kijk dan bij Instellingen, Lezen: daar staat vaak het vinkje \"Zoekmachines ontmoedigen deze site te indexeren\". Zet dat uit.",
+        phoneTitle: "Een oud telefoonnummer in de bedrijfsgegevens van je homepage",
+        phoneBody: (found: string, expected: string) => `In de bedrijfsgegevens die je homepage voor zoekmachines meestuurt (niet zichtbaar op de pagina zelf) staat: ${found}. Dit moet zijn: ${expected}.`,
+        phoneFix: "Pas het aan in de instellingen van je website (bij WordPress vaak in een plugin als Yoast), of vraag het je websitebouwer.",
+        dataTitle: "Kleine verbetering: je bedrijfsgegevens in een vaste vorm",
+        dataBody: "Je homepage stuurt je adres, openingstijden en telefoonnummer niet mee in de vaste vorm die zoekmachines en AI-assistenten direct lezen. Op je feitenpagina staat die vorm al. Je websitebouwer kan het blok overnemen:",
+      },
+    },
   },
 
   google: {
@@ -1867,11 +2120,30 @@ export const copy = {
     intro: "Log één keer in met het Google-account van je bedrijfsprofiel. Zo weten we zeker dat jij de eigenaar bent, en kunnen we je openingstijden, telefoonnummer en website lezen en bijwerken.",
     button: "Inloggen bij Google",
     verified: (date: string) => `Eigenaar bevestigd op ${date}.`,
-    needsVerification: "Bevestig eerst met Google dat jij de eigenaar bent. Daarna kun je je gegevens en domein instellen.",
+    needsVerification: "Bevestig eerst dat jij de eigenaar bent, met Google of met de telefoon van je bedrijf. Daarna kun je je gegevens en domein instellen.",
     connected: (date: string) => `Gekoppeld op ${date}.`,
     disconnected: "Nog niet gekoppeld.",
     mockHint: "Geen Google-sleutels ingesteld: de koppeling wordt gesimuleerd.",
     permissions: "We vragen alleen toegang tot je bedrijfsprofiel, niet tot je e-mail of andere Google-diensten.",
+    phone: {
+      h2: "Of bevestig met de telefoon van je bedrijf",
+      intro: "We bellen of sms'en een code naar het telefoonnummer dat Google voor je bedrijf toont. Wie die code kan teruglezen, neemt de telefoon van het bedrijf op. Een vast nummer bellen we, een mobiel nummer krijgt een sms of een WhatsApp-bericht.",
+      call: "Bel me met een code",
+      sms: "Stuur een sms",
+      whatsapp: "Stuur via WhatsApp",
+      sent: { call: "We bellen je nu. Een stem leest de code voor.", sms: "De sms is onderweg.", whatsapp: "Het WhatsApp-bericht is onderweg." } as Record<string, string>,
+      codeLabel: "Code",
+      confirm: "Bevestig",
+      errors: {
+        no_mobile: "Het nummer dat Google toont is een vast nummer. Kies \"Bel me met een code\".",
+        no_phone: "Google toont geen telefoonnummer voor je bedrijf. Mail support@vidalo.io, dan helpen we je verder.",
+        too_many_sends: "Je hebt vandaag al drie codes gevraagd. Probeer het morgen opnieuw.",
+        too_many_tries: "Te vaak een verkeerde code. Probeer het over een uur opnieuw.",
+        send_failed: "Het versturen lukte niet. Probeer het zo opnieuw.",
+        wrong_code: "Die code klopt niet. Kijk hem nog eens na.",
+      } as Record<string, string>,
+      mockHint: "Geen Twilio-sleutels ingesteld: er gaat niets uit en code 123456 werkt.",
+    },
   },
 
   owner: {
@@ -1919,6 +2191,16 @@ export const copy = {
     generic: "Er ging iets mis. Probeer het nog een keer.",
     notFound: "Deze pagina bestaat niet.",
     loginRequired: "Log in om verder te gaan.",
+    /** The bot check (Turnstile) on the free check or the sign-in form said no. */
+    humanCheck: "We konden niet nagaan dat je geen robot bent. Probeer het nog een keer.",
+    /** Replace the browser's own form-validation bubbles, which speak the browser's language (components/FormMessages.tsx). */
+    field: {
+      required: "Vul dit veld in.",
+      checkbox: "Vink dit vakje aan om verder te gaan.",
+      email: "Vul een geldig e-mailadres in, zoals naam@bedrijf.nl.",
+      url: "Vul een geldig webadres in, zoals https://jouwbedrijf.nl.",
+      number: "Vul een geldig getal in.",
+    },
   },
 
   email: {

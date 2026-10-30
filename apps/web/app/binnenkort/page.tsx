@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CONTACT, telHref, waHref } from "@vidalo/core/shared";
 import { getCopy, getI18n } from "@/lib/i18n";
 import { Wordmark } from "@/components/SiteHeader";
 import { LangSwitch } from "@/components/LangSwitch";
@@ -13,8 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: copy.comingSoon.title, description: copy.comingSoon.body, robots: { index: false } };
 }
 
-type State = "ok" | "fout" | "druk" | "mislukt";
-const STATES: readonly State[] = ["ok", "fout", "druk", "mislukt"];
+type State = "ok" | "fout" | "toestemming" | "druk" | "mislukt";
+const STATES: readonly State[] = ["ok", "fout", "toestemming", "druk", "mislukt"];
 
 /**
  * The page behind the launch gate (core/shared/gate.ts). Also reachable
@@ -29,7 +30,7 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
   const l = c.list;
   const raw = (await searchParams).lijst;
   const state = STATES.find((s) => s === raw) ?? null;
-  const error = state === "fout" ? l.invalid : state === "druk" ? l.busy : state === "mislukt" ? l.failed : null;
+  const error = state === "fout" ? l.invalid : state === "toestemming" ? l.noConsent : state === "druk" ? l.busy : state === "mislukt" ? l.failed : null;
   return (
     <>
       {/* One screen: header, then text + list on the left and the animation on the right (stacked on a phone). The footer sits just below. */}
@@ -56,7 +57,8 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
                     {l.thanks}
                   </p>
                 ) : (
-                  <form action="/api/waitlist" method="post" className="mt-3">
+                  <form action="/api/waitlist" method="post" noValidate className="mt-3">
+                    {/* noValidate: the browser's own "fill in this field" bubble speaks the browser's language, not the page's; /api/waitlist answers in the page's language instead. */}
                     <input type="hidden" name="lang" value={c.lang} />
                     {/* A field people never see; a bot that fills it is thanked and nothing is stored. */}
                     <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
@@ -84,7 +86,7 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
                       </button>
                     </div>
                     <label className="mt-2.5 flex items-start gap-2.5 text-[13px] leading-[1.45] text-ink-2 sm:text-[14px]">
-                      <input type="checkbox" name="consent" value="ja" required className="mt-[2px] h-4 w-4 shrink-0 accent-[#111827]" />
+                      <input type="checkbox" name="consent" value="ja" required aria-invalid={state === "toestemming" || undefined} aria-describedby={state === "toestemming" ? "lijst-error" : undefined} className="mt-[2px] h-4 w-4 shrink-0 accent-[#111827]" />
                       <span>
                         {l.consent}{" "}
                         <Link href={href("/privacy")} className="underline underline-offset-2">
@@ -100,12 +102,25 @@ export default async function ComingSoonPage({ searchParams }: { searchParams: P
                   </form>
                 )}
               </section>
-              <p className="mt-5 text-[14px] text-muted sm:mt-6">
-                {c.contact}{" "}
-                <a href="mailto:hello@vidalo.io" className="font-semibold text-ink underline underline-offset-2">
-                  hello@vidalo.io
-                </a>
-              </p>
+              <div className="mt-5 text-[14px] text-muted sm:mt-6">
+                <p>{c.contact.lead}</p>
+                <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                  <a href={waHref(CONTACT.whatsapp)} target="_blank" rel="noopener" className="font-semibold text-ink underline underline-offset-2">
+                    {c.contact.whatsapp} {CONTACT.whatsapp}
+                  </a>
+                  <a href={telHref(CONTACT.phone)} className="font-semibold text-ink underline underline-offset-2">
+                    {c.contact.phone} {CONTACT.phone}
+                  </a>
+                  <a href={`mailto:${CONTACT.email}`} className="font-semibold text-ink underline underline-offset-2">
+                    {CONTACT.email}
+                  </a>
+                </p>
+                <p className="mt-1.5">
+                  <Link href={href("/contact")} className="nav-link">
+                    {c.contact.more}
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </main>

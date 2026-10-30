@@ -13,6 +13,7 @@ import type { CopyShape } from "@vidalo/core/copy";
 import { PROGRESS_SCAN_KINDS, type ScanSnapshot } from "@vidalo/core/progress";
 import { env } from "./env";
 import { seedDemo } from "./demo";
+import { seedDomainStatus } from "./demo-domain";
 
 export type { BusinessCandidate, Db };
 export { draftProvisionalFacts, buildReport, renderFactsPage, ENGINE_LABEL, SCAN_DEFAULTS };
@@ -43,7 +44,7 @@ const db: Db = (() => {
 
 /** The request's handle on Cloudflare (core's withDb scope), else the process-wide one. */
 export function getDb(): Db {
-  if (env.mock && !g.__vidaloSeeded) g.__vidaloSeeded = seedDemo(db).catch((err) => console.warn("[web] demo seed failed", err));
+  if (env.mock && !g.__vidaloSeeded) g.__vidaloSeeded = seedDemo(db).then(() => seedDomainStatus(db)).catch((err) => console.warn("[web] demo seed failed", err));
   return scopedDb();
 }
 

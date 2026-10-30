@@ -11,7 +11,7 @@ describe("launch gate (go-live J4)", () => {
   });
 
   it("keeps every page a visitor has a right to or a link to (invariant: legal, reports, account, unsubscribe)", () => {
-    for (const route of ["/privacy", "/voorwaarden", "/cookies", "/binnenkort", "/r/abc", "/inloggen", "/auth/callback", "/app", "/app/abonnement", "/afmelden", "/feiten", "/feiten/bakkerij", "/welkom", "/eigenaar/bevestigen"]) {
+    for (const route of ["/privacy", "/voorwaarden", "/cookies", "/contact", "/binnenkort", "/r/abc", "/inloggen", "/auth/callback", "/app", "/app/abonnement", "/afmelden", "/feiten", "/feiten/bakkerij", "/welkom", "/eigenaar/bevestigen"]) {
       expect(gateRoute(route, on), route).toBe(route);
     }
   });

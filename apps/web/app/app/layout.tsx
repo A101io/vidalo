@@ -3,6 +3,10 @@ import { getI18n } from "@/lib/i18n";
 import { Wordmark } from "@/components/SiteHeader";
 import { requireOwner } from "@/lib/owner";
 import { followPreferredLang } from "@/lib/preferred-lang";
+import { loadLastConfirmedFacts } from "@/lib/reads";
+import { dateShort } from "@/lib/format";
+import { reconfirmation } from "@vidalo/core/facts-history";
+import { reconfirmFacts } from "./gegevens/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +15,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   await followPreferredLang(business);
   const { copy, href } = await getI18n();
   const d = copy.dashboard;
+  // "Klopt dit nog?": a year after the last confirmation, on every /app page until the owner answers.
+  const yearly = reconfirmation(await loadLastConfirmedFacts(business.id));
+  const R = copy.reconfirm;
   const links = [
     { href: "/app", label: d.h1 },
     { href: "/app/voortgang", label: copy.progress.nav },
@@ -44,7 +51,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
       </header>
-      <main className="wrap max-w-[1000px] py-8 sm:py-12">{children}</main>
+      <main className="wrap max-w-[1000px] py-8 sm:py-12">
+        {yearly?.due && (
+          <section aria-labelledby="klopt-dit-nog" className="card mb-8 flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 id="klopt-dit-nog" className="text-[17px] font-bold">
+                {R.h}
+              </h2>
+              <p className="mt-1 text-[15px] text-ink-2">{R.body(dateShort(yearly.confirmedAt), yearly.cycle)}</p>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-4">
+              <form action={reconfirmFacts}>
+                <button type="submit" className="btn-sm">
+                  {R.confirm}
+                </button>
+              </form>
+              <Link href={href("/app/gegevens")} className="btn-link">
+                {R.edit}
+              </Link>
+            </div>
+          </section>
+        )}
+        {children}
+      </main>
     </>
   );
 }

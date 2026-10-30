@@ -87,15 +87,20 @@ ${signature(ctx)}
   return { subject, text };
 }
 
-/** Correction request built from a channel diff (directory sync, no single finding). */
-export function directoryCorrectionEmail(directoryName: string, listingUrl: string | null, diff: ChannelDiffEntry[], ctx: CorrectionContext): Mail {
+/** Correction request built from a channel diff (directory sync, no single finding). `reminderOf`: the one reminder, 30 days after the first mail (publisher CORRECTION_REMINDER_DAYS). */
+export function directoryCorrectionEmail(directoryName: string, listingUrl: string | null, diff: ChannelDiffEntry[], ctx: CorrectionContext, opts: { reminderOf?: string | null } = {}): Mail {
   const rows = diff
     .map((d) => `- ${fieldNl(d.field)}: ${d.current ? `staat nu "${d.current}", ` : ""}moet zijn "${d.expected}"`)
     .join("\n");
-  const subject = `Correctie vermelding ${ctx.business.name}, ${ctx.business.place}`;
+  const reminder = "reminderOf" in opts;
+  const subject = `${reminder ? "Herinnering: c" : "C"}orrectie vermelding ${ctx.business.name}, ${ctx.business.place}`;
+  const first = opts.reminderOf ? new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Amsterdam" }).format(new Date(opts.reminderOf)) : null;
+  const intro = reminder
+    ? `${first ? `Op ${first}` : "Eerder"} vroegen we u de vermelding van ${ctx.business.name} in ${ctx.business.place} op ${directoryName} aan te passen. De gegevens hieronder kloppen nog steeds niet.`
+    : `De vermelding van ${ctx.business.name} in ${ctx.business.place} op ${directoryName} bevat gegevens die niet meer kloppen.`;
   const text = `Geachte heer/mevrouw,
 
-De vermelding van ${ctx.business.name} in ${ctx.business.place} op ${directoryName} bevat gegevens die niet meer kloppen.${listingUrl ? `
+${intro}${listingUrl ? `
 
 Vermelding: ${listingUrl}` : ""}
 

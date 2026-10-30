@@ -209,7 +209,21 @@ describe("email templates", () => {
     expect(t).toContain("Dit moet zijn: gesloten");
   });
 
-  it("html version exists for customer mails", () => {
-    expect((all.report as Mail).html).toContain("<a href=\"https://vidalo.io/dashboard\">");
+  it("html version exists for customer mails, in the Vidalo branding", () => {
+    const html = (all.report as Mail).html;
+    expect(html).toContain('<a href="https://vidalo.io/dashboard"');
+    expect(html).toContain('data-brand="vidalo"');
+    expect(html).toContain("A101 B.V.");
+    expect(html).toContain('<meta name="color-scheme" content="light">');
+  });
+
+  it("branded html: headings, the colour dot, code blocks, nothing unescaped", async () => {
+    const { textToHtml } = await import("../src/reporter/templates");
+    const html = textToHtml("Hoi,\n\nStip: rood. AI stuurt klanten weg.\n\n1. Bevestig je gegevens\nAdres en telefoon.\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nA <b>&</b> B");
+    expect(html).toContain("background:#d41b44");
+    expect(html).toContain('<strong style="color:#111827;font-weight:700">1. Bevestig je gegevens</strong>');
+    expect(html).toMatch(/<pre[^>]*>User-agent: OAI-SearchBot\nAllow: \/<\/pre>/);
+    expect(html).not.toContain("<strong style=\"color:#111827;font-weight:700\">Hoi,");
+    expect(html).toContain("A &lt;b&gt;&amp;&lt;/b&gt; B");
   });
 });
