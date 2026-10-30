@@ -139,9 +139,11 @@ async function main() {
     }
   }
 
-  // 5. Customer portal: invoices, payment method, cancel at period end. Stripe
-  // does not make an API-created configuration the default, so the portal
-  // route passes this id (STRIPE_PORTAL_CONFIGURATION).
+  // 5. Customer portal: invoices and payment method. Cancelling and pausing
+  // happen in the app (/app/abonnement, core/billing/lifecycle.ts), which
+  // confirms by mail and can be undone there; the portal does not offer it.
+  // Stripe does not make an API-created configuration the default, so the
+  // portal route passes this id (STRIPE_PORTAL_CONFIGURATION).
   const site = base || "https://vidalo.io";
   const portals = await stripe.billingPortal.configurations.list({ active: true, limit: 100 });
   let portal = portals.data.find((c) => c.name === "Vidalo");
@@ -154,11 +156,20 @@ async function main() {
         invoice_history: { enabled: true },
         payment_method_update: { enabled: true },
         customer_update: { enabled: true, allowed_updates: ["email", "address", "name", "tax_id"] },
-        subscription_cancel: { enabled: true, mode: "at_period_end", proration_behavior: "none", cancellation_reason: { enabled: true, options: ["too_expensive", "unused", "switched_service", "missing_features", "other"] } },
+        subscription_cancel: { enabled: false },
         subscription_update: { enabled: false },
       },
     });
     say(`+ created portal configuration ${portal.id}`);
+  }
+  if (portal?.features?.subscription_cancel?.enabled) {
+    if (apply) {
+      portal = await stripe.billingPortal.configurations.update(portal.id, { features: { subscription_cancel: { enabled: false } } });
+      say(`~ portal ${portal.id}: cancelling switched off (it lives in the app)`);
+    } else {
+      say(`· portal ${portal.id} still offers cancelling; --apply switches it off`);
+      missing++;
+    }
   }
   if (portal) {
     say(`✓ portal configuration → ${portal.id}`);

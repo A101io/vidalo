@@ -40,9 +40,11 @@ export function LogoIntro({ questions, name, label }: { questions: readonly [str
       const qs = el.querySelectorAll<HTMLElement>(".li-q");
       const nameEl = el.querySelector<HTMLElement>(".li-name");
       if (!field || !nameEl) return;
+      // The still logo's width: the stage keeps it while animating, so the field grows from where the dot ends up.
+      el.style.setProperty("--lw", `${(el.getBoundingClientRect().width / (parseFloat(getComputedStyle(el).fontSize) || 80)).toFixed(4)}em`);
       qs.forEach((q, i) => {
         const w = `${widthEm(q, 0.04).toFixed(4)}em`;
-        q.style.setProperty("--w", `${(parseFloat(w) / 0.22).toFixed(4)}em`); // inside .li-qs, whose font is .22em
+        q.style.setProperty("--w", `${(parseFloat(w) / 0.18).toFixed(4)}em`); // inside .li-qs, whose font is .18em
         field.style.setProperty(`--w${i + 1}`, w);
       });
       nameEl.style.setProperty("--w", `${(widthEm(nameEl, 0.06) / 0.84).toFixed(4)}em`); // .li-name is .84em

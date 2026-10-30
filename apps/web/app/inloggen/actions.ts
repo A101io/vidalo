@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
@@ -8,6 +8,8 @@ import { createServerSupabase } from "@/lib/supabase";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
+import { passesTurnstile } from "@/lib/turnstile";
+import { clientIp } from "@vidalo/core/shared";
 
 export async function sendMagicLink(form: FormData) {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -18,6 +20,8 @@ export async function sendMagicLink(form: FormData) {
   const q = `next=${encodeURIComponent(next)}`;
   const { href } = await getI18n();
   if (!isEmail(email)) redirect(href(`/inloggen?fout=1&${q}`));
+  // Bot check before anything is stored or mailed.
+  if (!(await passesTurnstile(form, clientIp({ headers: await headers() })))) redirect(href(`/inloggen?fout=check&${q}`));
 
   // Coming from /welkom after checkout: remember who asked for this business,
   // so the first sign-in finds it. A claim, not proof: ownership is proven by
@@ -34,22 +38,19 @@ export async function sendMagicLink(form: FormData) {
       email,
       options: { emailRedirectTo: `${env.baseUrl}/auth/callback?next=${encodeURIComponent(href(next))}` },
     });
-    if (error) redirect(href(`/inloggen?fout=1&${q}`));
+    if (error) {
+      console.error("sign-in link refused", error.status, error.code, error.message);
+      // Supabase sends a few links per hour; say so instead of a generic error.
+      const limited = error.status === 429 || error.code === "over_email_send_rate_limit";
+      redirect(href(`/inloggen?fout=${limited ? "wacht" : "1"}&${q}`));
+    }
     redirect(href(`/inloggen?sent=1`));
   }
 
-  // Mock auth: sign in immediately as this e-mail.
+  // Mock auth: sign in immediately as this e-mail. Never on real data (env.allowMockAuth).
+  if (!env.allowMockAuth) redirect(href(`/inloggen?fout=1&${q}`));
   const store = await cookies();
-  if (next.startsWith("/eigenaar/bevestigen")) {
-    // Claiming a business: ownership is proven by Google next, not by owning one already.
-    store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
-    redirect(href(next));
-  }
   const owned = await db.getBusinessByOwner({ email });
-  if (!owned) {
-    store.delete(MOCK_SESSION_COOKIE);
-    redirect(href(`/inloggen?fout=geen&${q}`));
-  }
-  store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
+  store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned?.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
   redirect(href(next));
 }

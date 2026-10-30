@@ -5,6 +5,10 @@ import { requireOwner } from "@/lib/owner";
 import { ready } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { dateShort } from "@/lib/format";
+import Link from "next/link";
+import { subscriptionOptions } from "@vidalo/core/billing";
+import { longDate } from "@vidalo/core/reporter";
+import { resumeAction, undoCancelAction } from "./actions";
 
 /** Next renewal date from Stripe, when there is a subscription and a key. */
 async function nextPayment(subscriptionId: string | null): Promise<string | null> {
@@ -21,11 +25,16 @@ async function nextPayment(subscriptionId: string | null): Promise<string | null
   }
 }
 
-export default async function BillingPage({ searchParams }: { searchParams: Promise<{ toegevoegd?: string }> }) {
+type Changed = "opgezegd" | "doorgaan" | "gepauzeerd" | "hervat";
+
+export default async function BillingPage({ searchParams }: { searchParams: Promise<{ toegevoegd?: string; gewijzigd?: string; fout?: string }> }) {
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/abonnement");
-  const { copy } = await getI18n();
+  const { copy, href, lang } = await getI18n();
   const B = copy.billing;
+  const M = B.manage;
+  const options = subscriptionOptions(business);
+  const changed = sp.gewijzigd && sp.gewijzigd in M.done ? M.done[sp.gewijzigd as Changed] : null;
   const events = await (await ready()).listEvents(business.id, 200);
   const lastPay = events.find((e) => e.type === "payment.processing" || e.type === "checkout.completed" || e.type === "checkout.mock");
   const processing = lastPay?.type === "payment.processing";
@@ -38,6 +47,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       {sp.toegevoegd === "1" && (
         <p className="card p-4 text-[15px]" aria-live="polite">
           {copy.billing.addonDone}
+        </p>
+      )}
+      {(changed || sp.fout === "1") && (
+        <p className={`card p-4 text-[15px] ${changed ? "" : "text-rood"}`} aria-live="polite">
+          {changed ?? M.error}
         </p>
       )}
       {(processing || business.status === "paused") && (
@@ -56,10 +70,36 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             <Stip tone={tone} /> {B.statuses[business.status]}
           </span>
         </div>
-        {next && (
+        {next && !options.canUndoCancel && !options.canResume && (
           <div className="flex flex-wrap items-center justify-between gap-3 p-5">
             <span className="text-[14px] text-muted">{B.nextLabel}</span>
             <span className="font-semibold">{next}</span>
+          </div>
+        )}
+        {options.canUndoCancel && business.cancelAt && (
+          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="text-[14px] text-muted">{M.cancelledRow}</span> <span className="font-semibold">{longDate(business.cancelAt, lang)}</span>
+              <p className="mt-1 max-w-[52ch] text-[15px] text-ink-2">{M.cancelledNote(longDate(business.cancelAt, lang))}</p>
+            </div>
+            <form action={undoCancelAction}>
+              <button type="submit" className="btn-sm">
+                {M.undo}
+              </button>
+            </form>
+          </div>
+        )}
+        {options.canResume && business.pauseUntil && (
+          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="text-[14px] text-muted">{M.pausedRow}</span> <span className="font-semibold">{longDate(business.pauseUntil, lang)}</span>
+              <p className="mt-1 max-w-[52ch] text-[15px] text-ink-2">{M.pausedNote(longDate(business.pauseUntil, lang))}</p>
+            </div>
+            <form action={resumeAction}>
+              <button type="submit" className="btn-sm">
+                {M.resume}
+              </button>
+            </form>
           </div>
         )}
       </section>
@@ -76,6 +116,26 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               {B.addonButton}
             </button>
           </form>
+        </section>
+      )}
+      {(options.canPause || options.canCancel) && (
+        <section className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div>
+            <h2 className="h3">{M.title}</h2>
+            <p className="mt-1 max-w-[52ch] text-[15px] text-muted">{M.body}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {options.canPause && (
+              <Link href={href("/app/abonnement/pauzeren")} className="btn-sm">
+                {M.pauseLink}
+              </Link>
+            )}
+            {options.canCancel && (
+              <Link href={href("/app/abonnement/opzeggen")} className="btn-sm">
+                {M.cancelLink}
+              </Link>
+            )}
+          </div>
         </section>
       )}
       {business.plan !== "none" && (

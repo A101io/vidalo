@@ -1,6 +1,6 @@
 import { copyFor, PRICES } from "@vidalo/core/copy";
 import { buildLlmsTxt } from "@vidalo/core/publisher";
-import { OWN_BUSINESS, OWN_FACTS } from "@vidalo/core/shared";
+import { CONTACT, OWN_BUSINESS, OWN_FACTS } from "@vidalo/core/shared";
 import { localizeHref } from "@/lib/lang-paths";
 import { OWN_FACTS_URL, SITE } from "@/lib/seo";
 
@@ -49,8 +49,11 @@ ${facts}
 ${faq}
 
 ## Contact
-hello@vidalo.io
-Support: support@vidalo.io
+- [${nl.pages.contact.title}](${u("/contact", "nl")})
+- WhatsApp: ${CONTACT.whatsapp} (werkdagen ${CONTACT.hours})
+- Telefoon: ${CONTACT.phone} (werkdagen ${CONTACT.hours})
+- E-mail: ${CONTACT.email}
+- Support: ${CONTACT.support}
 `;
   return new Response(body, { headers: { "content-type": "text/markdown; charset=utf-8" } });
 }

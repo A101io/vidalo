@@ -76,7 +76,7 @@ test("@gate the coming-soon list answers in the page's language", async ({ page 
 
 test("@gate legal pages behind the gate link only inside the coming-soon setup", async ({ page }) => {
   // Behind the gate they keep the coming-soon footer, never the site's (A101io/vidalo#34).
-  const allowed = new Set(["/", "/en", "/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]);
+  const allowed = new Set(["/", "/en", "/contact", "/voorwaarden", "/privacy", "/cookies", "/en/contact", "/en/terms", "/en/privacy", "/en/cookies"]);
   for (const url of ["/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]) {
     await page.goto(url);
     const hrefs = await page.locator("a[href^='/']").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));

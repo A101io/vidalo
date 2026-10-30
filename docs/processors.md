@@ -13,6 +13,7 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
 | Resend | Processor: email | Owner email, report links | US | DPF / SCCs | open |
+| Twilio | Processor: rings, texts or WhatsApps the ownership code (Verify; WhatsApp goes through Meta as sub-processor) | The business phone number Google lists, the code, call/SMS/WhatsApp logs | US | DPF / SCCs | open: Twilio DPA (Console → Legal) |
 | Cloudflare | Processor: facts pages, DNS | Visitor IPs of facts pages | Global edge | DPF / SCCs | open |
 | Vercel (planned, web) | Processor: hosting | Visitor IPs, request logs | EU region selectable | DPF / SCCs | open: **not yet in the privacy statement** |
 | Fly.io or Railway (planned, worker) | Processor: background jobs | Everything the database holds, in transit | EU region selectable | SCCs | open: **not yet in the privacy statement** |

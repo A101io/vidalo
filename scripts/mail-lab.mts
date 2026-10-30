@@ -8,7 +8,7 @@
  * Two journeys: a business that only did the free check (report mail, the
  * day-7 and day-21 follow-ups), and one that pays (welcome, own-website
  * check, directory corrections, fixes, rechecks weeks later, monthly report,
- * resolved and unfixable notices). A mail kind that no journey reaches in
+ * resolved and unfixable notices, the yearly re-confirmation). A mail kind that no journey reaches in
  * mock mode is rendered from its template with the journey's real records
  * and marked "template only".
  *
@@ -59,6 +59,7 @@ const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
   report: { label: "Monthly report", to: "owner" },
   resolution: { label: "A wrong answer is fixed", to: "owner" },
   unfixable: { label: "A wrong answer cannot be fixed", to: "owner" },
+  reconfirm: { label: "Yearly \"Klopt dit nog?\" about the facts", to: "owner" },
   directory_correction: { label: "Correction to a directory", to: "third_party" },
   correction_request: { label: "Correction request to a source", to: "third_party" },
   correction_followup: { label: "Follow-up to that source", to: "third_party" },
@@ -127,6 +128,19 @@ await sendMonthlyReport(b.id);
 const [first, second] = findings;
 if (first) await sendResolutionNotice(first.id);
 if (second) await sendUnfixableNotice(second.id, "De site reageert niet op verzoeken en staat buiten de zoekresultaten.");
+
+// A year later: the cron asks the owner once whether the facts are still right.
+{
+  const last = await db.latestFacts(b.id);
+  if (last) {
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...data } = last;
+    await db.insertFacts(b.id, data, { provisional: false, verifiedAt: new Date(Date.now() - 366 * DAY).toISOString() });
+  }
+  const { enqueueReconfirmations } = await import("@vidalo/worker/src/cron.ts");
+  await enqueueReconfirmations();
+  await enqueueReconfirmations(); // a second tick queues nothing
+  await drain();
+}
 
 // Kinds the journeys did not reach in mock mode: render their template from the real records.
 const mailDir = path.join(OUT, "mail");

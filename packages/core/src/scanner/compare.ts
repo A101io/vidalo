@@ -14,12 +14,15 @@
  * `criteriaNotFound`. Not-found samples are never wrong and never correct.
  *
  * Recommendation prompts ("welke loodgieter in Zwolle met spoed?") are judged
- * on one thing: is the business named. Absent becomes a finding on the
- * linked criterium with evidenceKind "recommendation" and wrongValue
- * "niet genoemd". Position is never counted.
+ * on one thing: is the business named. That is not a fact about the business,
+ * so it is never "wrong" or "correct" and never a finding (Julian, 25 Oct
+ * 2026: the first real scan turned a bakery with no wrong fact red on
+ * "niet genoemd" alone). The sample gets the verdict "named" or "not_named";
+ * the report shows it under "Wie AI wel noemt" (recommendations.ts), and the
+ * fact counts and the colour leave it out. Position is never counted.
  */
 import type { Claim, CriteriumId, Engine, FactKey, Facts, PromptKind, SourceType, Verdict } from "../types";
-import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, PRESENT_VALUE } from "../types";
+import { ABSENT_VALUE, NOT_FOUND_LABEL, PRESENT_VALUE } from "../types";
 import { criterium as criteriumDef, criteriumFor, criteriumNotFound as isCriteriumNotFound, judge, CRITERIUM_NOT_FOUND_RATIO, RATIO_MIN, INSTABLE_BELOW } from "../criteria";
 import { isNotFoundClaim, isRecommendationPrompt, parseProbe, type PromptLike } from "./extract";
 import { describeValue, factValue, valuesMatch } from "./normalize";
@@ -64,7 +67,7 @@ export interface FindingCandidate {
   instable?: boolean;
 }
 
-export type SampleVerdict = "correct" | "wrong" | "unknown" | "other_entity" | "not_found";
+export type SampleVerdict = "correct" | "wrong" | "unknown" | "other_entity" | "not_found" | "named" | "not_named";
 
 export interface CriteriumNotFoundCandidate {
   criterium: CriteriumId;
@@ -129,6 +132,8 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
   const judgedSamples = new Set<string>();
   const otherEntitySamples = new Set<string>();
   const notFoundSamples = new Set<string>();
+  // Recommendation samples: named or not, kept out of every fact count.
+  const recommendationVerdicts = new Map<string, "named" | "not_named">();
   const correct: CompareResult["correct"] = [];
   // Per (criterium, engine): how many samples, how many of them not found.
   const perCriterium = new Map<string, CriteriumNotFoundCandidate>();
@@ -168,7 +173,8 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
   const checkedKeys = new Set<string>();
 
   for (const g of groups.values()) {
-    checkedKeys.add(groupKey(g.factKey, g.subject, g.engine, g.kind));
+    // Recommendation groups are not checked facts: an open finding from an older scan is neither confirmed nor resolved by them.
+    if (g.kind !== "recommendation") checkedKeys.add(groupKey(g.factKey, g.subject, g.engine, g.kind));
     const wrong: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
     const other: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
     const notFound: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
@@ -179,17 +185,13 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
         continue;
       }
       if (!s.claim) continue;
-      judgedSamples.add(s.sampleId);
       if (g.kind === "recommendation") {
-        if (s.claim.value === PRESENT_VALUE) {
-          const promptText = samples.find((x) => x.sampleId === s.sampleId)?.prompt.textNl ?? "";
-          correct.push({ prompt: promptText, engine: g.engine, value: "genoemd", raw: PRESENT_VALUE, sampleId: s.sampleId, factKey: g.factKey, subject: g.subject });
-        } else if (s.claim.value === ABSENT_VALUE) {
-          wrong.push({ sampleId: s.sampleId, value: ABSENT_LABEL, citations: s.citations, quote: s.claim.rawQuote });
-          wrongSamples.add(s.sampleId);
-        }
+        // Named once on any probe is named.
+        if (s.claim.value === PRESENT_VALUE) recommendationVerdicts.set(s.sampleId, "named");
+        else if (s.claim.value === ABSENT_VALUE && !recommendationVerdicts.has(s.sampleId)) recommendationVerdicts.set(s.sampleId, "not_named");
         continue;
       }
+      judgedSamples.add(s.sampleId);
       if (s.claim.otherEntity) {
         other.push({ sampleId: s.sampleId, value: s.claim.value, citations: s.citations, quote: s.claim.rawQuote });
         otherEntitySamples.add(s.sampleId);
@@ -255,6 +257,7 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
     else if (wrongSamples.has(s.sampleId)) verdicts.set(s.sampleId, "wrong");
     else if (otherEntitySamples.has(s.sampleId)) verdicts.set(s.sampleId, "other_entity");
     else if (judgedSamples.has(s.sampleId)) verdicts.set(s.sampleId, "correct");
+    else if (recommendationVerdicts.has(s.sampleId)) verdicts.set(s.sampleId, recommendationVerdicts.get(s.sampleId)!);
     else verdicts.set(s.sampleId, "unknown");
   }
 

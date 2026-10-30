@@ -16,7 +16,7 @@ export async function LangSwitch({ className = "" }: { className?: string }) {
   const [lang, route, session] = [await getLang(), await getRoute(), await getSession()];
   const hrefFor = (l: (typeof LANGS)[number]) => (session ? `/api/lang?to=${l}&next=${encodeURIComponent(route)}` : localizeHref(route, l));
   return (
-    <span className={`lang-switch ${className}`}>
+    <span className={`lang-switch print:hidden ${className}`}>
       {LANGS.map((l) => (
         <a key={l} href={hrefFor(l)} hrefLang={l} lang={l} aria-current={l === lang ? "true" : undefined} className={l === lang ? "is-current" : ""}>
           {l.toUpperCase()}

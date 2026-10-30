@@ -44,6 +44,11 @@ export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unkno
     log.warn("job.skipped.not_paying", { kind, businessId: business.id, status: business.status });
     return `not_paying:${business.status}`;
   }
+  if (business.pauseUntil && new Date(business.pauseUntil) > new Date()) {
+    // The owner paused (core/billing/lifecycle.ts): nothing runs until the date they were given.
+    await getDb().logEvent(business.id, "job.skipped", { kind, reason: "paused_by_owner", until: business.pauseUntil });
+    return "paused_by_owner";
+  }
   if (!business.ownerVerifiedAt) {
     // Paid but not yet proven: the Google callback enqueues setup once it is.
     await getDb().logEvent(business.id, "job.skipped", { kind, reason: "owner_not_verified" });

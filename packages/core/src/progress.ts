@@ -52,7 +52,7 @@ export interface ProgressFilter {
   bundle: Bundle;
 }
 
-type SampleVerdictLike = "correct" | "wrong" | "unknown" | "other_entity" | "not_found";
+type SampleVerdictLike = "correct" | "wrong" | "unknown" | "other_entity" | "not_found" | "named" | "not_named";
 
 /**
  * Per (prompt, engine): the verdict most samples carried. A tie leans to the
@@ -65,7 +65,8 @@ export function cellsFromSamples(samples: Pick<Sample, "id" | "promptId" | "engi
   for (const s of samples) {
     const v = verdicts.get(s.id);
     if (!v || v === "unknown" || !promptById.has(s.promptId)) continue;
-    const verdict: CellVerdict = v === "other_entity" ? "wrong" : v;
+    // A recommendation cell keeps named / not named as correct / wrong; its kind keeps it out of the fact bundles.
+    const verdict: CellVerdict = v === "other_entity" || v === "not_named" ? "wrong" : v === "named" ? "correct" : v;
     const key = `${s.promptId}|${s.engine}`;
     const g = groups.get(key) ?? { promptId: s.promptId, engine: s.engine, votes: { correct: 0, wrong: 0, not_found: 0 } };
     g.votes[verdict]++;
@@ -84,7 +85,8 @@ export function cellsFromSamples(samples: Pick<Sample, "id" | "promptId" | "engi
 export function filterCells(cells: ProgressCell[], filter: ProgressFilter): ProgressCell[] {
   return cells.filter((c) => {
     if (filter.engine !== "all" && c.engine !== filter.engine) return false;
-    if (filter.bundle === "all") return true;
+    // "Alles" is every fact question; being named in a recommendation is its own bundle, never a wrong fact.
+    if (filter.bundle === "all") return c.kind !== "recommendation";
     if (filter.bundle === "recommendation") return c.kind === "recommendation";
     return c.kind === "about" && severityOf(c.criterium) === filter.bundle;
   });
