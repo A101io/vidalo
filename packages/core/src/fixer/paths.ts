@@ -23,6 +23,9 @@ export interface FixPath {
   labelNl: string;
   /** Dutch note shown when a finding is marked unfixable */
   unfixableNoteNl?: string;
+  /** the same two lines in English, for an owner who chose English (business.language) */
+  labelEn: string;
+  unfixableNoteEn?: string;
 }
 
 export const FIX_PATHS: Record<SourceType, FixPath> = {
@@ -32,6 +35,7 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     recheckDays: 7,
     escalation: "operator",
     labelNl: "We publiceren je feitenpagina opnieuw en melden de wijziging bij de zoekmachines.",
+    labelEn: "We republish your facts page and report the change to the search engines.",
   },
   owned_website: {
     sourceType: "owned_website",
@@ -42,6 +46,8 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     unfixableAfterDays: 60,
     labelNl: "We mailen je welke tekst op je website moet veranderen.",
     unfixableNoteNl: "De tekst op je eigen website is nog niet aangepast.",
+    labelEn: "We email you which text on your website needs to change.",
+    unfixableNoteEn: "The text on your own website has not been changed yet.",
   },
   directory_api: {
     sourceType: "directory_api",
@@ -50,6 +56,7 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     escalation: "operator",
     unfixableAfterDays: 45,
     labelNl: "We zetten de juiste gegevens opnieuw in het profiel.",
+    labelEn: "We put the right details in the profile again.",
   },
   directory_form: {
     sourceType: "directory_form",
@@ -58,6 +65,7 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     escalation: "operator",
     unfixableAfterDays: 45,
     labelNl: "We dienen een correctie in bij de gids.",
+    labelEn: "We submit a correction to the directory.",
   },
   third_party: {
     sourceType: "third_party",
@@ -68,6 +76,8 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     unfixableAfterDays: 45,
     labelNl: "We vragen de bron uit jouw naam om de gegevens te corrigeren.",
     unfixableNoteNl: "De bron heeft niet gereageerd op ons verzoek.",
+    labelEn: "We ask the source, on your behalf, to correct the details.",
+    unfixableNoteEn: "The source did not respond to our request.",
   },
   other_entity: {
     sourceType: "other_entity",
@@ -77,6 +87,8 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     unfixableAfterDays: 90,
     labelNl: "We maken op je feitenpagina en in je profielen duidelijker welk bedrijf jij bent.",
     unfixableNoteNl: "De AI verwart je nog met een ander bedrijf met dezelfde naam.",
+    labelEn: "We make it clearer on your facts page and in your profiles which business you are.",
+    unfixableNoteEn: "AI still mixes you up with another business with the same name.",
   },
   none: {
     sourceType: "none",
@@ -86,6 +98,8 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     unfixableAfterDays: 45,
     labelNl: "Dit antwoord komt uit het geheugen van het model. Dat verandert pas bij een nieuwe versie; we blijven controleren.",
     unfixableNoteNl: "Dit antwoord komt uit het geheugen van het model, niet van een bron die wij kunnen aanpassen.",
+    labelEn: "This answer comes from the model's memory. That only changes with a new version; we keep checking.",
+    unfixableNoteEn: "This answer comes from the model's memory, not from a source we can change.",
   },
 };
 
@@ -105,6 +119,8 @@ export const NOT_FOUND_PATH: FixPath = {
   unfixableAfterDays: 60,
   labelNl: "Niet gevonden: we maken je vindbaar",
   unfixableNoteNl: "AI noemt je na 60 dagen nog steeds niet. Je feitenpagina en profielen staan goed; we blijven elke maand controleren.",
+  labelEn: "Not found: we make you findable",
+  unfixableNoteEn: "After 60 days AI still does not name you. Your facts page and profiles are right; we keep checking every month.",
 };
 
 /**
@@ -122,6 +138,8 @@ export const RECOMMENDATION_PATH: FixPath = {
   unfixableAfterDays: 60,
   labelNl: "Niet genoemd: we zetten dit gegeven op je feitenpagina en in je profielen, en controleren na 3 weken opnieuw.",
   unfixableNoteNl: "AI noemt je na 60 dagen nog steeds niet bij deze vraag. Je gegevens staan goed; we blijven elke maand controleren.",
+  labelEn: "Not named: we put this detail on your facts page and in your profiles, and check again after 3 weeks.",
+  unfixableNoteEn: "After 60 days AI still does not name you for this question. Your details are right; we keep checking every month.",
 };
 
 export function fixPathFor(sourceType: SourceType, verdict?: Finding["verdict"], evidenceKind?: Finding["evidenceKind"]): FixPath {

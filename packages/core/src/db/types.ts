@@ -33,7 +33,7 @@ export interface BusinessRecord extends Business {
   /** Set when the owner proved ownership (see shared/ownership.ts); null = only claimed. */
   ownerVerifiedAt: string | null;
   ownerVerifiedVia: string | null;
-  /** The owner's language ("nl" | "en"); the dashboard and the report follow it; e-mails are still Dutch. */
+  /** The owner's language ("nl" | "en"); the dashboard, the report and every mail to the owner follow it (letters to third parties stay Dutch). */
   language: "nl" | "en";
   /** The owner cancelled; the subscription ends at this moment (migration 0012). */
   cancelAt: string | null;

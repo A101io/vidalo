@@ -237,3 +237,148 @@ describe("email templates", () => {
     expect(html).toContain("A &lt;b&gt;&amp;&lt;/b&gt; B");
   });
 });
+
+// ---------------------------------------------------------------------------
+// English: the same mails for an owner who chose English (business.language)
+// ---------------------------------------------------------------------------
+
+const BANNED_EN = /\b(GEO|AEO|LLM|LLMs|prompt|prompts|credits|platform|agent|agents|guarantee|guaranteed|visibility|ranking|optimi[sz]e)\b/i;
+/** Dutch words that must not survive in an English mail (the asked question in "Who AI names instead" is the one exception, not used here). */
+const DUTCH = /\b(je|jouw|niet|klopt|kloppen|hersteld|overzicht|gegevens|Hoi|Groet|antwoorden|controle|feitenpagina)\b/;
+const linksEn = { dashboardUrl: "https://vidalo.io/en/app", factsPageUrl: "https://feiten.bakkerijjansen.nl/", resultUrl: "https://vidalo.io/en/r/run1" };
+const en = "en" as const;
+
+const allEn: Record<string, Mail | { subject: string; text: string }> = {
+  welcome: welcomeEmail({ lang: en, business, cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" }, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
+  welcomeNoDomain: welcomeEmail({ lang: en, business, cname: null, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
+  baseline: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, offer: { setupEur: 149, monitorEur: 49 } }),
+  baselinePaying: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, paying: true }),
+  baselineClean: baselineSummaryEmail({ lang: en, business, checkedAt: "2026-10-02T03:00:00Z", totalAnswers: 100, wrongAnswers: 0, findings: [], engines: ["chatgpt"], links: linksEn }),
+  baselineNotFound: baselineSummaryEmail({
+    lang: en,
+    business,
+    checkedAt: "2026-10-02T03:00:00Z",
+    totalAnswers: 100,
+    wrongAnswers: 1,
+    notFoundAnswers: 70,
+    visibility: "unknown",
+    findings: [finding, notFoundFinding, { ...notFoundFinding, id: "f3", factKey: "phone", subject: null }],
+    engines: ["chatgpt", "gemini"],
+    links: linksEn,
+  }),
+  resolution: resolutionNoticeEmail({
+    lang: en,
+    business,
+    finding: { ...finding, status: "resolved", resolvedAt: "2026-10-14T03:00:00Z" },
+    before: { quote: "Open on Sunday from 10:00 to 14:00.", at: "2026-10-02T03:00:00Z" },
+    after: { quote: "Closed on Sunday.", at: "2026-10-14T03:00:00Z" },
+    days: 12,
+    links: linksEn,
+  }),
+  report: monthlyReportEmail({
+    lang: en,
+    business,
+    month: "October 2026",
+    checkedAt: "2026-10-07T03:00:00Z",
+    totalAnswers: 100,
+    wrongAnswers: 1,
+    resolved: 1,
+    inProgress: 1,
+    unfixable: 0,
+    stip: "oranje",
+    proofCards: [{ findingId: "f0", engine: "chatgpt", what: "the opening hours on Sunday", before: "closed on Monday", after: "open 9–18", source: "openingstijden.nl", days: 12, resolvedAt: "2026-10-01T00:00:00Z" }],
+    openFindings: [{ finding, nextStep: "We ask the source, on your behalf, to correct the details.", since: finding.firstSeenAt }],
+    engines: ["chatgpt", "gemini"],
+    links: linksEn,
+  }),
+  reportNotFound: monthlyReportEmail({ lang: en, business, month: "October 2026", checkedAt: "2026-10-07T03:00:00Z", totalAnswers: 100, wrongAnswers: 0, notFound: 3, notFoundAnswers: 40, visibility: "partial", resolved: 0, inProgress: 3, unfixable: 0, proofCards: [], openFindings: [{ finding: notFoundFinding, nextStep: "", since: notFoundFinding.firstSeenAt }], engines: ["chatgpt"], links: linksEn }),
+  reportClean: monthlyReportEmail({ lang: en, business, month: "October 2026", checkedAt: "2026-10-07T03:00:00Z", totalAnswers: 12, wrongAnswers: 0, resolved: 0, inProgress: 0, unfixable: 0, proofCards: [], openFindings: [], engines: ["chatgpt"], links: linksEn }),
+  followup7: followUpEmail({ lang: en, business, wrongAnswers: 3, totalAnswers: 12, example: finding, links: { ...linksEn, unsubscribeUrl: "https://vidalo.io/en/unsubscribe?b=b1&t=tok" }, priceSetupEur: 149, priceMonitorEur: 49 }, 7),
+  followup21: followUpEmail({ lang: en, business, wrongAnswers: 3, totalAnswers: 12, example: finding, links: { ...linksEn, unsubscribeUrl: "https://vidalo.io/en/unsubscribe?b=b1&t=tok" }, priceSetupEur: 149, priceMonitorEur: 49 }, 21),
+  unfixable: unfixableNoticeEmail({ lang: en, business, finding: { ...finding, sourceType: "none", sourceUrl: null }, note: "Dit antwoord komt uit het geheugen van het model, niet van een bron die wij kunnen aanpassen.", triedDays: 45, links: linksEn }),
+  unfixableNotFound: unfixableNoticeEmail({ lang: en, business, finding: notFoundFinding, note: "AI noemt je na 60 dagen nog steeds niet. Je feitenpagina en profielen staan goed; we blijven elke maand controleren.", triedDays: 61, links: linksEn }),
+  ownerInstruction: ownerWebsiteInstructionEmail({ ...finding, sourceType: "owned_website", sourceUrl: "https://www.bakkerijjansen.nl/contact" }, business, linksEn.dashboardUrl, en),
+  ownerReminder: ownerWebsiteReminderEmail({ ...finding, sourceType: "owned_website", sourceUrl: "https://www.bakkerijjansen.nl/contact" }, business, linksEn.dashboardUrl, 14, en),
+};
+
+describe("email templates in English", () => {
+  for (const [name, m] of Object.entries(allEn)) {
+    it(`${name}: English, no jargon, no exclamation marks, no Dutch left`, () => {
+      expect(m.subject.length).toBeGreaterThan(5);
+      expect(m.subject + "\n" + m.text).not.toMatch(BANNED_EN);
+      expect(m.subject + m.text).not.toContain("!");
+      expect(m.text).not.toMatch(/undefined|null|NaN/);
+      expect(m.text).not.toMatch(/\bcontrol\b/i);
+      expect(m.text.startsWith("Hi,\n")).toBe(true);
+      expect(m.text).toContain("Best,\nVidalo");
+      // Only the business, the town and the URLs are Dutch.
+      expect((m.subject + "\n" + m.text).replace(/https?:\/\/\S+/g, "")).not.toMatch(DUTCH);
+      if ("html" in m && m.html) {
+        expect(m.html).toContain('<html lang="en">');
+        expect(m.html).toContain("the Netherlands");
+      }
+    });
+  }
+
+  it("snapshots", () => {
+    for (const [name, m] of Object.entries(allEn)) expect(`${m.subject}\n\n${m.text}`).toMatchSnapshot(`en ${name}`);
+  });
+
+  it("dates and prices are written the English way", () => {
+    expect(allEn.resolution!.text).toContain("Before (2 October 2026)");
+    expect(allEn.resolution!.text).toContain("After (14 October 2026)");
+    expect(allEn.resolution!.text).toContain("fixed in 12 days");
+    expect(allEn.resolution!.subject).toBe('Fixed: ChatGPT now says "closed" about Bakkerij Jansen');
+    expect(allEn.baseline!.text).toContain("On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT");
+    expect(allEn.baseline!.text).toContain("€149 once, monitoring €49 a month");
+    expect(allEn.baselinePaying!.text).toMatch(/- Around \d+ (October|November) 2026: Your next monthly check\./);
+    expect(allEn.followup21!.subject).toBe('Still "10:00 to 14:00"');
+    expect(allEn.report!.subject).toBe("Bakkerij Jansen in October 2026: orange, 2 errors found, 1 fixed, 1 in progress");
+    expect(allEn.baselineNotFound!.text).toContain("ChatGPT found nothing about the opening hours on Sunday (8 of 10 times)");
+  });
+
+  it("the stored Dutch fix-path note becomes English; the dot line is English", () => {
+    expect(allEn.unfixable!.text).toContain("Why it did not work: This answer comes from the model's memory, not from a source we can change.");
+    expect(allEn.unfixable!.text).toContain("What we did: This answer comes from the model's memory.");
+    expect(allEn.baseline!.text).toContain("Dot: red. AI sends customers away. At least one answer sends customers away.");
+  });
+
+  it("the follow-ups carry the English unsubscribe line", () => {
+    for (const m of [allEn.followup7!, allEn.followup21!]) expect(m.text).toContain("No more emails about this? Unsubscribe: https://vidalo.io/en/unsubscribe?b=b1&t=tok");
+    expect((allEn.followup7 as Mail).html).toContain(">Unsubscribe</a>");
+  });
+
+  it("the Dutch mail is unchanged when no language is given", () => {
+    expect(welcomeEmail({ ...(all.welcome as never), business, cname: null, links: { ...links, confirmFactsUrl: "x", googleConnectUrl: "y" } }).html).toContain('<html lang="nl">');
+    expect(statusLine({ totalAnswers: 12, wrongAnswers: 1, resolved: 1, inProgress: 1 }, "en")).toBe("2 errors found, 1 fixed, 1 in progress");
+  });
+
+  it("textToHtml follows the language", async () => {
+    const { textToHtml } = await import("../src/reporter/templates");
+    expect(textToHtml("Hi,\n\nText", "en")).toContain('<html lang="en">');
+    expect(textToHtml("Hi,\n\nText", "en")).toContain("Prices excl. VAT");
+    expect(textToHtml("Hoi,\n\nTekst")).toContain('<html lang="nl">');
+  });
+
+  it("letters to third parties stay Dutch: they take no language", () => {
+    expect(correctionRequestEmail.length).toBe(2);
+    expect(all.correction!.text).toContain("Geachte heer/mevrouw");
+    expect(all.directoryCorrection!.text).toContain("Geachte heer/mevrouw");
+  });
+});
+
+describe("mail links per language", () => {
+  it("an English owner gets the English URLs, the same the web app makes", async () => {
+    const { mailPath, dashboardUrl, unsubscribeUrl, resultUrl, loginUrl } = await import("../src/reporter/links");
+    const { localizeHref } = await import("../../../apps/web/lib/lang-paths");
+    for (const route of ["/app", "/app/gegevens", "/app/google", "/app/domein", "/inloggen", "/afmelden", "/r/run1", "/api/afmelden"]) {
+      expect(mailPath(route, "en")).toBe(localizeHref(route, "en"));
+      expect(mailPath(route, "nl")).toBe(route);
+    }
+    expect(dashboardUrl({ slug: "x", language: "en" })).toMatch(/\/en\/app$/);
+    expect(dashboardUrl({ slug: "x", language: "nl" })).toMatch(/[^n]\/app$/);
+    expect(resultUrl("run1", "en")).toMatch(/\/en\/r\/run1$/);
+    expect(loginUrl(undefined, "en")).toMatch(/\/en\/login$/);
+    expect(unsubscribeUrl({ id: "b1", language: "en" })).toMatch(/\/en\/unsubscribe\?b=b1&t=/);
+  });
+});
