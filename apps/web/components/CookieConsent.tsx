@@ -48,7 +48,7 @@ export function CookieConsent({ copy, cookiesHref }: { copy: CopyShape["consent"
 
   if (!open) return null;
   return (
-    <aside role="dialog" aria-labelledby="consent-title" aria-describedby="consent-body" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-[520px] rounded-2xl border-[1.5px] border-line bg-white p-5 shadow-[0_8px_32px_rgba(16,18,24,0.12)] sm:left-6 sm:right-auto">
+    <aside role="dialog" aria-labelledby="consent-title" aria-describedby="consent-body" className="print:hidden fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-[520px] rounded-2xl border-[1.5px] border-line bg-white p-5 shadow-[0_8px_32px_rgba(16,18,24,0.12)] sm:left-6 sm:right-auto">
       <h2 id="consent-title" className="text-[16px] font-bold">
         {copy.title}
       </h2>

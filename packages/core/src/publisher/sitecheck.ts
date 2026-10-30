@@ -280,7 +280,8 @@ export function issueKey(issue: SiteIssue): string {
 // owner e-mail
 // ---------------------------------------------------------------------------
 
-const ENGINE_NAMES: Record<Engine, string> = { chatgpt: "ChatGPT", google_ai: "Google", gemini: "Gemini", copilot: "Copilot", perplexity: "Perplexity" };
+/** Engine names as the owner mail and the domain page say them. */
+export const ENGINE_NAMES: Record<Engine, string> = { chatgpt: "ChatGPT", google_ai: "Google", gemini: "Gemini", copilot: "Copilot", perplexity: "Perplexity" };
 
 function joinList(items: string[], and: string): string {
   if (items.length <= 1) return items.join("");

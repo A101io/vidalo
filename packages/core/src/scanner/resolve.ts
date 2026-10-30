@@ -29,13 +29,23 @@ export interface BusinessCandidate {
   source: "google" | "kvk" | "mock";
   /** Google Places primary type ("plumber") or a Dutch category word; picks the sector pack. */
   googleCategory?: string | null;
+  /** Every Google Places type, primary first; the sector and the question word try each in turn. */
+  googleTypes?: string[];
   /** KvK SBI code of the main activity. */
   sbi?: string | null;
 }
 
-/** Sector for a candidate: Google category first, then SBI, then a word in the name; null when unknown (owner picks). */
-export function sectorForCandidate(c: Pick<BusinessCandidate, "googleCategory" | "sbi" | "name">): SectorSlug | null {
-  return inferSector(c.googleCategory, c.sbi) ?? inferSector(c.name);
+/**
+ * Sector for a candidate: the Google primary type, then every other Google type
+ * (a bakery-café lists "cafe" first and "bakery" further on), then SBI, then a
+ * word in the name; null when unknown (owner picks).
+ */
+export function sectorForCandidate(c: Pick<BusinessCandidate, "googleCategory" | "googleTypes" | "sbi" | "name">): SectorSlug | null {
+  for (const t of [c.googleCategory, ...(c.googleTypes ?? [])]) {
+    const s = t ? inferSector(t) : null;
+    if (s) return s;
+  }
+  return inferSector(null, c.sbi) ?? inferSector(c.name);
 }
 
 export type DraftFacts = Omit<Facts, "businessId" | "version">;
@@ -116,6 +126,7 @@ async function googlePlaces(query: string, place?: string): Promise<BusinessCand
       hours: hoursFromGoogle(p),
       source: "google",
       googleCategory: p.primaryType ?? p.types?.[0] ?? null,
+      googleTypes: [...new Set([p.primaryType, ...(p.types ?? [])].filter((t): t is string => Boolean(t)))],
     };
   });
 }
@@ -369,5 +380,6 @@ export async function draftProvisionalFacts(candidate: BusinessCandidate, opts: 
     urgency: isMock() ? profile.urgency : undefined,
     credentials: isMock() ? (profile.credentials ?? []) : [],
     sector: sectorForCandidate(candidate),
+    googleTypes: candidate.googleTypes ?? (candidate.googleCategory ? [candidate.googleCategory] : []),
   };
 }

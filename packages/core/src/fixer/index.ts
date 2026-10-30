@@ -311,6 +311,42 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
 }
 
 // ---------------------------------------------------------------------------
+// the owner's two answers on a finding (dashboard, /app/fouten/[id])
+// ---------------------------------------------------------------------------
+
+/**
+ * "Ik heb dit aangepast": the owner changed the source (their own website,
+ * mostly). The open fix's recheck is pulled forward to now and queued, so the
+ * answer is asked again within the hour instead of at the planned date.
+ * Returns null when the finding has no open fix (resolved, or never opened).
+ */
+export async function markFixedByOwner(finding: Finding, now = new Date()): Promise<Fix | null> {
+  const db = getDb();
+  const fix = (await db.listFixes(finding.id)).find((x) => x.resolvedAt === null);
+  if (!fix) return null;
+  const at = now.toISOString();
+  const updated = await db.updateFix(fix.id, { recheckAt: at, evidence: { ...fix.evidence, ownerMarkedFixedAt: at } });
+  await db.enqueueJob("recheck", { fixId: fix.id, businessId: finding.businessId });
+  await db.logEvent(finding.businessId, "finding.owner_marked_fixed", { findingId: finding.id, fixId: fix.id });
+  log.info("fix.owner_marked_fixed", { fixId: fix.id, findingId: finding.id });
+  return updated;
+}
+
+/**
+ * "Dit klopt wél": the owner says the AI is right and the facts are wrong.
+ * Nothing changes here; the facts form is where the owner corrects the fact,
+ * and the next check resolves the finding against the new version. The event
+ * keeps the dispute on record for the log and for support.
+ */
+export async function disputeFinding(finding: Finding, now = new Date()): Promise<void> {
+  const db = getDb();
+  const fix = (await db.listFixes(finding.id)).find((x) => x.resolvedAt === null);
+  if (fix) await db.updateFix(fix.id, { evidence: { ...fix.evidence, disputedAt: now.toISOString() } });
+  await db.logEvent(finding.businessId, "finding.disputed", { findingId: finding.id, fixId: fix?.id ?? null, factKey: finding.factKey, subject: finding.subject });
+  log.info("finding.disputed", { findingId: finding.id });
+}
+
+// ---------------------------------------------------------------------------
 // rechecks
 // ---------------------------------------------------------------------------
 

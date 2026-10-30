@@ -76,7 +76,7 @@ test("@gate the coming-soon list answers in the page's language", async ({ page 
 
 test("@gate legal pages behind the gate link only inside the coming-soon setup", async ({ page }) => {
   // Behind the gate they keep the coming-soon footer, never the site's (A101io/vidalo#34).
-  const allowed = new Set(["/", "/en", "/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]);
+  const allowed = new Set(["/", "/en", "/contact", "/voorwaarden", "/privacy", "/cookies", "/en/contact", "/en/terms", "/en/privacy", "/en/cookies"]);
   for (const url of ["/voorwaarden", "/privacy", "/cookies", "/en/terms", "/en/privacy", "/en/cookies"]) {
     await page.goto(url);
     const hrefs = await page.locator("a[href^='/']").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
@@ -97,4 +97,24 @@ test("@gate Google can read the logo behind the gate", async ({ page, request })
   await page.goto("/");
   await expect(page.locator("link[rel='icon']").first()).toHaveAttribute("href", /icon/);
   await expect(page.locator("link[rel='apple-touch-icon']")).toHaveAttribute("href", /apple-icon/);
+});
+
+test("@gate the hidden preview page opens the site with the key, and only with the key", async ({ page }) => {
+  // Not linked from the coming-soon page, and not for search engines.
+  await page.goto("/");
+  expect(await page.locator("a[href*='voorvertoning'], a[href*='/en/preview']").count()).toBe(0);
+  await page.goto("/voorvertoning");
+  await expect(page.locator("meta[name='robots']")).toHaveAttribute("content", /noindex/);
+  // A wrong key comes back to the form with the message, and changes nothing.
+  await page.locator("#preview-key").fill("wrong-key");
+  await page.locator("form[action='/api/preview'] button[type='submit']").click();
+  await expect(page).toHaveURL(/\/voorvertoning\?fout=1$/);
+  await expect(page.locator("#preview-error")).toHaveText("Die sleutel klopt niet. Kijk hem nog even na.");
+  // The right key (playwright.config.ts: VIDALO_PREVIEW_KEY) opens the whole site.
+  await page.locator("#preview-key").fill("e2e-preview-key");
+  await page.locator("form[action='/api/preview'] button[type='submit']").click();
+  await expect(page.locator("form[action='/api/scan']").first()).toBeVisible();
+  // The English address works too.
+  await page.goto("/en/preview");
+  await expect(page.locator("h1")).toHaveText("See the whole site");
 });

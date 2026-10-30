@@ -7,12 +7,12 @@
  * Mock mode (VIDALO_MOCK=1 or no keys) runs the whole pipeline offline with
  * deterministic synthetic answers.
  */
-import { ENGINES, visibilityFor, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
+import { ENGINES, visibilityFor, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
 import { generatePrompts, promptsForFullScan, selectFreeScanPrompts } from "../prompts";
 import { attributeAll, type AttributionContext } from "./attribute";
-import { compare, groupKey, type ComparableSample, type CompareResult } from "./compare";
+import { compare, groupKey, type ComparableSample, type CompareResult, type SampleVerdict } from "./compare";
 import { computeStip, groupBySeverity } from "./stip";
 import { getEngines, type EngineClient } from "./engines";
 import { ENGINE_TIMEOUT_MS } from "./engines/types";
@@ -43,11 +43,40 @@ export const SCAN_DEFAULTS: Record<ScanKind, { engines: Engine[]; samplesPerProm
   ondemand: { engines: ENGINES, samplesPerPrompt: 5 },
 };
 
+/**
+ * Samples asked first, per (prompt, engine). Only when one of them disagrees
+ * with the facts, says not found, names another business or does not name
+ * the business in a recommendation does the cell go on to the full
+ * `samplesPerPrompt`. A cell that answers right every time stops here; the
+ * criteria that flag on a single wrong answer (1, 2, 8, 11) lose nothing, and
+ * the ratio criteria keep their ten samples wherever a wrong answer appeared.
+ * Override with VIDALO_SAMPLES_FIRST or `firstSamples`.
+ */
+export const FIRST_SAMPLES = 5;
+
+/**
+ * Engines whose answer does not vary between samples. Google's AI Overview
+ * for one query is one answer (and SerpApi serves repeats from cache): ten
+ * samples would be ten copies that count ten times in the ratios without
+ * adding evidence.
+ */
+export const SAMPLES_CAP: Partial<Record<Engine, number>> = { google_ai: 1 };
+
+/** Samples a scan asks one engine per prompt: the scan's number, capped per engine. */
+export function samplesFor(engine: Engine, samplesPerPrompt: number): number {
+  return Math.min(samplesPerPrompt, SAMPLES_CAP[engine] ?? samplesPerPrompt);
+}
+
+/** Sample verdicts that send a (prompt, engine) cell on to the full sample count. */
+const ESCALATE_ON: ReadonlySet<SampleVerdict> = new Set<SampleVerdict>(["wrong", "other_entity", "not_found", "not_named"]);
+
 export interface RunScanOptions {
   businessId: string;
   kind: ScanKind;
   engines?: Engine[];
   samplesPerPrompt?: number;
+  /** Samples asked before deciding whether a cell needs all of them (default FIRST_SAMPLES). */
+  firstSamples?: number;
   /** Restrict to these stored prompt ids (rechecks). */
   promptIds?: string[];
   /** Engine clients to use instead of the registry (tests, worker-injected adapters). */
@@ -96,42 +125,45 @@ async function loadPrompts(db: Db, businessId: string, facts: Facts, kind: ScanK
   return promptsForFullScan(prompts, now);
 }
 
-/** Ask every (engine x prompt x sample) with bounded concurrency, retries and timeouts. */
+/** One (engine, prompt) cell and the sample indexes [from, to) to ask it. */
+interface Cell {
+  client: EngineClient;
+  prompt: Prompt;
+  from: number;
+  to: number;
+}
+
+/** Ask every (engine x prompt x sample) in the plan with bounded concurrency, retries and timeouts. */
 async function sampleAll(
-  clients: EngineClient[],
-  prompts: Prompt[],
-  samplesPerPrompt: number,
+  plan: Cell[],
   ctx: { business: Awaited<ReturnType<Db["getBusiness"]>> & object; facts: Facts },
   concurrency: number,
+  progress: { total: number; done: number },
   onProgress?: RunScanOptions["onProgress"],
   onError?: (engine: Engine, prompt: Prompt, err: unknown) => void,
 ): Promise<Asked[]> {
   const limit = createLimiter(concurrency);
-  const total = clients.length * prompts.length * samplesPerPrompt;
-  let done = 0;
   const tasks: Promise<Asked>[] = [];
-  for (const client of clients) {
-    for (const prompt of prompts) {
-      for (let i = 0; i < samplesPerPrompt; i++) {
-        tasks.push(
-          limit(async () => {
-            try {
-              const ans = await retry(
-                () => withTimeout(client.ask(prompt.textNl, { business: ctx.business, facts: ctx.facts, prompt, sampleIndex: i }), ENGINE_TIMEOUT_MS, client.engine),
-                { retries: 2, baseMs: 1_000 },
-              );
-              done++;
-              onProgress?.({ type: "asked", engine: client.engine, prompt: prompt.textNl, sampleIndex: i, ok: !ans.skipped, done, total });
-              return { prompt, engine: client.engine, sampleIndex: i, answerText: ans.answerText, citations: ans.citations, costCents: ans.costCents, skipped: Boolean(ans.skipped) || !ans.answerText.trim() };
-            } catch (err) {
-              done++;
-              onError?.(client.engine, prompt, err);
-              onProgress?.({ type: "asked", engine: client.engine, prompt: prompt.textNl, sampleIndex: i, ok: false, done, total });
-              return { prompt, engine: client.engine, sampleIndex: i, answerText: "", citations: [], costCents: 0, skipped: true };
-            }
-          }),
-        );
-      }
+  for (const { client, prompt, from, to } of plan) {
+    for (let i = from; i < to; i++) {
+      tasks.push(
+        limit(async () => {
+          try {
+            const ans = await retry(
+              () => withTimeout(client.ask(prompt.textNl, { business: ctx.business, facts: ctx.facts, prompt, sampleIndex: i }), ENGINE_TIMEOUT_MS, client.engine),
+              { retries: 2, baseMs: 1_000 },
+            );
+            progress.done++;
+            onProgress?.({ type: "asked", engine: client.engine, prompt: prompt.textNl, sampleIndex: i, ok: !ans.skipped, done: progress.done, total: progress.total });
+            return { prompt, engine: client.engine, sampleIndex: i, answerText: ans.answerText, citations: ans.citations, costCents: ans.costCents, skipped: Boolean(ans.skipped) || !ans.answerText.trim() };
+          } catch (err) {
+            progress.done++;
+            onError?.(client.engine, prompt, err);
+            onProgress?.({ type: "asked", engine: client.engine, prompt: prompt.textNl, sampleIndex: i, ok: false, done: progress.done, total: progress.total });
+            return { prompt, engine: client.engine, sampleIndex: i, answerText: "", citations: [], costCents: 0, skipped: true };
+          }
+        }),
+      );
     }
   }
   return Promise.all(tasks);
@@ -170,6 +202,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   const defaults = SCAN_DEFAULTS[opts.kind];
   const engines = opts.engines?.length ? opts.engines : defaults.engines;
   const samplesPerPrompt = opts.samplesPerPrompt ?? Number(process.env.VIDALO_SAMPLES ?? defaults.samplesPerPrompt);
+  const firstSamples = Math.min(samplesPerPrompt, Math.max(1, opts.firstSamples ?? Number(process.env.VIDALO_SAMPLES_FIRST ?? FIRST_SAMPLES)));
   const concurrency = opts.concurrency ?? Number(process.env.VIDALO_CONCURRENCY ?? 4);
 
   const business = await db.getBusiness(opts.businessId);
@@ -184,38 +217,58 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   const unavailable = new Set(clients.filter((c) => !c.available()).map((c) => c.engine));
 
   const scanRun = await db.createScanRun({ businessId: business.id, kind: opts.kind, engines, samplesPerPrompt, status: "running" });
-  await db.logEvent(business.id, "scan.started", { scanRunId: scanRun.id, kind: opts.kind, engines, samplesPerPrompt, prompts: prompts.length, skippedEngines: [...unavailable] });
-  opts.onProgress?.({ type: "start", scanRunId: scanRun.id, total: active.length * prompts.length * samplesPerPrompt });
+  await db.logEvent(business.id, "scan.started", { scanRunId: scanRun.id, kind: opts.kind, engines, samplesPerPrompt, firstSamples, prompts: prompts.length, skippedEngines: [...unavailable] });
+  const firstRound: Cell[] = active.flatMap((client) => prompts.map((prompt) => ({ client, prompt, from: 0, to: Math.min(firstSamples, samplesFor(client.engine, samplesPerPrompt)) })));
+  const progress = { total: firstRound.reduce((n, c) => n + (c.to - c.from), 0), done: 0 };
+  opts.onProgress?.({ type: "start", scanRunId: scanRun.id, total: progress.total });
 
   // Previous open findings, loaded before we upsert so we can diff afterwards.
   const previousOpen = await db.listFindings(business.id, ["open", "fixing", "recheck"]);
 
   try {
-    const asked = await sampleAll(active, prompts, samplesPerPrompt, { business, facts }, concurrency, opts.onProgress, (engine, prompt, err) => {
-      void db.logEvent(business.id, "scan.sample_failed", { scanRunId: scanRun.id, engine, prompt: prompt.textNl, error: String((err as Error)?.message ?? err) });
-    });
-    const costCents = Math.round(asked.reduce((sum, a) => sum + a.costCents, 0));
-
-    // Persist samples (skipped ones carry no evidence and are not stored).
-    opts.onProgress?.({ type: "phase", phase: "persist" });
-    const usable = asked.filter((a) => !a.skipped);
-    const samples = await db.insertSamples(
-      usable.map((a) => ({ scanRunId: scanRun.id, promptId: a.prompt.id, engine: a.engine, answerText: a.answerText, citations: a.citations, costCents: a.costCents })),
-    );
     const promptById = new Map(prompts.map((p) => [p.id, p]));
-
-    // Extract claims.
-    opts.onProgress?.({ type: "phase", phase: "extract" });
     const extractLimit = createLimiter(defaultExtractMode() === "llm" ? concurrency : 16);
-    const claimsPerSample = await Promise.all(
-      samples.map((s) => extractLimit(() => extractClaims(s.answerText, facts, promptById.get(s.promptId)!, { sampleId: s.id }))),
-    );
-    const allClaims = claimsPerSample.flat();
-    await db.insertClaims(allClaims);
+    const samples: Sample[] = [];
+    const claimsPerSample: Claim[][] = [];
+    let costCents = 0;
+
+    // Ask the cells in the plan, store the usable answers (skipped ones carry no evidence) and extract their claims.
+    const round = async (plan: Cell[]) => {
+      const asked = await sampleAll(plan, { business, facts }, concurrency, progress, opts.onProgress, (engine, prompt, err) => {
+        void db.logEvent(business.id, "scan.sample_failed", { scanRunId: scanRun.id, engine, prompt: prompt.textNl, error: String((err as Error)?.message ?? err) });
+      });
+      costCents += asked.reduce((sum, a) => sum + a.costCents, 0);
+      const usable = asked.filter((a) => !a.skipped);
+      const stored = await db.insertSamples(
+        usable.map((a) => ({ scanRunId: scanRun.id, promptId: a.prompt.id, engine: a.engine, answerText: a.answerText, citations: a.citations, costCents: a.costCents })),
+      );
+      const claims = await Promise.all(stored.map((s) => extractLimit(() => extractClaims(s.answerText, facts, promptById.get(s.promptId)!, { sampleId: s.id }))));
+      await db.insertClaims(claims.flat());
+      samples.push(...stored);
+      claimsPerSample.push(...claims);
+    };
+    const comparableNow = (): ComparableSample[] => samples.map((s, i) => ({ sampleId: s.id, engine: s.engine, prompt: promptById.get(s.promptId)!, claims: claimsPerSample[i]!, citations: s.citations }));
+
+    // Round 1: the first samples of every cell.
+    await round(firstRound);
+
+    // Round 2: only the cells where a first answer was wrong, not found, about a namesake or did not name the business.
+    const verdicts = compare(comparableNow(), facts).verdicts;
+    const secondRound: Cell[] = firstRound
+      .map((c) => ({ ...c, from: c.to, to: samplesFor(c.client.engine, samplesPerPrompt) }))
+      .filter((c) => c.to > c.from && samples.some((s) => s.engine === c.client.engine && s.promptId === c.prompt.id && ESCALATE_ON.has(verdicts.get(s.id) ?? "unknown")));
+    if (secondRound.length) {
+      progress.total += secondRound.reduce((n, c) => n + (c.to - c.from), 0);
+      await round(secondRound);
+    }
+    costCents = Math.round(costCents);
+
+    opts.onProgress?.({ type: "phase", phase: "persist" });
+    opts.onProgress?.({ type: "phase", phase: "extract" });
 
     // Compare.
     opts.onProgress?.({ type: "phase", phase: "compare" });
-    const comparable: ComparableSample[] = samples.map((s, i) => ({ sampleId: s.id, engine: s.engine, prompt: promptById.get(s.promptId)!, claims: claimsPerSample[i]!, citations: s.citations }));
+    const comparable = comparableNow();
     const result = compare(comparable, facts);
 
     // Attribute.
@@ -261,6 +314,9 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
       newFindings: findings.filter((f) => f.scanRunId === scanRun.id && !previousOpen.some((p) => p.id === f.id)).length,
       resolved: resolved.length,
       unstable: result.instable.length,
+      firstSamples,
+      escalatedCells: secondRound.length,
+      cells: firstRound.length,
       costCents,
     });
     opts.onProgress?.({ type: "phase", phase: "done" });
@@ -295,6 +351,8 @@ function assembleReport(args: {
   const verdictOf = (s: Sample) => result.verdicts.get(s.id);
   const wrongAnswers = samples.filter((s) => verdictOf(s) === "wrong" || verdictOf(s) === "other_entity").length;
   const notFoundAnswers = samples.filter((s) => verdictOf(s) === "not_found").length;
+  // "X van Y antwoorden kloppen niet" counts answers to fact questions; recommendation answers are reported on their own.
+  const factSamples = samples.filter((s) => verdictOf(s) !== "named" && verdictOf(s) !== "not_named");
   const instable: InstableFinding[] = result.instable.map((c) => ({
     businessId: business.id,
     scanRunId: scanRun.id,
@@ -320,10 +378,10 @@ function assembleReport(args: {
     scanRunId: scanRun.id,
     kind: scanRun.kind,
     checkedAt: scanRun.finishedAt ?? new Date().toISOString(),
-    totalAnswers: samples.length,
+    totalAnswers: factSamples.length,
     wrongAnswers,
     notFoundAnswers,
-    visibility: visibilityFor(samples.length, notFoundAnswers),
+    visibility: visibilityFor(factSamples.length, notFoundAnswers),
     engines: engineStats(engines, samples, result.verdicts, unavailable),
     findings,
     correct: result.correct.map(({ prompt, engine, value, raw, factKey, subject }) => ({ prompt, engine, value, raw, factKey, subject })),

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemDb } from "../src/db/mem";
 import { setDb } from "../src/shared/db";
 import { FIX_PATHS, NOT_FOUND_PATH, fixPathFor, fixPathForFinding, addDays } from "../src/fixer/paths";
-import { affectedPrompts, openFixForFinding, runRecheck, stillPresent } from "../src/fixer";
+import { affectedPrompts, disputeFinding, markFixedByOwner, openFixForFinding, runRecheck, stillPresent } from "../src/fixer";
 import type { Finding, ScanReport, SourceType } from "../src/types";
 import type { BusinessRecord } from "../src/db/types";
 import { facts as baseFacts } from "./worker-fixtures";
@@ -182,6 +182,34 @@ describe("openFixForFinding", () => {
     const mails = [...db.jobs.values()].filter((j) => j.kind === "email");
     expect(mails.length).toBeGreaterThan(0);
     expect(mails.every((j) => j.payload.template === "directory_correction")).toBe(true);
+  });
+
+  it("'Ik heb dit aangepast': the recheck is pulled forward to now and queued", async () => {
+    const { finding } = await seed(db, "owned_website");
+    const opened = await openFixForFinding(finding, { now: () => new Date("2026-10-07T10:00:00Z") });
+    expect(opened.fix.recheckAt).toBe(addDays("2026-10-07T10:00:00Z", 14).toISOString());
+    const fix = await markFixedByOwner(finding, new Date("2026-10-12T09:00:00Z"));
+    expect(fix?.recheckAt).toBe("2026-10-12T09:00:00.000Z");
+    expect(fix?.evidence.ownerMarkedFixedAt).toBe("2026-10-12T09:00:00.000Z");
+    const rechecks = [...db.jobs.values()].filter((j) => j.kind === "recheck");
+    expect(rechecks).toHaveLength(1);
+    expect(rechecks[0]!.payload).toMatchObject({ fixId: opened.fix.id });
+    expect(db.events.some((e) => e.type === "finding.owner_marked_fixed")).toBe(true);
+  });
+
+  it("'Ik heb dit aangepast' without an open fix does nothing", async () => {
+    const { finding } = await seed(db, "owned_website");
+    expect(await markFixedByOwner(finding)).toBeNull();
+    expect(db.jobs.size).toBe(0);
+  });
+
+  it("'Dit klopt wél' is recorded on the fix and as an event, the finding itself is left to the next check", async () => {
+    const { finding } = await seed(db, "third_party");
+    const opened = await openFixForFinding(finding, { now: () => new Date("2026-10-07T10:00:00Z") });
+    await disputeFinding(finding, new Date("2026-10-12T09:00:00Z"));
+    expect((await db.getFix(opened.fix.id))!.evidence.disputedAt).toBe("2026-10-12T09:00:00.000Z");
+    expect(db.events.find((e) => e.type === "finding.disputed")?.payload).toMatchObject({ findingId: finding.id, factKey: "hours", subject: "6" });
+    expect((await db.getFinding(finding.id))!.status).toBe("fixing");
   });
 
   it("does not open a second fix while one is open", async () => {

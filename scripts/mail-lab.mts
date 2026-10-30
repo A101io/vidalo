@@ -8,10 +8,11 @@
  * Two journeys: a business that only did the free check (report mail, the
  * day-7 and day-21 follow-ups), and one that pays (welcome, own-website
  * check, directory corrections, fixes, rechecks weeks later, monthly report,
- * resolved and unfixable notices). Both run twice: for a Dutch owner and for
- * an owner who chose English (business.language). A mail kind that no
- * journey reaches in mock mode is rendered from its template with the
- * journey's real records and marked "template only".
+ * resolved and unfixable notices, the yearly re-confirmation). Both run
+ * twice: for a Dutch owner and for an owner who chose English
+ * (business.language). A mail kind that no journey reaches in mock mode is
+ * rendered from its template with the journey's real records and marked
+ * "template only".
  *
  * Checks per mail: the right recipient (owner vs third party), the right
  * language (the owner's; letters to third parties always Dutch), no leftover
@@ -68,6 +69,7 @@ const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
   report: { label: "Monthly report", to: "owner" },
   resolution: { label: "A wrong answer is fixed", to: "owner" },
   unfixable: { label: "A wrong answer cannot be fixed", to: "owner" },
+  reconfirm: { label: "Yearly \"Klopt dit nog?\" about the facts", to: "owner" },
   directory_correction: { label: "Correction to a directory", to: "third_party" },
   correction_request: { label: "Correction request to a source", to: "third_party" },
   correction_followup: { label: "Follow-up to that source", to: "third_party" },
@@ -142,6 +144,19 @@ async function journeys(lang: Lang) {
   if (first) await sendResolutionNotice(first.id);
   // A path's own note, as the fixer sends it; an English owner gets it in English.
   if (second) await sendUnfixableNotice(second.id, fixPathForFinding(second).unfixableNoteNl ?? "De bron is niet aangepast.");
+
+  // A year later: the cron asks the owner once whether the facts are still right.
+  {
+    const last = await db.latestFacts(b.id);
+    if (last) {
+      const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...data } = last;
+      await db.insertFacts(b.id, data, { provisional: false, verifiedAt: new Date(Date.now() - 366 * DAY).toISOString() });
+    }
+    const { enqueueReconfirmations } = await import("@vidalo/worker/src/cron.ts");
+    await enqueueReconfirmations();
+    await enqueueReconfirmations(); // a second tick queues nothing
+    await drain();
+  }
 
   // Kinds this journey did not reach in mock mode: render their template from the real records.
   const reached = new Set<string>();

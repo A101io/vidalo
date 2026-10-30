@@ -12,7 +12,7 @@ open out/mail-lab/index.html
 
 Two journeys run in mock mode, each twice: for a Dutch owner and for an owner who chose English (`business.language`, 25 Oct 2026):
 - **Free check only**: the report mail, then the day-7 and day-21 follow-ups.
-- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, and the resolved and unfixable notices.
+- **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, the resolved and unfixable notices, and a year later the "Klopt dit nog?" mail (queued by the cron step, twice, to show it goes out once).
 
 The correction request to a source and its follow-up are not reached in mock mode, because the mock answers cite no third-party site with a contact address. They are rendered from their templates with the journey's real finding, and the page marks them "template only".
 
@@ -20,7 +20,7 @@ The page shows one card per kind and language: recipient, sender, subject, the H
 
 | Check | Fails the run |
 |---|---|
-| Every one of the 13 kinds is produced, for the Dutch and for the English owner | yes |
+| Every one of the 14 kinds is produced, for the Dutch and for the English owner | yes |
 | An owner mail is in the owner's language: opens with "Hoi," / "Hi,", `<html lang>` and the `lang` tag match, no Dutch left in an English mail (links, the asked question, names and quoted answers aside) | yes |
 | A letter to a third party is the Dutch letter, also in the English journey | yes |
 | An owner's links are in the owner's language (`/en/...` for English; API routes have one URL) | yes |
@@ -40,7 +40,7 @@ The `.eml` files are in `out/mail-lab/mail/`. They carry the mail's tags as `X-V
 Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `controle@vidalo.io`; `docs/mail.md`, `docs/setup/stripe-and-resend.md`). Both can come from the environment or the root `.env`.
 
 ```
-pnpm mail:send --to you@example.com            # dry run: lists the 13 mails
+pnpm mail:send --to you@example.com            # dry run: lists the 14 mails
 pnpm mail:send --to you@example.com --send     # sends one of each kind
 pnpm mail:send --to you@example.com --send --kinds welcome,baseline
 pnpm mail:send --to you@example.com --lang en  # the owner mails as an English owner gets them

@@ -5,6 +5,7 @@
  * No JavaScript, minimal inline CSS, readable on a phone. Everything in Dutch.
  * The page is the owner-asserted source of truth that AI assistants can cite.
  */
+import { businessNoun } from "../prompts/sectors.js";
 import type { Business, Facts, Hours, PriceItem } from "../types.js";
 
 export interface RenderOptions {
@@ -276,26 +277,37 @@ export function buildSitemap(canonicalUrl: string, lastmod: string): string {
 
 const CSS = `
 :root{color-scheme:light}
-body{margin:0;padding:1.25rem;max-width:42rem;margin-inline:auto;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1b1b1b;background:#fff}
-header{margin-bottom:1.5rem}
-h1{font-size:1.5rem;line-height:1.25;margin:0 0 .25rem}
-h2{font-size:1.1rem;margin:1.75rem 0 .5rem;border-bottom:1px solid #ddd;padding-bottom:.25rem}
+*{box-sizing:border-box}
+body{margin:0 auto;padding:1.25rem;max-width:44rem;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f1222;background:#f6f7fa}
+header,main section{background:#fff;border:1.5px solid #e3e5ec;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1rem}
+h1{font-size:1.75rem;line-height:1.2;letter-spacing:-.02em;margin:0 0 .4rem}
+h2{font-size:1.05rem;margin:0 0 .6rem}
 p{margin:.4rem 0}
-.meta{color:#555;font-size:.9rem}
-table{border-collapse:collapse;width:100%;max-width:24rem}
-th,td{text-align:left;padding:.3rem .5rem .3rem 0;vertical-align:top}
-th{font-weight:600;width:8rem}
+.meta{color:#5b6070;font-size:.88rem}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0 .6rem}
+.btn{display:inline-block;padding:.7rem 1.25rem;border:1.5px solid #2f5bff;border-radius:12px;font-weight:700;text-decoration:none;text-align:center}
+.btn-primary{background:#2f5bff;color:#fff}
+.btn-secondary{background:#fff;color:#2f5bff}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:.45rem 0;vertical-align:top;border-top:1px solid #eef0f4}
+tr:first-child th,tr:first-child td{border-top:0}
+th{font-weight:600;width:50%}
+th::first-letter{text-transform:uppercase}
 ul{padding-left:1.2rem;margin:.4rem 0}
+ul.chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:.5rem}
+ul.chips li{border:1.5px solid #e3e5ec;border-radius:999px;padding:.3rem .85rem}
 dl{margin:0}
-dt{font-weight:600;margin-top:.5rem}
+dt{font-weight:600;margin-top:.6rem}
+dt:first-child{margin-top:0}
 dd{margin:0}
-footer{margin-top:2.5rem;color:#555;font-size:.85rem;border-top:1px solid #ddd;padding-top:.75rem}
-a{color:#1b4fa0}
+footer{color:#5b6070;font-size:.85rem;padding:.25rem .5rem}
+a{color:#2f5bff}
+@media (max-width:30rem){body{padding:.75rem}header,main section{padding:1rem 1.1rem}.btn{flex:1}}
 `.trim();
 
-function list(items: string[], prefix = ""): string {
+function list(items: string[], prefix = "", cls = ""): string {
   if (!items.length) return "";
-  return `<ul>${items.map((i) => `<li>${escapeHtml(prefix + i)}</li>`).join("")}</ul>`;
+  return `<ul${cls ? ` class="${cls}"` : ""}>${items.map((i) => `<li>${escapeHtml(prefix + i)}</li>`).join("")}</ul>`;
 }
 
 /**
@@ -316,11 +328,18 @@ export function renderFactsPage(facts: Facts, business: Business, opts: RenderOp
   const rows = hoursRows(facts.hours);
   const addressLine = [facts.address, [facts.postcode, facts.place].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
+  const phoneHref = facts.phone ? `tel:${facts.phone.replace(/\s+/g, "")}` : null;
+  const routeHref = addressLine ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${facts.name}, ${addressLine}`)}` : null;
+  const actions = [
+    phoneHref ? `<a class="btn btn-primary" href="${escapeHtml(phoneHref)}">Bellen</a>` : "",
+    routeHref ? `<a class="btn ${phoneHref ? "btn-secondary" : "btn-primary"}" href="${escapeHtml(routeHref)}">Route</a>` : "",
+  ].filter(Boolean);
+
   const sections: string[] = [];
 
   sections.push(`<section id="over">
 <h2>Over</h2>
-<p>${escapeHtml(facts.name)} is een bedrijf in ${escapeHtml(facts.place)}. ${escapeHtml(openStatusLine(facts))}</p>
+<p>${escapeHtml(facts.name)} is een ${escapeHtml(businessNoun(facts, business.sector) ?? "bedrijf")} in ${escapeHtml(facts.place)}. ${escapeHtml(openStatusLine(facts))}</p>
 ${business.kvk ? `<p class="meta">KvK-nummer: ${escapeHtml(business.kvk)}</p>` : ""}
 </section>`);
 
@@ -346,7 +365,7 @@ ${rows.map((r) => `<tr><th scope="row">${r.day}</th><td>${escapeHtml(r.text)}</t
   if (facts.servicesYes.length || facts.servicesNo.length) {
     sections.push(`<section id="diensten">
 <h2>Diensten</h2>
-${facts.servicesYes.length ? `<p>Wel:</p>${list(facts.servicesYes)}` : ""}
+${facts.servicesYes.length ? (facts.servicesNo.length ? `<p>Wel:</p>${list(facts.servicesYes)}` : list(facts.servicesYes, "", "chips")) : ""}
 ${facts.servicesNo.length ? `<p>Niet:</p>${list(facts.servicesNo, "Niet: ")}` : ""}
 </section>`);
   }
@@ -426,6 +445,7 @@ ${list(facts.notConfusedWith)}
 <header>
 <h1>${escapeHtml(facts.name)} in ${escapeHtml(facts.place)}</h1>
 <p class="meta">Feiten en openingstijden, zoals vastgelegd door de eigenaar.</p>
+${actions.length ? `<div class="actions">${actions.join("")}</div>` : ""}
 <p class="meta">Laatst gecontroleerd op <time datetime="${escapeHtml(isoDate(checkedAt))}">${escapeHtml(formatDateNl(checkedAt))}</time>.${
     facts.verifiedAt
       ? ` Laatst bevestigd door de eigenaar op <time datetime="${escapeHtml(isoDate(facts.verifiedAt))}">${escapeHtml(formatDateNl(facts.verifiedAt))}</time>.`

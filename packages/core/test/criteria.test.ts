@@ -16,6 +16,7 @@ import {
 import { compare, type ComparableSample } from "../src/scanner/compare";
 import { extractClaimsRules, mentionsBusiness, notFoundClaim } from "../src/scanner/extract";
 import { computeStip, groupBySeverity } from "../src/scanner/stip";
+import { factValue } from "../src/scanner/normalize";
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_VALUE, PRESENT_VALUE, type Claim, type Engine, type Finding, type Prompt } from "../src/types";
 import { sampleFacts } from "./scanner-fixtures";
 
@@ -146,7 +147,7 @@ describe("recommendation questions", () => {
     expect(noInfo[0]!.value).not.toBe(NOT_FOUND_VALUE);
   });
 
-  it("absent becomes a finding on the linked criterium with evidenceKind recommendation; present is correct; never a rank", () => {
+  it("named or not is its own verdict: never a finding, never wrong or correct, never a checked fact; never a rank", () => {
     const rec = prompt("service", ["service:glutenvrij brood"], { kind: "recommendation", criterium: 6, textNl: "Welke bakker in Haarlem verkoopt glutenvrij brood?" });
     const samples: ComparableSample[] = [
       { sampleId: "r1", engine: "chatgpt", prompt: rec, claims: [claim("service", "glutenvrij brood", ABSENT_VALUE, "r1")], citations: ["https://openingstijden.nl/x"] },
@@ -155,23 +156,29 @@ describe("recommendation questions", () => {
       { sampleId: "g1", engine: "gemini", prompt: rec, claims: [claim("service", "glutenvrij brood", PRESENT_VALUE, "g1")], citations: [] },
     ];
     const r = compare(samples, facts);
-    expect(r.findings).toHaveLength(1);
-    expect(r.findings[0]).toMatchObject({
-      engine: "chatgpt",
-      factKey: "service",
-      subject: "glutenvrij brood",
-      evidenceKind: "recommendation",
-      criterium: 6,
-      wrongValue: ABSENT_LABEL,
-      correctValue: "yes",
-      frequency: 2,
-      sampleCount: 3,
-    });
-    expect(r.correct.filter((c) => c.value === "genoemd").map((c) => c.sampleId).sort()).toEqual(["g1", "r3"]);
-    expect(r.verdicts.get("r1")).toBe("wrong");
-    expect(r.verdicts.get("g1")).toBe("correct");
-    // A recommendation finding and an about finding on the same key are separate groups.
-    expect(r.checkedKeys.has("service|glutenvrij brood|chatgpt|rec")).toBe(true);
+    // Julian, 25 Oct 2026: not being recommended is not a wrong fact.
+    expect(r.findings).toHaveLength(0);
+    expect(r.correct).toHaveLength(0);
+    expect(r.verdicts.get("r1")).toBe("not_named");
+    expect(r.verdicts.get("r3")).toBe("named");
+    expect(r.verdicts.get("g1")).toBe("named");
+    // An open finding from an older scan is neither confirmed nor resolved by a recommendation answer.
+    expect(r.checkedKeys.has("service|glutenvrij brood|chatgpt|rec")).toBe(false);
+  });
+
+  it("a recommendation answer never makes a fact wrong: one sample, a fact question and a recommendation", () => {
+    const about = prompt("phone", ["phone"], {});
+    const rec = prompt("existence", ["existence:beste"], { kind: "recommendation", criterium: 6 });
+    const r = compare(
+      [
+        { sampleId: "f1", engine: "chatgpt", prompt: about, claims: [claim("phone", null, factValue(facts, "phone", null)!, "f1")], citations: [] },
+        { sampleId: "n1", engine: "chatgpt", prompt: rec, claims: [claim("existence", "beste", ABSENT_VALUE, "n1")], citations: [] },
+      ],
+      facts,
+    );
+    expect(r.findings).toHaveLength(0);
+    expect(r.verdicts.get("f1")).toBe("correct");
+    expect(r.verdicts.get("n1")).toBe("not_named");
   });
 
   it("is skipped when the facts do not support the question (a service the business does not offer, closed on that day)", () => {
@@ -188,7 +195,7 @@ describe("recommendation questions", () => {
     expect(r.verdicts.get("a")).toBe("unknown");
   });
 
-  it("links area, urgency and credential recommendations to criteria 4, 5 and 12", () => {
+  it("area, urgency and credential recommendations are judged named or not, not as facts", () => {
     const mk = (category: Prompt["category"], probe: string, crit: Prompt["criterium"], id: string): ComparableSample => ({
       sampleId: id,
       engine: "google_ai",
@@ -197,8 +204,9 @@ describe("recommendation questions", () => {
       citations: [],
     });
     const r = compare([mk("area", "area:Heemstede", 4, "x1"), mk("urgency", "urgency", 5, "x2"), mk("credential", "credential:SKB", 12, "x3")], facts);
-    expect(r.findings.map((f) => f.criterium).sort((a, b) => a - b)).toEqual([4, 5, 12]);
-    expect(r.findings.every((f) => f.wrongValue === ABSENT_LABEL && f.correctValue === "yes")).toBe(true);
+    // The questions still apply (the facts support them) but not being named is reported, not counted.
+    expect(r.findings).toHaveLength(0);
+    expect(["x1", "x2", "x3"].map((id) => r.verdicts.get(id))).toEqual(["not_named", "not_named", "not_named"]);
   });
 });
 

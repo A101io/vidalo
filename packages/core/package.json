@@ -8,6 +8,7 @@
     "./types": "./src/types.ts",
     "./criteria": "./src/criteria.ts",
     "./progress": "./src/progress.ts",
+    "./facts-history": "./src/facts-history.ts",
     "./db": "./src/db/index.ts",
     "./scanner": "./src/scanner/index.ts",
     "./publisher": "./src/publisher/index.ts",
@@ -29,7 +30,7 @@
     "postgres": "^3.4.5",
     "zod": "^3.23.8",
     "openai": "^4.73.0",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.1",
     "nanoid": "^5.0.9"
   },
   "devDependencies": {

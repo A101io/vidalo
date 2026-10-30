@@ -78,7 +78,7 @@ function hostOf(url: string): string | null {
 export function summarizeRecommendations(args: {
   samples: Pick<Sample, "id" | "promptId" | "answerText" | "citations">[];
   prompts: Pick<Prompt, "id" | "textNl" | "kind" | "intent" | "pool" | "probes">[];
-  /** sample id -> verdict; "correct" on a recommendation sample means the business was named */
+  /** sample id -> verdict; "named" on a recommendation sample means the business was named (compare.ts) */
   verdicts: Map<string, string>;
   facts: Pick<Facts, "name" | "place">;
   /** how many other names / sources to keep per question */
@@ -94,7 +94,7 @@ export function summarizeRecommendations(args: {
     const sources = new Map<string, { host: string; url: string; answers: number }>();
     let named = 0;
     for (const s of samples) {
-      if (args.verdicts.get(s.id) === "correct") named++;
+      if (args.verdicts.get(s.id) === "named") named++;
       for (const name of namedBusinesses(s.answerText)) {
         if (mentionsBusiness(name, args.facts)) continue; // the business itself
         const key = normalizeName(name);

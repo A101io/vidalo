@@ -15,6 +15,9 @@ import type { BusinessRecord } from "../db/types.js";
 import { getDb, isMock, setFactsHost } from "../shared/db.js";
 import { log } from "../shared/log.js";
 import { syncChannel, type SyncResult } from "./channels/index.js";
+import { NOTE_AWAITING_APPROVAL, diffKey, type DiffApproval } from "./channels/gbp.js";
+export { diffKey, diffDecision, NOTE_AWAITING_APPROVAL, NOTE_DECLINED, type DiffApproval } from "./channels/gbp.js";
+import type { ChannelDiffEntry } from "./channels/types.js";
 import { findAllListings } from "./channels/directories.js";
 import { checkFactsHost, defaultFactsHost, isFallbackHost, preferredFactsHost } from "./host.js";
 import { pingIndexNow } from "./indexnow.js";
@@ -27,6 +30,7 @@ export * from "./indexnow.js";
 export * from "./serve.js";
 export * from "./sitecheck.js";
 export * from "./google-index.js";
+export * from "./status.js";
 export * from "./channels/index.js";
 
 export interface PublishResult {
@@ -224,6 +228,41 @@ export async function syncAllChannels(businessId: string, opts: { facts?: Facts;
   return { businessId, results };
 }
 
+/** The change a channel holds for the owner, if any (set by syncOneChannel). */
+export function pendingDiffOf(channel: Channel): ChannelDiffEntry[] {
+  const d = channel.meta?.pendingDiff;
+  return Array.isArray(d) ? (d as ChannelDiffEntry[]) : [];
+}
+
+/**
+ * The owner's answer to a held change (Workflow B). Approved: the decision is
+ * stored against exactly this diff and a sync of that channel is queued, which
+ * then applies it. Declined: stored the same way; the next sync reports the
+ * mismatch again but changes nothing. Returns null when the channel holds
+ * nothing, so a stale form cannot approve a change the owner never saw.
+ */
+export async function decideChannelDiff(channel: Channel, decision: DiffApproval["decision"], now = new Date()): Promise<Channel | null> {
+  const db = getDb();
+  const diff = pendingDiffOf(channel);
+  if (!diff.length) return null;
+  const diffApproval: DiffApproval = { key: diffKey(diff), decision, at: now.toISOString() };
+  const updated = await db.upsertChannel({
+    id: channel.id,
+    businessId: channel.businessId,
+    type: channel.type,
+    name: channel.name,
+    externalId: channel.externalId,
+    url: channel.url,
+    status: channel.status,
+    lastSyncedAt: channel.lastSyncedAt,
+    meta: { ...channel.meta, diffApproval, pendingDiff: decision === "approved" ? diff : null },
+  });
+  await db.logEvent(channel.businessId, decision === "approved" ? "channel.diff_approved" : "channel.diff_declined", { channelId: channel.id, name: channel.name, fields: diff.map((d) => d.field) });
+  if (decision === "approved") await db.enqueueJob("sync", { businessId: channel.businessId, channelIds: [channel.id] });
+  log.info("channel.diff_decided", { channelId: channel.id, decision, fields: diff.map((d) => d.field) });
+  return updated;
+}
+
 /** Sync one channel, store the outcome and enqueue any follow-up job. */
 export async function syncOneChannel(channel: Channel, facts: Facts, business?: BusinessRecord, now = new Date()): Promise<SyncResult> {
   const db = getDb();
@@ -257,7 +296,8 @@ export async function syncOneChannel(channel: Channel, facts: Facts, business?: 
     status,
     lastSyncedAt: new Date().toISOString(),
     // Merged: directories.ts reads meta.current and meta.factsPageUrl, which a sync must not wipe.
-    meta: { ...channel.meta, lastSync: result.evidence, lastDiff: result.diff, note: result.note ?? null, correction },
+    // pendingDiff: a change held for the owner's approval (gbp.ts holdForOwner); cleared once it is applied, declined or gone.
+    meta: { ...channel.meta, lastSync: result.evidence, lastDiff: result.diff, note: result.note ?? null, correction, pendingDiff: result.note === NOTE_AWAITING_APPROVAL ? result.diff : null },
   });
   if (result.followUp) {
     const payload: Record<string, unknown> = { ...result.followUp.payload, businessId: channel.businessId, channelId: channel.id, channelName: channel.name };

@@ -13,7 +13,8 @@ import { copyFor, type Lang } from "../copy/index.js";
 import { fixPathForFinding, daysBetween } from "../fixer/paths.js";
 import { cnameTarget, isFallbackHost } from "../publisher/host.js";
 import { confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
-import { canSignUnsubscribe, isUnsubscribed } from "../shared/unsubscribe.js";
+import { canSignUnsubscribe } from "../shared/unsubscribe.js";
+import { mailAllowed } from "../shared/mail-prefs.js";
 import { sendMail, type MailResult } from "./mail.js";
 import {
   baselineSummaryEmail,
@@ -32,6 +33,9 @@ import {
 export * from "./mail.js";
 export * from "./templates.js";
 export * from "./links.js";
+export * from "./subscription-mails.js";
+export * from "./launch.js";
+export * from "./reconfirm.js";
 
 const PRICE_SETUP = 149;
 const PRICE_MONITOR = 49;
@@ -42,9 +46,19 @@ async function requireBusiness(businessId: string): Promise<BusinessRecord> {
   return b;
 }
 
+/**
+ * The one way a mail reaches an owner. The owner's mail preferences are
+ * checked here (shared/mail-prefs.ts), so every caller obeys them; required
+ * kinds always go. The `lang` tag carries the owner's language (business.language).
+ */
 async function deliver(business: BusinessRecord, m: Mail, type: string, extra: Record<string, unknown> = {}, headers?: Record<string, string>): Promise<MailResult | null> {
   if (!business.ownerEmail) {
     log.warn("reporter.no_owner_email", { businessId: business.id, type });
+    return null;
+  }
+  if (!mailAllowed(business.mailPrefs, type)) {
+    log.info("reporter.skipped_by_prefs", { businessId: business.id, type });
+    await getDb().logEvent(business.id, "email.skipped", { type, reason: "mail_prefs", ...extra });
     return null;
   }
   const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug, lang: langOf(business) } });
@@ -107,6 +121,11 @@ function trim(s: string, n = 220): string {
 // ---------------------------------------------------------------------------
 // proof cards
 // ---------------------------------------------------------------------------
+
+/** A plain-text owner mail queued by the fixer or the site check (owner_instruction, owner_reminder, site_instruction), through the same check. */
+export async function sendOwnerText(businessId: string, kind: string, m: Mail, extra: Record<string, unknown> = {}): Promise<MailResult | null> {
+  return deliver(await requireBusiness(businessId), m, kind, extra);
+}
 
 export async function proofCards(businessId: string, limit = 12, lang: Lang = "nl"): Promise<ProofCard[]> {
   const db = getDb();
@@ -288,7 +307,8 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
     log.warn("followup.skip", { businessId, reason: "UNSUBSCRIBE_SECRET not set", day });
     return null;
   }
-  if (await isUnsubscribed(db, business.id)) {
+  // An opt-out (link or account page) is enforced in deliver(); checked here too so nothing is built for nothing.
+  if (!mailAllowed(business.mailPrefs, `followup_${day}`)) {
     log.info("followup.skip", { businessId, reason: "unsubscribed", day });
     return null;
   }
