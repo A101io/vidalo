@@ -12,7 +12,7 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | Integration reviewed against Stripe's planner; 3 bugs fixed | done, not committed | tests 191 + 8 green, `e2e:mock` OK |
 | Customer portal configuration | done (test) | `bpc_1UR8MDEKzmvgQ7J9sXzbS8S0` |
 | Terms URL, Privacy URL, statement descriptor | **open, Julian** | |
-| iDEAL and SEPA Direct Debit switched on | **open, Julian** | both read `off` on 16 Oct |
+| iDEAL and SEPA Direct Debit switched on | done per Julian, 26 Oct (not read back by Claude) | both read `off` on 16 Oct |
 | Test secret key in `.env` | **open, Julian** | |
 | Prices, btw rate, webhook (`pnpm stripe:setup --apply`) | open, after the key | |
 | A real test checkout end to end | open | |

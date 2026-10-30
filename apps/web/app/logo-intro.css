@@ -11,6 +11,10 @@
  * logo stands still: dot + name, no field, no carets.
  */
 @property --fw { syntax: '<length>'; inherits: false; initial-value: 0px; }
+/* The field's floor width (1.8em open, .6em as the dot) travels as a registered property too:
+   WebKit does not animate min-width from keyframes (measured 27 Oct 2026: the dot stayed 1.8em
+   wide on iPhone), but it does animate a registered <length>. */
+@property --mw { syntax: '<length>'; inherits: false; initial-value: 0px; }
 
 .li-stage {
   display: inline-flex; align-items: flex-end; gap: .16em;
@@ -27,16 +31,20 @@
 .li-qs { display: inline-grid; font-size: .18em; font-weight: 500; line-height: 1.4; color: #fff; }
 .li-q { grid-area: 1 / 1; display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; }
 .li-caret { display: none; flex: none; width: .02em; height: .24em; background: #fff; margin-left: .03em; }
+/* The right padding: the negative letter-spacing ends the box inside the "o", and overflow hidden
+   (the typing effect) then shaves the o's right edge flat. flex: none: the stage is fixed at the
+   still logo's width (--lw), which leaves out the cursor after the name; without it the name shrinks
+   by that much and loses the end of the "o". */
 .li-name {
-  display: inline-block; overflow: hidden; white-space: nowrap; font-weight: 800; font-size: .84em;
-  letter-spacing: -.0357em; padding: .12em 0 .16em; margin-bottom: -.16em; max-width: none;
+  flex: none; display: inline-block; overflow: hidden; white-space: nowrap; font-weight: 800; font-size: .84em;
+  letter-spacing: -.0357em; padding: .12em .06em .16em 0; margin-bottom: -.16em; max-width: none;
 }
 .li-caret2 { display: none; flex: none; width: .05em; height: .64em; background: var(--blue, #2563EB); margin: 0 0 .14em -.12em; }
 
 @keyframes li-field {
-  0%   { transform: scale(0); transform-origin: 0% 100%; opacity: 1; --fw: 0em; min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; border-radius: 999px 999px 999px .07em; }
-  2.2% { transform: scale(1.1); transform-origin: 0% 100%; }
-  3.5% { transform: scale(1); transform-origin: 0% 100%; opacity: 1; --fw: 0em; min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; border-radius: 999px 999px 999px .07em; }
+  0%   { transform: scale(1); transform-origin: 0% 100%; opacity: 1; --fw: 0em; --mw: .6em; padding: 0; border-radius: 999px 999px 999px .07em; }
+  2.2% { transform: scale(1.06); transform-origin: 0% 100%; }
+  3.5% { transform: scale(1); transform-origin: 0% 100%; opacity: 1; --fw: 0em; --mw: 1.8em; padding: 0 .22em; border-radius: 999px 999px 999px .07em; }
   4%   { --fw: 0em; animation-timing-function: steps(28, end); }
   10%  { transform: scale(1); transform-origin: 50% 50%; }
   16%  { --fw: var(--w1); }
@@ -46,20 +54,21 @@
   47%  { --fw: var(--w2); }
   48%  { --fw: 0em; animation-timing-function: steps(27, end); }
   60%  { --fw: var(--w3); }
-  69%  { transform: scale(1); opacity: 1; --fw: var(--w3); min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; border-radius: 999px 999px 999px .07em; }
-  78%  { --fw: 0em; min-width: .6em; width: .6em; padding: 0; border-radius: 999px 999px 999px .07em; }
-  89%  { transform: scale(1) rotate(0deg) translateY(0); min-width: .6em; width: .6em; padding: 0; }
-  92%  { transform: scale(1) rotate(-12deg) translateY(-.04em); min-width: .6em; width: .6em; padding: 0; }
-  96%  { transform: scale(1) rotate(0deg) translateY(0); min-width: .6em; width: .6em; padding: 0; }
-  97%  { opacity: 1; min-width: .6em; width: .6em; padding: 0; }
-  100% { opacity: 0; transform-origin: 50% 50%; min-width: .6em; width: .6em; padding: 0; border-radius: 999px 999px 999px .07em; }
+  69%  { transform: scale(1); opacity: 1; --fw: var(--w3); --mw: 1.8em; padding: 0 .22em; border-radius: 999px 999px 999px .07em; }
+  78%  { --fw: 0em; --mw: .6em; padding: 0; border-radius: 999px 999px 999px .07em; }
+  89%  { transform: scale(1) rotate(0deg) translateY(0); --mw: .6em; padding: 0; }
+  92%  { transform: scale(1) rotate(-12deg) translateY(-.04em); --mw: .6em; padding: 0; }
+  96%  { transform: scale(1) rotate(0deg) translateY(0); --mw: .6em; padding: 0; }
+  97%  { opacity: 1; --mw: .6em; padding: 0; }
+  100% { opacity: 1; transform-origin: 50% 50%; --mw: .6em; padding: 0; border-radius: 999px 999px 999px .07em; }
 }
 @keyframes li-q1 { 0% { max-width: 0; opacity: 0 } 4% { max-width: 0; opacity: 1; animation-timing-function: steps(28, end) } 16% { max-width: var(--w); opacity: 1 } 23% { max-width: var(--w); opacity: 1 } 25% { max-width: var(--w); opacity: 0 } 26%, 100% { max-width: 0; opacity: 0 } }
 @keyframes li-q2 { 0%, 25% { max-width: 0; opacity: 0 } 26% { max-width: 0; opacity: 1; animation-timing-function: steps(23, end) } 38% { max-width: var(--w); opacity: 1 } 45% { max-width: var(--w); opacity: 1 } 47% { max-width: var(--w); opacity: 0 } 48%, 100% { max-width: 0; opacity: 0 } }
 @keyframes li-q3 { 0%, 47% { max-width: 0; opacity: 0 } 48% { max-width: 0; opacity: 1; animation-timing-function: steps(27, end) } 60% { max-width: var(--w); opacity: 1 } 67% { max-width: var(--w); opacity: 1 } 69% { max-width: var(--w); opacity: 0 } 70%, 100% { max-width: 0; opacity: 0 } }
 @keyframes li-caret-on { 0% { visibility: hidden } 3% { visibility: visible } 69%, 100% { visibility: hidden } }
 @keyframes li-blink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
-@keyframes li-name { 0%, 83% { max-width: 0; opacity: 1; animation-timing-function: steps(6, end) } 89% { max-width: var(--w); opacity: 1 } 97% { max-width: var(--w); opacity: 1 } 100% { max-width: var(--w); opacity: 0 } }
+/* padding-right (the room for the o's right edge) only once the name is typed; before that it would show a sliver of the v. */
+@keyframes li-name { 0%, 83% { max-width: 0; padding-right: 0; opacity: 1; animation-timing-function: steps(6, end) } 89% { max-width: var(--w); padding-right: .06em; opacity: 1 } 97% { max-width: var(--w); padding-right: .06em; opacity: 1 } 100% { max-width: var(--w); padding-right: .06em; opacity: 0 } }
 @keyframes li-caret2-on { 0% { visibility: hidden } 81% { visibility: visible } 95%, 100% { visibility: hidden } }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -67,7 +76,7 @@
      the dot's own spot and stays within the logo, instead of the centred stage
      shifting sideways as the field widens and closes. */
   .li-ready.li-stage { width: var(--lw); justify-content: flex-start; }
-  .li-ready .li-field { flex: none; animation: li-field 10s cubic-bezier(.22, .7, .2, 1) infinite; min-width: 1.8em; width: calc(var(--fw) + .49em); padding: 0 .22em; }
+  .li-ready .li-field { flex: none; animation: li-field 10s cubic-bezier(.22, .7, .2, 1) infinite; min-width: 0; width: max(var(--mw), calc(var(--fw) + .49em)); padding: 0 .22em; }
   .li-ready .li-q1 { animation: li-q1 10s linear infinite; }
   .li-ready .li-q2 { animation: li-q2 10s linear infinite; }
   .li-ready .li-q3 { animation: li-q3 10s linear infinite; }
