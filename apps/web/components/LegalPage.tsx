@@ -1,12 +1,15 @@
 import { getI18n } from "@/lib/i18n";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ComingSoonFooter } from "@/components/ComingSoonFooter";
+import { behindGate } from "@/lib/gate-state";
 
 type Table = { head: readonly string[]; rows: readonly (readonly string[])[] };
 type Doc = { title: string; intro: string; sections: readonly { h: string; p: readonly string[]; table?: Table }[] };
 
+/** Behind the launch gate the page keeps the coming-soon footer, so a visitor from /binnenkort never reaches the closed site's links. */
 export async function LegalPage({ doc, draft = true }: { doc: Doc; draft?: boolean }) {
-  const { copy } = await getI18n();
+  const [{ copy }, gated] = [await getI18n(), await behindGate()];
   const l = copy.legal;
   return (
     <>
@@ -54,7 +57,7 @@ export async function LegalPage({ doc, draft = true }: { doc: Doc; draft?: boole
         ))}
         <p className="mt-12 text-[15px] text-ink-2">{l.contact}</p>
       </main>
-      <SiteFooter />
+      {gated ? <ComingSoonFooter /> : <SiteFooter />}
     </>
   );
 }

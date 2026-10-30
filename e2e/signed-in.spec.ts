@@ -40,7 +40,7 @@ test("signed in without a business: no form, a free check and sign-out", async (
   expect(res?.status()).toBe(200);
   await expect(page).toHaveURL(/\/inloggen\?fout=geen/);
   // Sign out: the form is back.
-  await page.getByRole("button", { name: "Uitloggen" }).click();
+  await page.getByRole("button", { name: "Ander e-mailadres? Log uit" }).click();
   await page.goto("/inloggen");
   await expect(page.locator("input[name='email']")).toBeVisible();
 });

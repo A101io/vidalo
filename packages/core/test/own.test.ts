@@ -12,7 +12,7 @@ import { OWN_BUSINESS, OWN_FACTS, OWN_FACTS_PATH, ownFactsFingerprint } from "..
 import type { FactKey } from "../src/types.js";
 
 /** Criteria the owner still has to fill in; listed here so the gap is visible, not hidden. */
-const OPEN: ReadonlySet<FactKey> = new Set<FactKey>(["phone", "payment", "identity", "credential"]);
+const OPEN: ReadonlySet<FactKey> = new Set<FactKey>(["payment", "identity", "credential"]);
 
 function answered(key: FactKey): boolean {
   const f = OWN_FACTS;

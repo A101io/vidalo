@@ -6,8 +6,10 @@ import { requireOwner } from "@/lib/owner";
 import { loadDashboard } from "@/lib/reads";
 import { getScanReport } from "@/lib/core";
 import { dateShort, dateTime } from "@/lib/format";
-import { checkNow, setLanguage } from "../actions";
+import { checkNow, deleteMyData, setLanguage } from "../actions";
 import { LANGS } from "@/lib/lang-paths";
+import { MAIL_PREF_KEYS } from "@vidalo/core/shared";
+import { changeEmail, saveMailPrefs } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +25,11 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 /**
  * The account page: who is signed in, the business as Vidalo knows it (from
  * the confirmed facts, falling back to what the scan found), the latest
- * finished report with its colour, the recent checks, and the plan. Reading
- * only; every change has its own page (gegevens, domein, google, abonnement).
+ * finished report with its colour, the recent checks, the plan, and "Je
+ * gegevens" (download, delete). Reading only, apart from the language and
+ * the delete, the e-mail address and the mail choices; every other change has its own page (gegevens, domein, google, abonnement).
  */
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string; email?: string; mails?: string }> }) {
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/account");
   const data = await loadDashboard(business.id);
@@ -50,10 +53,24 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       </header>
 
       {/* Signed in */}
-      <section>
+      <section id="inlog">
         <h2 className="h3">{A.sections.login}</h2>
         <div className="card mt-3 divide-y-[1px] divide-line">
           <Row label={A.loginEmail}>{session.email}</Row>
+          <Row label={A.changeEmail.label}>
+            <form action={changeEmail} className="flex flex-wrap items-center gap-3">
+              <input type="email" name="email" required autoComplete="email" aria-label={A.changeEmail.label} className="field-sm w-auto min-w-[240px]" />
+              <button type="submit" className="btn-sm">
+                {A.changeEmail.button}
+              </button>
+            </form>
+            {sp.email && A.changeEmail.status[sp.email] && (
+              <p className={`mt-2 text-[14px] ${["verstuurd", "gewijzigd", "bevestigd"].includes(sp.email) ? "text-groen" : "text-rood"}`} aria-live="polite">
+                {A.changeEmail.status[sp.email]}
+              </p>
+            )}
+            <p className="mt-2 text-[13px] text-muted">{A.changeEmail.body}</p>
+          </Row>
           <Row label={A.ownerLabel}>
             <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="inline-flex items-center gap-2">
@@ -123,7 +140,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               </span>
             )}
           </Row>
-          <Row label={A.fields.factsVersion}>{facts && !facts.provisional ? A.factsConfirmed(facts.version, dateShort(facts.verifiedAt ?? new Date())) : <span className="text-muted">{A.factsProvisional}</span>}</Row>
+          <Row label={A.fields.factsVersion}>
+            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+              {facts && !facts.provisional ? A.factsConfirmed(facts.version, dateShort(facts.verifiedAt ?? new Date())) : <span className="text-muted">{A.factsProvisional}</span>}
+              {facts && (
+                <Link href={href("/app/gegevens/versies")} className="btn-link">
+                  {A.factsHistory}
+                </Link>
+              )}
+            </span>
+          </Row>
         </div>
       </section>
 
@@ -196,6 +222,59 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               <Stip tone={planTone} /> {B.statuses[business.status]}
             </span>
           </Row>
+        </div>
+      </section>
+
+      {/* Mail preferences */}
+      <section id="mails">
+        <h2 className="h3">{A.mails.h}</h2>
+        <form action={saveMailPrefs} className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
+          <p>{A.mails.body}</p>
+          <ul className="space-y-3">
+            {MAIL_PREF_KEYS.map((k) => (
+              <li key={k}>
+                <label className="flex items-start gap-2">
+                  <input type="checkbox" name={k} value="aan" defaultChecked={business.mailPrefs[k] !== false} className="mt-1" />
+                  <span>
+                    <span className="font-semibold">{A.mails.optional[k].label}</span>
+                    <span className="block text-[14px] text-ink-2">{A.mails.optional[k].body}</span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t-[1px] border-line pt-4">
+            <p className="font-semibold">{A.mails.requiredH}</p>
+            <p className="mt-1 text-[14px] text-ink-2">{A.mails.required}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" className="btn-sm">
+              {A.mails.save}
+            </button>
+            {sp.mails === "opgeslagen" && <span className="text-[14px] text-groen">{A.mails.saved}</span>}
+          </div>
+        </form>
+      </section>
+
+      {/* My data */}
+      <section id="gegevens">
+        <h2 className="h3">{A.myData.h}</h2>
+        <div className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
+          <p>{A.myData.body}</p>
+          <a href="/api/account/export" download className="btn-link">
+            {A.myData.download}
+          </a>
+          <form action={deleteMyData} className="space-y-3 border-t-[1px] border-line pt-4">
+            <p className="text-ink-2">{A.myData.deleteBody}</p>
+            {sp.gegevens === "abonnement" && <p className="text-[14px] text-rood">{A.myData.blocked}</p>}
+            <label className="flex items-start gap-2">
+              <input type="checkbox" name="confirm" value="ja" required className="mt-1" />
+              <span>{A.myData.confirm}</span>
+            </label>
+            <button type="submit" className="btn-sm">
+              {A.myData.deleteButton}
+            </button>
+          </form>
         </div>
       </section>
 

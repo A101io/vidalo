@@ -39,13 +39,13 @@ export async function POST(req: Request) {
     website: form?.get("website"),
   });
   const lang = parsed.language;
-  const back = (state: "ok" | "fout" | "druk" | "mislukt") =>
+  const back = (state: "ok" | "fout" | "toestemming" | "druk" | "mislukt") =>
     NextResponse.redirect(`${env.baseUrl}${localizeHref(COMING_SOON_ROUTE, lang)}?lijst=${state}#lijst`, 303);
 
   if (!form || !fromOwnSite(req)) return back("mislukt");
   const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   if (limited(ip)) return back("druk");
-  if (!parsed.ok) return back(parsed.reason === "trap" ? "ok" : "fout");
+  if (!parsed.ok) return back(parsed.reason === "trap" ? "ok" : parsed.reason === "no_consent" ? "toestemming" : "fout");
 
   try {
     const db = await ready();

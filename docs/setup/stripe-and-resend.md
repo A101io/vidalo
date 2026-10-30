@@ -12,7 +12,7 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | Integration reviewed against Stripe's planner; 3 bugs fixed | done, not committed | tests 191 + 8 green, `e2e:mock` OK |
 | Customer portal configuration | done (test) | `bpc_1UR8MDEKzmvgQ7J9sXzbS8S0` |
 | Terms URL, Privacy URL, statement descriptor | **open, Julian** | |
-| iDEAL and SEPA Direct Debit switched on | **open, Julian** | both read `off` on 16 Oct |
+| iDEAL and SEPA Direct Debit switched on | done per Julian, 26 Oct (not read back by Claude) | both read `off` on 16 Oct |
 | Test secret key in `.env` | **open, Julian** | |
 | Prices, btw rate, webhook (`pnpm stripe:setup --apply`) | open, after the key | |
 | A real test checkout end to end | open | |
@@ -40,7 +40,7 @@ Business description given to Stripe:
 
 ## 2. Stripe connected to Claude
 
-The Stripe connector (`mcp.stripe.com`) was added in the Claude desktop app (Code tab) and granted to the Vidalo account only. It lists two contexts: `acct_1UR4QnEKzmvgQ7J9` (Vidalo, test mode) and `acct_1UR4RAELCe3OOCe2` (Vidalo sandbox). We use the first: it has the same account id as live, which is what the setup script pins. The sandbox is not used.
+The Stripe connector (`mcp.stripe.com`) was added in the Claude desktop app (Code tab) and granted to the Vidalo account only. It lists two contexts: `acct_1UR4QnEKzmvgQ7J9` (Vidalo, test mode) and `acct_1UR4RAELCe3OOCe2` (Vidalo sandbox). **Changed 25 Oct 2026 (Julian): only the sandbox exists for Vidalo, so the sandbox is what we use** (`VIDALO_STRIPE_ACCOUNT=acct_1UR4RAELCe3OOCe2`). `stripe:setup --apply` ran against it that day: prices €149 and €49/month, BTW 21% exclusive, portal "Vidalo" without cancelling, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` → `https://vidalo.io/api/stripe/webhook`; every id and the webhook secret went straight into `.env` and on to `vidalo-web` (`pnpm secrets:push`). The statement descriptor needs a live account. Going live means a live account in the organisation, `--apply --live`, and pinning that account.
 
 What the connector can and cannot do, found out on 16 Oct:
 - It can read and write products, prices, payment method configurations and portal configurations.
@@ -152,8 +152,9 @@ Proof, not the dashboard: the business's event log has `checkout.completed` with
    EMAIL_FROM=Vidalo <controle@vidalo.io>
    ```
 4. Sign-in mail through Resend too. Supabase's built-in mailer sends only a few mails per hour, from Supabase's own address. https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/smtp, Custom SMTP: host `smtp.resend.com`, port `465`, user `resend`, password the same `re_` key, sender `inloggen@vidalo.io`, name `Vidalo`.
+5. Branded sign-in mail. https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/templates → Magic link: subject `Je inloglink voor Vidalo`, body the whole of `docs/brand/supabase-magic-link.html`.
 
-The code is ready: `packages/core/src/reporter/mail.ts` sends through Resend when `RESEND_API_KEY` is set and `VIDALO_MOCK` is not `1`; every template is in `packages/core/src/reporter/templates.ts`. E-mails are Dutch only for now.
+The code is ready: `packages/core/src/reporter/mail.ts` sends through Resend when `RESEND_API_KEY` is set and `VIDALO_MOCK` is not `1`; every template is in `packages/core/src/reporter/templates.ts`, and every mail goes out in the brand's shell with the logo attached inline (`textToHtml`; logo rebuilt by `node scripts/brand/email-logo.mjs`). E-mails are Dutch only for now.
 
 Proof: a report mail and a sign-in mail arrive at Julian's address, and Resend's log shows both as delivered.
 

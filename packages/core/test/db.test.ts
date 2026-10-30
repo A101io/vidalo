@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { withMockDb, isMockMode, createDb, type Db } from "../src/db";
 import { sampleFacts } from "./scanner-fixtures";
+import { exportMyData } from "../src/shared/my-data";
 
 /**
  * Every scenario below runs against MemDb and, when TEST_DATABASE_URL points
@@ -41,6 +42,17 @@ describe.each(backends)("%s", (_name, makeDb) => {
     db = await makeDb();
   });
 
+  it("stores mail preferences per business; absent keys are on, other updates leave them alone", async () => {
+    const b = await db.upsertBusiness({ name: "Kapsalon Mooi", place: "Leiden" });
+    expect(b.mailPrefs).toEqual({});
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, mailPrefs: { report: false, followup: false, bogus: true } as never });
+    expect((await db.getBusiness(b.id))?.mailPrefs).toEqual({ report: false, followup: false });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status: "trial" });
+    expect((await db.getBusiness(b.slug))?.mailPrefs).toEqual({ report: false, followup: false });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, mailPrefs: { report: true } });
+    expect((await db.getBusiness(b.id))?.mailPrefs).toEqual({ report: true });
+  });
+
   it("stores business, facts, prompts, scan runs, samples, claims and findings", async () => {
     const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", domain: "bakkerijdevries.nl" });
     expect(b.slug).toBe("bakkerij-de-vries-haarlem");
@@ -56,6 +68,11 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(f1.version).toBe(1);
     expect(f2.version).toBe(2);
     expect((await db.latestFacts(b.id))?.phone).toBe("023-5300000");
+    // every version carries the moment it was stored; a copy of a version does not carry the old one over
+    expect(f1.createdAt).toBeTruthy();
+    const f3 = await db.insertFacts(b.id, { ...f2, createdAt: "2000-01-01T00:00:00.000Z" }, { provisional: false, verifiedAt: new Date().toISOString() });
+    expect(f3.createdAt).not.toBe("2000-01-01T00:00:00.000Z");
+    expect((await db.listFacts(b.id)).map((f) => [f.version, Boolean(f.createdAt)])).toEqual([[1, true], [2, true], [3, true]]);
 
     const prompts = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
     expect(await db.listPrompts(b.id)).toHaveLength(1);
@@ -92,6 +109,73 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.businessesDueForMonthlyScan(13)).toHaveLength(0);
   });
 
+  it("my data: export holds everything of one business, delete removes it and nothing else", async () => {
+    async function fill(name: string) {
+      const b = await db.upsertBusiness({ name, place: "Haarlem" });
+      await db.insertFacts(b.id, sampleFacts(), { provisional: true });
+      await db.insertFacts(b.id, { ...sampleFacts(), phone: "023-5300000" }, { provisional: false });
+      const [p] = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
+      const run = await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+      const [s] = await db.insertSamples([{ scanRunId: run.id, promptId: p!.id, engine: "chatgpt", answerText: "023-5399999", citations: [], costCents: 1 }]);
+      await db.insertClaims([{ sampleId: s!.id, factKey: "phone", subject: null, value: "+31235399999", confidence: 0.9, otherEntity: false, rawQuote: "023-5399999" }]);
+      const [f] = await db.upsertFindings([{ businessId: b.id, scanRunId: run.id, factKey: "phone", subject: null, engine: "chatgpt", wrongValue: "+31235399999", correctValue: "+31235300000", frequency: 1, sampleCount: 1, sourceUrl: null, sourceType: "none", evidenceBefore: s!.id }]);
+      await db.insertFix({ findingId: f!.id, action: "email", target: "info@x.nl" });
+      await db.upsertChannel({ businessId: b.id, type: "gbp", name: "Google Bedrijfsprofiel", externalId: null, url: null });
+      await db.logEvent(b.id, "scan.requested", {});
+      await db.enqueueJob("scan", { businessId: b.id });
+      return { b, run, sample: s!, finding: f! };
+    }
+    const mine = await fill("Bakkerij De Vries");
+    const other = await fill("Slagerij Jansen");
+
+    const data = await exportMyData(db, mine.b.id);
+    expect(data?.business.id).toBe(mine.b.id);
+    expect(data?.facts.map((f) => f.version)).toEqual([1, 2]);
+    expect(data?.scans).toHaveLength(1);
+    expect(data?.scans[0]?.samples).toHaveLength(1);
+    expect(data?.scans[0]?.claims).toHaveLength(1);
+    expect(data?.findings).toHaveLength(1);
+    expect(data?.fixes).toHaveLength(1);
+    expect(data?.channels).toHaveLength(1);
+    expect(data?.events.length).toBeGreaterThan(0);
+    expect(JSON.stringify(data)).not.toContain(other.b.id);
+
+    await db.deleteBusiness(mine.b.id);
+    expect(await db.getBusiness(mine.b.id)).toBeNull();
+    expect(await exportMyData(db, mine.b.id)).toBeNull();
+    expect(await db.listFacts(mine.b.id)).toEqual([]);
+    expect(await db.listSamples(mine.run.id)).toEqual([]);
+    expect(await db.listClaims([mine.sample.id])).toEqual([]);
+    expect(await db.listFixes(mine.finding.id)).toEqual([]);
+    expect(await db.listEvents(mine.b.id)).toEqual([]);
+    const job = await db.claimJob(["scan"]);
+    expect(job?.payload.businessId).toBe(other.b.id);
+    expect(await db.claimJob(["scan"])).toBeNull();
+    // Control: the other business keeps everything.
+    expect((await exportMyData(db, other.b.id))?.fixes).toHaveLength(1);
+  });
+
+  it("cancel and pause dates round-trip; a paused business skips the monthly check", async () => {
+    const day = new Date().getDate();
+    const end = "2026-11-12T10:00:00.000Z";
+    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", anniversaryDay: day, cancelAt: end });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBe(end);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: null, pauseUntil: new Date(Date.now() + 86_400_000).toISOString() });
+    expect((await db.getBusiness(b.id))?.cancelAt).toBeNull();
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(0);
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: null });
+    expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(1);
+  });
+
+  it("stores a real answer's fractional cost (cost_cents is an integer column)", async () => {
+    const b = await db.upsertBusiness({ name: "Bakkerij Feijenoord", place: "Rotterdam" });
+    const [p] = await db.insertPrompts(b.id, [{ category: "phone", textNl: "Wat is het telefoonnummer?", probes: ["phone"], active: true }]);
+    const run = await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    const [s] = await db.insertSamples([{ scanRunId: run.id, promptId: p!.id, engine: "chatgpt", answerText: "010-1234567", citations: [], costCents: 2.6 }]);
+    expect(s!.costCents).toBeCloseTo(3, 0);
+    expect((await db.updateScanRun(run.id, { status: "done", costCents: 46.7 })).costCents).toBeCloseTo(47, 0);
+  });
+
   it("job queue: claim, complete, fail with backoff", async () => {
     await db.enqueueJob("scan", { businessId: "x" });
     const later = await db.enqueueJob("report", {}, new Date(Date.now() + 60_000));
@@ -114,6 +198,10 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(again.created).toBe(false);
     await db.joinWaitlist({ email: "owner@shop.com", language: "en", source: "coming_soon", consentText: "Yes, email me." });
     expect(await db.countWaitlist()).toBe(2);
+    expect(await db.listWaitlist()).toEqual([
+      { email: "eigenaar@bakkerij.nl", language: "nl" },
+      { email: "owner@shop.com", language: "en" },
+    ]);
   });
 
   it("fixes, channels and events", async () => {

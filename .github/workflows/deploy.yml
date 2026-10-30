@@ -105,12 +105,33 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: ../web/node_modules/.bin/wrangler deploy --env "$WRANGLER_ENV"
 
+      # wrangler 4.151 hands this to `opennextjs-cloudflare deploy`, which first
+      # starts a local platform proxy to read the bindings; for a Hyperdrive
+      # binding that proxy demands a local Postgres URL (failed 23 Oct 2026,
+      # first production deploy). The placeholder is never connected to; the
+      # deployed Worker uses the Hyperdrive id from wrangler.jsonc.
+      #
+      # One retry, for one known failure only: Cloudflare's API answered
+      # "unknown error" (code 10013) on assets-upload-session in two of three
+      # production deploys on 25 Oct 2026, and a re-run minutes later passed
+      # both times. Any other error fails at once, as before.
       - name: Deploy the web Worker
         working-directory: apps/web
+        shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy --env "$WRANGLER_ENV"
+          CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: postgres://deploy:unused@127.0.0.1:5432/unused
+        run: |
+          log="$RUNNER_TEMP/deploy-web.log"
+          if pnpm exec wrangler deploy --env "$WRANGLER_ENV" 2>&1 | tee "$log"; then exit 0; fi
+          if grep -q "assets-upload-session" "$log" && grep -q "code: 10013" "$log"; then
+            echo "::warning::Cloudflare code 10013 on the asset upload; retrying once in 30 seconds"
+            sleep 30
+            pnpm exec wrangler deploy --env "$WRANGLER_ENV"
+          else
+            exit 1
+          fi
 
       # The last step is a check: fetch what actually shipped and say what it
       # SAW (status, bytes, language), not just what it wanted.

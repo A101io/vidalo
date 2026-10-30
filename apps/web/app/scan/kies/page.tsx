@@ -4,14 +4,18 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ScanField } from "@/components/ScanField";
 import { resolveBusiness, parseQuery } from "@/lib/core";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { kiesAllowed } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
-export default async function ChoosePage({ searchParams }: { searchParams: Promise<{ q?: string; place?: string; plaats?: string }> }) {
-  const { q = "", place: placeParam, plaats } = await searchParams;
+export default async function ChoosePage({ searchParams }: { searchParams: Promise<{ q?: string; place?: string; plaats?: string; k?: string }> }) {
+  const { q = "", place: placeParam, plaats, k } = await searchParams;
   const parsed = parseQuery(q);
   const place = placeParam || parsed.place;
-  const candidates = q ? await resolveBusiness(parsed.query, place) : [];
+  // A lookup costs money: only after a passed check (the token from POST /api/scan), else the field to start again.
+  const allowed = Boolean(q) && kiesAllowed(q, placeParam ?? "", k);
+  const candidates = allowed ? await resolveBusiness(parsed.query, place) : [];
   const needsPlace = plaats === "1" || (candidates.length > 0 && candidates.every((c) => !c.place) && !place);
   const { copy, href } = await getI18n();
   const c = copy.scan.choose;
@@ -46,6 +50,7 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
                         <input id={`place-${i}`} name="place" required defaultValue={place ?? ""} className="field-sm w-[180px]" />
                       </div>
                     )}
+                    <TurnstileWidget />
                     <button type="submit" className="btn-sm">
                       {c.button}
                     </button>
@@ -59,7 +64,7 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
           </>
         ) : (
           <>
-            <h1 className="h2">{c.none}</h1>
+            <h1 className="h2">{allowed || !q ? c.none : c.again}</h1>
             <div className="mt-8">
               <ScanField defaultName={parsed.query} defaultPlace={place ?? ""} note={false} />
             </div>

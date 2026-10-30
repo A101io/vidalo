@@ -30,9 +30,12 @@ export function groupBySeverity(findings: Finding[]): Record<Severity, Finding[]
   return out;
 }
 
+const isRecommendationVerdict = (v: SampleVerdict | undefined) => v === "named" || v === "not_named";
+
 export function computeEngineStips(input: StipInput): EngineStip[] {
   return input.engines.map((engine) => {
-    const mine = input.samples.filter((s) => s.engine === engine);
+    // Recommendation answers (named / not named) are not facts: they stay out of the colour.
+    const mine = input.samples.filter((s) => s.engine === engine && !isRecommendationVerdict(input.verdicts.get(s.id)));
     let correct = 0;
     let wrong = 0;
     let notFound = 0;

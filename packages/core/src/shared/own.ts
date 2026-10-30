@@ -43,7 +43,7 @@ export const OWN_FACTS: Facts = {
   place: OWN_BUSINESS.place,
   address: "Factorij 80",
   postcode: "3071 AV",
-  phone: null,
+  phone: "+31 85 109 1393",
   email: "hello@vidalo.io",
   website: "https://vidalo.io",
   openStatus: "open",

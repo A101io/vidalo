@@ -295,6 +295,8 @@ function assembleReport(args: {
   const verdictOf = (s: Sample) => result.verdicts.get(s.id);
   const wrongAnswers = samples.filter((s) => verdictOf(s) === "wrong" || verdictOf(s) === "other_entity").length;
   const notFoundAnswers = samples.filter((s) => verdictOf(s) === "not_found").length;
+  // "X van Y antwoorden kloppen niet" counts answers to fact questions; recommendation answers are reported on their own.
+  const factSamples = samples.filter((s) => verdictOf(s) !== "named" && verdictOf(s) !== "not_named");
   const instable: InstableFinding[] = result.instable.map((c) => ({
     businessId: business.id,
     scanRunId: scanRun.id,
@@ -320,10 +322,10 @@ function assembleReport(args: {
     scanRunId: scanRun.id,
     kind: scanRun.kind,
     checkedAt: scanRun.finishedAt ?? new Date().toISOString(),
-    totalAnswers: samples.length,
+    totalAnswers: factSamples.length,
     wrongAnswers,
     notFoundAnswers,
-    visibility: visibilityFor(samples.length, notFoundAnswers),
+    visibility: visibilityFor(factSamples.length, notFoundAnswers),
     engines: engineStats(engines, samples, result.verdicts, unavailable),
     findings,
     correct: result.correct.map(({ prompt, engine, value, raw, factKey, subject }) => ({ prompt, engine, value, raw, factKey, subject })),

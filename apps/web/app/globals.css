@@ -493,3 +493,29 @@ main { overflow-x: clip; }
 }
 .site-menu-panel a { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
 .site-menu-panel a:hover { background: var(--panel); color: var(--ink); }
+
+/* Print / save as PDF (the report, /r/[id]). Interactive parts carry
+   print:hidden in their components; this block handles the page itself. */
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+  html, body { background: #fff; }
+  /* Status colours are the message: keep dots, the hero circle and grounds. */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .site-header { position: static; box-shadow: none; border-bottom-color: var(--line); }
+  /* The hero number's count-up layer would print as 0 over the real number. */
+  .stip-num::before { content: none !important; }
+  /* motion.js holds below-the-fold parts in their starting pose until scrolled to; print them at rest. */
+  .print-doc, .print-doc * { opacity: 1 !important; translate: none !important; scale: none !important; box-shadow: none !important; }
+  .print-doc details:not([open]), .print-doc summary { display: none; }
+  .print-doc h2, .print-doc h3 { break-after: avoid; }
+  .print-doc .rounded-2xl, .print-doc .card, .print-doc .row-grey, .print-doc .row-hover, .print-doc li { break-inside: avoid; }
+  /* A link on paper: the address after its label. */
+  .print-doc a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+}

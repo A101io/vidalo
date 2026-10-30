@@ -36,8 +36,9 @@ describe("runScan (mock pipeline)", () => {
     expect(bank.length).toBeGreaterThanOrEqual(6);
 
     const report = await runScan({ businessId: prepared.business.id, kind: "baseline", samplesPerPrompt: 3, db });
-    // A full scan asks the core and six questions from the bank.
-    expect(report.totalAnswers).toBe((core.length + 6) * 5 * 3);
+    // A full scan asks the core and six recommendation questions from the bank; only the fact questions count as answers.
+    const factCore = core.filter((p) => p.kind !== "recommendation").length;
+    expect(report.totalAnswers).toBe(factCore * 5 * 3);
     const recs = report.recommendations ?? [];
     expect(recs.filter((r) => r.pool === "core")).toHaveLength(6);
     expect(recs.filter((r) => r.pool === "bank").length).toBeLessThanOrEqual(6);
@@ -71,7 +72,8 @@ describe("runScan (mock pipeline)", () => {
 
     const run = await db.getScanRun(report.scanRunId);
     expect(run?.status).toBe("done");
-    expect(await db.listSamples(report.scanRunId)).toHaveLength(report.totalAnswers);
+    // Every asked answer is stored; the recommendation answers are not counted in totalAnswers.
+    expect(await db.listSamples(report.scanRunId)).toHaveLength((core.length + 6) * 5 * 3);
     expect((await db.listEvents(prepared.business.id)).map((e) => e.type)).toContain("scan.finished");
 
     // buildReport reconstructs the same numbers from storage.
@@ -86,7 +88,9 @@ describe("runScan (mock pipeline)", () => {
     const prepared = await prepareBusiness({ name: "Kapsalon Mooi", place: "Leiden", db });
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
     expect(report.engines.map((e) => e.engine)).toEqual(["chatgpt", "google_ai", "copilot"]);
-    expect(report.totalAnswers).toBe(6 * 3 * 3);
+    // 6 prompts: 3 fact questions count as answers, 3 recommendation questions are reported on their own.
+    expect(report.totalAnswers).toBe(3 * 3 * 3);
+    expect(report.findings.every((f) => f.evidenceKind !== "recommendation")).toBe(true);
   });
 
   it("upserts findings across scans and resolves the ones that are no longer wrong", async () => {
@@ -122,6 +126,7 @@ describe("runScan on a business the AI has never heard of", () => {
     await db.insertFacts(prepared.business.id, { ...data, website: null }, { provisional: true });
 
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
+    // No sector, so no recommendation questions: all six are fact questions.
     expect(report.totalAnswers).toBe(6 * 3 * 3);
     expect(report.visibility).toBe("unknown");
     expect(report.notFoundAnswers / report.totalAnswers).toBeGreaterThanOrEqual(0.6);

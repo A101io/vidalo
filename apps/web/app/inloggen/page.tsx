@@ -8,6 +8,7 @@ import { getSession, getOwnedBusiness } from "@/lib/session";
 import { ready } from "@/lib/db";
 import { claimBusiness, sendMagicLink } from "./actions";
 import { safeNext } from "@/lib/auth-confirm";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export const dynamic = "force-dynamic";
  *    22 Oct 2026 this showed the e-mail form with a red "geen bedrijf" error,
  *    and a new link could not fix it.
  */
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; sent?: string; fout?: string; verwijderd?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   const a = copy.auth;
@@ -35,7 +36,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     if (claimable) {
       return (
         <Shell>
-          <h1 className="h2">{a.h1}</h1>
+          <h1 className="h2">{a.signedInH1}</h1>
           <p className="lead mt-3">{a.signedInAs(session.email)}</p>
           <form action={claimBusiness} className="mt-6">
             <input type="hidden" name="next" value={next} />
@@ -45,21 +46,22 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               {a.linkButton}
             </button>
           </form>
-          <SignOut label={a.logout} />
+          <SignOut label={a.otherEmail} />
         </Shell>
       );
     }
     if (owned && sp.fout !== "geen" && sp.fout !== "bezet") redirect(href(next));
     if (owned) redirect(href("/app"));
+    // Signed in, but no business belongs to this address yet (requireOwner).
     return (
       <Shell>
-        <h1 className="h2">{a.h1}</h1>
-        <p className="lead mt-3">{a.signedInAs(session.email)}</p>
-        <p className="mt-3 text-[16px] text-ink-2">{sp.fout === "bezet" ? a.linkTaken : a.signedInNoBusiness}</p>
-        <Link href={href("/#top")} className="btn-primary mt-6 block w-full text-center">
-          {a.freeCheck}
+        <h1 className="h2">{a.signedInH1}</h1>
+        {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
+        <p className="lead mt-3">{sp.fout === "bezet" ? `${a.signedInAs(session.email)} ${a.linkTaken}` : a.noBusinessSignedIn(session.email)}</p>
+        <Link href={href("/#top")} className="btn-primary mt-6 w-full">
+          {a.startCheck}
         </Link>
-        <SignOut label={a.logout} />
+        <SignOut label={a.otherEmail} />
       </Shell>
     );
   }
@@ -67,6 +69,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <Shell>
       <h1 className="h2">{a.h1}</h1>
+      {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
       {sp.sent === "1" ? (
         <p className="lead mt-4">{a.sent}</p>
       ) : (
@@ -81,7 +84,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} />
             {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
             {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
+            {sp.fout === "wacht" && <p className="mt-2 text-[14px] text-rood">{a.rateLimited}</p>}
+            {sp.fout === "check" && <p className="mt-2 text-[14px] text-rood">{copy.errors.humanCheck}</p>}
             {sp.fout === "link" && <p className="mt-2 text-[14px] text-rood">{a.linkExpired}</p>}
+            <div className="mt-4">
+              <TurnstileWidget />
+            </div>
             <button type="submit" className="btn-primary mt-4 w-full">
               {a.button}
             </button>
@@ -106,7 +114,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 function SignOut({ label }: { label: string }) {
   return (
     <form action="/auth/uitloggen" method="post" className="mt-4">
-      <button type="submit" className="btn-link text-[15px]">
+      <button type="submit" className="btn-link">
         {label}
       </button>
     </form>

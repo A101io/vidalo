@@ -23,7 +23,7 @@ else bad "SPF present but does not include Google"; note "$spf"; fi
 dmarc=$(dig +short TXT "_dmarc.$d")
 if [ -z "$dmarc" ]; then bad "DMARC missing"
 elif echo "$dmarc" | grep -qi 'rua=mailto:julian@'; then ok "DMARC reporting to julian@"; note "$(echo "$dmarc" | tr -d '"')"
-elif echo "$dmarc" | grep -qi 'rua=mailto:'; then bad "DMARC reports go somewhere other than julian@ (docs/mail.md: no dmarc@ alias)"; note "$dmarc"
+elif echo "$dmarc" | grep -qi 'rua=mailto:'; then bad "DMARC rua is not julian@$d: an address on another domain gets no reports unless that domain publishes $d._report._dmarc (docs/mail.md)"; note "$dmarc"
 else bad "DMARC has no rua, so no reports arrive"; note "$dmarc"; fi
 
 if [ -n "$(dig +short TXT "google._domainkey.$d")" ]; then ok "Google DKIM record present"

@@ -13,6 +13,7 @@
  */
 import type { CopyShape } from "../copy/index.js";
 import { PRICES } from "../copy/index.js";
+import { CONTACT } from "../shared/contact.js";
 import type { Lang } from "../copy/index.js";
 
 export interface ChatMessage {
@@ -37,6 +38,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   lines.push(`- ${L.prijs.setup.name}: €${PRICES.setupEur} ${L.prijs.setup.unit}. ${L.prijs.setup.audience} ${L.prijs.setup.includes.join(" ")}`);
   lines.push(`- ${L.prijs.monitor.name}: €${PRICES.setupEur} ${L.prijs.setup.unit} + €${PRICES.monitorEurPerMonth} ${L.prijs.monitor.unit}. ${L.prijs.monitor.audience} ${L.prijs.monitor.includes.join(" ")}`);
   lines.push(L.prijs.sub);
+  lines.push(`- ${L.prijs.website.simple.name}: ${L.prijs.website.simple.price} ${L.prijs.website.simple.unit}; ${L.prijs.website.custom.name}: ${L.prijs.website.custom.price} ${L.prijs.website.custom.unit}. ${L.prijs.website.note}`);
   lines.push(nl ? "Betalen en opzeggen:" : "Paying and cancelling:");
   for (const f of copy.pricing.faq) lines.push(`- ${f.q} ${f.a}`);
   lines.push(nl ? "Veelgestelde vragen:" : "Frequently asked questions:");
@@ -44,7 +46,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   const notPromised = copy.legal.terms.sections.find((s) => /beloven|promise/i.test(s.h));
   if (notPromised) lines.push(`${notPromised.h}: ${notPromised.p.join(" ")}`);
   lines.push(nl ? "Wat de klant zelf doet: " + (L.vragen.items.find((i) => /zelf/i.test(i.q))?.a ?? "") : "");
-  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: hello@vidalo.io. Support: support@vidalo.io.`);
+  lines.push(`${nl ? "Bedrijf" : "Company"}: ${L.footer.legal}. ${nl ? "Contact" : "Contact"}: WhatsApp ${CONTACT.whatsapp}, ${nl ? "telefoon" : "phone"} ${CONTACT.phone} (${nl ? "werkdagen" : "working days"} ${CONTACT.hours}), ${nl ? "e-mail" : "email"} ${CONTACT.email}. Support: ${CONTACT.support}. ${nl ? "Alles op" : "All on"} /contact.`);
   return lines.filter(Boolean).join("\n");
 }
 
