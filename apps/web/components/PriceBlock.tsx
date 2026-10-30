@@ -9,10 +9,11 @@ function Check({ light }: { light?: boolean }) {
   );
 }
 
-/** The two plans on the dark pricing band: Goed zetten (€149) and Goed houden (€49 per maand). */
+/** The two plans on the dark pricing band, Goed zetten (€149) and Goed houden (€49 per maand), and the websites by request. */
 export async function PriceBlock() {
   const { copy, href } = await getI18n();
   const P = copy.landing.prijs;
+  const W = P.website;
   return (
     <div className="flex flex-col gap-9">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -66,6 +67,35 @@ export async function PriceBlock() {
           <Link href={href("/#top")} className="sheen mt-auto block rounded-btn bg-white py-3.5 text-center text-[15px] font-extrabold text-ink hover:text-blue">
             {P.monitor.button}
           </Link>
+        </div>
+      </div>
+      <div className="flex flex-col gap-5 rounded-[20px] border-[1.5px] border-dark-panel p-7 sm:p-[30px]">
+        <div>
+          <h3 className="mb-1 text-[18px] font-extrabold">{W.h3}</h3>
+          <p className="text-[15px] text-dark-text">{W.sub}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {[W.simple, W.custom].map((o) => (
+            <div key={o.name} className="flex flex-col gap-2">
+              <p className="text-[15px] font-extrabold">
+                {o.name} <span className="ml-1 text-[22px]">{o.price}</span> <span className="text-[13px] font-medium text-grijs">{o.unit}</span>
+              </p>
+              <ul className="flex flex-col gap-2 text-[15px] leading-[1.5] text-dark-text">
+                {o.includes.map((t) => (
+                  <li key={t} className="flex gap-2.5">
+                    <Check />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 text-[13px] text-grijs">
+          <span>{W.note}</span>
+          <a href="mailto:hello@vidalo.io" className="text-[15px] font-bold text-blue-light">
+            {W.ask}
+          </a>
         </div>
       </div>
       <div className="flex flex-wrap justify-between gap-5 text-[13px] text-grijs">

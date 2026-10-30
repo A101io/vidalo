@@ -105,4 +105,13 @@ describe("owner-typed website", () => {
     const page = renderFactsPage({ ...facts, website: "bakkerijjansen.nl" }, business, { host: "feiten.bakkerijjansen.nl" });
     expect(page.html).toContain('href="https://bakkerijjansen.nl" rel="me"');
   });
+
+  it("has call and route buttons and names the kind of business", () => {
+    const page = renderFactsPage(facts, business, { host: "feiten.bakkerijjansen.nl" });
+    expect(page.html).toContain('<a class="btn btn-primary" href="tel:0231234567">Bellen</a>');
+    expect(page.html).toContain('href="https://www.google.com/maps/dir/?api=1&amp;destination=Bakkerij%20Jansen%2C%20Grote%20Markt%2012%2C%202011%20RD%20Haarlem">Route</a>');
+    const withSector = renderFactsPage({ ...facts, sector: "horeca", name: "Top Exotic", googleTypes: ["meal_takeaway"], servicesNo: [] }, business, { host: "x.nl" });
+    expect(withSector.html).toContain("Top Exotic is een restaurant in Haarlem.");
+    expect(withSector.html).toContain('<ul class="chips">');
+  });
 });

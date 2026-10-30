@@ -44,6 +44,7 @@ const EN_SLUGS: Record<string, string> = {
   eigenaar: "owner",
   feiten: "facts",
   binnenkort: "coming-soon",
+  voorvertoning: "preview",
 };
 
 export function en(route: string): string {

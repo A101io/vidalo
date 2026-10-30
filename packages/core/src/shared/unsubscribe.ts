@@ -10,6 +10,7 @@
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Db } from "../db/types.js";
+import { allOptionalOff, mailAllowed } from "./mail-prefs.js";
 
 export const UNSUBSCRIBED_EVENT = "email.unsubscribed";
 const DEV_SECRET = "vidalo-dev-unsubscribe-secret";
@@ -37,12 +38,20 @@ export function verifyUnsubscribeToken(businessId: string, token: string): boole
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
+/** True when the follow-ups are switched off (by the link or on the account page). */
 export async function isUnsubscribed(db: Db, businessId: string): Promise<boolean> {
-  return (await db.listEvents(businessId, 1000)).some((e) => e.type === UNSUBSCRIBED_EVENT);
+  const b = await db.getBusiness(businessId);
+  return b ? !mailAllowed(b.mailPrefs, "followup_7") : false;
 }
 
-/** Idempotent: a second opt-out adds nothing. */
+/**
+ * Unsubscribing switches every optional mail off (shared/mail-prefs.ts);
+ * required service mails still go. The event is logged once, without the address.
+ */
 export async function recordUnsubscribe(db: Db, businessId: string, via: "link" | "one-click"): Promise<void> {
-  if (await isUnsubscribed(db, businessId)) return;
-  await db.logEvent(businessId, UNSUBSCRIBED_EVENT, { via });
+  const b = await db.getBusiness(businessId);
+  if (!b) return;
+  const already = (await db.listEvents(businessId, 1000)).some((e) => e.type === UNSUBSCRIBED_EVENT);
+  await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, mailPrefs: allOptionalOff() });
+  if (!already) await db.logEvent(businessId, UNSUBSCRIBED_EVENT, { via });
 }

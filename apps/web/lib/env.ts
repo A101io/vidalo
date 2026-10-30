@@ -44,6 +44,14 @@ export const env = {
   get supabaseServiceRoleKey() {
     return read("SUPABASE_SERVICE_ROLE_KEY");
   },
+  /**
+   * Sign-in without Supabase (a cookie naming the e-mail) exists for mock mode
+   * and local development only. A production build with real data never trusts
+   * that cookie, even when the Supabase keys are missing: anyone can write it.
+   */
+  get allowMockAuth(): boolean {
+    return read("VIDALO_MOCK") === "1" || process.env.NODE_ENV !== "production";
+  },
   get hasSupabase(): boolean {
     return Boolean(this.supabaseUrl && this.supabaseAnonKey);
   },
@@ -82,5 +90,19 @@ export const env = {
   /** The mailbox relay's secret for POST /api/support-autoreply (docs/mail.md). Unset: the endpoint answers 503 to everything. */
   get supportRelaySecret() {
     return read("SUPPORT_RELAY_SECRET");
+  },
+  get googlePlacesKey() {
+    return read("GOOGLE_PLACES_API_KEY");
+  },
+  /** Twilio Verify for the phone ownership proof (shared/phone-proof.ts); undefined = not configured. */
+  get twilioVerify() {
+    const accountSid = read("TWILIO_ACCOUNT_SID");
+    const authToken = read("TWILIO_AUTH_TOKEN");
+    const serviceSid = read("TWILIO_VERIFY_SERVICE_SID");
+    return accountSid && authToken && serviceSid ? { accountSid, authToken, serviceSid } : undefined;
+  },
+  /** On once Vidalo's own WhatsApp sender is linked to the Verify service; without it Twilio falls back to SMS. */
+  get whatsappCodes(): boolean {
+    return read("TWILIO_VERIFY_WHATSAPP") === "1";
   },
 };

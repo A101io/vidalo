@@ -55,7 +55,7 @@ function linkify(line: string): string {
 }
 
 /** The branded HTML version of a plain-text mail: logo, paragraphs with clickable links, the colour dot, the company line. */
-export function textToHtml(text: string): string {
+export function textToHtml(text: string, lang: "nl" | "en" = "nl"): string {
   const paras = text.trim().split(/\n{2,}/);
   const body = paras
     .map((p) => {
@@ -77,7 +77,7 @@ export function textToHtml(text: string): string {
     })
     .join("\n");
   const mark = `<span style="display:inline-block;width:17px;height:17px;background:${BRAND.blue};border-radius:999px 999px 999px 2px;vertical-align:-1px;margin-right:6px"></span>`;
-  return `<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="margin:0;padding:0;background:#ffffff;font-family:${BRAND.font}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:${BRAND.font}">

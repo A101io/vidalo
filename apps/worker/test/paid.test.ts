@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
 import { handlerFor } from "../src/jobs/index";
+import { paidOnlyBlock } from "../src/jobs/paid";
 import type { Job } from "@vidalo/core/db";
 
 // A business nobody has paid for must never get anything published or sent in
@@ -56,5 +57,18 @@ describe("paid-only jobs", () => {
     const { b } = await business("trial");
     // Past the guard, the real publish step runs and wants facts this fixture never gave it.
     await expect(handlerFor("publish")!({ businessId: b.id }, job("publish", { businessId: b.id }))).rejects.toThrow(/has no facts yet/);
+  });
+});
+
+describe("an owner's pause", () => {
+  it("skips paid jobs until the pause ends, then lets them run", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const until = new Date(Date.now() + 86_400_000).toISOString();
+    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: new Date().toISOString(), pauseUntil: until });
+    const job = { id: 1, kind: "sync", payload: { businessId: b.id } } as unknown as Job;
+    expect(await handlerFor("sync")!({ businessId: b.id }, job)).toEqual({ skipped: "paused_by_owner" });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: new Date(Date.now() - 1000).toISOString() });
+    expect(await paidOnlyBlock("sync", { businessId: b.id })).toBeNull();
   });
 });

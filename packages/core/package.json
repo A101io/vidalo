@@ -8,6 +8,7 @@
     "./types": "./src/types.ts",
     "./criteria": "./src/criteria.ts",
     "./progress": "./src/progress.ts",
+    "./facts-history": "./src/facts-history.ts",
     "./db": "./src/db/index.ts",
     "./scanner": "./src/scanner/index.ts",
     "./publisher": "./src/publisher/index.ts",

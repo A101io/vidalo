@@ -6,6 +6,7 @@ import { renderFactsPage } from "../src/publisher/render";
 import { copy } from "../src/copy";
 import { FACT_KEYS, SECTOR_SLUGS, type Facts, type SectorSlug } from "../src/types";
 import { sampleFacts } from "./scanner-fixtures";
+import { sectorForCandidate } from "../src/scanner/resolve";
 import { business } from "./worker-fixtures";
 
 /** Full facts for a plumber: every sector-layer field filled, so every pack can build its longest set. */
@@ -161,6 +162,29 @@ describe("inferSector", () => {
     expect(inferSector("space_station", "9999")).toBeNull();
     expect(inferSector("space_station", "9999", "horeca")).toBe("horeca");
     expect(inferSector("plumber", null, "horeca")).toBe("horeca");
+  });
+});
+
+describe("sector and question word from Google types (first real scan, 25 Oct 2026)", () => {
+  const recTexts = (f: Facts, sector: SectorSlug) => sectorPrompts(f, sector).filter((p) => p.kind === "recommendation").map((p) => p.textNl);
+
+  it("tries every Google type in order when the primary one maps to no sector", () => {
+    expect(sectorForCandidate({ name: "Kenamju", googleCategory: "point_of_interest", googleTypes: ["point_of_interest", "health", "physiotherapist"], sbi: null })).toBe("zorg-praktijken");
+    expect(sectorForCandidate({ name: "Het Brood Café", googleCategory: "bakery", googleTypes: ["bakery", "cafe", "food"], sbi: null })).toBe("winkels");
+    expect(sectorForCandidate({ name: "Iets", googleCategory: null, googleTypes: [], sbi: null })).toBeNull();
+  });
+
+  it("a bakery whose name says nothing is asked about as a bakker, not a winkel", () => {
+    const f = sampleFacts({ name: "Het Brood Café", place: "Haarlem", googleTypes: ["bakery", "cafe"] });
+    const texts = recTexts(f, "winkels");
+    expect(texts.length).toBeGreaterThan(0);
+    expect(texts.join(" ")).toMatch(/bakker/);
+    expect(texts.join(" ")).not.toMatch(/\bwinkel\b/);
+  });
+
+  it("the name wins over the types; without either the pack's default stays", () => {
+    expect(recTexts(sampleFacts({ name: "Slagerij Hendriks", place: "Haarlem", googleTypes: ["florist"] }), "winkels").join(" ")).toMatch(/slager/);
+    expect(recTexts(sampleFacts({ name: "Het Hoekje", place: "Haarlem", googleTypes: [] }), "winkels").join(" ")).toMatch(/winkel/);
   });
 });
 

@@ -1,5 +1,7 @@
 # Secrets and keys (baseline A4)
 
+**Since 25 Oct 2026 the list of record is `secrets.manifest.json`** (name, targets, source link, whether it spends money), and `pnpm secrets:push` moves values from the root `.env` to the Workers without printing them: a plan by default, `--apply` to push, `--allow-spending` for AI and Places keys, `--live` for a live Stripe key; every push is read back by name. Julian types each key once, into `.env`; nothing else asks for it (Control Room A10).
+
 Every secret: where it comes from, where it is set, how to prove it landed. When a credential is "definitely set" and something still fails, **list the NAMES the job can see first** (Sitty lost 17 deploy runs to `CLOUDFLARE_API_SECRET` vs `_TOKEN`). `pnpm scan:secrets` fails CI on anything key-shaped in a tracked file.
 
 ## Deploying (GitHub → Cloudflare)
@@ -66,6 +68,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `SUPPORT_RELAY_SECRET` | `openssl rand -hex 32`; the same value as `RELAY_SECRET_VIDALO` in the mailbox relay's script properties (`docs/mail.md`) | Web env (`vidalo-web`) | `POST /api/support-autoreply` answers 401 to a wrong secret and 503 while unset; a test mail to support@vidalo.io gains a `Vidalo/…` label and a `support_autoreply_log` row |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare dashboard → Turnstile → Add widget "Vidalo", hostnames `vidalo.io` and `localhost` | Web env (`vidalo-web`) | The scan and sign-in forms show the widget; a post without it lands on `/scan/druk?check=1` or `/inloggen?fout=check`. Without both keys a production build with real engines refuses both forms (fail closed) |
 
 Nothing above is set anywhere yet except in local `.env` for mock mode.
 
