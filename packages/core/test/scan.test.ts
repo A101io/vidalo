@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { withMockDb } from "../src/db";
 import { ENGINES } from "../src/types";
 import { generatePrompts } from "../src/prompts";
-import { buildReport, runScan } from "../src/scanner";
+import { buildReport, runScan, samplesFor } from "../src/scanner";
+
+/** Samples one prompt collects over these engines (google_ai is capped at one). */
+const perPrompt = (engines: readonly string[], n: number) => engines.reduce((sum, e) => sum + samplesFor(e as (typeof ENGINES)[number], n), 0);
 import { createMockEngine } from "../src/scanner/engines";
 import { prepareBusiness } from "../src/scanner/onboard";
 import { resolveBusiness, draftProvisionalFacts } from "../src/scanner/resolve";
@@ -38,12 +41,13 @@ describe("runScan (mock pipeline)", () => {
     const report = await runScan({ businessId: prepared.business.id, kind: "baseline", samplesPerPrompt: 3, db });
     // A full scan asks the core and six recommendation questions from the bank; only the fact questions count as answers.
     const factCore = core.filter((p) => p.kind !== "recommendation").length;
-    expect(report.totalAnswers).toBe(factCore * 5 * 3);
+    expect(report.totalAnswers).toBe(factCore * perPrompt(ENGINES, 3));
     const recs = report.recommendations ?? [];
     expect(recs.filter((r) => r.pool === "core")).toHaveLength(6);
     expect(recs.filter((r) => r.pool === "bank").length).toBeLessThanOrEqual(6);
     // The mock leaves the business out of part of the lists and names three others.
     expect(recs.some((r) => r.named < r.answers)).toBe(true);
+    expect(recs.some((r) => r.named > 0)).toBe(true);
     expect(recs.every((r) => r.others.every((o) => !o.name.includes("De Vries")))).toBe(true);
     expect(recs.some((r) => r.others.length > 0)).toBe(true);
     expect(["rood", "oranje", "groen", "grijs"]).toContain(report.stip);
@@ -73,7 +77,7 @@ describe("runScan (mock pipeline)", () => {
     const run = await db.getScanRun(report.scanRunId);
     expect(run?.status).toBe("done");
     // Every asked answer is stored; the recommendation answers are not counted in totalAnswers.
-    expect(await db.listSamples(report.scanRunId)).toHaveLength((core.length + 6) * 5 * 3);
+    expect(await db.listSamples(report.scanRunId)).toHaveLength((core.length + 6) * perPrompt(ENGINES, 3));
     expect((await db.listEvents(prepared.business.id)).map((e) => e.type)).toContain("scan.finished");
 
     // buildReport reconstructs the same numbers from storage.
@@ -83,13 +87,47 @@ describe("runScan (mock pipeline)", () => {
     expect(rebuilt.findings.map((f) => f.id).sort()).toEqual(report.findings.map((f) => f.id).sort());
   });
 
+  it("asks five samples first and only the cells with a wrong, not-found or namesake answer get all ten", async () => {
+    const db = withMockDb();
+    const prepared = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
+    const prompts = (await db.listPrompts(prepared.business.id, { activeOnly: true })).filter((p) => p.pool !== "bank");
+
+    // Every answer right: every cell stops at five.
+    const clean = await runScan({ businessId: prepared.business.id, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 10, clients: [createMockEngine("chatgpt", { wrongPairRate: 0, otherEntityRate: 0 })], db });
+    const cleanSamples = await db.listSamples(clean.scanRunId);
+    const asked = (prompts.length + 6) * 5; // core plus six bank questions, five each
+    expect(cleanSamples.length).toBeLessThanOrEqual(asked);
+    expect(cleanSamples.length).toBeGreaterThan(asked - 6 * 5); // only the recommendation questions may escalate (not named)
+    expect(clean.findings.filter((f) => f.evidenceKind === "about")).toHaveLength(0);
+
+    // The usual mock: some cells escalate to ten, none beyond, and every wrong finding rests on all ten samples.
+    const messy = await runScan({ businessId: prepared.business.id, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 10, db });
+    const messySamples = await db.listSamples(messy.scanRunId);
+    const perCell = new Map<string, number>();
+    for (const smp of messySamples) perCell.set(smp.promptId, (perCell.get(smp.promptId) ?? 0) + 1);
+    expect([...perCell.values()].every((n) => n === 5 || n === 10)).toBe(true);
+    expect([...perCell.values()].some((n) => n === 10)).toBe(true);
+    expect([...perCell.values()].some((n) => n === 5)).toBe(true);
+    expect(messy.findings.length).toBeGreaterThan(0);
+    // The cell that carries a finding's evidence was asked all ten times (a finding groups prompts, so its own sampleCount may be 15 or 30).
+    const promptOf = new Map(messySamples.map((smp) => [smp.id, smp.promptId]));
+    for (const f of messy.findings.filter((x) => x.evidenceBefore)) expect(perCell.get(promptOf.get(f.evidenceBefore!)!)).toBe(10);
+    const finished = (await db.listEvents(prepared.business.id, 50)).find((e) => e.type === "scan.finished" && e.payload.scanRunId === messy.scanRunId);
+    expect(Number(finished?.payload.escalatedCells)).toBeGreaterThan(0);
+    expect(Number(finished?.payload.escalatedCells)).toBeLessThan(Number(finished?.payload.cells));
+
+    // A capped engine never asks more than its cap.
+    expect(samplesFor("google_ai", 10)).toBe(1);
+    expect(samplesFor("chatgpt", 10)).toBe(10);
+  });
+
   it("free scan uses 6 prompts and the free-scan engines", async () => {
     const db = withMockDb();
     const prepared = await prepareBusiness({ name: "Kapsalon Mooi", place: "Leiden", db });
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
     expect(report.engines.map((e) => e.engine)).toEqual(["chatgpt", "google_ai", "copilot"]);
     // 6 prompts: 3 fact questions count as answers, 3 recommendation questions are reported on their own.
-    expect(report.totalAnswers).toBe(3 * 3 * 3);
+    expect(report.totalAnswers).toBe(3 * perPrompt(["chatgpt", "google_ai", "copilot"], 3));
     expect(report.findings.every((f) => f.evidenceKind !== "recommendation")).toBe(true);
   });
 
@@ -127,7 +165,7 @@ describe("runScan on a business the AI has never heard of", () => {
 
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
     // No sector, so no recommendation questions: all six are fact questions.
-    expect(report.totalAnswers).toBe(6 * 3 * 3);
+    expect(report.totalAnswers).toBe(6 * perPrompt(["chatgpt", "google_ai", "copilot"], 3));
     expect(report.visibility).toBe("unknown");
     expect(report.notFoundAnswers / report.totalAnswers).toBeGreaterThanOrEqual(0.6);
     expect(report.wrongAnswers + report.notFoundAnswers).toBeLessThanOrEqual(report.totalAnswers);

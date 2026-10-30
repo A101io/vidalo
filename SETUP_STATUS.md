@@ -15,7 +15,7 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
 | R1 | Supabase | ✓verified | Project read back by ref: `vidalo`, eu-west-1, ACTIVE_HEALTHY. RLS on all 11 tables; advisors: only INFO "RLS enabled, no policy" on the 4 internal tables (intended). Transaction test, rolled back: anon sees 0 business, stranger 0, **control: owner 1** and own event 1. | 13 Oct |
-| R2 | Legal pages + footer | blocked | Drafts at `/voorwaarden`, `/privacy` with a "Concept" banner; footer identity line present. Needs: De Boer Legal masters uploaded, `/legal/terms|privacy|cookies` NL + EN, "Cookie settings" link, counsel review. | 13 Oct |
+| R2 | Legal pages + footer | written | Final terms, privacy and cookie statement in NL + EN, built from Sonable's counsel-reviewed texts (Julian decided 26 Oct: no outside counsel now); PR `claude/legal-final` awaits his approval. Evidence, local dev server 26 Oct 2026: `/voorwaarden`, `/privacy`, `/cookies`, `/en/terms`, `/en/privacy`, `/en/cookies` answer 200 with 18/20/6 sections, no "Concept" notice, no noindex, all three in `sitemap.xml`; footer links go to the same routes in each language; terms render as numbered articles (1.1, 6.3 a–e); no horizontal scroll at 375px; `pnpm -r typecheck`, `pnpm -r test` (315 core + 15 worker) and `pnpm e2e:mock` green. "Cookie-instellingen" appears once there is a choice (`OPTIONAL_CATEGORIES` is empty: necessary cookies only). Open: production check after deploy; the retention purge job. | 26 Oct |
 | R3 | Fixed header | ✓verified | Playwright, 2000px scroll: header `top 0`, sticky, z 40, visible at 1280 and 390 (`out/screenshots/r3-header-*.png`). Mobile menu (`<details>`) opens, follows a link and closes (`r3-menu-390.png`). `[id]{scroll-margin-top:88px}`. | 13 Oct |
 
 ## A. Foundation
@@ -69,9 +69,9 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## G. Support and email
 | # | Step | Status | Evidence | Date |
 |---|---|---|---|---|
-| G1 | Support channel | open | hello@vidalo.io for contact, support@vidalo.io for support (was hallo@ until 19 Oct; split in `docs/mail.md`). Zone is on Cloudflare since 16 Oct; runbook `docs/mail.md` (Workspace secondary domain, aliases support@/hello@/julian@/controle@/inloggen@ on Julian's user, Send mail as, DNS records), check with `scripts/verify-mail-dns.sh`. **26 Oct, public DNS:** MX for `vidalo.io` points at Google Workspace, DMARC `p=none` with rua to julian@vidalo.io. Whether hello@ and support@ receive mail has not been tested. | 26 Oct |
-| G3 | Auto-replies on support@ | written | Kit brain vendored (`packages/core/src/support`), `POST /api/support-autoreply`, log table 0010, 10 tests; knowledge = the website assistant's. Off until `SUPPORT_RELAY_SECRET` + `OPENAI_API_KEY` are set and the shared relay (`A101/kit/adopt/support`) is installed by Julian; soak in `DRY_RUN` first. Not yet proven with a real mail. | 23 Oct |
+| G1 | Support channel | open | hello@vidalo.io for contact, support@vidalo.io for support (was hallo@ until 19 Oct; split in `docs/mail.md`). Zone is on Cloudflare since 16 Oct; runbook `docs/mail.md` (Workspace secondary domain, aliases support@/hello@/julian@/controle@/inloggen@ on Julian's user, Send mail as, DNS records), check with `scripts/verify-mail-dns.sh`. **22 Oct:** Workspace secondary domain and the five aliases set up, `verify-mail-dns.sh` 5/5 green (MX, SPF, DKIM, DMARC, verification). **26 Oct, public DNS:** MX for `vidalo.io` points at Google Workspace, DMARC `p=none` with rua to julian@vidalo.io. Still: Start authentication in Google Admin, Send mail as; whether hello@ and support@ receive mail has not been tested (delivery test with a control). | 26 Oct |
 | G2 | Transactional email | written | Resend code + one-click unsubscribe (RFC 8058) written; Vidalo branding in every mail (#47); mail lab `pnpm mail:lab` checks all 13 kinds, `pnpm mail:send` delivers one of each to one inbox (#42, #45); directory corrections one mail per change (#44). **26 Oct:** `RESEND_API_KEY` on both Workers; Resend's DNS is in public DNS (`resend._domainkey` DKIM, `send.vidalo.io` MX + SPF). `vidalo.io` verified in Resend and 14 test mails sent on 25 Oct (`docs/reality-check-2026-10-25.md` F4). Still open: the Supabase sign-in mail through Resend SMTP (#37). Open PRs: #37 sign-in mail, #38 DNS check, #48 mail redesign, #65 mails in English. | 26 Oct |
+| G3 | Auto-replies on support@ | written | Kit brain vendored (`packages/core/src/support`), `POST /api/support-autoreply`, log table 0010, 10 tests; knowledge = the website assistant's. Off until `SUPPORT_RELAY_SECRET` + `OPENAI_API_KEY` are set and the shared relay (`A101/kit/adopt/support`) is installed by Julian; soak in `DRY_RUN` first. Not yet proven with a real mail. | 23 Oct |
 
 ## H. Operations
 | # | Step | Status | Evidence | Date |
@@ -111,13 +111,13 @@ Status: `✓verified` (observed, evidence + date) · `written` (code exists, not
 ## Legal review log
 | Check | Result |
 |---|---|
-| GDPR art. 13/14 contents in privacy draft | partial: controller, purposes, basis, recipients, retention, rights, AP complaint present; EEA transfer safeguards named generally; hosting processors missing |
-| Cookie statement matches the browser | fail: no cookie statement page yet (inventory is in the guidelines doc) |
-| Terms cover parties, service, prices + VAT, renewal, liability, NL law | pass (draft) |
-| Company identity visible | pass (footer) |
-| Deviations from masters | n/a: masters not available here |
+| GDPR art. 13/14 contents in privacy statement | pass (26 Oct): controller and contact, per activity the data, source (art. 14), purpose, basis and retention; recipients incl. Cloudflare hosting, Google Workspace, Turnstile; transfer safeguards (DPF/SCCs); rights incl. self-service export/delete; objection stated separately; AP complaint; whether data is required; no art. 22 decisions. Gap: retention periods are stated but no purge job enforces them yet |
+| Cookie statement matches the browser | pass (26 Oct): the five cookies set by the code, no local storage, Turnstile named as the only third-party script; production `Set-Cookie` on `/` is empty (curl, 26 Oct) |
+| Terms cover parties, service, prices + VAT, renewal, cancel/pause, liability, DSA notice-and-action, AI assistant, NL law | pass (26 Oct, 18 articles) |
+| Company identity visible | pass (footer); the legal pages also carry the btw-nummer (BW 3:15d) |
+| Deviations from masters | listed in the PR `claude/legal-final` (Sonable's July 2026 set used as the master) |
 
 ## Needs Julian
-1. Upload the De Boer Legal masters (B2B, July 2026) so R2 can be built from them.
+1. ~~Upload the De Boer Legal masters~~ replaced 26 Oct 2026: final texts built from Sonable's set; approve the PR `claude/legal-final`.
 2. ~~`vidalo.io` as a zone in A101's Cloudflare account~~ done 16 Oct 2026 (zone `5d39e2dacc81b8603d5dc69a163b6bca`). Still: SSL Full (strict) + Always Use HTTPS in the dashboard; then D4–D6, G1–G2 and production D2 can proceed.
 3. ~~The Supabase database password (for `DATABASE_URL`, go-live D3)~~ done 18 Oct, pipeline ran against the hosted project, ~~a Cloudflare API token plus the `preview`/`production` GitHub environments (X2)~~ done 16 Oct, ~~Vidalo's own Stripe account (B1)~~ created 16 Oct (its test secret key is still open), a Google OAuth client (A3), and one click on "Stuur inloglink" on the local sign-in page (A1).

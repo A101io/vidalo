@@ -32,15 +32,15 @@ See `docs/records-of-processing.md` and `docs/processors.md`. Cookies the app se
 | `vidalo_preview` | Build phase only: opens the site behind `/binnenkort` | Session |
 | `vidalo_mock_session` | Development only (mock mode) | Session |
 
-The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step. Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
+The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step. Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Third-party script: Cloudflare Turnstile (`challenges.cloudflare.com`) on the free check and sign-in, treated as strictly necessary security and named in the cookie statement. Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
 
 ## DPIA screening (P3)
 Vidalo processes business facts, mostly not personal data; owner emails and Google account ids are ordinary personal data; no special categories, no location tracking of people, no profiling of individuals, not large scale. **Screening outcome: a full DPIA is not indicated.** Re-screen if Vidalo starts monitoring people (e.g. sole traders at scale) or adds analytics.
 
 ## Open questions for counsel
-1. Terms, privacy and a cookie statement from the De Boer Legal masters (B2B, July 2026) instead of the current drafts; routes `/legal/terms|privacy|cookies` in NL and EN.
-2. Retention for free-check data and for closed accounts.
-3. The privacy text says reminders stop "if you mail us"; there is now a one-click unsubscribe link. Update the sentence.
-4. Hosting processors (Vercel, Fly/Railway) once chosen.
+1. ~~Terms, privacy and a cookie statement from the masters~~ final texts written 26 Oct 2026 from Sonable's counsel-reviewed set (Julian: no outside counsel in this phase); routes stay `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`). Points for a later lawyer are in that PR.
+2. ~~Retention~~ set in the privacy text: free check 12 months, closed accounts 90 days + one check + 30 days. **No purge job exists yet**; build it before launch.
+3. ~~Reminder unsubscribe sentence~~ done.
+4. ~~Hosting processors~~ Cloudflare, in the privacy text and `docs/processors.md`.
 5. Whether "Wij zorgen dat het antwoord klopt" needs a qualifier next to it.
 6. The EU AI Act: Vidalo uses AI providers to ask questions; it does not offer an AI system to the public. Confirm no transparency duty applies beyond saying which assistants we ask.

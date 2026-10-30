@@ -33,9 +33,9 @@ assert.equal(business.sector, "winkels", "sector inferred from the mock Google c
 const free = await runScan({ businessId: business.id, kind: "free", db });
 console.log(`free scan ${free.scanRunId}: ${free.wrongAnswers}/${free.totalAnswers} wrong, stip ${free.stip} (${free.engineStips.map((e) => `${e.engine}=${e.stip}`).join(", ")})`);
 assert.ok(free.totalAnswers > 0 && free.wrongAnswers > 0, "free scan produced findings");
-assert.equal((await db.listSamples(free.scanRunId)).length, 6 * 3 * 3, "free scan stays at 6 prompts x 3 engines x 3 samples");
+assert.equal((await db.listSamples(free.scanRunId)).length, 6 * (3 + 1 + 3), "free scan stays at 6 prompts, 3 samples on ChatGPT and Copilot and 1 on Google AI");
 // Only answers to fact questions count; the recommendation answers are reported under "Wie AI wel noemt".
-assert.equal(free.totalAnswers, 3 * 3 * 3, "free scan counts its 3 fact questions");
+assert.equal(free.totalAnswers, 3 * (3 + 1 + 3), "free scan counts its 3 fact questions: 3 samples on ChatGPT and Copilot, 1 on Google AI");
 assert.ok(free.findings.every((f) => f.evidenceKind !== "recommendation"), "not being recommended is never a finding");
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(free.stip), "free scan carries a stip colour");
 assert.equal(free.findingsBySeverity.afhaker.length + free.findingsBySeverity.misleider.length + free.findingsBySeverity.verwarring.length, free.findings.length, "findings grouped by severity");
@@ -128,6 +128,7 @@ const full = await buildReport(scans[0]!.id, db);
 console.log(`latest scan ${full.kind}: stip ${full.stip}, ${full.findings.length} findings, ${full.instable.length} instable, ${full.criteriaNotFound.length} criteria not found`);
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(full.stip), "full scan carries a stip colour");
 assert.ok((full.recommendations ?? []).some((r) => r.named < r.answers), "the report still shows the questions where the business was not named");
+assert.ok((full.recommendations ?? []).some((r) => r.named > 0), "the report counts the answers where the business was named");
 assert.ok(full.engineStips.filter((e) => e.counts).length === 4, "chatgpt, google_ai, copilot and gemini count for the stip; perplexity does not");
 let fixes = 0;
 for (const f of findings) fixes += (await db.listFixes(f.id)).length;

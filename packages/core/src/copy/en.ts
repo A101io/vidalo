@@ -1,5 +1,10 @@
 import type { CopyShape } from "./index.js";
 
+/** "ChatGPT, Copilot and Gemini" */
+function joinEn(items: string[]): string {
+  return items.length > 1 ? `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}` : (items[0] ?? "");
+}
+
 /** English copy. Same shape as the Dutch in ./index.ts; Dutch prevails where they differ (legal). */
 export const en: CopyShape = {
   brand: "Vidalo",
@@ -491,7 +496,7 @@ export const en: CopyShape = {
       },
       controle: {
         h3: "Asking once tells you nothing",
-        body: "AI rarely gives the same answer twice. Whoever looks once sees “everything is right” and misses the error every third customer gets. That is why we ask every question ten times to every assistant, and count.",
+        body: "AI rarely gives the same answer twice. Whoever looks once sees “everything is right” and misses the error every third customer gets. That is why we ask every question up to ten times to every assistant, and count.",
         label: "Example: the same question asked ten times to ChatGPT, Google AI and Copilot. The first time everything is right. Over ten times, Copilot gives an old number three times, ChatGPT once. Asking once would have missed that error.",
         ask: "What is the number of Fysiotherapie Van Dijk?",
         once: "Asked once: everything is right",
@@ -671,7 +676,7 @@ export const en: CopyShape = {
     how: {
       crumb: "How it works",
       title: "How Vidalo works: record, publish, check, fix",
-      description: "Record your details once, publish them the same everywhere, check every question ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
+      description: "Record your details once, publish them the same everywhere, check every question up to ten times a month with ChatGPT, Google AI, Gemini and Perplexity, and fix errors at the source with proof.",
       h1: "How Vidalo works",
       intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and fix every error at its source.",
     },
@@ -699,57 +704,456 @@ export const en: CopyShape = {
   },
 
   legal: {
-    draft: true,
+    draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Last updated: 9 October 2026",
-    contact: "Questions? Email us at hello@vidalo.io or call +31 85 109 1393.",
+    updated: "Version of 26 October 2026",
+    contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
-      intro: "These terms apply to every check and every subscription from Vidalo, a trade name of A101 B.V. This is a translation; the Dutch text is the binding version.",
+      intro: "These terms apply to every check, every plan and every other use of Vidalo. Vidalo is for businesses only. This is a translation; the Dutch text prevails.",
+      numbered: true,
       sections: [
-        { h: "What we do", p: ["We ask AI assistants such as ChatGPT, Google AI and Copilot what they say about your business, compare that with the details you confirm, and show where an error comes from.", "With a paid plan we publish a facts page, put your details in Google, Bing, Apple and Dutch directories, and ask sources with an error to fix it."] },
-        { h: "What we do not promise", p: ["Nobody decides what an AI assistant answers. We fix the sources those answers come from. Answers from a model's memory only change with a new model version.", "A fix at another website or directory depends on that party and usually takes two to four weeks, sometimes longer."] },
-        { h: "Your details, your responsibility", p: ["You confirm your business's details yourself. We only publish and send what you have confirmed.", "You give us permission to send correction requests to websites and directories on behalf of your business, and to update your Google Business Profile if you connect it."] },
-        { h: "Price and payment", p: ["Set it right costs €149 one-off. Keep it right costs €49 per month. All prices are exclusive of VAT.", "You pay through Stripe with iDEAL, card or SEPA direct debit. You receive an invoice for each payment."] },
-        { h: "Cancelling", p: ["There is no notice period. You cancel any month under ‘Subscription’ in your account; the period you have already paid for runs out. You get a confirmation by email straight away. Until the end date you can withdraw the cancellation.", "When your subscription ends, we stop checking and updating, and your facts page redirects to your own website."] },
-        { h: "Pausing", p: ["You can pause your subscription for 1, 2 or 3 months under ‘Subscription’ in your account. In that time we check and fix nothing and you pay nothing; your facts page stays online. You get a confirmation by email straight away and a reminder a week before the end.", "On the end date your subscription continues by itself at the regular price. You can resume earlier or cancel during the pause."] },
-        { h: "Liability", p: ["We do our work carefully, but are not liable for what AI assistants or other parties say about your business. Our liability is limited to the amount you paid us in the last twelve months."] },
-        { h: "Applicable law", p: ["Dutch law applies to these terms."] },
+        {
+          h: "Definitions",
+          p: [
+            "Vidalo, we, us, our: A101 B.V., established at Factorij 80, 3071 AV Rotterdam, the Netherlands, registered with the Dutch Chamber of Commerce (KvK) under number 42057858, trading as Vidalo.",
+            "You, your: the business or legal entity that requests a check, takes a plan or otherwise uses Vidalo, and the person acting on behalf of that business.",
+            "Service: everything Vidalo provides to you: the free check, the plans and what comes with them, your account and the assistant on our website.",
+            "Free check: a one-off check, without payment, of what AI assistants answer about a business, with a report that can be viewed through a link for 30 days.",
+            "Plan: ‘Set it right’ (one-off) or ‘Keep it right’ (a monthly subscription), as described at vidalo.io/en/pricing at the time you order.",
+            "AI assistant: a service of another party that answers questions using artificial intelligence, such as ChatGPT, Google AI, Gemini or Perplexity.",
+            "Source: a website, directory, profile or other public record from which an AI assistant takes its answer.",
+            "Details: the details of your business that you confirm to us, such as name, address, opening hours, phone number, services and prices.",
+            "Facts page: the page we publish with your confirmed Details, in a form that people and AI assistants can read.",
+            "Account: your own area on vidalo.io, which you sign in to with a link sent by email.",
+            "Agreement: the arrangements between you and Vidalo about the Service, including these terms.",
+            "In writing: on paper or by email.",
+          ],
+        },
+        {
+          h: "When these terms apply",
+          p: [
+            "These terms apply to every offer from Vidalo, every Agreement and every use of the Service, including the free check.",
+            "Vidalo is for businesses only. You use the Service in the course of your trade or profession, and at checkout you confirm that you are acting on behalf of a business. Consumer rules, such as the right of withdrawal, therefore do not apply.",
+            "Your purchasing conditions or other terms do not apply.",
+            "Deviations from these terms are valid only if we agree them with each other in writing.",
+            "Our offers are without obligation. An obvious mistake or typing error in an offer, on the website or in an email does not bind us.",
+            "If a provision is invalid or annulled, the other provisions remain in force. We will then agree a replacement provision that comes as close as possible to the purpose of the old one.",
+            "We may change these terms. We will tell you about a change at least thirty days before it takes effect, by email and on this page, unless a law, a ruling or an authority requires a shorter period. If you do not agree with a change to your disadvantage, you can cancel your subscription with effect from the day the change takes effect.",
+            "These terms exist in Dutch and English. If the two differ, the Dutch text prevails.",
+          ],
+        },
+        {
+          h: "What Vidalo does",
+          p: [
+            "With the free check we ask AI assistants questions that a customer might ask about your business. We compare the answers with the details we find about your business or that you confirm, and show which answers are wrong and which source an error seems to come from.",
+            "Which parts belong to a Plan is stated on the pricing page at the time you order. A part that depends on another party, such as updating your Google Business Profile, is provided only if that party allows it.",
+            "We choose which AI assistants we ask, which questions we ask and how often. Every report states which AI assistants we asked.",
+            "We do our work carefully and with expertise. Our obligation is one of best efforts: we do what can reasonably be done, but we do not promise a particular result.",
+            "We may change and improve the Service, as long as the core of what you took remains. If something essential disappears from your Plan, we will tell you in advance and you can cancel with effect from the day of the change.",
+            "We may use other parties, such as hosting, payment, email and AI services. Which of them process personal data is stated in our privacy policy.",
+            "The Service may be temporarily unavailable for maintenance or because of a fault. We announce noticeable maintenance in advance where we can.",
+            "We build a website only under a separate arrangement about what we make and what it costs. These terms apply to that as well.",
+          ],
+        },
+        {
+          h: "What we do not promise",
+          p: [
+            "Nobody decides what an AI assistant answers, and neither do we. We fix the sources those answers come from, or show you how to do it. What an AI assistant answers afterwards is decided by that assistant.",
+            "AI assistants do not always give the same answer to the same question. A report shows what they answered at the time of the check; next time it may be different.",
+            "Answers an AI assistant takes from its model's memory change only with a new model version. We have no influence on that.",
+            "A fix at another website, directory or platform depends on that party. It usually takes a few weeks and sometimes it does not succeed. On many large platforms only the owner can change anything; we then show you what to do.",
+            "We do not promise that an AI assistant will name your business, recommend it or put it in a particular position.",
+            "We judge whether an answer is right with the help of automatic comparison. We do this carefully, but it can occasionally be wrong. If you see something that is not right, tell us and we will check it.",
+            "A report is information, not advice. What you do with it is your decision.",
+          ],
+        },
+        {
+          h: "Your details and proof of management",
+          p: [
+            "You confirm the Details of your business yourself. You warrant that they are correct, that you may have them published, and that you will tell us when something changes.",
+            "We publish and send only Details you have confirmed. Every change becomes a new version, which you confirm.",
+            "Before we record your Details, publish them or ask others for something on behalf of your business, we ask you to show that you manage the business: with Google or with a code via the business's phone number. Your Account shows how. We may change those methods, for example when another party changes its rules. If the proof does not succeed, those parts do not start.",
+            "An email address alone does not prove that you manage a business. Until there is proof, you can use the free check and your reports, but your Details are not published.",
+            "You allow us to send correction requests on behalf of your business to sources containing an error, and to update your Google Business Profile or another profile if you connect it to your Account. We use only Details you have confirmed. You withdraw that permission by disconnecting the profile or emailing us.",
+            "You remain responsible for your own website, your profiles with other parties and your arrangements with those parties.",
+            "A free check of another business is allowed. You then do not use the report to mislead or harm that business or others.",
+          ],
+        },
+        {
+          h: "Your account and fair use",
+          p: [
+            "You sign in with a link we send to your email address. Keep access to that address to yourself and tell us straight away if someone else seems to have access to your Account.",
+            "You are responsible for what happens through your Account, including when an employee acts on behalf of your business.",
+            "You may not:",
+            [
+              "use the Service in breach of the law or of the rights of others;",
+              "request checks automatically or in large numbers, or get around our security or limits;",
+              "copy, take apart or rebuild the software behind Vidalo, or use the Service to make a competing service;",
+              "resell the Service or your Account or make them available to others; sharing your own reports is allowed;",
+              "have incorrect or misleading Details published.",
+            ],
+            "We may check whether you comply with these terms. If you do not, we may block your Account or part of the Service. We will tell you in advance, unless immediate action is needed, for example in case of fraud, abuse or a security risk.",
+          ],
+        },
+        {
+          h: "Facts page, published content and notices",
+          p: [
+            "The Facts page shows only Details you have confirmed, with the date you confirmed them. The page is on your own domain or at another address we show you.",
+            "We store and publish that content for you. Content that is unlawful or breaches these terms, such as incorrect details about another business or an infringement of the rights of others, we may refuse, adjust or take offline. We do so carefully and in proportion to the problem.",
+            "Anyone can report content they consider unlawful, at support@vidalo.io. Include in the notice:",
+            [
+              "why you consider the content unlawful;",
+              "the exact web address of the content;",
+              "your name and email address, except for a notice about child sexual abuse;",
+              "that you make the notice in good faith and that the information in it is accurate and complete.",
+            ],
+            "We confirm that we received a notice, assess it carefully and tell the person who made it what we decide. We do not use automated decision-making for this.",
+            "If we remove content of yours or restrict your Account, we tell you what we did, why, on the basis of which rule and how to object. You object at support@vidalo.io; a person reviews it.",
+            "support@vidalo.io is also our point of contact for authorities and users under the Digital Services Act (DSA). You can reach us there in Dutch and English.",
+            "When your Plan ends, the Facts page redirects to your own website. If you delete your data, the page disappears.",
+          ],
+        },
+        {
+          h: "Prices and payment",
+          p: [
+            "Set it right costs €149 once. Keep it right costs €49 per month. All prices are in euros, excluding 21% VAT and other government charges. The free check costs nothing.",
+            "You pay in advance through our payment service Stripe, by iDEAL, card or SEPA Direct Debit. Keep it right is charged automatically every month. You receive an invoice for each payment.",
+            "A paid part starts only once your payment has arrived. With SEPA Direct Debit that can take a few working days.",
+            "If a payment fails, Stripe tries again a few times and you are notified. If it still fails, we may suspend the subscription until it is paid. If a payment is still outstanding after sixty days, we may end the subscription.",
+            "If you do not pay on time, you are in default without a reminder and we may charge the statutory commercial interest and the reasonable costs of collection.",
+            "We may change our prices. We will tell you about a new price for a running subscription at least thirty days in advance. If you do not agree, you can cancel before the new price takes effect.",
+            "You may not set off an amount you owe us against an amount you say we owe you, and you may not suspend your payment.",
+          ],
+        },
+        {
+          h: "Term, cancelling and pausing",
+          p: [
+            "Set it right is a one-off assignment. Keep it right is a monthly subscription that renews every month until you cancel.",
+            "You can cancel Keep it right whenever you want, online under ‘Subscription’ in your Account. There is no notice period: the month you already paid for runs out, after which you pay nothing more. You immediately receive a confirmation by email with the end date. Until that date you can withdraw the cancellation.",
+            "When you cancel, the amount for the current month is not refunded: the Service continues until the end date. The amount for Set it right is not refunded once we have started on it.",
+            "If within thirty days of your payment we cannot start Set it right because the proof of management in article 5 does not succeed, you may terminate the Agreement. We then refund what you paid for the Plan.",
+            "You can pause Keep it right for 1, 2 or 3 months under ‘Subscription’. During that time we do not check or fix anything and you pay nothing; your Facts page stays online. You receive a confirmation by email and a reminder a week before the end. On the end date the subscription continues automatically at the regular price. You can resume earlier or cancel during the pause. You cannot pause while a payment is outstanding.",
+            "When your subscription ends, we stop checking and fixing, and your Facts page redirects to your own website. What has already been fixed at other parties stays there. What we do with your data afterwards is stated in our privacy policy.",
+            "You can also cancel by email to support@vidalo.io. You then receive the same confirmation.",
+          ],
+        },
+        {
+          h: "Suspension and termination by Vidalo",
+          p: [
+            "We may suspend the Service in whole or in part if:",
+            [
+              "you do not pay on time;",
+              "you breach these terms, in particular article 6 or 7;",
+              "there is a security risk;",
+              "a law or an authority requires it.",
+            ],
+            "We will tell you in writing as soon as possible.",
+            "We may terminate the Agreement without court intervention if:",
+            [
+              "you fail to perform an essential obligation and do not remedy it within fourteen days after we gave you written notice of default;",
+              "you are declared bankrupt or granted a suspension of payments, or otherwise lose control of your assets;",
+              "your business stops or is liquidated.",
+            ],
+            "What we delivered and invoiced before the termination remains payable.",
+            "If we stop Vidalo as a whole, we will tell you at least two months in advance and refund what you paid in advance for the time after that.",
+          ],
+        },
+        {
+          h: "Intellectual property",
+          p: [
+            "The software, the design of the reports, the questions, the texts and the Vidalo brand belong to us or our licensors. For as long as the Agreement runs, you receive a non-exclusive, non-transferable right to use the Service under these terms.",
+            "You may use, keep, print and share your reports for your own business, also after the Agreement ends.",
+            "For as long as the Agreement runs, you give us the right to use, publish and send to sources the Details, your business name and your logo, to the extent the Service requires.",
+            "We may derive general figures from checks, for example how often AI assistants get a certain kind of question wrong, to improve the Service and to publish about it. Such figures cannot be traced back to you or your business.",
+            "We indemnify you against claims by others that the Vidalo software infringes their intellectual property in the European Union, provided you inform us in writing straight away and leave the handling, including any settlement, to us. This does not apply if the infringement results from a change or from use in breach of these terms, nor to answers of AI assistants that we show in a report: those belong to the party that gives them.",
+          ],
+        },
+        {
+          h: "The assistant on our website",
+          p: [
+            "On vidalo.io you can ask questions to an assistant. That assistant is an AI system, not a person; the chat window says so too.",
+            "The assistant answers only questions about Vidalo, using information from our own website. An answer may be incomplete or wrong and does not bind us. What these terms, the pricing page and your confirmation say prevails.",
+            "The assistant gives no legal, tax or other personal advice. Do not type personal data or confidential information into the chat window. If you want to talk to a person, email support@vidalo.io.",
+          ],
+        },
+        {
+          h: "Personal data",
+          p: [
+            "To the extent we process personal data in providing the Service, we do so as an independent controller within the meaning of the General Data Protection Regulation (GDPR), in accordance with our privacy policy at vidalo.io/en/privacy.",
+            "If you confirm Details that contain personal data, such as the name or phone number of an employee, you make sure you may share them and have them published.",
+            "We protect personal data with appropriate technical and organisational measures. We expect the same of you.",
+          ],
+        },
+        {
+          h: "Confidentiality",
+          p: [
+            "We keep secret the confidential information we receive from each other under the Agreement. Confidential means information marked as such, or that you can reasonably understand to be confidential.",
+            "This does not apply to information:",
+            [
+              "that is made public with the other party's permission;",
+              "that is already generally known;",
+              "that must be disclosed under the law or by order of a court or regulator; the recipient then tells the other party in advance, where permitted;",
+              "that was lawfully obtained from a third party without a duty of confidentiality.",
+            ],
+            "You use confidential information only for the purpose for which it was given.",
+          ],
+        },
+        {
+          h: "Liability",
+          p: [
+            "Our total liability, on whatever ground, is limited to compensation of direct damage, up to at most the amount (excluding VAT) you paid us for the Service in the twelve months before the damage arose.",
+            "We are not liable for indirect damage. This includes in any case: consequential damage, lost profit or revenue, missed savings, reduced goodwill, damage from business interruption, damage from claims or fines of others, and loss or corruption of data.",
+            "We are not liable for what AI assistants, search engines, directories or other parties say or do about your business, for decisions you base on a report, or for damage because Details you confirmed were wrong.",
+            "We are not liable for the free check and the assistant on our website, which cost nothing.",
+            "Liability arises only if you give us written notice of default straight away, with a reasonable period to remedy the failure, and we still fail after that. Describe the failure as precisely as possible so we can respond properly.",
+            "A claim for damages lapses if you have not held us liable in writing within twelve months after you discovered the damage, or could reasonably have discovered it.",
+            "The limitations in this article do not apply in case of intent or deliberate recklessness of Vidalo or its management.",
+            "You indemnify us against claims and fines of others resulting from Details you had published, or from use of the Service in breach of the law or these terms.",
+          ],
+        },
+        {
+          h: "Force majeure",
+          p: [
+            "We are not liable if we cannot perform our obligations because of force majeure: a circumstance beyond our control, such as a fault or change at an AI assistant or at a hosting, payment or email service, a change in their terms or access, an internet or power outage, a cyberattack, a government measure, a natural disaster or a pandemic.",
+            "In case of force majeure we suspend our obligations for as long as it lasts. If it lasts longer than sixty days, either of us may terminate the Agreement. We refund what you paid in advance for the time after the termination.",
+          ],
+        },
+        {
+          h: "Other provisions",
+          p: [
+            "You do not transfer your rights and obligations under the Agreement without our written permission.",
+            "We may transfer our rights and obligations under the Agreement to another business that continues the Service. We will tell you in advance; you can then cancel with effect from the day of the transfer.",
+            "We communicate with you through the email address of your Account. An email to that address counts as in writing.",
+          ],
+        },
+        {
+          h: "Governing law and disputes",
+          p: [
+            "The Agreement and these terms are governed exclusively by Dutch law. The Vienna Sales Convention (CISG) does not apply.",
+            "If we cannot resolve a dispute together, the competent court of the District Court of Rotterdam decides.",
+          ],
+        },
       ],
     },
     privacy: {
       title: "Privacy policy",
-      intro: "Vidalo is a trade name of A101 B.V. This page sets out which data we use, why, and with whom we share it. This is a translation; the Dutch text is the binding version.",
+      intro: "This privacy policy applies to the personal data processed by A101 B.V., trading as Vidalo: on vidalo.io, in the free check, in your account, in the plans and facts pages, in our emails and in the assistant on our website.",
       sections: [
-        { h: "Which data", p: ["About your business: name, town, address, phone number, website, opening hours, services and other details you confirm. These are usually not personal data, unless your business carries your own name.", "About you: your email address, to log in and to send your reports. When you pay, Stripe processes your payment details; we do not see them.", "About the check: the questions we ask, the answers of AI assistants and the sources they mention.", "On the coming-soon list: your email address, the language of the page, when you signed up and the sentence with which you gave consent."] },
-        { h: "Why", p: ["To carry out the check, fix errors, email you about your report and invoice your subscription. After a free check we send you a reminder after 7 and after 21 days. Every email has an unsubscribe link; after that we send nothing more. The legal basis is the agreement with you, and for a free check our legitimate interest in being able to give you a report.", "If you put yourself on the coming-soon list, we email you when Vidalo opens. No newsletter and no advertising for anything else. The basis is your consent; you withdraw it by emailing hello@vidalo.io, and we then take your address off the list."] },
-        { h: "With whom we share data", p: ["Supabase (database and login, storage in the EU). OpenAI, Google, Perplexity and SerpAPI to ask the questions; we only send business details, no email addresses. Google and the KvK to find your business. Stripe for payments. Resend for email. Cloudflare for your facts page.", "Some of these parties process data outside the EU. That happens on the basis of the European Commission's standard contractual clauses or the EU-US Data Privacy Framework."] },
-        { h: "How long", p: ["A report from a free check can be seen through the link for 30 days. We keep the data of a paid plan for as long as you are a customer. 90 days after your subscription ends we do one more free check; after that we only keep what the law requires for invoices.", "We keep the coming-soon list until we have emailed everyone about the opening; then we delete it. If you unsubscribe earlier, we take you off at once."] },
-        { h: "Your rights", p: ["You may access your data, have it corrected or deleted, and object. Email us; we respond within a month. If you disagree with us, you can file a complaint with the Autoriteit Persoonsgegevens (the Dutch Data Protection Authority)."] },
+        {
+          h: "Who is responsible",
+          p: [
+            "The controller is A101 B.V., trading as Vidalo, Factorij 80, 3071 AV Rotterdam, the Netherlands, KvK 42057858.",
+            "For questions and requests about your data, email support@vidalo.io, call +31 85 109 1393 or write to the address above. We have no data protection officer; we are not required to.",
+          ],
+        },
+        {
+          h: "Who this is about",
+          p: [
+            "Vidalo is for businesses. Mostly we process details about a business, such as name, address and opening hours. Those are personal data when they relate to a person, for example a sole trader trading under the owner's name.",
+            "We also process details about the people who deal with us: who requests a check, who has an account or is a customer, who emails or calls us, who joins the ‘Coming soon’ list and who visits our website.",
+          ],
+        },
+        {
+          h: "The free check",
+          p: [
+            "When you request a free check, we look up the business and ask AI assistants questions about it.",
+            [
+              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, if you want the report by email. To limit abuse we keep an irreversibly encrypted form of your IP address per day.",
+              "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website and the sources AI assistants name.",
+              "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
+              "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, the periods under ‘A paid plan’ apply.",
+            ],
+            "If someone else checked your business, we use only public business details. If you do not want that, email us and we will delete that check.",
+          ],
+        },
+        {
+          h: "Reminders after a free check",
+          p: [
+            "If you gave your email address for the report, we send you a short reminder about the result 7 and 21 days later.",
+            [
+              "Data: your email address and the name of the business.",
+              "Basis: our legitimate interest in helping you with the result of a check you requested yourself.",
+              "Retention: until you unsubscribe or until the second reminder. Every email has a one-click unsubscribe link; after that we no longer send you these emails.",
+            ],
+          ],
+        },
+        {
+          h: "Your account and signing in",
+          p: [
+            [
+              "Data: your email address, a number for your account, when you signed in, your language and which emails you want to receive.",
+              "Basis: the performance of the agreement with you (article 6(1)(b) GDPR).",
+              "Retention: as long as your account exists. You delete your account yourself, see ‘Your rights’.",
+            ],
+          ],
+        },
+        {
+          h: "Proof that you manage the business",
+          p: [
+            "Before we publish a business's details or ask for something on its behalf, you have to show that you manage the business. An email address alone is not proof.",
+            [
+              "With Google: Google gives us a number for your account and which business profiles you manage. If it matches, we keep when the proof was given and the access key Google gives us, so we can update your business profile. We never see your password.",
+              "With a code by phone: we call or text a code to the phone number Google Maps lists for the business; you do not type that number yourself. This goes through Twilio, which processes the number, the code and the details of the call or message. We keep only a partly hidden number (such as 020 ••• ••67), whether the code was right, when, and who asked.",
+              "Basis: the performance of the agreement with you.",
+              "Retention: as long as your account exists, or until you disconnect Google.",
+            ],
+            "If we add another way to give the proof, we will add it to this privacy policy before we use it.",
+          ],
+        },
+        {
+          h: "A paid plan",
+          p: [
+            [
+              "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix.",
+              "What we do with it: we publish your confirmed details on your facts page, which anyone can see. We send them to sources containing an error to ask for a fix, and to your Google Business Profile if you connect it. AI assistants receive business details only, never your email address.",
+              "Basis: the performance of the agreement with you.",
+              "Retention: as long as you are a customer. After your subscription ends we keep your data for another 90 days. We then do one more free check and delete your data within 30 days after that. Only what the law requires for our accounts we keep for 7 years. What has been fixed at another party stays there.",
+            ],
+          ],
+        },
+        {
+          h: "Payment and invoices",
+          p: [
+            "You pay through Stripe. Stripe processes your payment details as an independent controller, under its own privacy policy; we do not see your card or account number.",
+            [
+              "Data: your name, billing address, VAT number, email address, a Stripe customer number and whether your payment succeeded.",
+              "Basis: the performance of the agreement and our legal obligation to keep accounts (article 6(1)(b) and (c) GDPR).",
+              "Retention: invoices and the data on them for 7 years, because Dutch tax law requires it.",
+            ],
+          ],
+        },
+        {
+          h: "Contact and support",
+          p: [
+            "If you email, call or message us, we use your data to help you.",
+            [
+              "Data: your name, email address or phone number, your message and our reply.",
+              "Basis: our legitimate interest in answering your question, or the performance of the agreement if you are a customer.",
+              "Retention: up to 2 years after the last contact, unless the message belongs to your customer records or our accounts.",
+            ],
+            "If you send us a WhatsApp message, WhatsApp (Meta) also processes that message under its own terms.",
+          ],
+        },
+        {
+          h: "The assistant on our website",
+          p: [
+            "The assistant on vidalo.io is an AI system. To answer, we send your question and the earlier messages of the same conversation to OpenAI.",
+            [
+              "Data: what you type in the chat window. We do not store the conversation; it exists only in your browser tab. To limit abuse we keep your IP address in memory for a few minutes.",
+              "Basis: our legitimate interest in answering questions about Vidalo quickly.",
+              "Do not type personal data or confidential information into the chat window.",
+            ],
+          ],
+        },
+        {
+          h: "The ‘Coming soon’ list",
+          p: [
+            "If you join the list on the ‘Coming soon’ page, we email you once when Vidalo opens. No newsletter and no advertising for anything else.",
+            [
+              "Data: your email address, the language of the page, the time you signed up and the sentence with which you gave consent.",
+              "Basis: your consent (article 6(1)(a) GDPR). You withdraw it by emailing hello@vidalo.io; we then remove your address from the list straight away.",
+              "Retention: until we have emailed everyone about the opening; then we delete the list.",
+            ],
+          ],
+        },
+        {
+          h: "Your visit to the website",
+          p: [
+            "Our website runs on Cloudflare. On every visit Cloudflare receives your IP address, your browser and the page you request, to deliver the page and protect the site.",
+            "On the free check and on signing in we use Cloudflare Turnstile to tell people from robots. To do so, Turnstile reads characteristics of your browser and device.",
+            "Basis: our legitimate interest in a website that works and is secure. We do not measure visitor statistics, set no advertising cookies and do not follow you across other websites. Which cookies we use is stated in our cookie policy.",
+          ],
+        },
+        {
+          h: "Who we share data with",
+          p: [
+            "We do not sell data. We share it only with parties we need for the Service, with whom we have agreed on security and confidentiality:",
+            [
+              "Supabase: database and sign-in; stored in the EU (Ireland).",
+              "Cloudflare: hosting of the website and the facts pages, security and Turnstile; a worldwide network of a US company.",
+              "Stripe: payments and invoices; EU and United States.",
+              "Resend: sending our emails; United States.",
+              "Google: our mailbox (Google Workspace), business details from Google Maps, Gemini, signing in with Google and your business profile; EU and United States.",
+              "OpenAI: ChatGPT for the checks, and the assistant on our website; United States.",
+              "Twilio: calling or texting the code with which you show that you manage the business; United States.",
+              "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
+              "The KvK: we look up a business in the Trade Register by name and place.",
+              "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",
+            ],
+            "Otherwise we give data to others only with your consent, or when the law requires us to.",
+          ],
+        },
+        {
+          h: "Data outside the European Economic Area",
+          p: [
+            "Some of these parties process data in the United States. We base that transfer on the European Commission's decision on the EU-US Data Privacy Framework where the party is certified under it, and otherwise on the European Commission's standard contractual clauses, with additional measures where needed. If you want to know which safeguard applies to a party, email us.",
+          ],
+        },
+        {
+          h: "Automatic assessment",
+          p: [
+            "We automatically compare answers of AI assistants with the details of a business. That is an assessment of an answer, not a decision about you. We take no decisions based solely on automated processing that have legal or similarly significant effects on you, and we do not profile people.",
+          ],
+        },
+        {
+          h: "Security",
+          p: [
+            "We protect data with appropriate technical and organisational measures: encrypted connections, sign-in without a password, access per account to your own data only, as few people with access as possible, and checks against abuse. If we discover a data breach that poses a risk to you, we inform you and the Dutch Data Protection Authority as the law requires.",
+          ],
+        },
+        {
+          h: "Your rights",
+          p: [
+            "You have the right to access your data, have it corrected or deleted, have its processing restricted, receive your data in a common file format, and withdraw a consent. Withdrawal works for the future.",
+            "Much of this you can do yourself, under ‘Account’ in your account: under ‘Your data’ you download everything we keep about your business, and delete everything once your subscription has ended. There you also choose which emails you want to receive.",
+            "For anything else, email support@vidalo.io. We respond within a month. Sometimes we first ask you to show that the request comes from you.",
+            "Providing data is not a legal requirement. Without an email address we cannot send you a report or give you an account, and without payment and business details we cannot deliver a plan.",
+          ],
+        },
+        {
+          h: "Your right to object",
+          p: [
+            "Where we process your data on the basis of our legitimate interest, you can object at any time on grounds relating to your particular situation. We then stop, unless we have compelling reasons that override it. Against emails you can switch off, your objection always works: unsubscribing takes one click.",
+          ],
+        },
+        {
+          h: "A complaint",
+          p: [
+            "If you disagree with us, please tell us first so we can find a solution together. You can also always lodge a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens), at autoriteitpersoonsgegevens.nl.",
+          ],
+        },
+        {
+          h: "Changes",
+          p: [
+            "We update this privacy policy when the Service or the law changes. The new version is on this page, with its date. If we are going to use data for a new purpose, we tell you in advance so you can object.",
+          ],
+        },
       ],
     },
     cookies: {
       title: "Cookies",
-      intro: "Vidalo only uses cookies the site needs to work. No tracking cookies, no advertising cookies. This page lists exactly what we store on your device.",
+      intro: "Vidalo uses only cookies that are needed to make the website work. No tracking cookies, no advertising cookies, no statistics. Here is exactly what we put on your device and what other parties do.",
       sections: [
-        { h: "What a cookie is", p: ["A cookie is a small file a website stores on your device so the site recognises you when you change pages or come back. The same applies to browser storage (local storage); we use none of it."] },
+        { h: "What a cookie is", p: ["A cookie is a small file a website puts on your device so the site recognises you when you change pages or come back. Where this cookie policy speaks of cookies, it also means similar techniques for storing or reading data on your device, such as browser storage (local storage). We do not use that storage."] },
+        { h: "Consent", p: ["Cookies needed to make the site work may be set without consent (article 11.7a of the Dutch Telecommunications Act); we do tell you they are there. We use no other cookies. If we ever do, for example for visitor statistics, we will ask for your consent first, with a button to refuse that is as easy as the button to accept, and set nothing before you choose."] },
         {
           h: "Which cookies we set",
-          p: ["Every cookie below is necessary. No consent is needed for these; we do tell you they exist."],
+          p: ["All cookies below are necessary and come from vidalo.io itself."],
           table: {
-            head: ["Name", "What for", "How long"],
+            head: ["Name", "Purpose", "Duration"],
             rows: [
-              ["vidalo_consent", "Remembers that you have seen the cookie notice and which choice you made.", "12 months"],
-              ["sb-…-auth-token", "Keeps you signed in to your account (Supabase, passwordless sign-in).", "Until you sign out, at most 400 days"],
-              ["sb-…-code-verifier", "During sign-in: ties the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 400 days"],
-              ["vidalo_google_state", "While connecting your Google Business Profile: protects that step against misuse.", "10 minutes"],
-              ["vidalo_preview", "Only while the site is being built: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
+              ["vidalo_consent", "Remembers that you saw the cookie notice and what you chose.", "12 months"],
+              ["sb-…-auth-token", "Keeps you signed in to your account (via Supabase, sign-in without a password).", "Until you sign out, at most 400 days"],
+              ["sb-…-auth-token-code-verifier", "While signing in: links the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 400 days"],
+              ["vidalo_google_state", "While connecting your Google account: protects that step against misuse.", "10 minutes"],
+              ["vidalo_preview", "Only while the site is not yet open: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
             ],
           },
         },
-        { h: "Statistics and marketing", p: ["We measure nothing at the moment and set no third-party cookies. Should we ever keep visitor statistics, we will ask your consent first, with a refuse button the same size as the accept button. Until then there is nothing to switch off."] },
-        { h: "Other parties", p: ["When you pay you go to a Stripe page; Stripe's cookies and privacy policy apply there. When you connect your Google Business Profile you sign in with Google; Google's rules apply there. On vidalo.io itself we load no scripts, fonts or buttons from other parties."] },
-        { h: "Changing your choice", p: ["As soon as there is something to choose, ‘Cookie settings’ sits at the bottom of every page. It shows your choice and lets you change it. You can also delete cookies in your browser settings."] },
+        { h: "Other parties", p: ["On the free check and on signing in we load Cloudflare Turnstile from challenges.cloudflare.com. Turnstile reads characteristics of your browser and device to tell people from robots. This is needed to protect the check and signing in against abuse. See Cloudflare's privacy policy at cloudflare.com/privacypolicy.", "If you pay, you go to a Stripe page; Stripe's cookie policy and privacy policy apply there. If you connect your Google account, you sign in at Google; Google's rules apply there.", "Otherwise we load no scripts, fonts, buttons or advertisements from other parties on vidalo.io. If we add a service of another party, it will be listed here before we use it."] },
+        { h: "Changing your choice", p: ["As soon as there is something to choose, ‘Cookie settings’ appears at the foot of every page. There you see your choice and change it. You can also always delete cookies through your browser settings; you will then be signed out."] },
+        { h: "More information", p: ["How we handle your data and which rights you have is stated in our privacy policy at vidalo.io/en/privacy. We update this cookie policy when the site changes; the date at the top says which version you are reading."] },
       ],
     },
   },
@@ -1761,6 +2165,11 @@ export const en: CopyShape = {
     noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Start with a free check and have the report emailed to this address: then you will find your business here.`,
     startCheck: "Start a free check",
     otherEmail: "Another email address? Log out",
+    linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
+    signedInAs: (email: string) => `You are signed in as ${email}.`,
+    linkBusiness: (name: string, place: string) => `Link ${name} (${place}) to this account?`,
+    linkButton: "Yes, link this business",
+    linkTaken: "This business is already linked to another account. Email support@vidalo.io if that is wrong.",
   },
 
   dashboard: {
@@ -1795,6 +2204,225 @@ export const en: CopyShape = {
     noScan: "No check carried out yet.",
     viewReport: "View report",
     factsPage: "View facts page",
+
+    checkTitle: (date: string) => `Check of ${date}`,
+    checkIntro: (questions: number, engines: number, perQuestion: number, wrongQuestions: number, notFoundQuestions: number) =>
+      `We asked ${questions} ${questions === 1 ? "question" : "questions"} of ${engines} AI ${engines === 1 ? "system" : "systems"}, ${perQuestion} times each. ` +
+      (wrongQuestions === 0 ? "Every answer was right" : `On ${wrongQuestions} ${wrongQuestions === 1 ? "question" : "questions"} at least one system gave a wrong answer`) +
+      (notFoundQuestions > 0 ? `; on ${notFoundQuestions} ${notFoundQuestions === 1 ? "question" : "questions"} a system found nothing.` : "."),
+    sinceLine: (date: string, found: number, resolved: number, open: number) => `Since ${date}: ${found} new, ${resolved} fixed, ${open} still open.`,
+    firstFull: "This was the first full check.",
+    fullReport: "Full report",
+    compare: "Compare the checks in Progress",
+    whatNow: "What now",
+    whatNowIntro: (you: number, us: number) =>
+      [you === 0 ? "Nothing is waiting for you." : `${you === 1 ? "One thing is" : `${you} things are`} waiting for you.`, us === 0 ? "" : `${us === 1 ? "One is" : `${us} are`} running with us; nothing for you to do.`].filter(Boolean).join(" "),
+    you: {
+      website: (host: string) => `Change the text on ${host}.`,
+      websiteBody: (wrong: string, engine: string, correct: string) => `It still says "${wrong}"; ${engine} reads that out. It should be: ${correct}.`,
+      openPage: "Open the page",
+      markFixed: "I have changed this",
+      details: "Details and evidence",
+      gbp: (n: number) => `Approve ${n} ${n === 1 ? "change" : "changes"} to your Google Business Profile.`,
+      gbpBody: (fields: string) => `${fields}. We change nothing before you have seen it.`,
+      viewChanges: "View the changes",
+      google: "Connect Google and confirm you are the owner.",
+      googleBody: "That tells us you run this business; before that we publish and fix nothing.",
+      facts: "Confirm your details.",
+      factsBody: "Right once; then we put them everywhere.",
+      domain: (host: string) => `Connect ${host}.`,
+      domainBody: "One line with your domain provider; then your facts page is under your own name and Google reads it as your source.",
+      setup: "Set up",
+    },
+    atUs: "Running with us",
+    atUsLine: (label: string, date: string | null) => (date ? `${label} Again on ${date}.` : label),
+    details: "Details",
+    perEngine: "Per AI system",
+    engineLine: (total: number, wrong: number, notFound: number) => {
+      const parts: string[] = [];
+      if (wrong > 0) parts.push(`${wrong} of ${total} wrong`);
+      if (notFound > 0) parts.push(`${notFound} nothing`);
+      return parts.length ? parts.join(", ") : total > 0 ? `${total} of ${total} right` : "not asked";
+    },
+    answers: "Answers",
+    engineLegend: "Red: an answer sends customers away. Amber: wrong details. Green: all right. Grey: the system finds nothing about you. The trend per system is in Progress.",
+    open: "Still open",
+    source: (source: string) => `Source: ${source}.`,
+    weLine: (label: string, date: string | null) => `We: ${label.charAt(0).toLowerCase()}${label.slice(1)}${date ? ` Again ${date}.` : ""}`,
+    youLine: "You: change the text on your website.",
+    view: "View",
+    log: "Log",
+    logEmpty: "Nothing done yet.",
+    olderLog: "Older log",
+    logLine: {
+      scanFinished: (kind: string) => `${kind} carried out.`,
+      scanRequested: "Extra check requested.",
+      fixOpened: {
+        republish: "Facts page published again and submitted to the search engines.",
+        sync: "The right details put back into the source.",
+        form: "Correction submitted to the directory.",
+        email: "Correction request sent to the source on your behalf.",
+        manual: "Mailed you which text on your website must change.",
+        none: "No source to fix; we ask again when a new version of the model is out.",
+      },
+      resolved: (days: number) => `Fixed after ${days} ${days === 1 ? "day" : "days"}.`,
+      stillWrong: (date: string | null) => `Asked again: still wrong.${date ? ` Next time ${date}.` : ""}`,
+      unfixable: (note: string) => `Cannot be fixed: ${note}`,
+      ownerMarkedFixed: "You: changed. Recheck scheduled.",
+      disputed: "You: this is right. Details to be changed.",
+      published: (version: number) => `Facts page published, version ${version}.`,
+      synced: (n: number, held: number) => `${n} ${n === 1 ? "source" : "sources"} aligned${held > 0 ? `, ${held} ${held === 1 ? "change waits" : "changes wait"} for you` : ""}.`,
+      diffApproved: "Change to your Google Business Profile approved.",
+      diffDeclined: "Change to your Google Business Profile not applied.",
+      factsConfirmed: (version: number) => `Details confirmed, version ${version}.`,
+      ownerVerified: "Google connected; owner confirmed.",
+      mail: (subject: string) => `Mail sent: ${subject}`,
+    },
+    proofLabels: { finding: "View", report: "Report", factsPage: "Facts page", channel: "Google's answer", facts: "Details" },
+    nextCheck: "Next check",
+    nextCheckNote: (day: number, rechecks: string) => `Every month on day ${day}.${rechecks ? ` In between we ask only the wrong answers again: ${rechecks}.` : ""}`,
+    expand: "Add more",
+    expandItems: [
+      { title: "Extra full check", body: "Every question, every system, today.", cta: "Request a check", subject: "Extra check" },
+      { title: "More AI systems", body: "New systems join once enough people in the Netherlands use them; you get a message.", cta: "Let me know", subject: "More AI systems" },
+      { title: "Second location", body: "Its own facts page, its own check, one overview.", cta: "Add a location", subject: "Second location" },
+    ],
+    expandNote: "Prices follow; mail us and we arrange it.",
+    sources: "Sources",
+    sourceWaiting: (n: number) => `${n} ${n === 1 ? "change waits" : "changes wait"} for you`,
+    allSources: (n: number) => `All ${n} sources`,
+    proof: "Fixed",
+    allProof: (n: number) => `All ${n} fixes, with before and after`,
+    subscription: "Subscription",
+    subscriptionLine: (plan: string, date: string | null) => `${plan}.${date ? ` Next invoice ${date}.` : ""}`,
+    invoicesLink: "Invoices and cancelling",
+  },
+
+  findingPage: {
+    back: "Overview",
+    meta: (status: string, since: string, found: string, fact: string) => `${status} since ${since} · found ${found} · ${fact}`,
+    h1: (engine: string, wrong: string) => `${engine} says: ${wrong}.`,
+    h1NotFound: (engine: string) => `${engine} finds nothing about this.`,
+    intro: (question: string, engine: string, frequency: number, count: number, wrong: string, correct: string, source: string) =>
+      `Asked "${question}", ${engine} answered ${wrong} ${frequency} of ${count} times. That is wrong: ${correct}. The source is ${source}.`,
+    introNotFound: (question: string, engine: string, frequency: number, count: number, correct: string) =>
+      `Asked "${question}", ${engine} found nothing ${frequency} of ${count} times. The answer is: ${correct}. No source says so; we make one.`,
+    whatNow: "What now",
+    nowOn: (host: string) => `Now on ${host}`,
+    wrongThere: (wrong: string) => `It still says: ${wrong}.`,
+    replaceBy: "Put",
+    openPage: "Open the page",
+    websiteNote: (date: string | null) => `We cannot change your website. Once it is changed, tell us with the button beside this; then we ask again within an hour${date ? ` instead of on ${date}` : ""}.`,
+    weDo: (label: string, date: string | null) => `${label}${date ? ` We ask again on ${date}.` : ""}`,
+    saidTitle: (engine: string) => `What ${engine} actually said`,
+    askedTimes: (n: number, date: string) => `asked ${n} times on ${date}`,
+    noSamples: "The literal answers of this check were not kept.",
+    others: (right: string[], notFound: string[], wrong: string[]) =>
+      [
+        right.length ? `${joinEn(right)} got it right.` : "",
+        notFound.length ? `${joinEn(notFound)} found nothing.` : "",
+        wrong.length ? `${joinEn(wrong)} got it wrong too.` : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    sourceTitle: "Where it comes from",
+    sourceMeta: (type: string, date: string) => `${type}, read by us on ${date}`,
+    sourceCited: (n: number, total: number) => `${n} of the ${total} answers ${n === 1 ? "names" : "name"} this source.`,
+    sourceNone: "No source named: the answer comes from the model's memory.",
+    didTitle: "What we did",
+    found: (engine: string, frequency: number, count: number) => `Found in the check: ${engine}, ${frequency} of ${count} times.`,
+    planned: (engine: string) => `Planned: the same question again to ${engine}. Earlier if you change the source earlier.`,
+    notPlanned: "No recheck planned.",
+    evidence: {
+      publish: (version: number | null) => `Facts page published again${version ? `, version ${version}` : ""}.`,
+      sync: (channel: string, status: string) => `${channel}: details put back (${status}).`,
+      syncMany: (n: number) => `${n} sources aligned.`,
+      email: (to: string) => `Correction request sent on your behalf to ${to}.`,
+      emailFollowUp: (day: string) => `Reminder sent after ${day} days.`,
+      ownerMail: "Mailed you which text on your website must change, with the new text.",
+      ownerReminder: (day: string) => `Reminder sent to you after ${day} days.`,
+      form: "Correction submitted to the directory by our staff.",
+      recheck: (outcome: string) => (outcome === "resolved" ? "Asked again: fixed." : "Asked again: still wrong."),
+      escalated: "Handed to a member of staff.",
+      ownerMarked: "You: changed.",
+      disputed: "You: this is right.",
+      note: "No source to fix; again when a new version of the model is out.",
+    },
+    proof: { report: "Report", factsPage: "Facts page", channel: "Source", mail: "The mail" },
+    rail: {
+      you: "You",
+      youWebsite: (date: string | null) => `Changed the text on your website? Tell us; then we ask again within an hour${date ? ` instead of on ${date}` : ""}.`,
+      youOther: "Changed the source yourself? Tell us; then we ask again within an hour.",
+      markFixed: "I have changed this",
+      dispute: "This is right",
+      disputeNote: "Is the answer right and are your details wrong? Choose \"This is right\": your details open on this field, you change it and confirm. After that this is no longer an error.",
+      status: "Status",
+      steps: { found: "Found", fixing: "In progress", recheck: "Recheck", resolved: "Fixed", unfixable: "Cannot be fixed" },
+      resolvedWhen: "once the answer is right",
+      orEarlier: "or earlier",
+      questions: "Questions",
+      support: (ref: string) => `Mail support@vidalo.io and mention "${ref}". We answer within a working day.`,
+    },
+    flash: {
+      scheduled: "Thanks. We ask again within an hour.",
+      none: "No fix is running for this error; the next check picks it up.",
+    },
+    notFound: "This error does not exist, or does not belong to your business.",
+  },
+
+  channelPage: {
+    back: "Overview",
+    meta: (status: string, since: string | null) => (since ? `${status} · connected ${since}` : status),
+    h1Pending: (name: string, n: number) => `${name}: ${n} ${n === 1 ? "line differs" : "lines differ"}.`,
+    h1Same: (name: string) => `${name}: matches your details.`,
+    h1Other: (name: string) => name,
+    introPending: (version: number | null, date: string | null) =>
+      `Google still has an older version of your details${version && date ? `; on ${date} you confirmed version ${version}` : ""}. Below is your profile as Google shows it now and as it will be. We change nothing before you approve it.`,
+    introSame: "Everything we keep up to date is on Google as it is in your details.",
+    introDirectory: "We do not change this directory ourselves: we send a correction on your behalf and keep the evidence. Below is what differs and what we did.",
+    introDeclined: (date: string) => `On ${date} you chose not to apply this change. Google still shows the old lines; the next check reports the difference again.`,
+    introApproved: (date: string) => `You approved this change on ${date}. We put it on Google within an hour; Google's answer then shows here.`,
+    openAtGoogle: "Open your profile at Google",
+    viewFacts: "View details",
+    now: "Now on Google",
+    nowGeneric: "Now in the source",
+    after: "After the change",
+    fromFacts: (version: number | null) => (version ? `from your details, version ${version}` : "from your details"),
+    field: { phone: "Phone", website: "Website", address: "Address", hours: "Opening hours" },
+    empty: "empty",
+    same: "same",
+    whatNow: "What now",
+    approveIntro: "Approve the change, or leave everything as it is. Google usually shows the change within an hour. After 7 days we ask the AI systems whether they picked it up. You can always put it back.",
+    approve: "Apply on Google",
+    decline: "Do not apply",
+    fixFactsNote: "Is a line in your details itself wrong?",
+    fixFactsLink: "Change your details first",
+    fixFactsAfter: "; then we prepare a new change.",
+    lastSync: "Last sync",
+    when: "When",
+    updated: "Updated",
+    held: "Waiting for you",
+    answer: "The source's answer",
+    answerGoogle: "Google's answer",
+    answerOk: "updated",
+    answerHeld: "waiting for you",
+    answerFailed: "failed",
+    answerMock: "test mode, nothing sent",
+    approvedBy: "Approved by",
+    byYou: (date: string) => `you, ${date}`,
+    nothingChanged: "nothing, all was the same already",
+    noSync: "Not synced yet.",
+    earlier: "Earlier syncs",
+    syncLine: (date: string, n: number, status: string) =>
+      `${date} · ${n === 0 ? "all the same" : status === "synced" ? `${n} ${n === 1 ? "field" : "fields"} aligned` : status === "mismatch" ? `${n} ${n === 1 ? "field differs" : "fields differ"}` : `${n} ${n === 1 ? "field" : "fields"} reported, ${status.toLowerCase()}`}`,
+    next: "Next: after your approval above, then every month after the check.",
+    nextDirectory: "Next: every month after the check, and a reminder 30 days after a correction.",
+    flash: {
+      approved: "Approved. We put the change on Google within an hour.",
+      declined: "Not applied. Your profile stays as it is.",
+      nothing: "No change was waiting.",
+    },
+    notFound: "This source does not exist, or does not belong to your business.",
   },
 
   progress: {
@@ -1916,6 +2544,7 @@ export const en: CopyShape = {
     intro: "This is what we publish everywhere. Check it carefully, once.",
     provisionalNotice: "We took these details from your website and Google. They have not been confirmed yet.",
     verifiedNotice: (date: string) => `Confirmed on ${date}.`,
+    disputedNotice: (fact: string) => `You said the AI's answer is right and your details about ${fact.toLowerCase()} are wrong. Change the field below and confirm; the next check reads your new details.`,
     groups: {
       basics: "Business",
       contact: "Contact",
