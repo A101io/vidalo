@@ -1,5 +1,5 @@
 /**
- * The country of a business (ISO 3166-1 alpha-2, business.country, migration 0013).
+ * The country of a business (ISO 3166-1 alpha-2, business.country, migration 0014).
  *
  * Vidalo started in the Netherlands and also serves businesses elsewhere. The country decides:
  *  - the scan language: Dutch for NL, English everywhere else (scanLang);

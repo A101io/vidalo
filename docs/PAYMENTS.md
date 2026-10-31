@@ -14,7 +14,7 @@ charging €149 flat for a price shown excl. btw would cost 21% on every sale.
 
 ### Businesses outside the Netherlands (26 Oct 2026)
 
-A business has a country (`business.country`, migration 0013). For a business
+A business has a country (`business.country`, migration 0014). For a business
 abroad the fixed 21% is wrong (an EU business with a valid VAT number gets
 reverse charge, one outside the EU no Dutch VAT), so:
 
