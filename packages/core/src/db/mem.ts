@@ -86,6 +86,7 @@ export class MemDb implements Db {
       slug,
       name: input.name,
       place: input.place,
+      country: "NL",
       domain: null,
       kvk: null,
       googlePlaceId: null,

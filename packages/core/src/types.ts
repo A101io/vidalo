@@ -42,6 +42,8 @@ export interface Business {
   slug: string;
   name: string;
   place: string; // city / town
+  /** ISO 3166-1 alpha-2 ("NL", "DE"); picks the scan language, phone reading and facts page (shared/country.ts). */
+  country: string;
   domain: string | null;
   kvk: string | null;
   googlePlaceId: string | null;
@@ -89,6 +91,11 @@ export interface Facts {
   createdAt?: string;
   name: string;
   place: string;
+  /**
+   * The business's country (business.country), copied in where facts are loaded for a scan or the
+   * facts page so phone numbers and the language follow it. Not owner-entered; absent = "NL".
+   */
+  country?: string;
   address: string | null;
   postcode: string | null;
   phone: string | null;

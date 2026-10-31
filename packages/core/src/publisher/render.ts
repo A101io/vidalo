@@ -2,11 +2,112 @@
  * Renders the facts page for a business: plain, dated, semantic HTML with
  * JSON-LD (schema.org LocalBusiness), an llms.txt and a sitemap.
  *
- * No JavaScript, minimal inline CSS, readable on a phone. Everything in Dutch.
+ * No JavaScript, minimal inline CSS, readable on a phone. Dutch for a business
+ * in the Netherlands, English for one abroad (shared/country.ts scanLang), with
+ * the business's country and currency.
  * The page is the owner-asserted source of truth that AI assistants can cite.
  */
 import { businessNoun } from "../prompts/sectors.js";
+import { currencyOf, scanLang, withCountry, type ScanLang } from "../shared/country.js";
 import type { Business, Facts, Hours, PriceItem } from "../types.js";
+
+/** Every word on the page, per language. */
+const T = {
+  nl: {
+    days: ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"],
+    closed: "gesloten",
+    within: (km: number, place: string) => `binnen ${km} km van ${place}`,
+    noUrgency: "Geen spoeddienst.",
+    urgency: "Spoeddienst beschikbaar",
+    tempClosed: "Tijdelijk gesloten.",
+    permClosed: "Definitief gesloten.",
+    open: "Dit bedrijf is open en actief.",
+    statusWord: { open: "open", temporarily_closed: "tijdelijk gesloten", permanently_closed: "definitief gesloten" },
+    factsAbout: (n: string, p: string) => `Feiten over ${n} in ${p}, bevestigd door de eigenaar.`,
+    source: "Bron",
+    address: "Adres",
+    phone: "Telefoon",
+    email: "E-mail",
+    kvk: "KvK",
+    kvkLong: "KvK-nummer",
+    hours: "Openingstijden",
+    services: "Diensten",
+    yes: "Wel",
+    no: "Niet",
+    prices: "Prijzen",
+    pricesVat: "Prijzen inclusief btw, tenzij anders vermeld.",
+    policies: "Afspraken en beleid",
+    payment: "Betalen",
+    area: "Werkgebied",
+    urgent: "Spoed",
+    credentials: "Erkenningen",
+    notConfused: "Niet te verwarren met",
+    lastChecked: "Laatst gecontroleerd",
+    lastConfirmed: "Laatst bevestigd door de eigenaar",
+    title: (n: string, p: string) => `${n} in ${p} – feiten en openingstijden`,
+    call: "Bellen",
+    route: "Route",
+    about: "Over",
+    isA: (n: string, noun: string, p: string) => `${n} is een ${noun} in ${p}.`,
+    business: "bedrijf",
+    contact: "Adres en contact",
+    description: (n: string, p: string) => `Openingstijden, adres, telefoonnummer en diensten van ${n} in ${p}. Bevestigd door de eigenaar.`,
+    tagline: "Feiten en openingstijden, zoals vastgelegd door de eigenaar.",
+    checkedOn: "Laatst gecontroleerd op",
+    confirmedOn: "Laatst bevestigd door de eigenaar op",
+    notConfirmed: "Nog niet bevestigd door de eigenaar.",
+    official: (n: string, v: number) => `Deze pagina is de officiële feitenpagina van ${n}. Versie ${v}. Vaste link:`,
+    textVersion: "Tekstversie",
+  },
+  en: {
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    closed: "closed",
+    within: (km: number, place: string) => `within ${km} km of ${place}`,
+    noUrgency: "No emergency service.",
+    urgency: "Emergency service available",
+    tempClosed: "Temporarily closed.",
+    permClosed: "Permanently closed.",
+    open: "This business is open and operating.",
+    statusWord: { open: "open", temporarily_closed: "temporarily closed", permanently_closed: "permanently closed" },
+    factsAbout: (n: string, p: string) => `Facts about ${n} in ${p}, confirmed by the owner.`,
+    source: "Source",
+    address: "Address",
+    phone: "Phone",
+    email: "Email",
+    kvk: "KvK",
+    kvkLong: "Dutch Chamber of Commerce (KvK) number",
+    hours: "Opening hours",
+    services: "Services",
+    yes: "Yes",
+    no: "Not",
+    prices: "Prices",
+    pricesVat: "Prices include VAT unless stated otherwise.",
+    policies: "Policies",
+    payment: "Payment",
+    area: "Service area",
+    urgent: "Emergencies",
+    credentials: "Accreditations",
+    notConfused: "Not to be confused with",
+    lastChecked: "Last checked",
+    lastConfirmed: "Last confirmed by the owner",
+    title: (n: string, p: string) => `${n} in ${p} – facts and opening hours`,
+    call: "Call",
+    route: "Directions",
+    about: "About",
+    isA: (n: string, _noun: string, p: string) => `${n} is a business in ${p}.`,
+    business: "business",
+    contact: "Address and contact",
+    description: (n: string, p: string) => `Opening hours, address, phone number and services of ${n} in ${p}. Confirmed by the owner.`,
+    tagline: "Facts and opening hours, as recorded by the owner.",
+    checkedOn: "Last checked on",
+    confirmedOn: "Last confirmed by the owner on",
+    notConfirmed: "Not yet confirmed by the owner.",
+    official: (n: string, v: number) => `This page is the official facts page of ${n}. Version ${v}. Permanent link:`,
+    textVersion: "Text version",
+  },
+} as const;
+
+const langOf = (facts: Facts): ScanLang => scanLang(facts.country);
 
 export interface RenderOptions {
   /** Host the page is served on, e.g. "feiten.bakkerij-jansen.nl". Defaults to the business facts host fallback. */
@@ -36,6 +137,12 @@ const MONTHS_NL = [
   "januari", "februari", "maart", "april", "mei", "juni",
   "juli", "augustus", "september", "oktober", "november", "december",
 ];
+
+/** "7 October 2026" for a page in English. */
+function formatDate(iso: string | Date, lang: ScanLang): string {
+  if (lang === "nl") return formatDateNl(iso);
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", day: "numeric", month: "long", year: "numeric" }).format(typeof iso === "string" ? new Date(iso) : iso);
+}
 
 /** "7 oktober 2026" in Europe/Amsterdam. */
 export function formatDateNl(iso: string | Date): string {
@@ -85,18 +192,23 @@ export function defaultFactsHost(business: Pick<Business, "slug">): string {
   return `${business.slug}.feiten.${suffix}`;
 }
 
-function formatPrice(p: PriceItem): string {
-  const amount = p.amount.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `€ ${amount}${p.unit ? ` ${p.unit}` : ""}`;
+function formatPrice(p: PriceItem, facts: Facts): string {
+  const currency = currencyOf(facts.country);
+  if (currency === "EUR" && langOf(facts) === "nl") {
+    const amount = p.amount.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `€ ${amount}${p.unit ? ` ${p.unit}` : ""}`;
+  }
+  const amount = new Intl.NumberFormat("en-GB", { style: "currency", currency, minimumFractionDigits: 2 }).format(p.amount);
+  return `${amount}${p.unit ? ` ${p.unit}` : ""}`;
 }
 
-function hoursRows(hours: Hours[]): { day: string; text: string; schema: Record<string, unknown> | null; dayIdx: number }[] {
+function hoursRows(hours: Hours[], lang: ScanLang = "nl"): { day: string; text: string; schema: Record<string, unknown> | null; dayIdx: number }[] {
   const byDay = new Map<number, Hours>();
   for (const h of hours) byDay.set(h.day, h);
-  return DAY_NAMES_NL.map((day, idx) => {
+  return T[lang].days.map((day, idx) => {
     const h = byDay.get(idx);
     if (!h || h.closed || !h.open || !h.close) {
-      return { day, text: "gesloten", schema: null, dayIdx: idx };
+      return { day, text: T[lang].closed, schema: null, dayIdx: idx };
     }
     return {
       day,
@@ -118,29 +230,32 @@ export function serviceAreaLine(facts: Facts): string | null {
   if (!area) return null;
   const parts: string[] = [];
   if (area.places.length) parts.push(area.places.join(", "));
-  if (area.radiusKm != null) parts.push(`binnen ${area.radiusKm} km van ${facts.place}`);
+  if (area.radiusKm != null) parts.push(T[langOf(facts)].within(area.radiusKm, facts.place));
   return parts.length ? parts.join("; ") : null;
 }
 
 export function urgencyLine(facts: Facts): string | null {
   const u = facts.urgency;
   if (!u) return null;
-  if (!u.available) return "Geen spoeddienst.";
-  return u.hoursNl ? `Spoeddienst beschikbaar: ${u.hoursNl}.` : "Spoeddienst beschikbaar.";
+  const t = T[langOf(facts)];
+  if (!u.available) return t.noUrgency;
+  return u.hoursNl ? `${t.urgency}: ${u.hoursNl}.` : `${t.urgency}.`;
 }
 
 function openStatusLine(facts: Facts): string {
+  const t = T[langOf(facts)];
   switch (facts.openStatus) {
     case "temporarily_closed":
-      return "Tijdelijk gesloten.";
+      return t.tempClosed;
     case "permanently_closed":
-      return "Definitief gesloten.";
+      return t.permClosed;
     default:
-      return "Dit bedrijf is open en actief.";
+      return t.open;
   }
 }
 
 export function buildJsonLd(facts: Facts, business: Business, canonicalUrl: string): Record<string, unknown> {
+  facts = facts.country ? facts : withCountry(facts, business);
   const rows = hoursRows(facts.hours);
   const sameAs: string[] = [];
   const website = safeWebUrl(facts.website);
@@ -157,7 +272,7 @@ export function buildJsonLd(facts: Facts, business: Business, canonicalUrl: stri
       streetAddress: facts.address ?? undefined,
       postalCode: facts.postcode ?? undefined,
       addressLocality: facts.place,
-      addressCountry: "NL",
+      addressCountry: facts.country ?? business.country ?? "NL",
     },
     openingHoursSpecification: rows.filter((r) => r.schema).map((r) => r.schema),
   };
@@ -169,7 +284,7 @@ export function buildJsonLd(facts: Facts, business: Business, canonicalUrl: stri
     ld.makesOffer = facts.prices.map((p) => ({
       "@type": "Offer",
       name: p.label,
-      priceCurrency: "EUR",
+      priceCurrency: currencyOf(facts.country),
       price: p.amount.toFixed(2),
       ...(p.unit ? { description: p.unit } : {}),
     }));
@@ -181,7 +296,7 @@ export function buildJsonLd(facts: Facts, business: Business, canonicalUrl: stri
   if (area && (area.places.length || area.radiusKm != null)) {
     const served: Record<string, unknown>[] = area.places.map((p) => ({ "@type": "City", name: p }));
     if (area.radiusKm != null) {
-      served.push({ "@type": "GeoCircle", geoMidpoint: { "@type": "PostalAddress", addressLocality: facts.place, addressCountry: "NL" }, geoRadius: `${area.radiusKm * 1000}` });
+      served.push({ "@type": "GeoCircle", geoMidpoint: { "@type": "PostalAddress", addressLocality: facts.place, addressCountry: facts.country ?? business.country ?? "NL" }, geoRadius: `${area.radiusKm * 1000}` });
     }
     ld.areaServed = served.length === 1 ? served[0] : served;
   }
@@ -198,67 +313,69 @@ export function buildJsonLd(facts: Facts, business: Business, canonicalUrl: stri
 }
 
 export function buildLlmsTxt(facts: Facts, business: Business, canonicalUrl: string, checkedAt: string): string {
+  facts = facts.country ? facts : withCountry(facts, business);
+  const t = T[langOf(facts)];
   const lines: string[] = [];
   lines.push(`# ${facts.name} (${facts.place})`);
   lines.push("");
-  lines.push(`> Feiten over ${facts.name} in ${facts.place}, bevestigd door de eigenaar. Bron: ${canonicalUrl}`);
+  lines.push(`> ${t.factsAbout(facts.name, facts.place)} ${t.source}: ${canonicalUrl}`);
   lines.push("");
-  lines.push(`- Status: ${facts.openStatus === "open" ? "open" : facts.openStatus === "temporarily_closed" ? "tijdelijk gesloten" : "definitief gesloten"}`);
-  if (facts.address) lines.push(`- Adres: ${facts.address}${facts.postcode ? `, ${facts.postcode}` : ""} ${facts.place}`);
-  if (facts.phone) lines.push(`- Telefoon: ${facts.phone}`);
-  if (facts.email) lines.push(`- E-mail: ${facts.email}`);
+  lines.push(`- Status: ${t.statusWord[facts.openStatus]}`);
+  if (facts.address) lines.push(`- ${t.address}: ${facts.address}${facts.postcode ? `, ${facts.postcode}` : ""} ${facts.place}`);
+  if (facts.phone) lines.push(`- ${t.phone}: ${facts.phone}`);
+  if (facts.email) lines.push(`- ${t.email}: ${facts.email}`);
   const website = safeWebUrl(facts.website);
   if (website) lines.push(`- Website: ${website}`);
-  if (business.kvk) lines.push(`- KvK: ${business.kvk}`);
+  if (business.kvk) lines.push(`- ${t.kvk}: ${business.kvk}`);
   lines.push("");
-  lines.push("## Openingstijden");
-  for (const r of hoursRows(facts.hours)) lines.push(`- ${r.day}: ${r.text}`);
+  lines.push(`## ${t.hours}`);
+  for (const r of hoursRows(facts.hours, langOf(facts))) lines.push(`- ${r.day}: ${r.text}`);
   if (facts.servicesYes.length || facts.servicesNo.length) {
     lines.push("");
-    lines.push("## Diensten");
-    for (const s of facts.servicesYes) lines.push(`- Wel: ${s}`);
-    for (const s of facts.servicesNo) lines.push(`- Niet: ${s}`);
+    lines.push(`## ${t.services}`);
+    for (const s of facts.servicesYes) lines.push(`- ${t.yes}: ${s}`);
+    for (const s of facts.servicesNo) lines.push(`- ${t.no}: ${s}`);
   }
   if (facts.prices.length) {
     lines.push("");
-    lines.push("## Prijzen");
-    for (const p of facts.prices) lines.push(`- ${p.label}: ${formatPrice(p)}`);
+    lines.push(`## ${t.prices}`);
+    for (const p of facts.prices) lines.push(`- ${p.label}: ${formatPrice(p, facts)}`);
   }
   if (facts.policies.length) {
     lines.push("");
-    lines.push("## Afspraken en beleid");
+    lines.push(`## ${t.policies}`);
     for (const p of facts.policies) lines.push(`- ${p}`);
   }
   if (facts.paymentMethods.length) {
     lines.push("");
-    lines.push("## Betalen");
+    lines.push(`## ${t.payment}`);
     lines.push(`- ${facts.paymentMethods.join(", ")}`);
   }
   const areaLine = serviceAreaLine(facts);
   if (areaLine) {
     lines.push("");
-    lines.push("## Werkgebied");
+    lines.push(`## ${t.area}`);
     lines.push(`- ${areaLine}`);
   }
   const urgency = urgencyLine(facts);
   if (urgency) {
     lines.push("");
-    lines.push("## Spoed");
+    lines.push(`## ${t.urgent}`);
     lines.push(`- ${urgency}`);
   }
   if (facts.credentials?.length) {
     lines.push("");
-    lines.push("## Erkenningen");
+    lines.push(`## ${t.credentials}`);
     for (const c of facts.credentials) lines.push(`- ${c}`);
   }
   if (facts.notConfusedWith.length) {
     lines.push("");
-    lines.push("## Niet te verwarren met");
+    lines.push(`## ${t.notConfused}`);
     for (const n of facts.notConfusedWith) lines.push(`- ${n}`);
   }
   lines.push("");
-  lines.push(`Laatst gecontroleerd: ${isoDate(checkedAt)}`);
-  if (facts.verifiedAt) lines.push(`Laatst bevestigd door de eigenaar: ${isoDate(facts.verifiedAt)}`);
+  lines.push(`${t.lastChecked}: ${isoDate(checkedAt)}`);
+  if (facts.verifiedAt) lines.push(`${t.lastConfirmed}: ${isoDate(facts.verifiedAt)}`);
   return lines.join("\n") + "\n";
 }
 
@@ -314,6 +431,7 @@ function list(items: string[], prefix = "", cls = ""): string {
  * Render the facts page. Pure: no I/O.
  */
 export function renderFactsPage(facts: Facts, business: Business, opts: RenderOptions = {}): RenderedFactsPage {
+  facts = facts.country ? facts : withCountry(facts, business);
   const host = opts.host ?? defaultFactsHost(business);
   const protocol = opts.protocol ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
   const canonicalUrl = opts.canonicalUrl ?? `${protocol}://${host}/`;
@@ -324,37 +442,39 @@ export function renderFactsPage(facts: Facts, business: Business, opts: RenderOp
   const llmsTxt = buildLlmsTxt(facts, business, canonicalUrl, checkedAt);
   const sitemapXml = buildSitemap(canonicalUrl, lastmod);
 
-  const title = `${facts.name} in ${facts.place} – feiten en openingstijden`;
-  const rows = hoursRows(facts.hours);
+  const lang = langOf(facts);
+  const t = T[lang];
+  const title = t.title(facts.name, facts.place);
+  const rows = hoursRows(facts.hours, lang);
   const addressLine = [facts.address, [facts.postcode, facts.place].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
   const phoneHref = facts.phone ? `tel:${facts.phone.replace(/\s+/g, "")}` : null;
   const routeHref = addressLine ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${facts.name}, ${addressLine}`)}` : null;
   const actions = [
-    phoneHref ? `<a class="btn btn-primary" href="${escapeHtml(phoneHref)}">Bellen</a>` : "",
-    routeHref ? `<a class="btn ${phoneHref ? "btn-secondary" : "btn-primary"}" href="${escapeHtml(routeHref)}">Route</a>` : "",
+    phoneHref ? `<a class="btn btn-primary" href="${escapeHtml(phoneHref)}">${t.call}</a>` : "",
+    routeHref ? `<a class="btn ${phoneHref ? "btn-secondary" : "btn-primary"}" href="${escapeHtml(routeHref)}">${t.route}</a>` : "",
   ].filter(Boolean);
 
   const sections: string[] = [];
 
   sections.push(`<section id="over">
-<h2>Over</h2>
-<p>${escapeHtml(facts.name)} is een ${escapeHtml(businessNoun(facts, business.sector) ?? "bedrijf")} in ${escapeHtml(facts.place)}. ${escapeHtml(openStatusLine(facts))}</p>
-${business.kvk ? `<p class="meta">KvK-nummer: ${escapeHtml(business.kvk)}</p>` : ""}
+<h2>${t.about}</h2>
+<p>${escapeHtml(t.isA(facts.name, businessNoun(facts, business.sector) ?? t.business, facts.place))} ${escapeHtml(openStatusLine(facts))}</p>
+${business.kvk ? `<p class="meta">${t.kvkLong}: ${escapeHtml(business.kvk)}</p>` : ""}
 </section>`);
 
   sections.push(`<section id="contact">
-<h2>Adres en contact</h2>
+<h2>${t.contact}</h2>
 <dl>
-${addressLine ? `<dt>Adres</dt><dd>${escapeHtml(addressLine)}</dd>` : ""}
-${facts.phone ? `<dt>Telefoon</dt><dd><a href="tel:${escapeHtml(facts.phone.replace(/\s+/g, ""))}">${escapeHtml(facts.phone)}</a></dd>` : ""}
-${facts.email ? `<dt>E-mail</dt><dd><a href="mailto:${escapeHtml(facts.email)}">${escapeHtml(facts.email)}</a></dd>` : ""}
+${addressLine ? `<dt>${t.address}</dt><dd>${escapeHtml(addressLine)}</dd>` : ""}
+${facts.phone ? `<dt>${t.phone}</dt><dd><a href="tel:${escapeHtml(facts.phone.replace(/\s+/g, ""))}">${escapeHtml(facts.phone)}</a></dd>` : ""}
+${facts.email ? `<dt>${t.email}</dt><dd><a href="mailto:${escapeHtml(facts.email)}">${escapeHtml(facts.email)}</a></dd>` : ""}
 ${safeWebUrl(facts.website) ? `<dt>Website</dt><dd><a href="${escapeHtml(safeWebUrl(facts.website)!)}" rel="me">${escapeHtml(facts.website!)}</a></dd>` : ""}
 </dl>
 </section>`);
 
   sections.push(`<section id="openingstijden">
-<h2>Openingstijden</h2>
+<h2>${t.hours}</h2>
 <table>
 <tbody>
 ${rows.map((r) => `<tr><th scope="row">${r.day}</th><td>${escapeHtml(r.text)}</td></tr>`).join("\n")}
@@ -364,34 +484,34 @@ ${rows.map((r) => `<tr><th scope="row">${r.day}</th><td>${escapeHtml(r.text)}</t
 
   if (facts.servicesYes.length || facts.servicesNo.length) {
     sections.push(`<section id="diensten">
-<h2>Diensten</h2>
-${facts.servicesYes.length ? (facts.servicesNo.length ? `<p>Wel:</p>${list(facts.servicesYes)}` : list(facts.servicesYes, "", "chips")) : ""}
-${facts.servicesNo.length ? `<p>Niet:</p>${list(facts.servicesNo, "Niet: ")}` : ""}
+<h2>${t.services}</h2>
+${facts.servicesYes.length ? (facts.servicesNo.length ? `<p>${t.yes}:</p>${list(facts.servicesYes)}` : list(facts.servicesYes, "", "chips")) : ""}
+${facts.servicesNo.length ? `<p>${t.no}:</p>${list(facts.servicesNo, `${t.no}: `)}` : ""}
 </section>`);
   }
 
   if (facts.prices.length) {
     sections.push(`<section id="prijzen">
-<h2>Prijzen</h2>
+<h2>${t.prices}</h2>
 <table>
 <tbody>
-${facts.prices.map((p) => `<tr><th scope="row">${escapeHtml(p.label)}</th><td>${escapeHtml(formatPrice(p))}</td></tr>`).join("\n")}
+${facts.prices.map((p) => `<tr><th scope="row">${escapeHtml(p.label)}</th><td>${escapeHtml(formatPrice(p, facts))}</td></tr>`).join("\n")}
 </tbody>
 </table>
-${facts.prices.every((p) => /btw/i.test(p.unit ?? "")) ? "" : `<p class="meta">Prijzen inclusief btw, tenzij anders vermeld.</p>`}
+${facts.prices.every((p) => /btw|vat/i.test(p.unit ?? "")) ? "" : `<p class="meta">${t.pricesVat}</p>`}
 </section>`);
   }
 
   if (facts.policies.length) {
     sections.push(`<section id="beleid">
-<h2>Afspraken en beleid</h2>
+<h2>${t.policies}</h2>
 ${list(facts.policies)}
 </section>`);
   }
 
   if (facts.paymentMethods.length) {
     sections.push(`<section id="betalen">
-<h2>Betalen</h2>
+<h2>${t.payment}</h2>
 <p>${escapeHtml(facts.paymentMethods.join(", "))}</p>
 </section>`);
   }
@@ -399,7 +519,7 @@ ${list(facts.policies)}
   const areaText = serviceAreaLine(facts);
   if (areaText) {
     sections.push(`<section id="werkgebied">
-<h2>Werkgebied</h2>
+<h2>${t.area}</h2>
 <p>${escapeHtml(areaText)}</p>
 </section>`);
   }
@@ -407,32 +527,32 @@ ${list(facts.policies)}
   const urgencyText = urgencyLine(facts);
   if (urgencyText) {
     sections.push(`<section id="spoed">
-<h2>Spoed</h2>
+<h2>${t.urgent}</h2>
 <p>${escapeHtml(urgencyText)}</p>
 </section>`);
   }
 
   if (facts.credentials?.length) {
     sections.push(`<section id="erkenningen">
-<h2>Erkenningen</h2>
+<h2>${t.credentials}</h2>
 ${list(facts.credentials)}
 </section>`);
   }
 
   if (facts.notConfusedWith.length) {
     sections.push(`<section id="niet-te-verwarren">
-<h2>Niet te verwarren met</h2>
+<h2>${t.notConfused}</h2>
 ${list(facts.notConfusedWith)}
 </section>`);
   }
 
   const html = `<!doctype html>
-<html lang="nl">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-<meta name="description" content="${escapeHtml(`Openingstijden, adres, telefoonnummer en diensten van ${facts.name} in ${facts.place}. Bevestigd door de eigenaar.`)}">
+<meta name="description" content="${escapeHtml(t.description(facts.name, facts.place))}">
 <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
 <link rel="alternate" type="text/plain" href="/llms.txt">
 <link rel="sitemap" type="application/xml" href="/sitemap.xml">
@@ -444,20 +564,20 @@ ${list(facts.notConfusedWith)}
 <body>
 <header>
 <h1>${escapeHtml(facts.name)} in ${escapeHtml(facts.place)}</h1>
-<p class="meta">Feiten en openingstijden, zoals vastgelegd door de eigenaar.</p>
+<p class="meta">${t.tagline}</p>
 ${actions.length ? `<div class="actions">${actions.join("")}</div>` : ""}
-<p class="meta">Laatst gecontroleerd op <time datetime="${escapeHtml(isoDate(checkedAt))}">${escapeHtml(formatDateNl(checkedAt))}</time>.${
+<p class="meta">${t.checkedOn} <time datetime="${escapeHtml(isoDate(checkedAt))}">${escapeHtml(formatDate(checkedAt, lang))}</time>.${
     facts.verifiedAt
-      ? ` Laatst bevestigd door de eigenaar op <time datetime="${escapeHtml(isoDate(facts.verifiedAt))}">${escapeHtml(formatDateNl(facts.verifiedAt))}</time>.`
-      : " Nog niet bevestigd door de eigenaar."
+      ? ` ${t.confirmedOn} <time datetime="${escapeHtml(isoDate(facts.verifiedAt))}">${escapeHtml(formatDate(facts.verifiedAt, lang))}</time>.`
+      : ` ${t.notConfirmed}`
   }</p>
 </header>
 <main>
 ${sections.join("\n")}
 </main>
 <footer>
-<p>Deze pagina is de officiële feitenpagina van ${escapeHtml(facts.name)}. Versie ${facts.version}. Vaste link: <a href="${escapeHtml(canonicalUrl)}">${escapeHtml(canonicalUrl)}</a></p>
-<p><a href="/llms.txt">Tekstversie</a></p>
+<p>${escapeHtml(t.official(facts.name, facts.version))} <a href="${escapeHtml(canonicalUrl)}">${escapeHtml(canonicalUrl)}</a></p>
+<p><a href="/llms.txt">${t.textVersion}</a></p>
 </footer>
 </body>
 </html>

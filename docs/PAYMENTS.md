@@ -12,6 +12,25 @@ Every line carries the 21% NL tax rate (`STRIPE_TAX_RATE_ID`). A live checkout
 without it is refused and the visitor sees "Afrekenen lukt nu even niet":
 charging €149 flat for a price shown excl. btw would cost 21% on every sale.
 
+### Businesses outside the Netherlands (26 Oct 2026)
+
+A business has a country (`business.country`, migration 0014). For a business
+abroad the fixed 21% is wrong (an EU business with a valid VAT number gets
+reverse charge, one outside the EU no Dutch VAT), so:
+
+- `VIDALO_STRIPE_TAX` unset (today, decision 16 Oct stands): checkout for a
+  business outside NL is refused before Stripe, logged as
+  `checkout.refused` / `abroad_no_tax`, and the page says to mail
+  support@vidalo.io. Dutch businesses pay as before.
+- `VIDALO_STRIPE_TAX=1`: `automatic_tax` on every session and no tax rate on
+  the lines; Stripe Tax works it out from the billing address and the VAT
+  number Checkout already collects. Needs, in the Stripe dashboard: Stripe Tax
+  on, the origin address (Factorij 80, Rotterdam), the NL registration, and the
+  prices' `tax_behavior: exclusive` and tax code (`pnpm stripe:setup` already
+  sets both). Stripe charges a fee per transaction for Tax. Switch it on only
+  after the accountant confirms the rules (go-live B6), then update the VAT
+  FAQ (`copy.subscription.faq`, NL and EN) and the abroad answer in the landing FAQ.
+
 ## What a payment does to a business
 
 All of it is in `packages/core/src/billing/index.ts`, tested in

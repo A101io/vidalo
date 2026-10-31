@@ -24,7 +24,7 @@ export function GET() {
 
 > ${nl.pages.home.description}
 
-${nl.tagline} Vidalo is een dienst van A101 B.V. (Rotterdam, KvK 42057858) voor Nederlandse bedrijven. English: ${en.pages.home.description}
+${nl.tagline} Vidalo is een dienst van A101 B.V. (Rotterdam, KvK 42057858) voor bedrijven in Nederland en daarbuiten. English: ${en.pages.home.description}
 
 ## Wat Vidalo doet
 ${steps}

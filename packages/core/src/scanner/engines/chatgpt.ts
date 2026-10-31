@@ -11,7 +11,7 @@
  */
 import OpenAI from "openai";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
-import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
+import { systemFor, ENGINE_TIMEOUT_MS } from "./types";
 import { withTimeout } from "../util";
 import { openAiUserLocation } from "./location";
 
@@ -46,7 +46,7 @@ export const chatgptEngine: EngineClient = {
     const res = await withTimeout(
       openaiClient().responses.create({
         model,
-        instructions: SYSTEM_NL,
+        instructions: systemFor(ctx.business.country),
         input: promptNl,
         tools: [{ type: "web_search", user_location: openAiUserLocation(ctx.business), search_context_size: "low" } as unknown as OpenAI.Responses.Tool],
         temperature: 0.7,

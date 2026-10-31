@@ -13,13 +13,29 @@
       },
       "Overview": {
         "limit": 2000,
-        "nl": "Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.\n\nKlanten googelen steeds minder. Ze vragen het aan AI: hoe laat ben je open, wat is je telefoonnummer, waar zit je. Ze krijgen één antwoord, geen tien links. Dat antwoord bouwt de AI uit wat het online vindt: oude gidsen, Wikipedia, nieuwsberichten, soms een bedrijf met dezelfde naam. Klopt het niet, dan hoor je het als laatste.\n\nVidalo controleert elke maand wat ChatGPT, Gemini, Perplexity en Google AI over je bedrijf zeggen. We vinden de antwoorden die niet kloppen en de bron waar ze vandaan komen. Je legt je gegevens één keer goed vast. Wij publiceren ze op een feitenpagina op je eigen domein, zetten ze goed in de Nederlandse bedrijvengidsen en herstellen fouten bij de bron, met bewijs.\n\nVoor Nederlandse ondernemers met een zaak waar klanten naar vragen: bakkers, kappers, garages, restaurants, praktijken en installateurs.\n\nWe starten binnenkort. Zet je op de lijst op vidalo.io.\n\nVidalo is onderdeel van A101 B.V.",
-        "en": "Your customers ask ChatGPT. We make sure the answer is right.\n\nCustomers search less and ask more. They ask AI: what time do you open, what is your phone number, where are you. They get one answer, not ten links. AI builds that answer from what it finds online: old directories, Wikipedia, news articles, sometimes a business with the same name. When it is wrong, you are the last to hear.\n\nVidalo checks every month what ChatGPT, Gemini, Perplexity and Google AI say about your business. We find the answers that are wrong and the source they come from. You record your details once. We publish them on a facts page on your own domain, correct them in the Dutch business directories and fix errors at the source, with proof.\n\nFor businesses in the Netherlands that customers ask about: bakeries, hair salons, garages, restaurants, practices and installers.\n\nWe open soon. Join the list at vidalo.io.\n\nVidalo is part of A101 B.V."
+        "nl": "Maak je bedrijf klaar voor AI-agents.\n\nJe klanten vragen het steeds vaker aan AI. Straks laten ze een AI-agent het regelen: een tafel reserveren, een afspraak maken, croissants bestellen voor zondag. Zo'n agent kiest op basis van de gegevens die hij kan lezen. Staat er ergens dat je dicht bent, of vindt hij niets, dan gaat hij door naar de volgende. Je merkt het niet.\n\nVidalo zet je gegevens op één plek die agents kunnen lezen: een feitenpagina op je eigen domein, als gewone pagina, als schema.org-gegevens en als llms.txt. Wat erop staat, heb jij bevestigd, met datum. In Nederland houden we dezelfde gegevens ook gelijk in de bedrijvengidsen. We controleren elke maand wat ChatGPT, Gemini, Perplexity en Google AI over je zeggen, zodat je ziet waar het nog niet klopt en waar dat vandaan komt.\n\nNieuwe afspraken voor agents, zoals OKF, MCP en A2A, volgen we. Wordt er een echt gebruikt, dan zetten we je gegevens er ook in.\n\nVoor ondernemers met een zaak waar klanten naar vragen: bakkers, kappers, garages, restaurants, praktijken en installateurs. We beginnen in Nederland en werken ook voor bedrijven daarbuiten.\n\nWe starten binnenkort. Zet je op de lijst op vidalo.io.\n\nVidalo is onderdeel van A101 B.V.",
+        "en": "Get your business ready for AI agents.\n\nYour customers ask AI more and more. Soon they will let an AI agent handle it: book a table, make an appointment, order croissants for Sunday. Such an agent chooses based on the details it can read. If something says you are closed, or it finds nothing, it moves on to the next business. You never notice.\n\nVidalo puts your details in one place agents can read: a facts page on your own domain, as a normal page, as schema.org data and as llms.txt. What it says, you confirmed, with a date. In the Netherlands we also keep the same details consistent in the business directories. We check every month what ChatGPT, Gemini, Perplexity and Google AI say about you, so you see where it is still wrong and where that comes from.\n\nWe follow new agreements for agents, such as OKF, MCP and A2A. Once one is really used, we put your details in it too.\n\nFor businesses that customers ask about: bakeries, hair salons, garages, restaurants, practices and installers. We start in the Netherlands and work for businesses elsewhere too.\n\nWe open soon. Join the list at vidalo.io.\n\nVidalo is part of A101 B.V."
       },
       "Specialties": {
         "limit": 20,
-        "nl": ["AI-antwoordcontrole", "ChatGPT", "Google AI", "Bedrijfsgegevens", "Feitenpagina", "Bedrijvengidsen", "Lokale ondernemers"],
-        "en": ["AI answer checks", "ChatGPT", "Google AI", "Business details", "Facts page", "Business directories", "Local businesses"]
+        "nl": [
+          "AI-agents",
+          "Feitenpagina",
+          "schema.org",
+          "llms.txt",
+          "Bedrijfsgegevens",
+          "Bedrijvengidsen",
+          "Lokale ondernemers"
+        ],
+        "en": [
+          "AI agents",
+          "Facts page",
+          "schema.org",
+          "llms.txt",
+          "Business details",
+          "Business directories",
+          "Local businesses"
+        ]
       },
       "Industry": {
         "limit": 100,
@@ -40,15 +56,15 @@
       },
       "Bio": {
         "limit": 101,
-        "nl": "Wat zegt ChatGPT over jouw zaak? Wij vinden de fouten en herstellen ze bij de bron.",
-        "en": "What does ChatGPT say about your business? We find the errors and fix them at the source."
+        "nl": "Straks regelen AI-agents de klantvraag. Wij zorgen dat ze jouw juiste gegevens kunnen lezen.",
+        "en": "AI agents will soon book for your customers. We make sure they can read your correct details."
       }
     },
     "instagram": {
       "Name": {
         "limit": 30,
-        "nl": "Vidalo · AI-antwoordcontrole",
-        "en": "Vidalo · AI answer checks"
+        "nl": "Vidalo · klaar voor AI-agents",
+        "en": "Vidalo · ready for AI agents"
       },
       "Category": {
         "limit": 100,
@@ -57,8 +73,8 @@
       },
       "Bio": {
         "limit": 150,
-        "nl": "Je klanten vragen het aan ChatGPT.\nWij zorgen dat het antwoord klopt.\nVoor Nederlandse ondernemers. Zet je op de lijst:",
-        "en": "Your customers ask ChatGPT.\nWe make sure the answer is right.\nFor businesses in the Netherlands. Join the list:"
+        "nl": "AI-agents gaan namens je klanten zoeken en boeken.\nWij zorgen dat ze jouw juiste gegevens lezen.\nIn NL en daarbuiten. Zet je op de lijst:",
+        "en": "AI agents will search and book for your customers.\nWe make sure they read your correct details.\nFor businesses everywhere. Join the list:"
       }
     },
     "tiktok": {
@@ -69,8 +85,8 @@
       },
       "Bio": {
         "limit": 80,
-        "nl": "Vraag ChatGPT naar je openingstijden. Klopt het niet? Wij herstellen het.",
-        "en": "Ask ChatGPT for your opening hours. Wrong? We fix it at the source."
+        "nl": "Straks boekt een AI-agent voor je klant. Kan hij jouw gegevens lezen?",
+        "en": "Soon an AI agent books for your customer. Can it read your details?"
       }
     }
   },
@@ -84,16 +100,16 @@
       "en": "We make sure the answer is right."
     },
     "question": {
-      "nl": "Hoe laat is Bakkerij De Vries open op zondag?",
-      "en": "When does Bakkerij De Vries open on Sunday?"
+      "nl": "Regel 12 croissants, zondag 9:00, Haarlem",
+      "en": "Order 12 croissants, Sunday 9:00, Haarlem"
     },
     "answer": {
-      "nl": "Zondag 8:00 tot 14:00",
-      "en": "Sunday 8:00 to 14:00"
+      "nl": "Zondag 8–13 · bestellen: ja",
+      "en": "Sunday 8–13 · orders: yes"
     },
     "verdict": {
-      "nl": "klopt",
-      "en": "correct"
+      "nl": "gelezen",
+      "en": "read"
     },
     "alt": {
       "nl": "Vidalo: Je klanten vragen het aan ChatGPT. Wij zorgen dat het antwoord klopt.",

@@ -14,16 +14,18 @@ Link: https://vidalo.io/en/coming-soon
 Your customers ask ChatGPT. We make sure the answer is right.
 ```
 
-### Overview (929/2000)
+### Overview (1136/2000)
 
 ```
-Your customers ask ChatGPT. We make sure the answer is right.
+Get your business ready for AI agents.
 
-Customers search less and ask more. They ask AI: what time do you open, what is your phone number, where are you. They get one answer, not ten links. AI builds that answer from what it finds online: old directories, Wikipedia, news articles, sometimes a business with the same name. When it is wrong, you are the last to hear.
+Your customers ask AI more and more. Soon they will let an AI agent handle it: book a table, make an appointment, order croissants for Sunday. Such an agent chooses based on the details it can read. If something says you are closed, or it finds nothing, it moves on to the next business. You never notice.
 
-Vidalo checks every month what ChatGPT, Gemini, Perplexity and Google AI say about your business. We find the answers that are wrong and the source they come from. You record your details once. We publish them on a facts page on your own domain, correct them in the Dutch business directories and fix errors at the source, with proof.
+Vidalo puts your details in one place agents can read: a facts page on your own domain, as a normal page, as schema.org data and as llms.txt. What it says, you confirmed, with a date. In the Netherlands we also keep the same details consistent in the business directories. We check every month what ChatGPT, Gemini, Perplexity and Google AI say about you, so you see where it is still wrong and where that comes from.
 
-For businesses in the Netherlands that customers ask about: bakeries, hair salons, garages, restaurants, practices and installers.
+We follow new agreements for agents, such as OKF, MCP and A2A. Once one is really used, we put your details in it too.
+
+For businesses that customers ask about: bakeries, hair salons, garages, restaurants, practices and installers. We start in the Netherlands and work for businesses elsewhere too.
 
 We open soon. Join the list at vidalo.io.
 
@@ -33,23 +35,23 @@ Vidalo is part of A101 B.V.
 ### Specialties (7/20 items)
 
 ```
-AI answer checks
-```
-
-```
-ChatGPT
-```
-
-```
-Google AI
-```
-
-```
-Business details
+AI agents
 ```
 
 ```
 Facts page
+```
+
+```
+schema.org
+```
+
+```
+llms.txt
+```
+
+```
+Business details
 ```
 
 ```
@@ -80,18 +82,18 @@ Vidalo
 Software Company
 ```
 
-### Bio (89/101)
+### Bio (93/101)
 
 ```
-What does ChatGPT say about your business? We find the errors and fix them at the source.
+AI agents will soon book for your customers. We make sure they can read your correct details.
 ```
 
 ## instagram
 
-### Name (25/30)
+### Name (28/30)
 
 ```
-Vidalo · AI answer checks
+Vidalo · ready for AI agents
 ```
 
 ### Category (8/100)
@@ -100,12 +102,12 @@ Vidalo · AI answer checks
 Software
 ```
 
-### Bio (111/150)
+### Bio (137/150)
 
 ```
-Your customers ask ChatGPT.
-We make sure the answer is right.
-For businesses in the Netherlands. Join the list:
+AI agents will search and book for your customers.
+We make sure they read your correct details.
+For businesses everywhere. Join the list:
 ```
 
 ## tiktok
@@ -119,7 +121,7 @@ Vidalo
 ### Bio (67/80)
 
 ```
-Ask ChatGPT for your opening hours. Wrong? We fix it at the source.
+Soon an AI agent books for your customer. Can it read your details?
 ```
 
 ## Banner alt text

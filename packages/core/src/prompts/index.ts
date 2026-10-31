@@ -1,7 +1,9 @@
 /**
- * Dutch prompt templates per FactKey.
+ * Prompt templates per FactKey, in the scan language: Dutch for a business in
+ * the Netherlands, English for one abroad (shared/country.ts scanLang; the
+ * field is still called textNl and holds the question in that language).
  *
- * generatePrompts(facts) builds ~20 prompts a Dutch consumer would plausibly
+ * generatePrompts(facts) builds ~20 prompts a customer would plausibly
  * type into an AI assistant about this business. Each prompt names the fact
  * field(s) it probes in `probes` (e.g. "hours.6", "service:verhuur",
  * "payment:pin") so the extractor and comparer know what to look for.
@@ -10,6 +12,8 @@ import type { FactKey, Facts, Hours, Prompt, SectorSlug } from "../types";
 import { DAY_NAMES_NL, normalizeHours } from "../scanner/normalize";
 import { FACT_KEY_CRITERIUM } from "../criteria";
 import { sectorPrompts, type SectorPromptTemplate } from "./sectors";
+import { sectorPromptsEn } from "./sectors.en";
+import { scanLang, type ScanLang } from "../shared/country";
 
 export * from "./sectors";
 export * from "./rotation";
@@ -19,7 +23,15 @@ export type PromptTemplate = Omit<Prompt, "id" | "businessId">;
 interface Ctx {
   name: string;
   place: string;
+  lang: ScanLang;
 }
+
+const DAY_NAMES_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+
+/** The question in the scan language. */
+const say = (ctx: Ctx, nl: string, en: string) => (ctx.lang === "nl" ? nl : en);
+
+const ctxOf = (facts: Facts): Ctx => ({ name: facts.name, place: facts.place, lang: scanLang(facts.country) });
 
 const t = (category: FactKey, textNl: string, probes: string[]): PromptTemplate => ({ category, textNl, probes, active: true, criterium: FACT_KEY_CRITERIUM[category], kind: "about" });
 
@@ -29,11 +41,12 @@ export function sectorOf(facts: Pick<Facts, "sector">, fallback?: SectorSlug | n
 }
 
 /** Existence: three phrasings so model memory and web answers both get probed. */
-export function existencePrompts({ name, place }: Ctx): PromptTemplate[] {
+export function existencePrompts(ctx: Ctx): PromptTemplate[] {
+  const { name, place } = ctx;
   return [
-    t("existence", `Is ${name} in ${place} nog open?`, ["existence"]),
-    t("existence", `Bestaat ${name} in ${place} nog?`, ["existence"]),
-    t("existence", `Is ${name} in ${place} permanent gesloten?`, ["existence"]),
+    t("existence", say(ctx, `Is ${name} in ${place} nog open?`, `Is ${name} in ${place} still open?`), ["existence"]),
+    t("existence", say(ctx, `Bestaat ${name} in ${place} nog?`, `Does ${name} in ${place} still exist?`), ["existence"]),
+    t("existence", say(ctx, `Is ${name} in ${place} permanent gesloten?`, `Is ${name} in ${place} permanently closed?`), ["existence"]),
   ];
 }
 
@@ -65,54 +78,64 @@ export function hoursPrompts(ctx: Ctx, facts: Facts): PromptTemplate[] {
   const allDays = facts.hours.map((h) => `hours.${h.day}`);
   const unusual = mostUnusualDay(facts.hours);
   const out: PromptTemplate[] = [
-    t("hours", `Wat zijn de openingstijden van ${name} in ${place}?`, allDays.length ? allDays : ["hours"]),
-    t("hours", `Is ${name} in ${place} op zondag open?`, ["hours.6"]),
+    t("hours", say(ctx, `Wat zijn de openingstijden van ${name} in ${place}?`, `What are the opening hours of ${name} in ${place}?`), allDays.length ? allDays : ["hours"]),
+    sundayPrompt(ctx),
   ];
-  if (unusual != null) {
-    out.push(t("hours", `Hoe laat is ${name} in ${place} op ${DAY_NAMES_NL[unusual]} open?`, [`hours.${unusual}`]));
-  } else {
-    out.push(t("hours", `Hoe laat is ${name} in ${place} op zaterdag open?`, ["hours.5"]));
-  }
+  const day = unusual ?? 5;
+  out.push(t("hours", say(ctx, `Hoe laat is ${name} in ${place} op ${DAY_NAMES_NL[day]} open?`, `What time is ${name} in ${place} open on ${DAY_NAMES_EN[day]}?`), [`hours.${day}`]));
   const second = unusual === 5 ? 4 : 5; // one more weekday/saturday probe
-  out.push(t("hours", `Tot hoe laat kan ik op ${DAY_NAMES_NL[second]} terecht bij ${name} in ${place}?`, [`hours.${second}`]));
+  out.push(t("hours", say(ctx, `Tot hoe laat kan ik op ${DAY_NAMES_NL[second]} terecht bij ${name} in ${place}?`, `Until what time can I go to ${name} in ${place} on ${DAY_NAMES_EN[second]}?`), [`hours.${second}`]));
   return out;
 }
 
-export function phonePrompts({ name, place }: Ctx): PromptTemplate[] {
+function sundayPrompt(ctx: Ctx): PromptTemplate {
+  return t("hours", say(ctx, `Is ${ctx.name} in ${ctx.place} op zondag open?`, `Is ${ctx.name} in ${ctx.place} open on Sunday?`), ["hours.6"]);
+}
+
+export function phonePrompts(ctx: Ctx): PromptTemplate[] {
+  const { name, place } = ctx;
   return [
-    t("phone", `Wat is het telefoonnummer van ${name} in ${place}?`, ["phone"]),
-    t("phone", `Hoe kan ik ${name} in ${place} telefonisch bereiken?`, ["phone"]),
+    t("phone", say(ctx, `Wat is het telefoonnummer van ${name} in ${place}?`, `What is the phone number of ${name} in ${place}?`), ["phone"]),
+    t("phone", say(ctx, `Hoe kan ik ${name} in ${place} telefonisch bereiken?`, `How can I reach ${name} in ${place} by phone?`), ["phone"]),
   ];
 }
 
-export function addressPrompts({ name, place }: Ctx): PromptTemplate[] {
-  return [t("address", `Wat is het adres van ${name} in ${place}?`, ["address"])];
+export function addressPrompts(ctx: Ctx): PromptTemplate[] {
+  return [t("address", say(ctx, `Wat is het adres van ${ctx.name} in ${ctx.place}?`, `What is the address of ${ctx.name} in ${ctx.place}?`), ["address"])];
 }
 
-export function websitePrompts({ name, place }: Ctx): PromptTemplate[] {
-  return [t("website", `Wat is de website van ${name} in ${place}?`, ["website"])];
+export function websitePrompts(ctx: Ctx): PromptTemplate[] {
+  return [t("website", say(ctx, `Wat is de website van ${ctx.name} in ${ctx.place}?`, `What is the website of ${ctx.name} in ${ctx.place}?`), ["website"])];
+}
+
+function servicePrompt(ctx: Ctx, service: string): PromptTemplate {
+  return t("service", say(ctx, `Doet ${ctx.name} in ${ctx.place} ook ${service}?`, `Does ${ctx.name} in ${ctx.place} also offer ${service}?`), [`service:${service}`]);
 }
 
 /** Two services the business does offer, two it does not (if known). */
-export function servicePrompts({ name, place }: Ctx, facts: Facts): PromptTemplate[] {
+export function servicePrompts(ctx: Ctx, facts: Facts): PromptTemplate[] {
   const yes = facts.servicesYes.slice(0, 2);
   const no = facts.servicesNo.slice(0, 2);
-  return [
-    ...yes.map((service) => t("service", `Doet ${name} in ${place} ook ${service}?`, [`service:${service}`])),
-    ...no.map((service) => ({ ...t("service", `Doet ${name} in ${place} ook ${service}?`, [`service:${service}`]), criterium: 7 as const })),
-  ];
+  return [...yes.map((service) => servicePrompt(ctx, service)), ...no.map((service) => ({ ...servicePrompt(ctx, service), criterium: 7 as const }))];
 }
 
-export function pricePrompts({ name, place }: Ctx, facts: Facts): PromptTemplate[] {
-  return facts.prices.slice(0, 2).map((p) => t("price", `Wat kost ${p.label} bij ${name} in ${place}?`, [`price:${p.label}`]));
+export function pricePrompts(ctx: Ctx, facts: Facts): PromptTemplate[] {
+  const { name, place } = ctx;
+  return facts.prices.slice(0, 2).map((p) => t("price", say(ctx, `Wat kost ${p.label} bij ${name} in ${place}?`, `How much does ${p.label} cost at ${name} in ${place}?`), [`price:${p.label}`]));
 }
 
-export function policyPrompts({ name, place }: Ctx, facts: Facts): PromptTemplate[] {
-  return facts.policies.slice(0, 2).map((p) => t("policy", `Geldt bij ${name} in ${place}: "${p}"?`, [`policy:${p}`]));
+export function policyPrompts(ctx: Ctx, facts: Facts): PromptTemplate[] {
+  const { name, place } = ctx;
+  return facts.policies.slice(0, 2).map((p) => t("policy", say(ctx, `Geldt bij ${name} in ${place}: "${p}"?`, `Is this true at ${name} in ${place}: "${p}"?`), [`policy:${p}`]));
 }
 
-export function paymentPrompts({ name, place }: Ctx): PromptTemplate[] {
-  return [t("payment", `Kan ik bij ${name} in ${place} pinnen?`, ["payment:pin"])];
+export function paymentPrompts(ctx: Ctx): PromptTemplate[] {
+  return [t("payment", say(ctx, `Kan ik bij ${ctx.name} in ${ctx.place} pinnen?`, `Can I pay by card at ${ctx.name} in ${ctx.place}?`), ["payment:pin"])];
+}
+
+/** The sector pack's questions in the scan language. */
+function sectorFor(facts: Facts, sector: SectorSlug | null): SectorPromptTemplate[] {
+  return scanLang(facts.country) === "nl" ? sectorPrompts(facts, sector) : sectorPromptsEn(facts, sector);
 }
 
 export interface GenerateOptions {
@@ -126,7 +149,7 @@ export interface GenerateOptions {
  * 2 policy + 1 payment = up to 20.
  */
 export function basePrompts(facts: Facts): PromptTemplate[] {
-  const ctx: Ctx = { name: facts.name, place: facts.place };
+  const ctx = ctxOf(facts);
   return [
     ...existencePrompts(ctx),
     ...hoursPrompts(ctx, facts),
@@ -149,7 +172,7 @@ export function basePrompts(facts: Facts): PromptTemplate[] {
 export function generatePrompts(facts: Facts, opts: GenerateOptions = {}): PromptTemplate[] {
   const base = basePrompts(facts);
   const seen = new Set(base.map((p) => p.textNl));
-  const extra: PromptTemplate[] = sectorPrompts(facts, sectorOf(facts, opts.sector)).filter((p) => !seen.has(p.textNl));
+  const extra: PromptTemplate[] = sectorFor(facts, sectorOf(facts, opts.sector)).filter((p) => !seen.has(p.textNl));
   return [...base, ...extra];
 }
 
@@ -166,9 +189,9 @@ const FREE_SCAN_INTENTS = ["quality", "trust", "now", "specialty", "place", "pri
  * business does NOT offer (falls back to one it does), and pin payment.
  */
 export function freeScanPrompts(facts: Facts, opts: GenerateOptions = {}): PromptTemplate[] {
-  const ctx: Ctx = { name: facts.name, place: facts.place };
-  const sunday = t("hours", `Is ${facts.name} in ${facts.place} op zondag open?`, ["hours.6"]);
-  const sector: SectorPromptTemplate[] = sectorPrompts(facts, sectorOf(facts, opts.sector));
+  const ctx = ctxOf(facts);
+  const sunday = sundayPrompt(ctx);
+  const sector: SectorPromptTemplate[] = sectorFor(facts, sectorOf(facts, opts.sector));
   if (sector.length) {
     const out: PromptTemplate[] = [existencePrompts(ctx)[0]!, phonePrompts(ctx)[0]!, sunday];
     const recs = sector.filter((p) => p.kind === "recommendation" && p.pool === "core");
@@ -184,7 +207,7 @@ export function freeScanPrompts(facts: Facts, opts: GenerateOptions = {}): Promp
   }
   const service = facts.servicesNo[0] ?? facts.servicesYes[0];
   const out: PromptTemplate[] = [existencePrompts(ctx)[0]!, sunday, phonePrompts(ctx)[0]!, addressPrompts(ctx)[0]!];
-  if (service) out.push(t("service", `Doet ${facts.name} in ${facts.place} ook ${service}?`, [`service:${service}`]));
+  if (service) out.push(servicePrompt(ctx, service));
   out.push(paymentPrompts(ctx)[0]!);
   return out;
 }

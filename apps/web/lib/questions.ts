@@ -1,6 +1,6 @@
 import type { FactKey, Finding } from "@vidalo/core/types";
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE } from "@vidalo/core/types";
-import { formatPhoneNl } from "@vidalo/core/scanner";
+import { formatPhone } from "@vidalo/core/scanner";
 import type { CopyShape } from "@vidalo/core/copy";
 
 function dayName(subject: string | null, copy: CopyShape): string | null {
@@ -88,7 +88,7 @@ export function humanValue(factKey: FactKey, value: string, subject: string | nu
       return to ? V.range(day, from, to) : `${day} ${value}`.trim();
     }
     case "phone":
-      return value.startsWith("+31") ? formatPhoneNl(value) : value;
+      return value.startsWith("+") ? formatPhone(value) : value;
     case "service":
     case "policy":
     case "payment":
