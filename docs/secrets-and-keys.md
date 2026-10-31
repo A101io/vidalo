@@ -57,7 +57,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `DATABASE_URL` | Supabase → Project `bbynmqvaxpjdnkaasutd` → Connect → pooler, service role | Web + worker host env | `/api/health` returns `"db":"pg"` |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Supabase → API | Web host env | Sign-in email arrives |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API | Worker env only; never `NEXT_PUBLIC_` | Worker claims a job |
-| `OPENAI_API_KEY`, `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY` | Each provider | Worker + web env | A scan with `VIDALO_MOCK=0` has samples from that engine |
+| `OPENAI_API_KEY`, `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `SERPAPI_KEY` | Each provider | Worker + web env | A scan with `VIDALO_MOCK=0` has samples from that engine |
 | `GOOGLE_PLACES_API_KEY`, `KVK_API_KEY` | Google Cloud, KvK | Web env | `/scan/kies` lists businesses |
 | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | Google Cloud OAuth client | Web env | Verification sets `owner_verified_at` |
 | `STRIPE_SECRET_KEY` | Vidalo's own Stripe account (not Sitty `acct_1UA8rHEGTq7D30VV`, not Sonable `acct_1TyIM8EQK4LIWEDd`) | Web env; GitHub environment secret for setup | `pnpm stripe:setup` prints the account id; pin it as `VIDALO_STRIPE_ACCOUNT` |
@@ -81,7 +81,7 @@ One row per step of the customer journey. "Have" means it exists and was checked
 | Database | Supabase project, migrations 0001–0009, Hyperdrive `vidalo-db` | Have (16–18 Oct) |
 | Deploy | Cloudflare token + account id on the GitHub environments, zone `vidalo.io` | Have (16 Oct); `staging` environment exists but is empty |
 | Free check | `OPENAI_API_KEY` (in Julian's local `.env`, valid, 20 Oct; not yet a Worker secret), `GOOGLE_PLACES_API_KEY`, optional `KVK_API_KEY` | Places and KvK open |
-| Other AI systems | `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY` (Google AI answers). Without a key that system is not checked, so copy may not name it | Open |
+| Other AI systems | `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY` (Claude), `SERPAPI_KEY` (Google AI answers). Without a key that system is not checked, so copy may not name it | Open |
 | Sign-in | `SUPABASE_URL`, `SUPABASE_ANON_KEY` as Worker vars; Supabase Auth site URL + redirect URLs for vidalo.io; custom SMTP through Resend | Open (needs Resend) |
 | E-mail | Resend account + `RESEND_API_KEY`, vidalo.io verified (SPF, DKIM, DMARC), `UNSUBSCRIBE_SECRET` (`openssl rand -hex 32`), mailboxes hello@ and support@ (`docs/mail.md`) | Open |
 | Payment | Vidalo's own Stripe account (test mode first), then `pnpm stripe:setup --apply`: prices, 21% tax rate, webhook, portal; Terms and Privacy URLs in Stripe settings | Open |

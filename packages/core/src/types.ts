@@ -193,9 +193,9 @@ export function seasonOf(date: Date): Season {
   return m === 11 || m <= 1 ? "winter" : m <= 4 ? "lente" : m <= 7 ? "zomer" : "herfst";
 }
 
-export type Engine = "chatgpt" | "gemini" | "perplexity" | "google_ai" | "copilot";
+export type Engine = "chatgpt" | "gemini" | "perplexity" | "google_ai" | "copilot" | "claude";
 
-export const ENGINES: Engine[] = ["chatgpt", "gemini", "perplexity", "google_ai", "copilot"];
+export const ENGINES: Engine[] = ["chatgpt", "gemini", "perplexity", "google_ai", "copilot", "claude"];
 
 export const ENGINE_LABEL: Record<Engine, string> = {
   chatgpt: "ChatGPT",
@@ -203,6 +203,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   perplexity: "Perplexity",
   google_ai: "Google AI",
   copilot: "Copilot",
+  claude: "Claude",
 };
 
 export interface Sample {
