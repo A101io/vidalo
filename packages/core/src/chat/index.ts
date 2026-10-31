@@ -50,9 +50,14 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   return lines.filter(Boolean).join("\n");
 }
 
-export function systemPrompt(copy: CopyShape, lang: Lang): string {
+/**
+ * The rules the assistant speaks under, as one list per language. Shared with
+ * the support@ mail responder (../support), so the two channels can never
+ * drift apart on what may be promised or which words are banned.
+ */
+export function assistantRules(lang: Lang): string[] {
   const nl = lang === "nl";
-  const rules = nl
+  return nl
     ? [
         "Je bent de assistent op de website van Vidalo. Je bent een AI en zegt dat als iemand het vraagt.",
         "Je beantwoordt alleen vragen over Vidalo, met de kennis hieronder. Weet je iets niet, zeg dat dan en verwijs naar support@vidalo.io.",
@@ -69,6 +74,11 @@ export function systemPrompt(copy: CopyShape, lang: Lang): string {
         "Write English, informal, short: at most ninety words, usually fewer. Always state amounts as 'excl. VAT'.",
         "Do not ask for personal data. Give no legal, tax or medical advice.",
       ];
+}
+
+export function systemPrompt(copy: CopyShape, lang: Lang): string {
+  const nl = lang === "nl";
+  const rules = assistantRules(lang);
   return `${rules.join("\n")}\n\n${nl ? "KENNIS" : "KNOWLEDGE"}\n${buildKnowledge(copy, lang)}`;
 }
 

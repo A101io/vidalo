@@ -131,6 +131,20 @@ describe("sitecheckEmail", () => {
     expect(m.text).toContain("https://feiten.bakkerijjansen.nl/feiten.json");
     expect(m.text.replace(/User-agent/g, "")).not.toMatch(/!|\b(GEO|AEO|LLM|prompt|credits|zichtbaarheid|platform|agent)\b/i);
   });
+
+  it("speaks English to an owner who chose English", async () => {
+    const r = await checkSite("bakkerijjansen.nl", facts, {
+      fetch: site({ "/robots.txt": [200, "User-agent: OAI-SearchBot\nUser-agent: PerplexityBot\nDisallow: /\n"], "/": [200, '<html><head><meta name="robots" content="noindex"></head></html>'] }),
+    });
+    const m = sitecheckEmail({ name: "Bakkerij Jansen" }, r, { factsPageUrl: "https://feiten.bakkerijjansen.nl/", dashboardUrl: "https://vidalo.io/en/app" }, "en");
+    expect(m.subject).toMatch(/^\d changes on your website for Bakkerij Jansen$/);
+    expect(m.text).toMatch(/^Hi,\n/);
+    expect(m.text).toContain("ChatGPT and Perplexity cannot read your website");
+    expect(m.text).toContain("Your homepage asks search engines to skip it");
+    expect(m.text).toContain("User-agent: OAI-SearchBot\nAllow: /");
+    expect(m.text).toContain("Your overview: https://vidalo.io/en/app");
+    expect(m.text.replace(/User-agent/g, "")).not.toMatch(/!|\b(GEO|AEO|LLM|prompt|credits|visibility|platform|agent|je|Hoi|Groet)\b/i);
+  });
 });
 
 describe("runSiteCheck", () => {

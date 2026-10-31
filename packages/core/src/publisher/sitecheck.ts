@@ -20,6 +20,7 @@ import { getDb, isMock } from "../shared/db.js";
 import { log, errorMessage } from "../shared/log.js";
 import { formatPhoneNl, normalizePhone } from "../scanner/normalize.js";
 import { dashboardUrl } from "../reporter/links.js";
+import { copyFor, type Lang } from "../copy/index.js";
 import { bareDomain, defaultFactsHost } from "./host.js";
 
 export const SITECHECK_USER_AGENT = "Vidalo-Sitecheck/1.0 (+https://vidalo.io)";
@@ -285,67 +286,67 @@ export function issueKey(issue: SiteIssue): string {
 /** Engine names as the owner mail and the domain page say them. */
 export const ENGINE_NAMES: Record<Engine, string> = { chatgpt: "ChatGPT", google_ai: "Google", gemini: "Gemini", copilot: "Copilot", perplexity: "Perplexity", claude: "Claude" };
 
-function joinNl(items: string[]): string {
+function joinList(items: string[], and: string): string {
   if (items.length <= 1) return items.join("");
-  return `${items.slice(0, -1).join(", ")} en ${items.at(-1)}`;
+  return `${items.slice(0, -1).join(", ")} ${and} ${items.at(-1)}`;
 }
 
-/** To the owner: what to change on their own website so the assistants can read it. */
-export function sitecheckEmail(business: Pick<BusinessRecord, "name">, result: SiteCheckResult, links: { factsPageUrl: string; dashboardUrl: string }): { subject: string; text: string } {
+/** To the owner, in their language (copy.mails.siteCheck): what to change on their own website so the assistants can read it. */
+export function sitecheckEmail(business: Pick<BusinessRecord, "name">, result: SiteCheckResult, links: { factsPageUrl: string; dashboardUrl: string }, lang: Lang = "nl"): { subject: string; text: string } {
+  const M = copyFor(lang).mails;
+  const S = M.siteCheck;
   const blocks: string[] = [];
   let n = 0;
   for (const issue of result.issues) {
     switch (issue.kind) {
       case "robots_blocked": {
-        const who = joinNl(issue.engines.map((e) => ENGINE_NAMES[e]));
+        const who = joinList(issue.engines.map((e) => ENGINE_NAMES[e]), M.and);
         const allow = issue.robots.map((r) => `User-agent: ${r}\nAllow: /`).join("\n\n");
-        blocks.push(`${++n}. ${who} ${issue.engines.length === 1 ? "mag" : "mogen"} je website niet lezen
+        blocks.push(`${S.robots.title(++n, who, issue.engines.length !== 1)}
 
-In het bestand ${issue.robotsUrl} staat een regel die de zoekrobot van ${who} buitensluit. Daardoor kan ${who} je openingstijden en telefoonnummer niet van je eigen website halen, en neemt het ze over van andere sites.
+${S.robots.body(issue.robotsUrl, who)}
 
-Haal die regel weg, of zet dit bovenaan het bestand:
+${S.robots.fix}
 
 ${allow}`);
         break;
       }
       case "noindex":
-        blocks.push(`${++n}. Je homepage vraagt zoekmachines om haar over te slaan
+        blocks.push(`${S.noindex.title(++n)}
 
-${issue.via === "header" ? "Je webserver stuurt bij de homepage de instructie \"noindex\" mee." : "In de code van je homepage staat de instructie \"noindex\"."} Google, Bing en de AI-assistenten die daarop zoeken, nemen de pagina dan niet op.
+${issue.via === "header" ? S.noindex.viaHeader : S.noindex.viaMeta} ${S.noindex.effect}
 
-Haal "noindex" weg. Werk je met WordPress, kijk dan bij Instellingen, Lezen: daar staat vaak het vinkje "Zoekmachines ontmoedigen deze site te indexeren". Zet dat uit.`);
+${S.noindex.fix}`);
         break;
       case "phone_mismatch":
-        blocks.push(`${++n}. Een oud telefoonnummer in de bedrijfsgegevens van je homepage
+        blocks.push(`${S.phone.title(++n)}
 
-In de bedrijfsgegevens die je homepage voor zoekmachines meestuurt (niet zichtbaar op de pagina zelf) staat: ${issue.found}
-Dit moet zijn: ${issue.expected}
+${S.phone.found(issue.found)}
+${S.phone.expected(issue.expected)}
 
-Pas het aan in de instellingen van je website (bij WordPress vaak in een plugin als Yoast), of vraag het je websitebouwer.`);
+${S.phone.fix}`);
         break;
       case "no_business_data":
-        blocks.push(`${++n}. Kleine verbetering: je bedrijfsgegevens in een vaste vorm
+        blocks.push(`${S.data.title(++n)}
 
-Je homepage stuurt je adres, openingstijden en telefoonnummer niet mee in de vaste vorm die zoekmachines en AI-assistenten direct lezen. Op je feitenpagina staat die vorm al. Je websitebouwer kan het blok overnemen:
+${S.data.body}
 ${links.factsPageUrl}feiten.json`);
         break;
     }
   }
-  const subject = `${n === 1 ? "Eén aanpassing" : `${n} aanpassingen`} op je website voor ${business.name}`;
-  const text = `Hoi,
+  const text = `${M.hi}
 
-We hebben gekeken of AI-assistenten je eigen website ${result.domain} goed kunnen lezen. Dit kan beter:
+${S.intro(result.domain)}
 
 ${blocks.join("\n\n")}
 
-Lukt het niet zelf? Stuur deze mail door naar wie je website bouwt, dit is alles wat er moet gebeuren. Wij controleren het over een maand opnieuw. Je hoeft ons niets te laten weten.
+${S.outro}
 
-Je overzicht: ${links.dashboardUrl}
+${M.overview(links.dashboardUrl)}
 
-Groet,
-Vidalo
+${M.regards}
 `;
-  return { subject, text };
+  return { subject: S.subject(n, business.name), text };
 }
 
 // ---------------------------------------------------------------------------
@@ -386,8 +387,8 @@ export async function runSiteCheck(businessId: string, opts: { fetch?: FetchLike
 
   let notified = false;
   if (newIssues.length && business.ownerEmail) {
-    const m = sitecheckEmail(business, result, { factsPageUrl: `https://${business.factsHost ?? defaultFactsHost(business)}/`, dashboardUrl: dashboardUrl(business) });
-    await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, businessId: business.id, kind: "site_instruction" });
+    const m = sitecheckEmail(business, result, { factsPageUrl: `https://${business.factsHost ?? defaultFactsHost(business)}/`, dashboardUrl: dashboardUrl(business) }, business.language);
+    await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, lang: business.language, businessId: business.id, kind: "site_instruction" });
     await db.logEvent(business.id, "sitecheck.notified", { keys, newIssues });
     notified = true;
   }

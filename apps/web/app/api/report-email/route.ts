@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ready } from "@/lib/db";
 import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
+import { langFromReferer } from "@/lib/request-lang";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,10 @@ export async function POST(req: Request) {
   const db = await ready();
   const business = await db.getBusiness(businessId);
   if (!business) return NextResponse.redirect(back, 303);
-  await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerEmail: business.ownerEmail ?? email });
+  // The first address on a business also sets the language its mails go out in: the language of the report page it was asked on.
+  // Later the owner changes it on the account page; an address already on file keeps both.
+  const first = business.ownerEmail ? {} : { ownerEmail: email, language: langFromReferer(req) };
+  await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ...first });
   await db.enqueueJob("email", { template: "baseline", scanRunId, businessId: business.id });
   await db.logEvent(business.id, "report_email.requested", { scanRunId, email });
   return NextResponse.redirect(`${back}?mail=ok`, 303);

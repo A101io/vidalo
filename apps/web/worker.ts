@@ -36,6 +36,12 @@ export default {
     // fixtures are never a fallback).
     if (postgres && !url) return notConfigured();
     if (!url) return handler.fetch(request, env, ctx);
+    // The app decides "mock or real" by DATABASE_URL (apps/web/lib/env.ts,
+    // core/db). On Workers the string lives in the Hyperdrive binding, so
+    // without this the web app took production for mock mode: every route
+    // that awaits ready() first seeded eight demo scans into a MemDb and hung
+    // (seen on vidalo.io 31 Oct 2026: /api/scan/*/status, /api/support-autoreply).
+    if (!process.env.DATABASE_URL) process.env.DATABASE_URL = url;
     // Few connections, closed shortly after the last query: the next request opens its own.
     const db = createDb(url, { max: 3, idleTimeout: 5 });
     return withDb(db, () => handler.fetch(request, env, ctx));
