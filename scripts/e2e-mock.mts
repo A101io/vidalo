@@ -129,7 +129,8 @@ console.log(`latest scan ${full.kind}: stip ${full.stip}, ${full.findings.length
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(full.stip), "full scan carries a stip colour");
 assert.ok((full.recommendations ?? []).some((r) => r.named < r.answers), "the report still shows the questions where the business was not named");
 assert.ok((full.recommendations ?? []).some((r) => r.named > 0), "the report counts the answers where the business was named");
-assert.ok(full.engineStips.filter((e) => e.counts).length === 4, "chatgpt, google_ai, copilot and gemini count for the stip; perplexity does not");
+assert.ok(full.engineStips.filter((e) => e.counts).length === 4, "chatgpt, google_ai, copilot and gemini count for the stip; perplexity and claude do not");
+assert.ok(full.engines.some((e) => e.engine === "claude" && !e.skipped && e.correct + e.wrong + e.notFound > 0), "claude is asked as the sixth engine in a full scan");
 let fixes = 0;
 for (const f of findings) fixes += (await db.listFixes(f.id)).length;
 assert.ok(fixes > 0, "fixes opened for findings");

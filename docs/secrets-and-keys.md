@@ -57,7 +57,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `DATABASE_URL` | Supabase → Project `bbynmqvaxpjdnkaasutd` → Connect → pooler, service role | Web + worker host env | `/api/health` returns `"db":"pg"` |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Supabase → API | Web host env | Sign-in email arrives |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API | Worker env only; never `NEXT_PUBLIC_` | Worker claims a job |
-| `OPENAI_API_KEY`, `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY` | Each provider | Worker + web env | A scan with `VIDALO_MOCK=0` has samples from that engine |
+| `OPENAI_API_KEY`, `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `SERPAPI_KEY` | Each provider | Worker + web env | A scan with `VIDALO_MOCK=0` has samples from that engine |
 | `GOOGLE_PLACES_API_KEY`, `KVK_API_KEY` | Google Cloud, KvK | Web env | `/scan/kies` lists businesses |
 | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | Google Cloud OAuth client | Web env | Verification sets `owner_verified_at` |
 | `STRIPE_SECRET_KEY` | Vidalo's own Stripe account (not Sitty `acct_1UA8rHEGTq7D30VV`, not Sonable `acct_1TyIM8EQK4LIWEDd`) | Web env; GitHub environment secret for setup | `pnpm stripe:setup` prints the account id; pin it as `VIDALO_STRIPE_ACCOUNT` |
@@ -66,6 +66,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `VIDALO_STRIPE_TAX` | `1` after the accountant's yes and Stripe Tax set up (`docs/PAYMENTS.md`) | Web env (plain variable) | A checkout for a business abroad opens with the VAT Stripe Tax picks; unset = refused |
 | `RESEND_API_KEY` | Resend | Worker + web env | A report mail arrives |
 | `UNSUBSCRIBE_SECRET` | `openssl rand -hex 32` | Worker + web env | Unsubscribe link works; without it follow-ups are not sent |
+| `SUPPORT_RELAY_SECRET` | `openssl rand -hex 32`; the same value as `RELAY_SECRET_VIDALO` in the mailbox relay's script properties (`docs/mail.md`) | Web env (`vidalo-web`) | `POST /api/support-autoreply` answers 401 to a wrong secret and 503 while unset; a test mail to support@vidalo.io gains a `Vidalo/…` label and a `support_autoreply_log` row |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare dashboard → Turnstile → Add widget "Vidalo", hostnames `vidalo.io` and `localhost` | Web env (`vidalo-web`) | The scan and sign-in forms show the widget; a post without it lands on `/scan/druk?check=1` or `/inloggen?fout=check`. Without both keys a production build with real engines refuses both forms (fail closed) |
@@ -81,7 +82,7 @@ One row per step of the customer journey. "Have" means it exists and was checked
 | Database | Supabase project, migrations 0001–0009, Hyperdrive `vidalo-db` | Have (16–18 Oct) |
 | Deploy | Cloudflare token + account id on the GitHub environments, zone `vidalo.io` | Have (16 Oct); `staging` environment exists but is empty |
 | Free check | `OPENAI_API_KEY` (in Julian's local `.env`, valid, 20 Oct; not yet a Worker secret), `GOOGLE_PLACES_API_KEY`, optional `KVK_API_KEY` | Places and KvK open |
-| Other AI systems | `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `SERPAPI_KEY` (Google AI answers). Without a key that system is not checked, so copy may not name it | Open |
+| Other AI systems | `GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY` (Claude), `SERPAPI_KEY` (Google AI answers). Without a key that system is not checked, so copy may not name it | Open |
 | Sign-in | `SUPABASE_URL`, `SUPABASE_ANON_KEY` as Worker vars; Supabase Auth site URL + redirect URLs for vidalo.io; custom SMTP through Resend | Open (needs Resend) |
 | E-mail | Resend account + `RESEND_API_KEY`, vidalo.io verified (SPF, DKIM, DMARC), `UNSUBSCRIBE_SECRET` (`openssl rand -hex 32`), mailboxes hello@ and support@ (`docs/mail.md`) | Open |
 | Payment | Vidalo's own Stripe account (test mode first), then `pnpm stripe:setup --apply`: prices, 21% tax rate, webhook, portal; Terms and Privacy URLs in Stripe settings | Open |

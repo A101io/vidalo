@@ -95,6 +95,10 @@ export const env = {
   get hasGoogle(): boolean {
     return Boolean(this.googleClientId && this.googleClientSecret);
   },
+  /** The mailbox relay's secret for POST /api/support-autoreply (docs/mail.md). Unset: the endpoint answers 503 to everything. */
+  get supportRelaySecret() {
+    return read("SUPPORT_RELAY_SECRET");
+  },
   get googlePlacesKey() {
     return read("GOOGLE_PLACES_API_KEY");
   },

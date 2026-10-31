@@ -510,3 +510,490 @@ Groet,
 Vidalo
 "
 `;
+
+exports[`email templates in English > snapshots > en baseline 1`] = `
+"First check of Bakkerij Jansen: 3 answers are wrong
+
+Hi,
+
+3 of the 100 answers about Bakkerij Jansen are wrong
+
+Dot: red. AI sends customers away. At least one answer sends customers away. We fix that first.
+
+On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+Per AI: ChatGPT: red, Gemini: green, Perplexity: orange, Google AI: green, Copilot: grey.
+
+100 answers checked · 3 were wrong
+
+The most important errors
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+About: the phone number
+ChatGPT said: +31231234568 (2 of 10 times)
+Wrong. It is: +31231234567
+Where it comes from: openingstijden.nl
+
+Recommendation question about: whether desembrood is offered
+ChatGPT does not name you (7 of 10 times)
+You are not named, even though this applies to you. Your detail is: yes
+No source: this detail is nowhere AI can read it.
+
+See your full result: https://vidalo.io/en/r/run1
+Rather have us fix it? Setup costs €149 once, monitoring €49 a month, cancel any month. Prices excl. VAT.
+
+How we fix it
+- Day 1: We record your details and put your facts page live.
+- Week 1: We submit corrections to the sources: the directories, Google, Bing and Apple.
+- Weeks 1 to 4: We check every source again. You see per answer whether it is right again.
+- Every month: A new check of all questions, with a short report.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en baselineClean 1`] = `
+"First check of Bakkerij Jansen: all 100 answers are right
+
+Hi,
+
+All 100 answers about Bakkerij Jansen are right
+
+On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT.
+
+100 answers checked · 0 were wrong
+
+See your full result: https://vidalo.io/en/r/run1
+
+How we fix it
+- Day 1: We record your details and put your facts page live.
+- Week 1: We submit corrections to the sources: the directories, Google, Bing and Apple.
+- Weeks 1 to 4: We check every source again. You see per answer whether it is right again.
+- Every month: A new check of all questions, with a short report.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en baselineNotFound 1`] = `
+"First check of Bakkerij Jansen: AI finds (almost) nothing about you
+
+Hi,
+
+1 of the 100 answers about Bakkerij Jansen is wrong
+
+On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT, Gemini.
+
+100 answers checked · 1 was wrong · 70 were empty
+
+2 questions: AI finds nothing about you. 70 answers were empty: the AI said it has no information about you. AI finds (almost) nothing about Bakkerij Jansen. You do not exist in the answer. We do not count that as an error, but it does mean a customer who asks gets no answer. We build your facts page, put you in Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.
+
+The most important errors
+
+About: the opening hours on Sunday
+ChatGPT found nothing about the opening hours on Sunday (8 of 10 times)
+Not found. Your detail is: closed
+
+About: the phone number
+ChatGPT found nothing about the phone number (8 of 10 times)
+Not found. Your detail is: closed
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+See your full result: https://vidalo.io/en/r/run1
+
+How we fix it
+- Day 1: We record your details and put your facts page live.
+- Week 1: We submit corrections to the sources: the directories, Google, Bing and Apple.
+- Weeks 1 to 4: We check every source again. You see per answer whether it is right again.
+- Every month: A new check of all questions, with a short report.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en baselinePaying 1`] = `
+"First check of Bakkerij Jansen: 3 answers are wrong
+
+Hi,
+
+3 of the 100 answers about Bakkerij Jansen are wrong
+
+Dot: red. AI sends customers away. At least one answer sends customers away. We fix that first.
+
+On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT, Gemini, Perplexity, Google AI, Copilot.
+
+Per AI: ChatGPT: red, Gemini: green, Perplexity: orange, Google AI: green, Copilot: grey.
+
+100 answers checked · 3 were wrong
+
+The most important errors
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+About: the phone number
+ChatGPT said: +31231234568 (2 of 10 times)
+Wrong. It is: +31231234567
+Where it comes from: openingstijden.nl
+
+Recommendation question about: whether desembrood is offered
+ChatGPT does not name you (7 of 10 times)
+You are not named, even though this applies to you. Your detail is: yes
+No source: this detail is nowhere AI can read it.
+
+See everything in your overview: https://vidalo.io/en/app
+
+What happens now
+- Today: We submit the first corrections to the sources.
+- Around 23 October 2026: The first rechecks. You hear from us as soon as an answer is right again.
+- Around 1 November 2026: Your next monthly check.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en followup7 1`] = `
+"3 answers about Bakkerij Jansen are wrong
+
+Hi,
+
+3 of the 12 answers about Bakkerij Jansen are wrong
+
+A week ago we checked what AI says about Bakkerij Jansen. A customer who asks gets this answer. Not once, every time, until the source changes.
+
+For example
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+You can fix it yourself: the sources are in your result.
+
+See your full result: https://vidalo.io/en/r/run1
+Rather have us fix it? Setup costs €149 once, monitoring €49 a month, cancel any month. Prices excl. VAT.
+
+How we fix it
+- Day 1: We record your details and put your facts page live.
+- Week 1: We submit corrections to the sources: the directories, Google, Bing and Apple.
+- Weeks 1 to 4: We check every source again. You see per answer whether it is right again.
+- Every month: A new check of all questions, with a short report.
+
+Best,
+Vidalo
+
+No more emails about this? Unsubscribe: https://vidalo.io/en/unsubscribe?b=b1&t=tok
+"
+`;
+
+exports[`email templates in English > snapshots > en followup21 1`] = `
+"Still "10:00 to 14:00"
+
+Hi,
+
+ChatGPT still says "10:00 to 14:00"
+
+Three weeks ago we saw that ChatGPT says "10:00 to 14:00" about the opening hours on Sunday for Bakkerij Jansen. We checked it again today. It is still there.
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+See your full result: https://vidalo.io/en/r/run1
+Rather have us fix it? Setup costs €149 once, monitoring €49 a month, cancel any month. Prices excl. VAT.
+
+This is the last email about it. If you want us to fix the sources, you can arrange that from your result. If not, we leave you be.
+
+Best,
+Vidalo
+
+No more emails about this? Unsubscribe: https://vidalo.io/en/unsubscribe?b=b1&t=tok
+"
+`;
+
+exports[`email templates in English > snapshots > en ownerInstruction 1`] = `
+"One change on your website for Bakkerij Jansen
+
+Hi,
+
+AI assistants take the opening hours on Sunday for Bakkerij Jansen from your own website, and it says something other than what you confirmed with us.
+
+On page https://www.bakkerijjansen.nl/contact it says: 10:00 to 14:00
+It should be: closed
+
+Could you change this? We then check again in 14 days whether the answer is right. You do not need to let us know.
+
+Does it not work, or do you need help from whoever built your website? Forward this email; this is all that needs to happen.
+
+Your overview: https://vidalo.io/en/app
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en ownerReminder 1`] = `
+"Still "10:00 to 14:00" on your website
+
+Hi,
+
+14 days ago we emailed you about the opening hours on Sunday on https://www.bakkerijjansen.nl/contact. At our check today it is still there.
+
+On page https://www.bakkerijjansen.nl/contact it says: 10:00 to 14:00
+It should be: closed
+
+As long as this is on your website, AI keeps taking it over. It is one change of text.
+
+Your overview: https://vidalo.io/en/app
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en report 1`] = `
+"Bakkerij Jansen in October 2026: orange, 2 errors found, 1 fixed, 1 in progress
+
+Hi,
+
+October 2026: 2 errors found, 1 fixed, 1 in progress
+
+Dot: orange. AI misleads. No deal-breakers, but the customer does get wrong details.
+
+Check of 7 October 2026. We put 100 questions about Bakkerij Jansen to ChatGPT, Gemini.
+
+1 fixed · 1 in progress
+
+Fixed this month
+
+ChatGPT about the opening hours on Sunday
+Was: "closed on Monday"
+Now: "open 9–18"
+Source: openingstijden.nl, fixed in 12 days.
+
+Still open, the most important
+
+About: the opening hours on Sunday
+ChatGPT said: 10:00 to 14:00 (7 of 10 times)
+Wrong. It is: closed
+Where it comes from: openingstijden.nl
+
+See everything in your overview: https://vidalo.io/en/app
+
+The coming weeks
+- In between: An email as soon as an answer is right again, with the answer before and after.
+- Around 6 November 2026: Your next monthly check.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en reportClean 1`] = `
+"Bakkerij Jansen in October 2026: 12 of 12 answers are right
+
+Hi,
+
+October 2026: 12 of 12 answers are right
+
+Check of 7 October 2026. We put 12 questions about Bakkerij Jansen to ChatGPT.
+
+0 fixed · 0 in progress
+
+There is nothing to fix. Good.
+
+See everything in your overview: https://vidalo.io/en/app
+
+The coming weeks
+- In between: An email as soon as an answer is right again, with the answer before and after.
+- Around 6 November 2026: Your next monthly check.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en reportNotFound 1`] = `
+"Bakkerij Jansen in October 2026: 3 in progress, 3 questions: AI finds nothing about you
+
+Hi,
+
+October 2026: 3 in progress, 3 questions: AI finds nothing about you
+
+Check of 7 October 2026. We put 100 questions about Bakkerij Jansen to ChatGPT.
+
+0 fixed · 3 in progress
+
+3 questions: AI finds nothing about you. 40 answers were empty: the AI said it has no information about you. AI only half knows Bakkerij Jansen: some of the answers are empty. We do not count that as an error, but it does mean a customer who asks gets no answer. We build your facts page, put you in Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.
+
+Still open, the most important
+
+About: the opening hours on Sunday
+ChatGPT found nothing about the opening hours on Sunday (8 of 10 times)
+Not found. Your detail is: closed
+
+See everything in your overview: https://vidalo.io/en/app
+
+The coming weeks
+- In between: An email as soon as an answer is right again, with the answer before and after.
+- Around 6 November 2026: Your next monthly check.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en resolution 1`] = `
+"Fixed: ChatGPT now says "closed" about Bakkerij Jansen
+
+Hi,
+
+ChatGPT gives the right answer about the opening hours on Sunday again
+
+ChatGPT gave a wrong answer about the opening hours on Sunday for Bakkerij Jansen. That is fixed.
+
+Before (2 October 2026)
+"Open on Sunday from 10:00 to 14:00."
+
+After (14 October 2026)
+"Closed on Sunday."
+
+Source: openingstijden.nl, fixed in 12 days. We keep checking this answer every month.
+
+See your overview: https://vidalo.io/en/app
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en unfixable 1`] = `
+"Not fixed: ChatGPT about the opening hours on Sunday for Bakkerij Jansen
+
+Hi,
+
+ChatGPT still says "10:00 to 14:00" about the opening hours on Sunday for Bakkerij Jansen. It is closed. We tried for 45 days to fix this.
+
+Why it did not work: This answer comes from the model's memory, not from a source we can change.
+
+What we did: This answer comes from the model's memory. That only changes with a new version; we keep checking.
+
+What now: we keep this answer in your overview and check it again every month. Answers from the model's memory only change with a new version of that model. As soon as that happens, you see it in your report.
+
+Your overview: https://vidalo.io/en/app
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en unfixableNotFound 1`] = `
+"Not fixed: ChatGPT about the opening hours on Sunday for Bakkerij Jansen
+
+Hi,
+
+ChatGPT still finds nothing about the opening hours on Sunday for Bakkerij Jansen. It is closed. We tried for 61 days to make you findable.
+
+Why it did not work: After 60 days AI still does not name you. Your facts page and profiles are right; we keep checking every month.
+
+What we did: Not found: we make you findable
+
+What now: we keep this answer in your overview and check it again every month. Your facts page and your profiles stay in place. As soon as AI does name you, you see it in your report.
+
+Your overview: https://vidalo.io/en/app
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en welcome 1`] = `
+"Welcome to Vidalo: 4 steps for Bakkerij Jansen
+
+Hi,
+
+Welcome. This is how we start for Bakkerij Jansen.
+
+Thank you for your order. From now on we check what AI says about Bakkerij Jansen and fix errors at the source. To start, we need 4 things from you, about 5 minutes in all.
+
+1. Confirm your details
+Address, phone, opening hours, what you do and do not do. We have filled them in already; you check them.
+
+2. One DNS record
+Create a CNAME record with your domain provider:
+feiten.bakkerijjansen.nl  →  feiten.vidalo.io
+We check every 10 minutes whether it is there. If it does not work, we put the page on our own address.
+
+3. Log in to Google once
+This lets us read your Google Business Profile and bring the opening hours, the phone number and the website in line.
+https://vidalo.io/en/app/google
+
+4. We do the rest
+Once your DNS record is in place, your facts page is live. We update your Google profile straight away; at Bing and Apple we submit the change and follow it until it is processed.
+
+Confirm your details: https://vidalo.io/en/app/gegevens
+Your overview, with everything we do: https://vidalo.io/en/app
+
+What you get from us next
+- Within 48 hours: Your first full check, by email, with the most important errors.
+- After that: An email as soon as an answer is right again, with the answer before and after.
+- Every month: A new check and a short report. Everything is in your overview.
+
+Questions? Reply to this email.
+
+Best,
+Vidalo
+"
+`;
+
+exports[`email templates in English > snapshots > en welcomeNoDomain 1`] = `
+"Welcome to Vidalo: 4 steps for Bakkerij Jansen
+
+Hi,
+
+Welcome. This is how we start for Bakkerij Jansen.
+
+Thank you for your order. From now on we check what AI says about Bakkerij Jansen and fix errors at the source. To start, we need 4 things from you, about 5 minutes in all.
+
+1. Confirm your details
+Address, phone, opening hours, what you do and do not do. We have filled them in already; you check them.
+
+2. Facts page
+You did not give us a domain of your own. We put your facts page on https://feiten.bakkerijjansen.nl/. You can always move it later.
+
+3. Log in to Google once
+This lets us read your Google Business Profile and bring the opening hours, the phone number and the website in line.
+https://vidalo.io/en/app/google
+
+4. We do the rest
+Once your DNS record is in place, your facts page is live. We update your Google profile straight away; at Bing and Apple we submit the change and follow it until it is processed.
+
+Confirm your details: https://vidalo.io/en/app/gegevens
+Your overview, with everything we do: https://vidalo.io/en/app
+
+What you get from us next
+- Within 48 hours: Your first full check, by email, with the most important errors.
+- After that: An email as soon as an answer is right again, with the answer before and after.
+- Every month: A new check and a short report. Everything is in your overview.
+
+Questions? Reply to this email.
+
+Best,
+Vidalo
+"
+`;

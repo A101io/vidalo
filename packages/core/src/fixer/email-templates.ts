@@ -9,9 +9,14 @@
  *
  * Tone: calm, "u" towards third parties (business-to-business, unknown person),
  * "je" towards the owner. No exclamation marks.
+ *
+ * Letters to third parties stay Dutch: they go to Dutch organisations, signed
+ * by the owner. Mails to the owner follow business.language (copy.mails.ownWebsite).
  */
 import type { Business, Finding } from "../types.js";
 import { findingWordsNl, hostOfUrl } from "../shared/facts-nl.js";
+import { findingWords } from "../shared/facts-en.js";
+import { copyFor, type Lang } from "../copy/index.js";
 import type { ChannelDiffEntry } from "../publisher/channels/types.js";
 
 export interface Mail {
@@ -123,47 +128,47 @@ function fieldNl(field: string): string {
 }
 
 /** To the owner: what to change on their own website. */
-export function ownerWebsiteInstructionEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string): Mail {
-  const w = findingWordsNl(finding);
-  const page = finding.sourceUrl ?? "je website";
-  const subject = `Eén aanpassing op je website voor ${business.name}`;
-  const text = `Hoi,
+export function ownerWebsiteInstructionEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, lang: Lang = "nl"): Mail {
+  const M = copyFor(lang).mails;
+  const O = M.ownWebsite;
+  const w = findingWords(finding, lang);
+  const page = finding.sourceUrl ?? O.yourWebsite;
+  const text = `${M.hi}
 
-AI-assistenten halen ${w.what} van ${business.name} van je eigen website, en daar staat iets anders dan je bij ons hebt bevestigd.
+${O.intro(w.what, business.name)}
 
-Op pagina ${page} staat: ${w.wrong}
-Dit moet zijn: ${w.correct}
+${O.onPage(page, w.wrong)}
+${O.shouldBe(w.correct)}
 
-Pas je dit aan? Daarna controleren wij over 14 dagen opnieuw of het antwoord klopt. Je hoeft ons niets te laten weten.
+${O.change}
 
-Lukt het niet of heb je hulp nodig van je websitebouwer? Stuur deze mail door, dit is alles wat er moet gebeuren.
+${O.forward}
 
-Je overzicht: ${dashboardUrl}
+${M.overview(dashboardUrl)}
 
-Groet,
-Vidalo
+${M.regards}
 `;
-  return { subject, text };
+  return { subject: O.subject(business.name), text };
 }
 
 /** Reminder to the owner after 14 / 28 days when the website text is still wrong. */
-export function ownerWebsiteReminderEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, daysAgo: number): Mail {
-  const w = findingWordsNl(finding);
-  const page = finding.sourceUrl ?? "je website";
-  const subject = `Nog steeds "${w.wrong}" op je website`;
-  const text = `Hoi,
+export function ownerWebsiteReminderEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, daysAgo: number, lang: Lang = "nl"): Mail {
+  const M = copyFor(lang).mails;
+  const O = M.ownWebsite;
+  const w = findingWords(finding, lang);
+  const page = finding.sourceUrl ?? O.yourWebsite;
+  const text = `${M.hi}
 
-${daysAgo} dagen geleden mailden we je over ${w.what} op ${page}. Bij onze controle van vandaag staat het er nog.
+${O.reminderIntro(daysAgo, w.what, page)}
 
-Op pagina ${page} staat: ${w.wrong}
-Dit moet zijn: ${w.correct}
+${O.onPage(page, w.wrong)}
+${O.shouldBe(w.correct)}
 
-Zolang dit op je website staat, blijft AI het overnemen. Het is één tekstwijziging.
+${O.reminderWhy}
 
-Je overzicht: ${dashboardUrl}
+${M.overview(dashboardUrl)}
 
-Groet,
-Vidalo
+${M.regards}
 `;
-  return { subject, text };
+  return { subject: O.reminderSubject(w.wrong), text };
 }

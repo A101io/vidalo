@@ -26,6 +26,7 @@ import type {
   ScanRunUpdate,
   WaitlistInput,
 } from "./types";
+import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
 const nowIso = () => new Date().toISOString();
 const OPEN_STATUSES: FindingStatus[] = ["open", "fixing", "recheck"];
@@ -45,6 +46,7 @@ export class MemDb implements Db {
   fixes = new Map<string, Fix>();
   googleIndex = new Map<string, GoogleIndexState>();
   waitlist = new Map<string, WaitlistInput & { createdAt: string; unsubscribedAt: string | null }>();
+  supportLog: Array<SupportLogRow & { createdAt: string }> = [];
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -59,6 +61,7 @@ export class MemDb implements Db {
     this.findings.clear();
     this.jobs.clear();
     this.events = [];
+    this.supportLog = [];
     this.channels.clear();
     this.fixes.clear();
     this.googleIndex.clear();
@@ -427,6 +430,23 @@ export class MemDb implements Db {
 
   async countWaitlist(): Promise<number> {
     return [...this.waitlist.values()].filter((w) => w.unsubscribedAt === null).length;
+  }
+
+  // --- support@ auto-replies ---
+  async supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters> {
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const today = this.supportLog.filter((r) => new Date(r.createdAt).getTime() > dayAgo);
+    return {
+      alreadyRepliedInThread: threadId !== null && this.supportLog.some((r) => r.provider_thread_id === threadId && r.action === "replied"),
+      decisionsForSenderToday: today.filter((r) => r.from_email === fromEmail).length,
+      modelCallsToday: today.reduce((n, r) => n + (r.model_calls ?? 0), 0),
+    };
+  }
+
+  async recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }> {
+    if (row.provider_message_id && this.supportLog.some((r) => r.provider_message_id === row.provider_message_id)) return { duplicate: true };
+    this.supportLog.push({ ...row, createdAt: nowIso() });
+    return { duplicate: false };
   }
 
   async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {

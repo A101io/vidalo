@@ -3,6 +3,7 @@
  *
  *   pnpm mail:send --to you@example.com             dry run: lists what would be sent
  *   pnpm mail:send --to you@example.com --send      sends one of each kind through Resend
+ *   pnpm mail:send --to you@example.com --lang en   the owner mails as an owner who chose English gets them
  *
  * It first runs the mail lab itself into out/mail-send with links to
  * https://vidalo.io (MAIL_LAB_BASE_URL), so the links in the inbox open the
@@ -34,9 +35,15 @@ const value = (name: string) => {
 const to = value("--to");
 const send = flag("--send");
 const only = value("--kinds")?.split(",").map((s) => s.trim());
+// The lab writes every owner mail in Dutch and in English; letters to third parties are Dutch either way.
+const lang = value("--lang") ?? "nl";
+if (lang !== "nl" && lang !== "en") {
+  console.error("--lang takes nl or en.");
+  process.exit(2);
+}
 
 if (!to || !/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)) {
-  console.error("Usage: pnpm mail:send --to you@example.com [--send] [--kinds welcome,baseline]\n--to takes exactly one address.");
+  console.error("Usage: pnpm mail:send --to you@example.com [--send] [--lang nl|en] [--kinds welcome,baseline]\n--to takes exactly one address.");
   process.exit(2);
 }
 try {
@@ -63,7 +70,7 @@ if (!files?.length) {
   process.exit(2);
 }
 
-type LabMail = { kind: string; originalTo: string; subject: string; text: string; html?: string; headers: Record<string, string> };
+type LabMail = { kind: string; lang: string | null; originalTo: string; subject: string; text: string; html?: string; headers: Record<string, string> };
 function parse(raw: string): LabMail {
   const [head, ...rest] = raw.split("\r\n\r\n");
   const h: Record<string, string> = {};
@@ -85,13 +92,14 @@ function parse(raw: string): LabMail {
   }
   const headers: Record<string, string> = {};
   for (const k of ["List-Unsubscribe", "List-Unsubscribe-Post"]) if (h[k]) headers[k] = h[k]!;
-  return { kind: h["X-Vidalo-type"] ?? h["X-Vidalo-kind"] ?? "unknown", originalTo: h.To ?? "", subject: h.Subject ?? "", text, html, headers };
+  return { kind: h["X-Vidalo-type"] ?? h["X-Vidalo-kind"] ?? "unknown", lang: h["X-Vidalo-lang"] ?? null, originalTo: h.To ?? "", subject: h.Subject ?? "", text, html, headers };
 }
 
-// One mail per kind: the first the lab produced.
+// One mail per kind: the first the lab produced, in --lang (owner mails carry their language as a tag).
 const byKind = new Map<string, LabMail>();
 for (const f of files.sort()) {
   const m = parse(await readFile(path.join(dir, f), "utf8"));
+  if (m.lang && m.lang !== lang) continue;
   if (!byKind.has(m.kind) && (!only || only.includes(m.kind))) byKind.set(m.kind, m);
 }
 // A test mail with links to this machine is useless in an inbox (23 Oct 2026).
@@ -110,7 +118,7 @@ if (send && !process.env.RESEND_API_KEY) {
 
 let failed = 0;
 for (const [kind, m] of byKind) {
-  const subject = `[Test ${kind}] ${m.subject}`;
+  const subject = `[Test ${kind}${m.lang ? ` ${m.lang}` : ""}] ${m.subject}`;
   if (!send) {
     console.log(`  - ${kind.padEnd(22)} ${subject}   (lab recipient: ${m.originalTo})`);
     continue;

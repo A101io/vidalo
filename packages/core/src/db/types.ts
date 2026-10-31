@@ -19,6 +19,7 @@ import type {
   ScanKind,
   ScanRun,
 } from "../types";
+import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 import type { MailPrefs } from "../shared/mail-prefs";
 
 /** Business plus the operational columns that exist in SQL but not in the shared Business type. */
@@ -32,7 +33,7 @@ export interface BusinessRecord extends Business {
   /** Set when the owner proved ownership (see shared/ownership.ts); null = only claimed. */
   ownerVerifiedAt: string | null;
   ownerVerifiedVia: string | null;
-  /** The owner's language ("nl" | "en"); the dashboard and the report follow it; e-mails are still Dutch. */
+  /** The owner's language ("nl" | "en"); the dashboard, the report and every mail to the owner follow it (letters to third parties stay Dutch). */
   language: "nl" | "en";
   /** The owner cancelled; the subscription ends at this moment (migration 0012). */
   cancelAt: string | null;
@@ -213,6 +214,12 @@ export interface Db {
    * on record or undo an unsubscribe).
    */
   joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }>;
+
+  // --- support@ auto-replies (migration 0010; ../support) ---
+  /** The counters the responder needs before it answers: replied on this thread before, this sender's decisions in 24 h (any outcome), model calls in 24 h (all senders). */
+  supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters>;
+  /** One row per decision. `duplicate` when this provider message id was recorded before: the relay must not send again. */
+  recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }>;
   /** Addresses on the list that have not unsubscribed. */
   countWaitlist(): Promise<number>;
   /** Addresses on the list that have not unsubscribed, oldest first (the launch mail, scripts/launch-mail.mts). */

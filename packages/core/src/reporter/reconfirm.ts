@@ -1,16 +1,17 @@
 /**
  * The yearly "Klopt dit nog?" mail: one year after the owner last confirmed
- * their facts, one button to the facts form. Queued once per year by the
- * worker cron (apps/worker/src/cron.ts, enqueueReconfirmations). Its own file
- * so the template stays apart from templates.ts.
+ * their facts, one button to the facts form, in the owner's language
+ * (business.language, wording in copy.mails.reconfirm). Queued once per year
+ * by the worker cron (apps/worker/src/cron.ts, enqueueReconfirmations). Its
+ * own file so the template stays apart from templates.ts.
  */
 import { getDb } from "../shared/db.js";
 import { lastConfirmed, reconfirmation } from "../facts-history.js";
-import { formatDateNl } from "../publisher/render.js";
+import { copyFor, type Lang } from "../copy/index.js";
 import { log } from "../shared/log.js";
 import { confirmFactsUrl } from "./links.js";
 import { sendMail, type MailResult } from "./mail.js";
-import { textToHtml, type Mail } from "./templates.js";
+import { formatMailDate, textToHtml, type Mail } from "./templates.js";
 
 export interface ReconfirmData {
   business: { name: string };
@@ -19,29 +20,31 @@ export interface ReconfirmData {
   /** Whole years since then (1 or more). */
   years: number;
   confirmFactsUrl: string;
+  /** the owner's language; Dutch when absent */
+  lang?: Lang;
 }
 
-const BUTTON = "Bekijk je gegevens";
-
 export function reconfirmEmail(d: ReconfirmData): Mail {
-  const subject = `Klopt dit nog? De gegevens van ${d.business.name}`;
-  const text = `Hoi,
+  const lang = d.lang ?? "nl";
+  const M = copyFor(lang).mails;
+  const R = M.reconfirm;
+  const subject = R.subject(d.business.name);
+  const text = `${M.hi}
 
-Op ${formatDateNl(d.confirmedAt)} heb je de gegevens van ${d.business.name} bevestigd. Dat is ${d.years === 1 ? "een jaar" : `${d.years} jaar`} geleden. Adres, telefoon, openingstijden en wat je wel en niet doet veranderen soms zonder dat je eraan denkt.
+${R.intro(formatMailDate(d.confirmedAt, lang), d.business.name, R.years(d.years))}
 
-Wil je ze even nalopen? Klopt alles nog, dan is het één klik op "Alles klopt nog" in je overzicht. Is er iets veranderd, pas het dan aan. Wij werken daarna je feitenpagina en de bronnen bij.
+${R.ask}
 
-${BUTTON}:
+${R.button}:
 ${d.confirmFactsUrl}
 
-Groet,
-Vidalo
+${M.regards}
 `;
   // The link paragraph becomes one button in the HTML; the plain text keeps the address.
-  const html = textToHtml(text).replace(
+  const html = textToHtml(text, lang).replace(
     /<p style="[^"]*">(?:<strong[^>]*>)?[^<]*:(?:<\/strong>)?<br><a href="([^"]+)"[^>]*>[^<]*<\/a><\/p>/,
     (_m, href: string) =>
-      `<p style="margin:8px 0 24px"><a href="${href}" style="display:inline-block;background:#2563eb;color:#ffffff;font-weight:700;font-size:16px;line-height:1;text-decoration:none;padding:16px 24px;border-radius:10px">${BUTTON}</a></p>`,
+      `<p style="margin:8px 0 24px"><a href="${href}" style="display:inline-block;background:#2563eb;color:#ffffff;font-weight:700;font-size:16px;line-height:1;text-decoration:none;padding:16px 24px;border-radius:10px">${R.button}</a></p>`,
   );
   return { subject, text, html };
 }
@@ -57,8 +60,9 @@ export async function sendFactsReconfirm(businessId: string, now: Date = new Dat
     log.warn("reporter.reconfirm.skipped", { businessId, due: r?.due ?? false, ownerEmail: Boolean(business.ownerEmail) });
     return null;
   }
-  const m = reconfirmEmail({ business, confirmedAt: r.confirmedAt, years: r.cycle, confirmFactsUrl: confirmFactsUrl(business) });
-  const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, tags: { type: "reconfirm", business: business.slug } });
+  const lang: Lang = business.language === "en" ? "en" : "nl";
+  const m = reconfirmEmail({ business, confirmedAt: r.confirmedAt, years: r.cycle, confirmFactsUrl: confirmFactsUrl(business), lang });
+  const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, tags: { type: "reconfirm", business: business.slug, lang } });
   await db.logEvent(business.id, "email.reconfirm", { to: business.ownerEmail, subject: m.subject, mode: res.mode, id: res.id, version: r.version, cycle: r.cycle });
   return res;
 }

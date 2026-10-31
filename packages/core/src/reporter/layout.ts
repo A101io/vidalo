@@ -9,7 +9,7 @@
  * scarcity. "Wat er nu gebeurt" shows real next dates, not urgency.
  */
 import type { Stip } from "../types.js";
-import { copy } from "../copy/index.js";
+import { copyFor, type Lang } from "../copy/index.js";
 
 export const BRAND = {
   ink: "#111827",
@@ -45,6 +45,8 @@ export interface MailDoc {
   stipText?: string;
   blocks: Block[];
   unsubscribeUrl?: string;
+  /** the owner's language (business.language): greeting, sign-off, footer and <html lang> follow it */
+  lang?: Lang;
 }
 
 function esc(s: string): string {
@@ -110,14 +112,17 @@ function blockText(b: Block): string {
 }
 
 export function renderMail(d: MailDoc): { subject: string; text: string; html: string } {
-  const stipLine = d.stip ? `Stip: ${copy.stip[d.stip].toLowerCase()}. ${d.stipText ?? ""}`.trim() : "";
+  const lang = d.lang ?? "nl";
+  const C = copyFor(lang);
+  const M = C.mails;
+  const stipLine = d.stip ? `${M.stip(C.stip[d.stip].toLowerCase())} ${d.stipText ?? ""}`.trim() : "";
   const text = [
-    "Hoi,",
+    M.hi,
     d.headline,
     stipLine,
     ...d.blocks.map(blockText),
-    "Groet,\nVidalo",
-    d.unsubscribeUrl ? `Geen mails meer hierover? Afmelden: ${d.unsubscribeUrl}` : "",
+    M.regards,
+    d.unsubscribeUrl ? `${M.unsubscribe.lead} ${M.unsubscribe.link}: ${d.unsubscribeUrl}` : "",
   ]
     .filter(Boolean)
     .join("\n\n")
@@ -126,19 +131,19 @@ export function renderMail(d: MailDoc): { subject: string; text: string; html: s
   const mark = `<span style="display:inline-block;width:17px;height:17px;background:${BRAND.blue};border-radius:999px 999px 999px 2px;vertical-align:-1px;margin-right:6px"></span>`;
   // Hidden preview text, padded so the client does not pull body text in after it.
   const preheader = `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff">${esc(d.preheader)}${"&#8199;&#65279;&#847;".repeat(40)}</div>`;
-  const html = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(d.subject)}</title></head>
+  const html = `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(d.subject)}</title></head>
 <body style="margin:0;padding:0;background:#ffffff;font-family:${BRAND.font}">${preheader}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:${BRAND.font}">
 <tr><td data-brand="vidalo" style="padding:0 0 20px;border-bottom:1.5px solid ${BRAND.line}"><span style="font-size:22px;line-height:1;font-weight:800;letter-spacing:-0.02em;color:${BRAND.ink}">${mark}vidalo</span></td></tr>
 <tr><td style="padding:28px 0 8px">
-<p style="margin:0 0 8px;font-size:16px;line-height:1.55;color:${BRAND.ink2}">Hoi,</p>
+<p style="margin:0 0 8px;font-size:16px;line-height:1.55;color:${BRAND.ink2}">${esc(M.hi)}</p>
 <h1 style="margin:0 0 ${d.stip ? "10px" : "20px"};font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;color:${BRAND.ink}">${esc(d.headline)}</h1>
 ${d.stip ? `<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:${BRAND.ink2}">${dot(BRAND.stip[d.stip])}&nbsp;&nbsp;${esc(stipLine)}</p>` : ""}
 ${d.blocks.map(blockHtml).join("\n")}
-<p style="margin:8px 0 16px;font-size:16px;line-height:1.55;color:${BRAND.ink2}">Groet,<br>Vidalo</p></td></tr>
-<tr><td style="padding:16px 0 0;border-top:1.5px solid ${BRAND.line};font-size:13px;line-height:1.5;color:${BRAND.muted}">${esc(copy.landing.footer.legal)}${
-    d.unsubscribeUrl ? `<br>Geen mails meer hierover? <a href="${esc(d.unsubscribeUrl)}" style="color:${BRAND.muted};text-decoration:underline">Afmelden</a>` : ""
+<p style="margin:8px 0 16px;font-size:16px;line-height:1.55;color:${BRAND.ink2}">${M.regards.split("\n").map(esc).join("<br>")}</p></td></tr>
+<tr><td style="padding:16px 0 0;border-top:1.5px solid ${BRAND.line};font-size:13px;line-height:1.5;color:${BRAND.muted}">${esc(C.landing.footer.legal)}${
+    d.unsubscribeUrl ? `<br>${esc(M.unsubscribe.lead)} <a href="${esc(d.unsubscribeUrl)}" style="color:${BRAND.muted};text-decoration:underline">${esc(M.unsubscribe.link)}</a>` : ""
   }</td></tr>
 </table></td></tr></table></body></html>`;
   return { subject: d.subject, text, html };
