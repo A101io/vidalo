@@ -6,16 +6,15 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 
 | Step | Status | Proof |
 |---|---|---|
-| Stripe account "Vidalo" in the A101 B.V. organisation | done | `acct_1UR4QnEKzmvgQ7J9` |
-| Onboarding choices (no Managed Payments, no Stripe Tax, invoices on) | done | wizard, 16 Oct |
-| Stripe connected to Claude (Vidalo account only, test mode) | done | connector lists Vidalo and Vidalo sandbox, nothing else |
-| Integration reviewed against Stripe's planner; 3 bugs fixed | done, not committed | tests 191 + 8 green, `e2e:mock` OK |
-| Customer portal configuration | done (test) | `bpc_1UR8MDEKzmvgQ7J9sXzbS8S0` |
-| Terms URL, Privacy URL, statement descriptor | **open, Julian** | |
-| iDEAL and SEPA Direct Debit switched on | done per Julian, 26 Oct (not read back by Claude) | both read `off` on 16 Oct |
-| Test secret key in `.env` | **open, Julian** | |
-| Prices, btw rate, webhook (`pnpm stripe:setup --apply`) | open, after the key | |
-| A real test checkout end to end | open | |
+| Stripe account "Vidalo" in the A101 B.V. organisation | done (sandbox only) | sandbox `acct_1UR4RAELCe3OOCe2`; no live account yet |
+| Onboarding choices (no Managed Payments, fixed 21% rate, invoices on) | done | wizard, 16 Oct |
+| Integration reviewed against Stripe's planner; 4 fixes | done, merged | §3 |
+| Prices, btw rate, portal, webhook (`pnpm stripe:setup --apply`) | done in the sandbox | 25 Oct; ids on `vidalo-web` (`wrangler secret list`, 26 Oct) |
+| iDEAL and SEPA Direct Debit | done per Julian, 26 Oct (sandbox; not read back) | |
+| Cancel and pause in the app; portal without cancelling | done, mock + local Postgres | `docs/CANCEL-PAUSE.md` |
+| A real sandbox checkout end to end | **open** | §8 |
+| **Live account, live settings, live key, one refunded purchase** | **open: §10 L1–L10** | |
+| Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
 | Resend API key in `.env` | open, Julian | |
 | Supabase sign-in mail through Resend (SMTP) | open, Julian | |
@@ -95,18 +94,17 @@ Rules:
 - In production: Cloudflare Worker secrets (step 10). GitHub only holds the Cloudflare deploy token.
 - The full list of every secret, where it comes from and how to prove it landed: `docs/secrets-and-keys.md`.
 
-How to add the Stripe test key:
-1. https://dashboard.stripe.com/test/apikeys → **Secret key** → Reveal → copy (starts with `sk_test_`).
+How the sandbox key was added (done 25 Oct; kept for a new machine):
+1. Account switcher (top left) on **Vidalo sandbox** → Developers → API keys → **Secret key** → Reveal → copy (starts with `sk_test_`).
 2. Open the file: `open -e /Users/a101/Vidalo/.env` (hidden in Finder).
 3. Add at the bottom, no quotes, no spaces around `=`:
    ```
    STRIPE_SECRET_KEY=sk_test_...
-   VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9
-   STRIPE_PORTAL_CONFIGURATION=bpc_1UR8MDEKzmvgQ7J9sXzbS8S0
+   VIDALO_STRIPE_ACCOUNT=acct_1UR4RAELCe3OOCe2
    ```
 4. Save as plain text (⌘S).
 
-The account id and the portal id are not secrets; the key is.
+The account id is not a secret; the key is. `pnpm stripe:setup` prints the portal id and the rest.
 
 ## 7. Prices, tax rate and webhook
 
@@ -160,22 +158,142 @@ Proof: a report mail and a sign-in mail arrive at Julian's address, and Resend's
 
 **Open decision: `hallo@vidalo.io` cannot receive mail.** `vidalo.io` has no MX record, and that address is the reply-to on our mail and the contact for ownership questions. Cheapest fix: Cloudflare Email Routing forwarding it to Julian's A101 address.
 
-## 10. Live mode and production
+## 10. Going live on Stripe, step by step
 
-At launch, not before:
-1. The same dashboard settings in live mode (the `test/` links without `test/`).
-2. Live key, then `PUBLIC_BASE_URL=https://vidalo.io` and `--apply --live`; the script refuses a live key without `--live`. This creates the live prices, tax rate, portal and the webhook for `https://vidalo.io/api/stripe/webhook`.
-3. Every `STRIPE_*`, `RESEND_API_KEY` and `EMAIL_FROM` value on the Worker: `wrangler secret put NAME --name vidalo-web` (and `RESEND_API_KEY`, `EMAIL_FROM` on `vidalo-worker` too).
-4. Proof: a real €149 payment, refunded afterwards; the webhook shows 200 in the Stripe dashboard; the business moves to `trial`.
+Live money needs a live account. Today Vidalo has only the sandbox, so every step below is still open. **J** = Julian in the dashboard, **C** = Claude in the repo. Do them in order; each ends with how we know it worked.
+
+Values used throughout:
+
+| Field | Value |
+|---|---|
+| Legal entity | `A101 B.V.` |
+| KvK | `42057858` |
+| btw-nummer | `NL869514192B01` |
+| Registered address | `Factorij 80`, `3071 AV`, `Rotterdam`, Netherlands |
+| Public name and statement descriptor | `Vidalo` / `VIDALO` |
+| Website | `https://vidalo.io` |
+| Terms / Privacy | `https://vidalo.io/voorwaarden` / `https://vidalo.io/privacy` |
+| Support e-mail | `support@vidalo.io` (needs the mailbox from launch-todo M2 first) |
+
+**Before you start, know this about review.** Stripe looks at the website during activation. Terms, privacy and contact pass the coming-soon gate (checked 1 Nov 2026), but the prices page does not: a reviewer sees "Binnenkort". The product description in L1 therefore carries the prices. If Stripe still asks, the answer is to send them the preview link or to open `/prijzen` in the gate; that is your call when it happens.
+
+### L1 (J) Activate a live account for Vidalo
+https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo**. If the switcher shows only "Vidalo sandbox", choose **+ New account** inside the A101 B.V. organisation, name `Vidalo`, then activate it.
+
+| Field | Value |
+|---|---|
+| Type of business | `Company` → `Private company` (B.V.) |
+| Legal business name | `A101 B.V.` |
+| Company registration number | `42057858` |
+| VAT number | `NL869514192B01` |
+| Registered address | `Factorij 80`, `3071 AV`, `Rotterdam` |
+| Industry | `Software` → `Software as a service (SaaS)` |
+| Website | `https://vidalo.io` |
+| Product description | the block below |
+| Representative, owner, bank account (IBAN of A101 B.V.) | your own details; only you enter these |
+| Statement descriptor / shortened | `VIDALO` / `VIDALO` |
+
+Product description:
+```
+Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, and corrects them. Two plans for businesses (B2B only): a one-time setup at EUR 149 and a monthly check at EUR 49, both excluding 21% VAT. The site is in pre-launch; terms at https://vidalo.io/voorwaarden, privacy at https://vidalo.io/privacy, contact at https://vidalo.io/contact.
+```
+Done when: the dashboard no longer shows "Activate payments" and the top left shows **Vidalo** without the word sandbox.
+
+### L2 (J) Public details
+https://dashboard.stripe.com/settings/public
+
+| Field | Value |
+|---|---|
+| Public business name | `Vidalo` |
+| Statement descriptor | `VIDALO` |
+| Shortened descriptor | `VIDALO` |
+| Support e-mail | `support@vidalo.io` |
+| Business website / Support website | `https://vidalo.io` / `https://vidalo.io/contact` |
+| Terms of service | `https://vidalo.io/voorwaarden` |
+| Privacy policy | `https://vidalo.io/privacy` |
+
+Why: Checkout asks for terms consent, and Stripe refuses every session while the Terms URL is empty. The visitor would see "Afrekenen lukt nu even niet".
+
+### L3 (J) Payment methods
+https://dashboard.stripe.com/settings/payment_methods: **Cards** on, **iDEAL** on, **SEPA Direct Debit** on. The code asks for exactly these (card and iDEAL for the one-time plan, SEPA as well for the subscription); Checkout refuses a method that is off. SEPA may ask for extra details before it turns on.
+
+### L4 (J) Branding and invoices
+https://dashboard.stripe.com/settings/branding
+
+| Field | Value |
+|---|---|
+| Icon | `/Users/a101/Vidalo/docs/brand/social/avatar/vidalo-avatar-blue.png` |
+| Logo | `/Users/a101/Vidalo/apps/web/public/logo-512.png` |
+| Brand colour | `#2563EB` |
+| Accent colour | `#111827` |
+
+https://dashboard.stripe.com/settings/billing/invoice → **Default footer**:
+```
+A101 B.V. · Factorij 80, 3071 AV Rotterdam · KvK 42057858 · btw NL869514192B01 · support@vidalo.io
+```
+Do **not** switch on Stripe Tax: the setup script creates a fixed, exclusive 21% rate and Checkout puts it on every line (decision 16 Oct; abroad comes later, L11).
+
+### L5 (J) Failed payments
+https://dashboard.stripe.com/settings/billing/automatic
+
+| Setting | Value |
+|---|---|
+| Smart Retries | on (Stripe's default schedule) |
+| E-mail customers when a payment fails | on |
+| If all retries for a payment fail | **Mark the subscription as unpaid** (not cancel) |
+
+Why "unpaid": the app pauses the business and a late payer resumes, instead of losing their facts page (`docs/PAYMENTS.md`).
+
+### L6 (J) Live secret key, into its own file
+The live key stays out of the root `.env`, so local development keeps using the sandbox. `.env.live` is gitignored like `.env`.
+
+1. In Terminal: `touch /Users/a101/Vidalo/.env.live && open -e /Users/a101/Vidalo/.env.live`
+2. https://dashboard.stripe.com/apikeys (live, account **Vidalo**) → **Secret key** → Reveal → copy (starts with `sk_live_`).
+3. Paste into the file, no quotes, no spaces around `=`, and save (⌘S):
+   ```
+   STRIPE_SECRET_KEY=sk_live_...
+   PUBLIC_BASE_URL=https://vidalo.io
+   ```
+4. Tell Claude: "live key in .env.live". Never paste the key in the chat.
+
+### L7 (C) Prices, tax rate, portal and webhook on the live account
+```bash
+cd /Users/a101/Vidalo/apps/web && node --env-file=../../.env.live scripts/stripe-setup.mjs
+```
+The first run prints the key's account and stops. C checks it is not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_...` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Goed zetten" €149 once, "Vidalo Goed houden" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
+
+### L8 (C) Live values onto the web Worker, then deploy
+```bash
+cd /Users/a101/Vidalo && pnpm secrets:push --env .env.live --apply --live --only STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,STRIPE_PRICE_SETUP,STRIPE_PRICE_MONITOR,STRIPE_TAX_RATE_ID,STRIPE_PORTAL_CONFIGURATION
+```
+`VIDALO_STRIPE_ACCOUNT` stays in `.env.live`: only the setup script reads it, no Worker does.
+Then `deploy.yml` → `production`. Done when `wrangler secret list` on `vidalo-web` shows all six names and the deploy's checks pass. From here the sandbox webhook (`we_1UUPzEELCe3OOCe2Z48U08Sn`) also still points at vidalo.io and will fail its signature check; **J** disables it: account switcher → **Vidalo sandbox** → Developers → Webhooks → that endpoint → **Disable**.
+
+### L9 (J) One real purchase, then refund
+1. Open the full site behind the gate: https://vidalo.io/voorvertoning, key `VIDALO_PREVIEW_KEY` from your root `.env`.
+2. Run a free check on a business, choose **Goed zetten** (one-time, so no subscription is left behind), pay with iDEAL: `€149,00 + €31,29 btw = €180,29`.
+3. Refund it: https://dashboard.stripe.com/payments → that payment → **Refund** → full amount.
+4. Tell Claude the business name you used.
+
+### L10 (C) Read back the proof
+- The business's event log has `checkout.completed` with `termsConsent: "accepted"`, and the business moved to `trial` (Supabase, project `bbynmqvaxpjdnkaasutd`).
+- https://dashboard.stripe.com/webhooks → the Vidalo endpoint shows `200` for `checkout.session.completed`.
+- The invoice carries the 21% line and the footer from L4.
+- C then stops the test business's queued setup job and records the test, so nothing runs for a business that did not buy.
+
+Only after L10 is Stripe live. Update this file's status table and go-live B1–B4 with the proof.
+
+### L11 Later: businesses outside the Netherlands
+Checkout refuses a business abroad today. When the accountant has confirmed the rules (go-live B6): Stripe Tax on with the origin address above and the NL registration, `VIDALO_STRIPE_TAX=1` on `vidalo-web`, VAT FAQ updated. Details in `docs/PAYMENTS.md`.
 
 ## Reference
 
 | Thing | Value |
 |---|---|
-| Stripe account | Vidalo, `acct_1UR4QnEKzmvgQ7J9`, in organisation A101 B.V. |
-| Stripe sandbox (unused) | `acct_1UR4RAELCe3OOCe2` |
+| Stripe account in use | Vidalo sandbox, `acct_1UR4RAELCe3OOCe2`, in organisation A101 B.V.; live account: after §10 L1 |
+| Former test account | `acct_1UR4QnEKzmvgQ7J9` (16 Oct; replaced by the sandbox 25 Oct) |
 | Other A101 accounts, never touch | Sitty `acct_1UA8rHEGTq7D30VV`, Sonable `acct_1TyIM8EQK4LIWEDd` |
-| Portal configuration (test) | `bpc_1UR8MDEKzmvgQ7J9sXzbS8S0` |
+| Portal configuration | id printed by `pnpm stripe:setup`, per account |
 | Webhook path | `/api/stripe/webhook`, events in `STRIPE_WEBHOOK_EVENTS` (`packages/core/src/billing/index.ts`) |
 | Billing rules and tests | `packages/core/src/billing/index.ts`, `packages/core/test/billing.test.ts` |
 | Payments doc | `docs/PAYMENTS.md` |
