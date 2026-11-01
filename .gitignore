@@ -12,3 +12,4 @@ out/
 
 # Local wrangler dev secrets
 .dev.vars
+.env.live
