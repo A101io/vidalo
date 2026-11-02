@@ -270,11 +270,7 @@ The live key stays out of the root `.env`, so local development keeps using the 
 ```bash
 cd /Users/a101/Vidalo/apps/web && node --env-file=../../.env.live scripts/stripe-setup.mjs
 ```
-<<<<<<< HEAD
-The first run prints the key's account and stops. C checks it is `acct_1UR4QnEKzmvgQ7J9`, not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Goed zetten" €149 once, "Vidalo Goed houden" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
-=======
-The first run prints the key's account and stops. C checks it is not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_...` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Scan" €149 once, "Vidalo Monthly" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
->>>>>>> origin/main
+The first run prints the key's account and stops. C checks it is `acct_1UR4QnEKzmvgQ7J9`, not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Scan" €149 once, "Vidalo Monthly" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
 
 ### L8 (C) Live values onto the web Worker, then deploy
 ```bash
