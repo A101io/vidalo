@@ -74,8 +74,8 @@ describe("Vidalo as its own first customer", () => {
   });
 
   it("charges itself what it charges customers", () => {
-    const setup = OWN_FACTS.prices.find((p) => p.label === "Goed zetten");
-    const monitor = OWN_FACTS.prices.find((p) => p.label === "Goed houden");
+    const setup = OWN_FACTS.prices.find((p) => p.label === "Vidalo Scan");
+    const monitor = OWN_FACTS.prices.find((p) => p.label === "Vidalo Monthly");
     expect(setup?.amount).toBe(PRICES.setupEur);
     expect(monitor?.amount).toBe(PRICES.monitorEurPerMonth);
     expect(setup?.unit).toContain("excl. btw");

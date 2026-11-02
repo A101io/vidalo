@@ -47,7 +47,7 @@ const NL: Words = {
   bye: "Groet,\nVidalo",
   cancel_confirmed: (name, date, url) => ({
     subject: `Je abonnement voor ${name} is opgezegd`,
-    body: `We hebben je opzegging ontvangen. Je abonnement op Goed houden voor ${name} stopt op ${date}. Tot die dag loopt alles door en betaal je niets extra. Daarna schrijven we niets meer af.
+    body: `We hebben je opzegging ontvangen. Je abonnement op Vidalo Monthly voor ${name} stopt op ${date}. Tot die dag loopt alles door en betaal je niets extra. Daarna schrijven we niets meer af.
 
 Wat er op ${date} gebeurt
 Ons werk stopt: we controleren niet meer wat AI over je bedrijf zegt en we werken je gegevens niet meer bij.
@@ -60,13 +60,13 @@ Toch doorgaan? Dat kan tot ${date}, met één klik op ${url}`,
   }),
   cancel_undone: (name, _date, url) => ({
     subject: `Je abonnement voor ${name} loopt door`,
-    body: `Je hebt je opzegging ingetrokken. Je abonnement op Goed houden voor ${name} loopt gewoon door, met dezelfde prijs en dezelfde datum van betalen.
+    body: `Je hebt je opzegging ingetrokken. Je abonnement op Vidalo Monthly voor ${name} loopt gewoon door, met dezelfde prijs en dezelfde datum van betalen.
 
 Je abonnement: ${url}`,
   }),
   pause_confirmed: (name, date, url) => ({
     subject: `Je abonnement voor ${name} staat stil tot ${date}`,
-    body: `Je abonnement op Goed houden voor ${name} staat stil tot ${date}. In die tijd betaal je niets.
+    body: `Je abonnement op Vidalo Monthly voor ${name} staat stil tot ${date}. In die tijd betaal je niets.
 
 Wat stilstaat: de maandelijkse controle, het herstellen van fouten en het bijwerken van gidsen.
 Wat blijft: je feitenpagina blijft online en je gegevens blijven bewaard.
@@ -75,7 +75,7 @@ Op ${date} gaat alles vanzelf weer verder en betaal je weer per maand. Een week 
   }),
   pause_ending: (name, date, url) => ({
     subject: `Op ${date} gaat je abonnement voor ${name} weer verder`,
-    body: `Je abonnement op Goed houden voor ${name} staat nog stil tot ${date}. Vanaf die dag controleren we weer elke maand en betaal je weer per maand.
+    body: `Je abonnement op Vidalo Monthly voor ${name} staat nog stil tot ${date}. Vanaf die dag controleren we weer elke maand en betaal je weer per maand.
 
 Wil je niet verder? Zeg dan voor ${date} op via ${url}`,
   }),
@@ -93,7 +93,7 @@ const EN: Words = {
   bye: "Best,\nVidalo",
   cancel_confirmed: (name, date, url) => ({
     subject: `Your subscription for ${name} is cancelled`,
-    body: `We have received your cancellation. Your Keep it right subscription for ${name} ends on ${date}. Until then everything carries on and you pay nothing extra. After that we charge nothing more.
+    body: `We have received your cancellation. Your Vidalo Monthly subscription for ${name} ends on ${date}. Until then everything carries on and you pay nothing extra. After that we charge nothing more.
 
 What happens on ${date}
 Our work stops: we no longer check what AI says about your business and no longer update your details.
@@ -106,13 +106,13 @@ Changed your mind? Until ${date} it takes one click at ${url}`,
   }),
   cancel_undone: (name, _date, url) => ({
     subject: `Your subscription for ${name} continues`,
-    body: `You have withdrawn your cancellation. Your Keep it right subscription for ${name} simply continues, at the same price and on the same payment date.
+    body: `You have withdrawn your cancellation. Your Vidalo Monthly subscription for ${name} simply continues, at the same price and on the same payment date.
 
 Your subscription: ${url}`,
   }),
   pause_confirmed: (name, date, url) => ({
     subject: `Your subscription for ${name} is paused until ${date}`,
-    body: `Your Keep it right subscription for ${name} is paused until ${date}. You pay nothing in that time.
+    body: `Your Vidalo Monthly subscription for ${name} is paused until ${date}. You pay nothing in that time.
 
 What stops: the monthly check, fixing errors and updating directories.
 What stays: your facts page stays online and your details are kept.
@@ -121,7 +121,7 @@ On ${date} everything starts again by itself and you pay monthly again. We send 
   }),
   pause_ending: (name, date, url) => ({
     subject: `Your subscription for ${name} starts again on ${date}`,
-    body: `Your Keep it right subscription for ${name} is paused until ${date}. From that day we check every month again and you pay monthly again.
+    body: `Your Vidalo Monthly subscription for ${name} is paused until ${date}. From that day we check every month again and you pay monthly again.
 
 Don't want to continue? Cancel before ${date} at ${url}`,
   }),
