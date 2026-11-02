@@ -15,9 +15,10 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | A real sandbox checkout end to end | **open** | §8 |
 | Live account activated (L1) | **done per Julian, 2 Nov** | connector reaches `acct_1UR4QnEKzmvgQ7J9` in live mode; balance €0 |
 | Live prices | done (created at activation, 2 Nov) | `price_1UWxT8EKzmvgQ7J9OmjfqZZo` €149 once, `price_1UWxT8EKzmvgQ7J9uF1DTf0t` €49/month, both exclusive, lookup keys as the code expects |
-| Live iDEAL and SEPA Direct Debit (L3) | **open, Julian**: read `available: false` on 2 Nov; card is on | |
+| Live iDEAL and SEPA Direct Debit (L3) | done | read back on live: card, iDEAL, SEPA `on` |
 | Live public details, branding, failed payments, key (L2, L4–L6) | **open, Julian** | |
-| Live tax rate, portal, webhook (L7) | open, Claude after L6 | none exist on live (2 Nov) |
+| Live portal | done by Claude through the connector | `bpc_1UXOFCEKzmvgQ7J9gUOq1jOj`, name Vidalo, default, no cancel, no pause |
+| Live tax rate, webhook (L7) | open, Claude after L6: the connector cannot create tax rates, and a webhook made there would show its secret in the chat | none on live |
 | Live Worker values, one refunded purchase (L8–L10) | open | |
 | Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
