@@ -1,12 +1,12 @@
 # Cancel and pause
 
-How an owner ends or pauses the monthly plan ("Goed houden", €49 per month), why it works this way, and what still needs counsel. Built 25 Oct 2026 (`packages/core/src/billing/lifecycle.ts`, `apps/web/app/app/abonnement/`, migration `0012_cancel_pause.sql`). Not legal advice.
+How an owner ends or pauses the monthly plan ("Vidalo Monthly", €49 per month), why it works this way, and what still needs counsel. Built 25 Oct 2026 (`packages/core/src/billing/lifecycle.ts`, `apps/web/app/app/abonnement/`, migration `0012_cancel_pause.sql`). Not legal advice.
 
 ## The flow
 
 | Step | Where | What happens |
 |---|---|---|
-| Find it | `/app/abonnement`, section "Pauzeren of opzeggen" | Two plain buttons, one click from the account menu. Shown only for the monthly plan; "Goed zetten" was paid once and has nothing to end |
+| Find it | `/app/abonnement`, section "Pauzeren of opzeggen" | Two plain buttons, one click from the account menu. Shown only for the monthly plan; "Vidalo Scan" was paid once and has nothing to end |
 | Cancel | `/app/abonnement/opzeggen` | One page, one button "Zeg op per <date>". It says the end date, what stops, what stays, that it can be undone. A reason is asked, never required. The pause is offered once, as a plain link |
 | At Stripe | `cancel_at_period_end: true`, reason in `cancellation_details` | The paid period runs out; nothing more is charged; no refund of the running period (none is owed: the service runs until the end) |
 | Confirmation | mail `cancel_confirmed`, straight away | What was cancelled, the end date, what stops, what stays (facts page redirect, corrections at third parties, invoices, the free check after 90 days, retention), how to undo |

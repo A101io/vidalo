@@ -4,9 +4,9 @@ Two plans, both excl. 21% btw:
 
 | Plan | What | Stripe |
 |---|---|---|
-| Goed zetten | €149 once | Checkout `mode=payment`, invoice created |
-| Goed zetten en houden | €149 once + €49/month | Checkout `mode=subscription`, setup as a one-time first line |
-| Goed houden (later) | €49/month | `plan=monitor_addon`, from `/app/abonnement`, verified owner only |
+| Vidalo Scan | €149 once | Checkout `mode=payment`, invoice created |
+| Vidalo Scan + Vidalo Monthly | €149 once + €49/month | Checkout `mode=subscription`, setup as a one-time first line |
+| Vidalo Monthly (later) | €49/month | `plan=monitor_addon`, from `/app/abonnement`, verified owner only |
 
 Every line carries the 21% NL tax rate (`STRIPE_TAX_RATE_ID`). A live checkout
 without it is refused and the visitor sees "Afrekenen lukt nu even niet":

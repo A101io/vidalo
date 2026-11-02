@@ -65,8 +65,8 @@ export const OWN_FACTS: Facts = {
   ],
   servicesNo: ["Websites bouwen", "Advertenties plaatsen", "Reviews schrijven of laten verwijderen"],
   prices: [
-    { label: "Goed zetten", amount: PRICES.setupEur, unit: "eenmalig, excl. btw" },
-    { label: "Goed houden", amount: PRICES.monitorEurPerMonth, unit: "per maand, excl. btw" },
+    { label: "Vidalo Scan", amount: PRICES.setupEur, unit: "eenmalig, excl. btw" },
+    { label: "Vidalo Monthly", amount: PRICES.monitorEurPerMonth, unit: "per maand, excl. btw" },
   ],
   policies: ["De eerste controle is gratis, zonder account", "Geen opzegtermijn, maandelijks opzegbaar", "Prijzen exclusief btw", "Voor bedrijven in Nederland en daarbuiten; buiten Nederland in het Engels"],
   paymentMethods: [],
