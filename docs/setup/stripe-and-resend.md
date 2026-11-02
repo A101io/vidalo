@@ -18,8 +18,10 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | Live iDEAL and SEPA Direct Debit (L3) | done | read back on live: card, iDEAL, SEPA `on` |
 | Live public details, branding, failed payments, key (L2, L4–L6) | **open, Julian** | |
 | Live portal | done by Claude through the connector | `bpc_1UXOFCEKzmvgQ7J9gUOq1jOj`, name Vidalo, default, no cancel, no pause |
-| Live tax rate, webhook (L7) | open, Claude after L6: the connector cannot create tax rates, and a webhook made there would show its secret in the chat | none on live |
-| Live Worker values, one refunded purchase (L8–L10) | open | |
+| Live key (L6) | done, 2 Nov | restricted key `rk_live_`, "Full access except sensitive operations", in `.env.live` |
+| Live tax rate, webhook (L7) | done by Claude with the setup script, 2 Nov | `txr_1UXOVfEKzmvgQ7J9uS8y2KyS` BTW 21% exclusive; webhook `we_1UXOVfEKzmvgQ7J9dQNugNlv` enabled, seven events, read back through the connector; second check run: nothing missing |
+| Live Worker values (L8) | **open, Julian**: the permission layer refused Claude the push to the Worker secret store | |
+| One refunded purchase (L9–L10) | open | |
 | Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
 | Resend API key in `.env` | open, Julian | |
