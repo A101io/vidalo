@@ -13,7 +13,12 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | iDEAL and SEPA Direct Debit | done per Julian, 26 Oct (sandbox; not read back) | |
 | Cancel and pause in the app; portal without cancelling | done, mock + local Postgres | `docs/CANCEL-PAUSE.md` |
 | A real sandbox checkout end to end | **open** | §8 |
-| **Live account, live settings, live key, one refunded purchase** | **open: §10 L1–L10** | |
+| Live account activated (L1) | **done per Julian, 2 Nov** | connector reaches `acct_1UR4QnEKzmvgQ7J9` in live mode; balance €0 |
+| Live prices | done (created at activation, 2 Nov) | `price_1UWxT8EKzmvgQ7J9OmjfqZZo` €149 once, `price_1UWxT8EKzmvgQ7J9uF1DTf0t` €49/month, both exclusive, lookup keys as the code expects |
+| Live iDEAL and SEPA Direct Debit (L3) | **open, Julian**: read `available: false` on 2 Nov; card is on | |
+| Live public details, branding, failed payments, key (L2, L4–L6) | **open, Julian** | |
+| Live tax rate, portal, webhook (L7) | open, Claude after L6 | none exist on live (2 Nov) |
+| Live Worker values, one refunded purchase (L8–L10) | open | |
 | Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
 | Resend API key in `.env` | open, Julian | |
@@ -178,7 +183,7 @@ Values used throughout:
 **Before you start, know this about review.** Stripe looks at the website during activation. Terms, privacy and contact pass the coming-soon gate (checked 1 Nov 2026), but the prices page does not: a reviewer sees "Binnenkort". The product description in L1 therefore carries the prices. If Stripe still asks, the answer is to send them the preview link or to open `/prijzen` in the gate; that is your call when it happens.
 
 ### L1 (J) Activate a live account for Vidalo
-https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo** (`acct_1UR4QnEKzmvgQ7J9`), not on "Vidalo sandbox". That account exists since 16 Oct and keeps its id when it goes live; do not create a new one. Checked 2 Nov 2026 through the Stripe connector: it reaches this account in test mode only, with no live side yet.
+https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo** (`acct_1UR4QnEKzmvgQ7J9`), not on "Vidalo sandbox". That account exists since 16 Oct and keeps its id when it goes live; do not create a new one. Activated by Julian on 2 Nov 2026; the connector then reached its live side.
 
 | Field | Value |
 |---|---|
@@ -215,7 +220,7 @@ https://dashboard.stripe.com/settings/public
 Why: Checkout asks for terms consent, and Stripe refuses every session while the Terms URL is empty. The visitor would see "Afrekenen lukt nu even niet".
 
 ### L3 (J) Payment methods
-https://dashboard.stripe.com/settings/payment_methods: **Cards** on, **iDEAL** on, **SEPA Direct Debit** on. The code asks for exactly these (card and iDEAL for the one-time plan, SEPA as well for the subscription); Checkout refuses a method that is off. SEPA may ask for extra details before it turns on.
+https://dashboard.stripe.com/settings/payment_methods: **Cards** on, **iDEAL** on, **SEPA Direct Debit** on. The code asks for exactly these (card and iDEAL for the one-time plan, SEPA as well for the subscription); Checkout refuses a method that is off, so **every live checkout fails until iDEAL is on**. SEPA may ask for extra details before it turns on. The other methods Stripe switched on by default (Klarna, Bancontact, Apple Pay and so on) can stay: the code lists its own and Checkout shows only those.
 
 ### L4 (J) Branding and invoices
 https://dashboard.stripe.com/settings/branding
