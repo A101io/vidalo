@@ -20,8 +20,10 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | Live portal | done by Claude through the connector | `bpc_1UXOFCEKzmvgQ7J9gUOq1jOj`, name Vidalo, default, no cancel, no pause |
 | Live key (L6) | done, 2 Nov | restricted key `rk_live_`, "Full access except sensitive operations", in `.env.live` |
 | Live tax rate, webhook (L7) | done by Claude with the setup script, 2 Nov | `txr_1UXOVfEKzmvgQ7J9uS8y2KyS` BTW 21% exclusive; webhook `we_1UXOVfEKzmvgQ7J9dQNugNlv` enabled, seven events, read back through the connector; second check run: nothing missing |
-| Live Worker values (L8) | **open, Julian**: the permission layer refused Claude the push to the Worker secret store | |
-| One refunded purchase (L9–L10) | open | |
+| Live Worker values (L8) | done, 2 Nov | six values on `vidalo-web`, 6/6 read back; production deploy 41489043807 |
+| Live checkout from vidalo.io | **works, 2 Nov** | after #86 (fetch HTTP client): both plans answer 303 to `checkout.stripe.com` in 1.5 s; sessions read back: €149 + €31,29 btw = €180,29 one-time with iDEAL and card; €198 + €41,58 = €239,58 first month with iDEAL, card and SEPA; terms checkbox required; B2B text; btw-nummer asked. Both expired, test business deleted |
+| Live webhook | works, 2 Nov | a request signed with the live secret answers 200, a wrong signature 400. Old endpoint `we_1UXOVfEKzmvgQ7J9dQNugNlv` disabled and parked (secret lost to a TextEdit save); new `we_1UXOYhEKzmvgQ7J9svK5J2yX` |
+| One real purchase, refunded (L9–L10) | open: needs a real card or iDEAL, so Julian | the only step left |
 | Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
 | Resend API key in `.env` | open, Julian | |
@@ -126,8 +128,8 @@ The first run checks only. It prints the key's account and stops if it is not `V
 
 | Line | What |
 |---|---|
-| `STRIPE_PRICE_SETUP` | "Vidalo Goed zetten", €149 once, excl. btw (lookup `vidalo_setup_eur_149`) |
-| `STRIPE_PRICE_MONITOR` | "Vidalo Goed houden", €49/month, excl. btw (lookup `vidalo_monitor_eur_49`) |
+| `STRIPE_PRICE_SETUP` | "Vidalo Scan", €149 once, excl. btw (lookup `vidalo_setup_eur_149`) |
+| `STRIPE_PRICE_MONITOR` | "Vidalo Monthly", €49/month, excl. btw (lookup `vidalo_monitor_eur_49`) |
 | `STRIPE_TAX_RATE_ID` | BTW 21% NL, exclusive |
 | `STRIPE_PORTAL_CONFIGURATION` | the portal above |
 | `STRIPE_WEBHOOK_SECRET` | only when `PUBLIC_BASE_URL` is set; shown once, at creation |
@@ -203,7 +205,7 @@ https://dashboard.stripe.com/account/onboarding, with the account switcher (top 
 
 Product description:
 ```
-Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, and corrects them. Two plans for businesses (B2B only): a one-time setup at EUR 149 and a monthly check at EUR 49, both excluding 21% VAT. The site is in pre-launch; terms at https://vidalo.io/voorwaarden, privacy at https://vidalo.io/privacy, contact at https://vidalo.io/contact.
+Vidalo checks what AI assistants say about a Dutch business, finds wrong facts and their sources, and corrects them. Two plans for businesses (B2B only): Vidalo Scan, a one-time check and fix at EUR 149, and Vidalo Monthly, a monthly check at EUR 49, both excluding 21% VAT. The site is in pre-launch; terms at https://vidalo.io/voorwaarden, privacy at https://vidalo.io/privacy, contact at https://vidalo.io/contact.
 ```
 Done when: the dashboard no longer shows "Activate payments" and the top left shows **Vidalo** without the word sandbox.
 
@@ -268,7 +270,11 @@ The live key stays out of the root `.env`, so local development keeps using the 
 ```bash
 cd /Users/a101/Vidalo/apps/web && node --env-file=../../.env.live scripts/stripe-setup.mjs
 ```
+<<<<<<< HEAD
 The first run prints the key's account and stops. C checks it is `acct_1UR4QnEKzmvgQ7J9`, not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Goed zetten" €149 once, "Vidalo Goed houden" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
+=======
+The first run prints the key's account and stops. C checks it is not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_...` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Scan" €149 once, "Vidalo Monthly" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
+>>>>>>> origin/main
 
 ### L8 (C) Live values onto the web Worker, then deploy
 ```bash
@@ -279,7 +285,7 @@ Then `deploy.yml` → `production`. Done when `wrangler secret list` on `vidalo-
 
 ### L9 (J) One real purchase, then refund
 1. Open the full site behind the gate: https://vidalo.io/voorvertoning, key `VIDALO_PREVIEW_KEY` from your root `.env`.
-2. Run a free check on a business, choose **Goed zetten** (one-time, so no subscription is left behind), pay with iDEAL: `€149,00 + €31,29 btw = €180,29`.
+2. Run a free check on a business, choose **Vidalo Scan** (one-time, so no subscription is left behind), pay with iDEAL: `€149,00 + €31,29 btw = €180,29`.
 3. Refund it: https://dashboard.stripe.com/payments → that payment → **Refund** → full amount.
 4. Tell Claude the business name you used.
 

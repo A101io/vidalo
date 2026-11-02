@@ -24,8 +24,8 @@ const OTHER_A101_ACCOUNTS = {
   acct_1TyIM8EQK4LIWEDd: "Sonable",
 };
 const PRICES = [
-  { lookup: "vidalo_setup_eur_149", product: "Vidalo Goed zetten", amount: 14900, recurring: null, env: "STRIPE_PRICE_SETUP" },
-  { lookup: "vidalo_monitor_eur_49", product: "Vidalo Goed houden", amount: 4900, recurring: { interval: "month" }, env: "STRIPE_PRICE_MONITOR" },
+  { lookup: "vidalo_setup_eur_149", product: "Vidalo Scan", amount: 14900, recurring: null, env: "STRIPE_PRICE_SETUP" },
+  { lookup: "vidalo_monitor_eur_49", product: "Vidalo Monthly", amount: 4900, recurring: { interval: "month" }, env: "STRIPE_PRICE_MONITOR" },
 ];
 
 const args = new Set(process.argv.slice(2));

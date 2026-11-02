@@ -9,7 +9,7 @@ function Check({ light }: { light?: boolean }) {
   );
 }
 
-/** The two plans on the dark pricing band, Goed zetten (€149) and Goed houden (€49 per maand), and the websites by request. */
+/** The two plans on the dark pricing band, Vidalo Scan (€149) and Vidalo Monthly (€49 per maand), and the websites by request. */
 export async function PriceBlock() {
   const { copy, href } = await getI18n();
   const P = copy.landing.prijs;
