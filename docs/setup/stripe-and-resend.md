@@ -178,7 +178,7 @@ Values used throughout:
 **Before you start, know this about review.** Stripe looks at the website during activation. Terms, privacy and contact pass the coming-soon gate (checked 1 Nov 2026), but the prices page does not: a reviewer sees "Binnenkort". The product description in L1 therefore carries the prices. If Stripe still asks, the answer is to send them the preview link or to open `/prijzen` in the gate; that is your call when it happens.
 
 ### L1 (J) Activate a live account for Vidalo
-https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo**. If the switcher shows only "Vidalo sandbox", choose **+ New account** inside the A101 B.V. organisation, name `Vidalo`, then activate it.
+https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo** (`acct_1UR4QnEKzmvgQ7J9`), not on "Vidalo sandbox". That account exists since 16 Oct and keeps its id when it goes live; do not create a new one. Checked 2 Nov 2026 through the Stripe connector: it reaches this account in test mode only, with no live side yet.
 
 | Field | Value |
 |---|---|
@@ -260,7 +260,7 @@ The live key stays out of the root `.env`, so local development keeps using the 
 ```bash
 cd /Users/a101/Vidalo/apps/web && node --env-file=../../.env.live scripts/stripe-setup.mjs
 ```
-The first run prints the key's account and stops. C checks it is not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_...` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Goed zetten" €149 once, "Vidalo Goed houden" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
+The first run prints the key's account and stops. C checks it is `acct_1UR4QnEKzmvgQ7J9`, not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Goed zetten" €149 once, "Vidalo Goed houden" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
 
 ### L8 (C) Live values onto the web Worker, then deploy
 ```bash
@@ -290,8 +290,8 @@ Checkout refuses a business abroad today. When the accountant has confirmed the 
 
 | Thing | Value |
 |---|---|
-| Stripe account in use | Vidalo sandbox, `acct_1UR4RAELCe3OOCe2`, in organisation A101 B.V.; live account: after §10 L1 |
-| Former test account | `acct_1UR4QnEKzmvgQ7J9` (16 Oct; replaced by the sandbox 25 Oct) |
+| Stripe account in use | Vidalo sandbox, `acct_1UR4RAELCe3OOCe2`, in organisation A101 B.V. Read back 2 Nov 2026: prices €149 and €49/month exclusive, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` enabled with the seven events, portal `bpc_1UUPzEELCe3OOCe2PxDVWozg` (default, no cancel, no pause), card, iDEAL and SEPA on |
+| Account to activate for live | Vidalo, `acct_1UR4QnEKzmvgQ7J9` (16 Oct); its test mode has old prices from 16 Oct, unused |
 | Other A101 accounts, never touch | Sitty `acct_1UA8rHEGTq7D30VV`, Sonable `acct_1TyIM8EQK4LIWEDd` |
 | Portal configuration | id printed by `pnpm stripe:setup`, per account |
 | Webhook path | `/api/stripe/webhook`, events in `STRIPE_WEBHOOK_EVENTS` (`packages/core/src/billing/index.ts`) |
