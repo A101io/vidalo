@@ -13,7 +13,17 @@ Started 16 Oct 2026. The record of how Vidalo's payments (Stripe) and email (Res
 | iDEAL and SEPA Direct Debit | done per Julian, 26 Oct (sandbox; not read back) | |
 | Cancel and pause in the app; portal without cancelling | done, mock + local Postgres | `docs/CANCEL-PAUSE.md` |
 | A real sandbox checkout end to end | **open** | §8 |
-| **Live account, live settings, live key, one refunded purchase** | **open: §10 L1–L10** | |
+| Live account activated (L1) | **done per Julian, 2 Nov** | connector reaches `acct_1UR4QnEKzmvgQ7J9` in live mode; balance €0 |
+| Live prices | done (created at activation, 2 Nov) | `price_1UWxT8EKzmvgQ7J9OmjfqZZo` €149 once, `price_1UWxT8EKzmvgQ7J9uF1DTf0t` €49/month, both exclusive, lookup keys as the code expects |
+| Live iDEAL and SEPA Direct Debit (L3) | done | read back on live: card, iDEAL, SEPA `on` |
+| Live public details, branding, failed payments, key (L2, L4–L6) | **open, Julian** | |
+| Live portal | done by Claude through the connector | `bpc_1UXOFCEKzmvgQ7J9gUOq1jOj`, name Vidalo, default, no cancel, no pause |
+| Live key (L6) | done, 2 Nov | restricted key `rk_live_`, "Full access except sensitive operations", in `.env.live` |
+| Live tax rate, webhook (L7) | done by Claude with the setup script, 2 Nov | `txr_1UXOVfEKzmvgQ7J9uS8y2KyS` BTW 21% exclusive; webhook `we_1UXOVfEKzmvgQ7J9dQNugNlv` enabled, seven events, read back through the connector; second check run: nothing missing |
+| Live Worker values (L8) | done, 2 Nov | six values on `vidalo-web`, 6/6 read back; production deploy 41489043807 |
+| Live checkout from vidalo.io | **works, 2 Nov** | after #86 (fetch HTTP client): both plans answer 303 to `checkout.stripe.com` in 1.5 s; sessions read back: €149 + €31,29 btw = €180,29 one-time with iDEAL and card; €198 + €41,58 = €239,58 first month with iDEAL, card and SEPA; terms checkbox required; B2B text; btw-nummer asked. Both expired, test business deleted |
+| Live webhook | works, 2 Nov | a request signed with the live secret answers 200, a wrong signature 400. Old endpoint `we_1UXOVfEKzmvgQ7J9dQNugNlv` disabled and parked (secret lost to a TextEdit save); new `we_1UXOYhEKzmvgQ7J9svK5J2yX` |
+| One real purchase, refunded (L9–L10) | open: needs a real card or iDEAL, so Julian | the only step left |
 | Stripe Tax for businesses abroad | open: accountant first | §10 L11, `docs/PAYMENTS.md` |
 | Resend account, `vidalo.io` domain verified | open, Julian | |
 | Resend API key in `.env` | open, Julian | |
@@ -178,7 +188,7 @@ Values used throughout:
 **Before you start, know this about review.** Stripe looks at the website during activation. Terms, privacy and contact pass the coming-soon gate (checked 1 Nov 2026), but the prices page does not: a reviewer sees "Binnenkort". The product description in L1 therefore carries the prices. If Stripe still asks, the answer is to send them the preview link or to open `/prijzen` in the gate; that is your call when it happens.
 
 ### L1 (J) Activate a live account for Vidalo
-https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo**. If the switcher shows only "Vidalo sandbox", choose **+ New account** inside the A101 B.V. organisation, name `Vidalo`, then activate it.
+https://dashboard.stripe.com/account/onboarding, with the account switcher (top left) on **Vidalo** (`acct_1UR4QnEKzmvgQ7J9`), not on "Vidalo sandbox". That account exists since 16 Oct and keeps its id when it goes live; do not create a new one. Activated by Julian on 2 Nov 2026; the connector then reached its live side.
 
 | Field | Value |
 |---|---|
@@ -215,7 +225,7 @@ https://dashboard.stripe.com/settings/public
 Why: Checkout asks for terms consent, and Stripe refuses every session while the Terms URL is empty. The visitor would see "Afrekenen lukt nu even niet".
 
 ### L3 (J) Payment methods
-https://dashboard.stripe.com/settings/payment_methods: **Cards** on, **iDEAL** on, **SEPA Direct Debit** on. The code asks for exactly these (card and iDEAL for the one-time plan, SEPA as well for the subscription); Checkout refuses a method that is off. SEPA may ask for extra details before it turns on.
+https://dashboard.stripe.com/settings/payment_methods: **Cards** on, **iDEAL** on, **SEPA Direct Debit** on. The code asks for exactly these (card and iDEAL for the one-time plan, SEPA as well for the subscription); Checkout refuses a method that is off, so **every live checkout fails until iDEAL is on**. SEPA may ask for extra details before it turns on. The other methods Stripe switched on by default (Klarna, Bancontact, Apple Pay and so on) can stay: the code lists its own and Checkout shows only those.
 
 ### L4 (J) Branding and invoices
 https://dashboard.stripe.com/settings/branding
@@ -260,7 +270,7 @@ The live key stays out of the root `.env`, so local development keeps using the 
 ```bash
 cd /Users/a101/Vidalo/apps/web && node --env-file=../../.env.live scripts/stripe-setup.mjs
 ```
-The first run prints the key's account and stops. C checks it is not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_...` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Scan" €149 once, "Vidalo Monthly" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
+The first run prints the key's account and stops. C checks it is `acct_1UR4QnEKzmvgQ7J9`, not the sandbox (`acct_1UR4RAELCe3OOCe2`), Sitty or Sonable, adds `VIDALO_STRIPE_ACCOUNT=acct_1UR4QnEKzmvgQ7J9` to `.env.live`, then runs again with `--apply --live` (the script refuses a live key without `--live`). It creates "Vidalo Scan" €149 once, "Vidalo Monthly" €49/month, BTW 21% exclusive, the portal "Vidalo" without cancelling, and the webhook to `https://vidalo.io/api/stripe/webhook` with the seven events the billing code handles. C writes the printed `STRIPE_*` lines into `.env.live` without showing them; the webhook secret is shown only this once. A second check run must report nothing missing.
 
 ### L8 (C) Live values onto the web Worker, then deploy
 ```bash
@@ -290,8 +300,8 @@ Checkout refuses a business abroad today. When the accountant has confirmed the 
 
 | Thing | Value |
 |---|---|
-| Stripe account in use | Vidalo sandbox, `acct_1UR4RAELCe3OOCe2`, in organisation A101 B.V.; live account: after §10 L1 |
-| Former test account | `acct_1UR4QnEKzmvgQ7J9` (16 Oct; replaced by the sandbox 25 Oct) |
+| Stripe account in use | Vidalo sandbox, `acct_1UR4RAELCe3OOCe2`, in organisation A101 B.V. Read back 2 Nov 2026: prices €149 and €49/month exclusive, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` enabled with the seven events, portal `bpc_1UUPzEELCe3OOCe2PxDVWozg` (default, no cancel, no pause), card, iDEAL and SEPA on |
+| Account to activate for live | Vidalo, `acct_1UR4QnEKzmvgQ7J9` (16 Oct); its test mode has old prices from 16 Oct, unused |
 | Other A101 accounts, never touch | Sitty `acct_1UA8rHEGTq7D30VV`, Sonable `acct_1TyIM8EQK4LIWEDd` |
 | Portal configuration | id printed by `pnpm stripe:setup`, per account |
 | Webhook path | `/api/stripe/webhook`, events in `STRIPE_WEBHOOK_EVENTS` (`packages/core/src/billing/index.ts`) |
