@@ -86,16 +86,52 @@ export function seededRandom(seed: string | number): () => number {
   };
 }
 
-/** Fetch a URL as text with a timeout and a byte cap. Returns null on any failure. */
+/** A name with a dot that is not localhost or an IP literal. */
+export function isPublicHostname(host: string): boolean {
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(host)) return false; // also rejects IPv4/IPv6 literals and bare names
+  return !/(^|\.)(localhost|local|internal)$/i.test(host);
+}
+
+/** An http(s) URL on a public hostname, without credentials: the only kind the worker fetches for a third party. */
+export function isFetchableUrl(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  return (u.protocol === "https:" || u.protocol === "http:") && !u.username && !u.password && isPublicHostname(u.hostname);
+}
+
+export const MAX_REDIRECTS = 5;
+
+/**
+ * fetch() for URLs that come from outside (a Places website, an AI answer's
+ * citation, an owner's domain): every hop, redirects included, must pass
+ * isFetchableUrl, and at most MAX_REDIRECTS are followed. Throws on a refused
+ * URL, like fetch throws on a network error.
+ */
+export async function fetchPublic(url: string, init: RequestInit = {}, fetchImpl: (url: string, init?: RequestInit) => Promise<Response> = fetch): Promise<Response> {
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (!isFetchableUrl(current)) throw new Error(`refused url: ${current.slice(0, 200)}`);
+    const res = await fetchImpl(current, { ...init, redirect: "manual" });
+    const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+    if (!location) return res;
+    current = new URL(location, current).toString();
+  }
+  throw new Error(`too many redirects: ${url.slice(0, 200)}`);
+}
+
+/** Fetch a URL as text with a timeout and a byte cap. Returns null on any failure, a refused URL included. */
 export async function fetchText(url: string, opts: { timeoutMs?: number; maxBytes?: number } = {}): Promise<string | null> {
   const timeoutMs = opts.timeoutMs ?? 8_000;
   const maxBytes = opts.maxBytes ?? 200_000;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(url, {
+    const res = await fetchPublic(url, {
       signal: ctrl.signal,
-      redirect: "follow",
       headers: { "user-agent": "VidaloBot/0.1 (+https://vidalo.io)", accept: "text/html,text/plain;q=0.9,*/*;q=0.5" },
     });
     if (!res.ok || !res.body) return null;

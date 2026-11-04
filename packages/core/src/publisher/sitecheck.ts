@@ -22,6 +22,7 @@ import { formatPhoneNl, normalizePhone } from "../scanner/normalize.js";
 import { dashboardUrl } from "../reporter/links.js";
 import { copyFor, type Lang } from "../copy/index.js";
 import { bareDomain, defaultFactsHost } from "./host.js";
+import { fetchPublic, isPublicHostname } from "../scanner/util.js";
 
 export const SITECHECK_USER_AGENT = "Vidalo-Sitecheck/1.0 (+https://vidalo.io)";
 
@@ -202,7 +203,7 @@ export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
 async function get(fetchImpl: FetchLike, url: string): Promise<{ status: number; text: string; headers: Headers } | null> {
   try {
-    const res = await fetchImpl(url, { headers: { "user-agent": SITECHECK_USER_AGENT, accept: "text/html,text/plain;q=0.9,*/*;q=0.5" }, redirect: "follow", signal: AbortSignal.timeout(15_000) });
+    const res = await fetchPublic(url, { headers: { "user-agent": SITECHECK_USER_AGENT, accept: "text/html,text/plain;q=0.9,*/*;q=0.5" }, signal: AbortSignal.timeout(15_000) }, fetchImpl);
     return { status: res.status, text: res.ok ? await res.text() : "", headers: res.headers };
   } catch (err) {
     log.info("sitecheck.fetch_failed", { url, error: errorMessage(err) });
@@ -210,11 +211,7 @@ async function get(fetchImpl: FetchLike, url: string): Promise<{ status: number;
   }
 }
 
-/** A name with a dot that is not localhost or an IP literal. */
-export function isPublicHostname(host: string): boolean {
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(host)) return false; // also rejects IPv4/IPv6 literals and bare names
-  return !/(^|\.)(localhost|local|internal)$/i.test(host);
-}
+export { isPublicHostname };
 
 /** Check one site against the confirmed facts. Never throws on network trouble; unread parts give no issue. */
 export async function checkSite(domainOrUrl: string, facts: Pick<Facts, "phone"> | null, opts: { fetch?: FetchLike; now?: Date } = {}): Promise<SiteCheckResult> {
