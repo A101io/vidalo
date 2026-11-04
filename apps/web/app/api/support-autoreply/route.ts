@@ -1,5 +1,6 @@
 import { handleVidaloSupportRelay } from "@vidalo/core/support";
 import { ready } from "@/lib/db";
+import { log } from "@vidalo/core/shared";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -17,9 +18,11 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const db = await ready();
-  return handleVidaloSupportRelay(req, db, {
+  const res = await handleVidaloSupportRelay(req, db, {
     secret: env.supportRelaySecret,
     apiKey: process.env.OPENAI_API_KEY?.trim() || undefined,
     model: process.env.CHAT_MODEL?.trim() || undefined,
   });
+  if (res.status === 401) log.warn("security.refused", { route: "support-autoreply", reason: "relay_secret" });
+  return res;
 }

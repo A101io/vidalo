@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { log } from "@vidalo/core/shared";
 import { env } from "@/lib/env";
 import { localizeHref } from "@/lib/lang-paths";
 import { COMING_SOON_ROUTE, PREVIEW_COOKIE } from "@vidalo/core/shared/gate";
@@ -41,7 +42,10 @@ export async function POST(req: Request) {
   const expected = env.previewKey;
   const allowed = !!expected && key.length > 0 && sameKey(key, expected);
   // From the key form (/voorvertoning): back to it with a message. Elsewhere: the coming-soon page, as before.
-  if (!allowed) return NextResponse.redirect(page(String(form.get("from") ?? "") === "voorvertoning" ? "/voorvertoning?fout=1" : COMING_SOON_ROUTE), 303);
+  if (!allowed) {
+    log.warn("security.refused", { route: "preview", reason: "preview_key" });
+    return NextResponse.redirect(page(String(form.get("from") ?? "") === "voorvertoning" ? "/voorvertoning?fout=1" : COMING_SOON_ROUTE), 303);
+  }
   const res = NextResponse.redirect(page("/"), 303);
   // A session cookie: closing the browser ends the preview (copy.legal.cookies says so).
   res.cookies.set(PREVIEW_COOKIE, "1", COOKIE);
