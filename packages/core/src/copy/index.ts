@@ -17,6 +17,8 @@ function joinNl(items: string[]): string {
 export const PRICES = {
   setupEur: 149,
   monitorEurPerMonth: 49,
+  extraLocationSetupEur: 99,
+  extraLocationEurPerMonth: 39,
 } as const;
 
 export const copy = {
@@ -617,6 +619,19 @@ export const copy = {
         note: "Bij een plan van Vidalo. Het domein staat op jouw naam. Bestellen en betalen op de website zitten er niet in.",
         ask: "Vraag een website aan",
       },
+      /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
+      locations: {
+        h3: "Meer vestigingen?",
+        sub: "AI haalt vestigingen vaak door elkaar: de openingstijden van de ene bij de andere, het nummer van het hoofdkantoor, of een adres waar je al weg bent. Daarom krijgt elke vestiging eigen vragen en een eigen feitenpagina, in één overzicht.",
+        includes: [
+          "Elke vestiging wordt gevraagd op haar eigen plaats, adres, openingstijden en telefoonnummer.",
+          "Je ziet het als AI de ene vestiging met de andere verwart, of een verhuisde of gesloten vestiging nog noemt.",
+          "Bij de vraag wie AI aanraadt zie je per plaats of jij genoemd wordt, niet alleen waar je het bekendst bent.",
+        ],
+        price: "€99 eenmalig en €39 per maand per extra vestiging",
+        note: "Voor je tweede tot en met tiende vestiging, bovenop het plan voor je eerste.",
+        ask: "Vraag vestigingen aan",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -839,7 +854,7 @@ export const copy = {
         {
           h: "Prijzen en betalen",
           p: [
-            "Vidalo Scan kost eenmalig €149. Vidalo Monthly kost €49 per maand. Alle prijzen zijn in euro, exclusief 21% btw en andere heffingen van de overheid. De gratis controle kost niets.",
+            "Vidalo Scan kost eenmalig €149. Vidalo Monthly kost €49 per maand. Een extra vestiging, de tweede tot en met de tiende, kost eenmalig €99 en €39 per maand per vestiging. Alle prijzen zijn in euro, exclusief 21% btw en andere heffingen van de overheid. De gratis controle kost niets.",
             "Je betaalt vooraf via onze betaaldienst Stripe, met iDEAL, kaart of SEPA-incasso. Vidalo Monthly schrijven we elke maand automatisch af. Je krijgt per betaling een factuur.",
             "Een betaald onderdeel begint pas als je betaling binnen is. Bij een SEPA-incasso kan dat enkele werkdagen duren.",
             "Mislukt een betaling, dan probeert Stripe het nog een paar keer en krijg je bericht. Lukt het niet, dan mogen we het abonnement opschorten tot er betaald is. Staat een betaling na zestig dagen nog open, dan mogen we het abonnement beëindigen.",
@@ -2082,6 +2097,7 @@ export const copy = {
       { q: "Hoe zeg ik op?", a: "Wanneer je wilt, onder ‘Abonnement’ in je account. Er is geen opzegtermijn; de lopende maand loopt af." },
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
+      { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.io. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Vidalo Scan’ gekozen, dan voeg je ‘Vidalo Monthly’ later toe onder ‘Abonnement’ in je account." },
       { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
@@ -2317,7 +2333,7 @@ export const copy = {
     expandItems: [
       { title: "Extra volledige controle", body: "Alle vragen, alle systemen, vandaag.", cta: "Vraag een controle aan", subject: "Extra controle" },
       { title: "Meer AI-systemen", body: "Nieuwe systemen komen erbij zodra genoeg Nederlanders ze gebruiken; je krijgt een bericht.", cta: "Laat het me weten", subject: "Meer AI-systemen" },
-      { title: "Tweede vestiging", body: "Eigen feitenpagina, eigen controle, één overzicht.", cta: "Vestiging toevoegen", subject: "Tweede vestiging" },
+      { title: "Tweede vestiging", body: "Eigen feitenpagina, eigen controle, één overzicht. €99 eenmalig en €39 per maand.", cta: "Vestiging toevoegen", subject: "Tweede vestiging" },
     ],
     expandNote: "Prijzen volgen; je mailt ons en we regelen het.",
     sources: "Bronnen",

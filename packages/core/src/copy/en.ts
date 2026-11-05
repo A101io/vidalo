@@ -604,6 +604,19 @@ export const en: CopyShape = {
         note: "With a Vidalo plan. The domain is in your name. Ordering and payments on the website are not included.",
         ask: "Ask for a website",
       },
+      /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
+      locations: {
+        h3: "More locations?",
+        sub: "AI often mixes up locations: one location's opening hours given for another, the head office number, or an address you have already left. So each location gets its own questions and its own facts page, in one overview.",
+        includes: [
+          "Each location is asked about its own town, address, opening hours and phone number.",
+          "You see it when AI confuses one location with another, or still names a location that moved or closed.",
+          "On the question of whom AI recommends, you see per town whether you are named, not only where you are best known.",
+        ],
+        price: "€99 one-off and €39 per month per extra location",
+        note: "For your second to tenth location, on top of the plan for your first.",
+        ask: "Ask for more locations",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -819,7 +832,7 @@ export const en: CopyShape = {
         {
           h: "Prices and payment",
           p: [
-            "Vidalo Scan costs €149 once. Vidalo Monthly costs €49 per month. All prices are in euros, excluding 21% VAT and other government charges. The free check costs nothing.",
+            "Vidalo Scan costs €149 once. Vidalo Monthly costs €49 per month. An extra location, the second to the tenth, costs €99 once and €39 per month per location. All prices are in euros, excluding 21% VAT and other government charges. The free check costs nothing.",
             "You pay in advance through our payment service Stripe, by iDEAL, card or SEPA Direct Debit. Vidalo Monthly is charged automatically every month. You receive an invoice for each payment.",
             "A paid part starts only once your payment has arrived. With SEPA Direct Debit that can take a few working days.",
             "If a payment fails, Stripe tries again a few times and you are notified. If it still fails, we may suspend the subscription until it is paid. If a payment is still outstanding after sixty days, we may end the subscription.",
@@ -2049,6 +2062,7 @@ export const en: CopyShape = {
       { q: "How do I cancel?", a: "Whenever you like, under ‘Subscription’ in your account. There is no notice period; the current month runs out." },
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
+      { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
       { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
@@ -2281,7 +2295,7 @@ export const en: CopyShape = {
     expandItems: [
       { title: "Extra full check", body: "Every question, every system, today.", cta: "Request a check", subject: "Extra check" },
       { title: "More AI systems", body: "New systems join once enough people in the Netherlands use them; you get a message.", cta: "Let me know", subject: "More AI systems" },
-      { title: "Second location", body: "Its own facts page, its own check, one overview.", cta: "Add a location", subject: "Second location" },
+      { title: "Second location", body: "Its own facts page, its own check, one overview. €99 one-off and €39 per month.", cta: "Add a location", subject: "Second location" },
     ],
     expandNote: "Prices follow; mail us and we arrange it.",
     sources: "Sources",

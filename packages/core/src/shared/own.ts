@@ -68,6 +68,7 @@ export const OWN_FACTS: Facts = {
   prices: [
     { label: "Vidalo Scan", amount: PRICES.setupEur, unit: "eenmalig, excl. btw" },
     { label: "Vidalo Monthly", amount: PRICES.monitorEurPerMonth, unit: "per maand, excl. btw" },
+    { label: "Extra vestiging (2 t/m 10)", amount: PRICES.extraLocationEurPerMonth, unit: `per maand plus €${PRICES.extraLocationSetupEur} eenmalig, excl. btw` },
   ],
   policies: ["De eerste controle is gratis, zonder account", "Geen opzegtermijn, maandelijks opzegbaar", "Prijzen exclusief btw", "Voor bedrijven in Nederland en daarbuiten; buiten Nederland in het Engels"],
   paymentMethods: [],
