@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
-import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, lifecycleTransitions, monthlySlot, ownerSubscriptionChanges, retentionPurge } from "../src/cron";
+import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, lifecycleTransitions, monthlySlot, ownerSubscriptionChanges, retentionPurge, SCAN_TERM_DAYS } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -195,5 +195,22 @@ describe("retention after the end of a paid plan", () => {
     stamp(day(200));
     expect((await retentionPurge(day(250)))?.endedCustomers).toBe(0);
     expect((await lifecycleTransitions(day(290))).rescans).toBe(1);
+  });
+
+  it("ends Vidalo Scan 12 months after payment, not a day before, and leaves Monthly alone", async () => {
+    const scan = await db.upsertBusiness({ name: "Kapsalon Mia", place: "Haarlem", status: "trial", plan: "setup" });
+    const monthly = await db.upsertBusiness({ name: "Bakkerij Jan", place: "Haarlem", status: "trial", plan: "monitor" });
+    await db.logEvent(scan.id, "checkout.completed", { plan: "setup" });
+    await db.logEvent(monthly.id, "checkout.completed", { plan: "monitor" });
+    stamp(day(0));
+
+    expect((await lifecycleTransitions(day(SCAN_TERM_DAYS - 1))).churned).toBe(0);
+    expect((await db.getBusiness(scan.id))?.status).toBe("trial");
+    expect((await lifecycleTransitions(day(SCAN_TERM_DAYS))).churned).toBe(1);
+    expect((await db.getBusiness(scan.id))?.status).toBe("churned");
+    expect((await db.getBusiness(monthly.id))?.status).toBe("trial");
+    // One status event, with the reason; from here the cancelled-subscription path (tested above) takes over.
+    const ended = db.events.filter((e) => e.businessId === scan.id && e.type === "business.status");
+    expect(ended.map((e) => e.payload)).toEqual([{ status: "churned", from: "trial", reason: "scan_term_ended" }]);
   });
 });

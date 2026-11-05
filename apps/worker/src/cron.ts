@@ -5,7 +5,7 @@
  *   1. monthly scans on the anniversary day, spread 02:00–06:00 Europe/Amsterdam
  *   2. due rechecks → recheck jobs
  *   3. DNS / Cloudflare polls for unverified custom facts hosts
- *   4. lifecycle: paused → churned after 60 days; churned → free re-scan after 90 days
+ *   4. lifecycle: paused → churned after 60 days; Vidalo Scan → churned 12 months after payment; churned → free re-scan after 90 days
  *   5. follow-ups for scanned-but-not-purchased businesses at day 7 / day 21
  *   6. own-website check every 30 days for paying businesses
  *   7. Google index check of the facts page: daily until Google has it, then weekly
@@ -23,6 +23,9 @@ import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
 
 export const TZ = "Europe/Amsterdam";
+
+/** How long Vidalo Scan (paid once) runs: facts page, fixes and rechecks for 12 months after payment. */
+export const SCAN_TERM_DAYS = 365;
 
 /** { y, m, d, hh, mm } of `date` in Europe/Amsterdam. */
 export function amsterdamParts(date = new Date()): { y: number; m: number; d: number; hh: number; mm: number } {
@@ -134,6 +137,16 @@ export async function lifecycleTransitions(now = new Date()): Promise<{ churned:
       churned++;
       log.info("cron.lifecycle.churned", { businessId: b.id });
     }
+  }
+
+  // Vidalo Scan (paid once) → churned 12 months after payment, then the same end path as a cancelled subscription (privacy text, 'Een betaald plan')
+  for (const b of await listBusinessesByStatus(["trial"])) {
+    if (b.plan !== "setup") continue;
+    const paidAt = lastEvent(await events(b.id), (e) => e.type === "checkout.completed" && e.payload.plan === "setup")?.at ?? null;
+    if (!paidAt || daysSince(paidAt, now) < SCAN_TERM_DAYS) continue;
+    await setBusinessStatus(b.id, "churned", { reason: "scan_term_ended" });
+    churned++;
+    log.info("cron.lifecycle.churned", { businessId: b.id, reason: "scan_term_ended" });
   }
 
   // churned → one free re-scan after 90 days (re-engagement)

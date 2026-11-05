@@ -572,7 +572,7 @@ export const copy = {
           "Een feitenpagina op je eigen domein, met datum, die AI kan lezen.",
           "Dezelfde gegevens bij Google, Bing, Apple en de bedrijvengidsen.",
         ],
-        limit: "1 vestiging · eenmalige betaling",
+        limit: "1 vestiging · eenmalige betaling · loopt 12 maanden",
         button: "Begin met de gratis check",
       },
       monitor: {
@@ -851,7 +851,7 @@ export const copy = {
         {
           h: "Looptijd, opzeggen en pauzeren",
           p: [
-            "Vidalo Scan is een eenmalige opdracht. Vidalo Monthly is een abonnement per maand dat elke maand vanzelf verlengt, tot je opzegt.",
+            "Vidalo Scan is een eenmalige opdracht die 12 maanden na je betaling eindigt: zo lang staat je feitenpagina online en controleren we herstelde fouten opnieuw. Vidalo Monthly is een abonnement per maand dat elke maand vanzelf verlengt, tot je opzegt.",
             "Je zegt Vidalo Monthly op wanneer je wilt, online onder ‘Abonnement’ in je Account. Er is geen opzegtermijn: de maand die je al betaalde loopt af, daarna betaal je niets meer. Je krijgt direct een bevestiging per e-mail met de einddatum. Tot die datum kun je de opzegging intrekken.",
             "Bij opzeggen krijg je het bedrag voor de lopende maand niet terug: de Dienst loopt tot de einddatum door. Het bedrag voor Vidalo Scan krijg je niet terug zodra we ermee begonnen zijn.",
             "Kunnen we binnen dertig dagen na je betaling niet aan Vidalo Scan beginnen, omdat het bewijs van beheer uit artikel 5 niet lukt, dan mag je de Overeenkomst ontbinden. We betalen je dan terug wat je voor het Plan betaalde.",
@@ -1030,7 +1030,7 @@ export const copy = {
               "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel.",
               "Wat we ermee doen: we publiceren je bevestigde gegevens op je feitenpagina, die voor iedereen te zien is. We sturen ze naar bronnen met een fout om herstel te vragen, en naar je Google-bedrijfsprofiel als je dat koppelt. AI-assistenten krijgen alleen bedrijfsgegevens, nooit je e-mailadres.",
               "Grondslag: de uitvoering van de overeenkomst met jou.",
-              "Hoe lang: zolang je klant bent. Na het einde van je abonnement bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle en verwijderen we binnen 30 dagen daarna je gegevens. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar. Wat bij een andere partij is hersteld, blijft daar staan.",
+              "Hoe lang: zolang je klant bent; bij Vidalo Scan tot 12 maanden na je betaling. Na het einde van je abonnement of van Vidalo Scan bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle en verwijderen we binnen 30 dagen daarna je gegevens. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar. Wat bij een andere partij is hersteld, blijft daar staan.",
             ],
           ],
         },

@@ -559,7 +559,7 @@ export const en: CopyShape = {
           "A facts page on your own domain, with a date, that AI can read.",
           "The same details at Google, Bing, Apple and the business directories.",
         ],
-        limit: "1 location · one-off payment",
+        limit: "1 location · one-off payment · runs 12 months",
         button: "Start with the free check",
       },
       monitor: {
@@ -831,7 +831,7 @@ export const en: CopyShape = {
         {
           h: "Term, cancelling and pausing",
           p: [
-            "Vidalo Scan is a one-off assignment. Vidalo Monthly is a monthly subscription that renews every month until you cancel.",
+            "Vidalo Scan is a one-off assignment that ends 12 months after your payment: until then your facts page stays online and we recheck fixed errors. Vidalo Monthly is a monthly subscription that renews every month until you cancel.",
             "You can cancel Vidalo Monthly whenever you want, online under ‘Subscription’ in your Account. There is no notice period: the month you already paid for runs out, after which you pay nothing more. You immediately receive a confirmation by email with the end date. Until that date you can withdraw the cancellation.",
             "When you cancel, the amount for the current month is not refunded: the Service continues until the end date. The amount for Vidalo Scan is not refunded once we have started on it.",
             "If within thirty days of your payment we cannot start Vidalo Scan because the proof of management in article 5 does not succeed, you may terminate the Agreement. We then refund what you paid for the Plan.",
@@ -1010,7 +1010,7 @@ export const en: CopyShape = {
               "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix.",
               "What we do with it: we publish your confirmed details on your facts page, which anyone can see. We send them to sources containing an error to ask for a fix, and to your Google Business Profile if you connect it. AI assistants receive business details only, never your email address.",
               "Basis: the performance of the agreement with you.",
-              "Retention: as long as you are a customer. After your subscription ends we keep your data for another 90 days. We then do one more free check and delete your data within 30 days after that. Only what the law requires for our accounts we keep for 7 years. What has been fixed at another party stays there.",
+              "Retention: as long as you are a customer; for Vidalo Scan, until 12 months after your payment. After your subscription or Vidalo Scan ends we keep your data for another 90 days. We then do one more free check and delete your data within 30 days after that. Only what the law requires for our accounts we keep for 7 years. What has been fixed at another party stays there.",
             ],
           ],
         },
