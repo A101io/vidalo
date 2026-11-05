@@ -13,14 +13,14 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Channel, Facts } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
-import { getDb, isMock, setFactsHost } from "../shared/db.js";
+import { getBusinessByFactsHost, getDb, isMock, setFactsHost } from "../shared/db.js";
 import { log } from "../shared/log.js";
 import { syncChannel, type SyncResult } from "./channels/index.js";
 import { NOTE_AWAITING_APPROVAL, diffKey, type DiffApproval } from "./channels/gbp.js";
 export { diffKey, diffDecision, NOTE_AWAITING_APPROVAL, NOTE_DECLINED, type DiffApproval } from "./channels/gbp.js";
 import type { ChannelDiffEntry } from "./channels/types.js";
 import { findAllListings } from "./channels/directories.js";
-import { checkFactsHost, defaultFactsHost, isFallbackHost, preferredFactsHost } from "./host.js";
+import { checkFactsHost, defaultFactsHost, isFallbackHost, isOwnFactsHost, preferredFactsHost } from "./host.js";
 import { pingIndexNow } from "./indexnow.js";
 import { renderFactsPage, type RenderedFactsPage } from "./render.js";
 import { clearServeCache } from "./serve.js";
@@ -59,10 +59,16 @@ export async function ensureFactsHost(businessId: string, choice: "domain" | "fa
   if (!business) throw new Error(`business ${businessId} not found`);
   if (business.factsHost) return business;
   const host = choice === "domain" ? preferredFactsHost(business) : defaultFactsHost(business);
-  const verifiedAt = isFallbackHost(host) ? new Date().toISOString() : null;
+  const verifiedAt = isOwnFactsHost(host, business) ? new Date().toISOString() : null;
   const updated = await setFactsHost(business.id, host, verifiedAt);
   await db.logEvent(business.id, "facts_host.set", { host, verified: verifiedAt !== null, cnameTarget: isFallbackHost(host) ? null : `feiten.${process.env.FACTS_HOST_SUFFIX || "vidalo.io"}` });
   return updated;
+}
+
+/** True when another business already holds `host` as its verified facts host. */
+export async function factsHostTaken(host: string, businessId: string): Promise<boolean> {
+  const holder = await getBusinessByFactsHost(host);
+  return Boolean(holder && holder.id !== businessId && holder.factsHostVerifiedAt);
 }
 
 /** Cron helper: poll DNS/Cloudflare for an unverified custom host; mark verified when it resolves. */
@@ -71,7 +77,11 @@ export async function pollFactsHost(businessId: string): Promise<{ verified: boo
   const business = await db.getBusiness(businessId);
   if (!business?.factsHost) return { verified: false, host: null };
   if (business.factsHostVerifiedAt) return { verified: true, host: business.factsHost };
-  const check = await checkFactsHost(business.factsHost);
+  if (await factsHostTaken(business.factsHost, business.id)) {
+    log.warn("facts_host.taken", { businessId, host: business.factsHost });
+    return { verified: false, host: business.factsHost };
+  }
+  const check = await checkFactsHost(business.factsHost, business);
   log.info("facts_host.poll", { businessId, host: business.factsHost, verified: check.verified, cname: check.cname?.found ?? null });
   if (check.verified) {
     await setFactsHost(business.id, business.factsHost, new Date().toISOString());

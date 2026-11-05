@@ -2,7 +2,14 @@
  * Facts host logic.
  *
  * Preferred: `feiten.{domain}` on the owner's own domain, pointed at Vidalo with
- * one CNAME record. Fallback: `{slug}.feiten.{FACTS_HOST_SUFFIX}`.
+ * one CNAME record. Fallback: `{slug}-feiten.{FACTS_HOST_SUFFIX}` (one level deep,
+ * so Universal SSL's `*.vidalo.io` covers it).
+ *
+ * Serving: `vidalo-worker` answers on the routes in apps/worker/wrangler.jsonc
+ * (`feiten.vidalo.io/*`, `*-feiten.vidalo.io/*`) and on one route per custom
+ * hostname, which `ensureCustomHostname` adds next to the hostname. No `*\/*`
+ * catch-all: a route beats a Custom Domain on the same hostname, so it would
+ * take `vidalo.io` and `www.vidalo.io` away from `vidalo-web`.
  *
  * Cloudflare for SaaS (custom hostnames) is used when CLOUDFLARE_API_TOKEN and
  * CLOUDFLARE_ZONE_ID are set; otherwise every call is a logged no-op so the
@@ -11,7 +18,8 @@
  */
 import { resolveCname } from "node:dns/promises";
 import type { Business } from "../types.js";
-import { defaultFactsHost } from "./render.js";
+import { OWN_BUSINESS } from "../shared/own.js";
+import { FALLBACK_LABEL_END, defaultFactsHost } from "./render.js";
 
 export { defaultFactsHost };
 
@@ -40,9 +48,42 @@ export function preferredFactsHost(business: Pick<Business, "slug" | "domain">):
   return defaultFactsHost(business);
 }
 
-/** True when the host is on our own suffix (no DNS verification needed). */
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * The label before `-feiten` in a fallback host `{slug}-feiten.{suffix}`, or
+ * null when `host` is not exactly one such name: one DNS label (lowercase
+ * letters, digits, hyphens, at most 63) directly under the suffix. So
+ * `x-feiten.vidalo.io.evil.com`, `a.b-feiten.vidalo.io`, `feiten.vidalo.io`,
+ * `www.vidalo.io` and customer domains are not.
+ */
+export function fallbackSlug(host: string): string | null {
+  const inner = 63 - FALLBACK_LABEL_END.length - 2;
+  const re = new RegExp(`^([a-z0-9](?:[a-z0-9-]{0,${inner}}[a-z0-9])?)${escapeRe(FALLBACK_LABEL_END)}\\.${escapeRe(factsHostSuffix().toLowerCase())}$`);
+  return re.exec(host.toLowerCase())?.[1] ?? null;
+}
+
+/** True when the host has the shape of one of our fallback hosts (no CNAME to show the owner). */
 export function isFallbackHost(host: string): boolean {
-  return host.endsWith(`.feiten.${factsHostSuffix()}`);
+  return fallbackSlug(host) !== null;
+}
+
+/** `host` is the suffix itself or any name under it: ours, never claimable by a CNAME. */
+export function isOurName(host: string): boolean {
+  const h = host.toLowerCase();
+  const suffix = factsHostSuffix().toLowerCase();
+  return h === suffix || h.endsWith(`.${suffix}`);
+}
+
+/**
+ * True when `host` is ours to give this business without a DNS check: its own
+ * fallback host, or, for Vidalo itself, `feiten.{suffix}`. Another business's
+ * fallback host is not.
+ */
+export function isOwnFactsHost(host: string, business: Pick<Business, "slug">): boolean {
+  const h = host.toLowerCase();
+  if (h === defaultFactsHost(business)) return true;
+  return business.slug === OWN_BUSINESS.slug && h === `feiten.${factsHostSuffix()}`;
 }
 
 export interface CnameCheck {
@@ -132,6 +173,7 @@ export async function ensureCustomHostname(hostname: string): Promise<CustomHost
     console.log(JSON.stringify({ msg: "cloudflare.custom_hostname.skip", hostname, reason: "no CLOUDFLARE_API_TOKEN/ZONE_ID" }));
     return { id: null, hostname, status: "mock", sslStatus: null };
   }
+  await ensureWorkerRoute(hostname);
   const existing = await cf<CfHostname[]>(`/custom_hostnames?hostname=${encodeURIComponent(hostname)}`);
   const found = existing[0];
   if (found) return toStatus(found);
@@ -140,6 +182,32 @@ export async function ensureCustomHostname(hostname: string): Promise<CustomHost
     body: JSON.stringify({ hostname, ssl: { method: "http", type: "dv", settings: { min_tls_version: "1.2" } } }),
   });
   return toStatus(created);
+}
+
+interface CfRoute {
+  id: string;
+  pattern: string;
+  script?: string;
+}
+
+/** The Worker that serves facts pages (apps/worker/wrangler.jsonc `name`). */
+function factsWorkerName(): string {
+  return process.env.FACTS_WORKER_NAME || "vidalo-worker";
+}
+
+/**
+ * Worker route `{hostname}/*` → vidalo-worker on our zone, so a custom
+ * hostname's traffic reaches the facts handler (Cloudflare for SaaS evaluates
+ * the SaaS zone's routes by the customer's hostname). Idempotent.
+ */
+async function ensureWorkerRoute(hostname: string): Promise<void> {
+  // Never a wildcard and never one of our own names: a route there would take
+  // vidalo.io or www.vidalo.io away from vidalo-web.
+  if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(hostname) || isOurName(hostname)) throw new Error(`refusing a worker route for ${hostname}`);
+  const pattern = `${hostname}/*`;
+  const routes = await cf<CfRoute[]>(`/workers/routes`);
+  if (routes.some((r) => r.pattern === pattern)) return;
+  await cf(`/workers/routes`, { method: "POST", body: JSON.stringify({ pattern, script: factsWorkerName() }) });
 }
 
 export async function customHostnameStatus(hostname: string): Promise<CustomHostnameStatus> {
@@ -157,6 +225,8 @@ export async function deleteCustomHostname(hostname: string): Promise<void> {
     console.log(JSON.stringify({ msg: "cloudflare.custom_hostname.delete.skip", hostname }));
     return;
   }
+  const route = (await cf<CfRoute[]>(`/workers/routes`)).find((r) => r.pattern === `${hostname}/*`);
+  if (route) await cf(`/workers/routes/${route.id}`, { method: "DELETE" });
   const existing = await cf<CfHostname[]>(`/custom_hostnames?hostname=${encodeURIComponent(hostname)}`);
   const found = existing[0];
   if (!found) return;
@@ -170,11 +240,13 @@ function toStatus(h: CfHostname): CustomHostnameStatus {
 
 /**
  * Full host verification step used by the cron poll:
- * fallback hosts are always verified; custom hosts need a CNAME and (when
- * configured) an active Cloudflare custom hostname.
+ * the business's own fallback host is always verified; any other name under
+ * our suffix never is; custom hosts need a CNAME and (when configured) an
+ * active Cloudflare custom hostname.
  */
-export async function checkFactsHost(host: string): Promise<{ verified: boolean; cname: CnameCheck | null; cloudflare: CustomHostnameStatus | null }> {
-  if (isFallbackHost(host)) return { verified: true, cname: null, cloudflare: null };
+export async function checkFactsHost(host: string, business: Pick<Business, "slug">): Promise<{ verified: boolean; cname: CnameCheck | null; cloudflare: CustomHostnameStatus | null }> {
+  if (isOwnFactsHost(host, business)) return { verified: true, cname: null, cloudflare: null };
+  if (isOurName(host)) return { verified: false, cname: null, cloudflare: null };
   const cname = await verifyCname(host);
   if (!cname.ok) return { verified: false, cname, cloudflare: null };
   const cloudflare = await ensureCustomHostname(host);

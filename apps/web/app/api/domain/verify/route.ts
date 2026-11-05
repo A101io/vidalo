@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { getSession, getOwnedBusiness } from "@/lib/session";
 import { cnameTarget } from "@/lib/factsPage";
 import { isVerifiedOwner } from "@vidalo/core/shared";
+import { factsHostTaken, isOurName } from "@vidalo/core/publisher";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,13 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const host = String(form.get("host") ?? "").trim().toLowerCase();
   if (!host) return NextResponse.redirect(`${env.baseUrl}/app/domein`, 303);
+  // Names under vidalo.io are ours (no CNAME proves them), and a host another
+  // business already verified stays theirs.
+  const db = await ready();
+  if (isOurName(host) || (await factsHostTaken(host, business.id))) {
+    await db.logEvent(business.id, "domain.refused", { host });
+    return NextResponse.redirect(`${env.baseUrl}/app/domein?dns=nee`, 303);
+  }
 
   let ok = false;
   try {
@@ -27,7 +35,6 @@ export async function POST(req: Request) {
   }
   if (!ok && env.mock && form.get("simulate") === "1") ok = true;
 
-  const db = await ready();
   if (ok) {
     await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, factsHost: host, factsHostVerifiedAt: new Date().toISOString() });
     await db.upsertChannel({ businessId: business.id, type: "facts_page", name: "Feitenpagina", url: `https://${host}`, externalId: null, status: "pending" });

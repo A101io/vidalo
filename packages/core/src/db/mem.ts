@@ -131,8 +131,11 @@ export class MemDb implements Db {
 
   async getBusinessByFactsHost(host: string): Promise<BusinessRecord | null> {
     const h = host.toLowerCase();
-    for (const b of this.businesses.values()) if (b.factsHost?.toLowerCase() === h) return { ...b };
-    return null;
+    // Same order as PgDb: the earliest verified holder first.
+    const all = [...this.businesses.values()].filter((b) => b.factsHost?.toLowerCase() === h);
+    const time = (b: BusinessRecord) => (b.factsHostVerifiedAt ? Date.parse(b.factsHostVerifiedAt) : Number.POSITIVE_INFINITY);
+    const found = all.sort((a, b) => time(a) - time(b))[0];
+    return found ? { ...found } : null;
   }
 
   async getBusinessByStripeCustomer(customerId: string): Promise<BusinessRecord | null> {
