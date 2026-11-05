@@ -176,6 +176,32 @@ export class MemDb implements Db {
     for (const [k, j] of this.jobs) if (!j.doneAt && j.payload.businessId === id) this.jobs.delete(k);
   }
 
+  async deleteScanRuns(ids: string[]): Promise<void> {
+    const runs = new Set(ids);
+    const samples = new Set([...this.samples.values()].filter((s) => runs.has(s.scanRunId)).map((s) => s.id));
+    for (const s of samples) this.samples.delete(s);
+    this.claims = this.claims.filter((c) => !samples.has(c.sampleId));
+    for (const [k, f] of this.findings) {
+      if (runs.has(f.scanRunId)) {
+        this.findings.delete(k);
+        for (const [fk, fix] of this.fixes) if (fix.findingId === k) this.fixes.delete(fk);
+        continue;
+      }
+      if (f.evidenceBefore && samples.has(f.evidenceBefore)) f.evidenceBefore = null;
+      if (f.evidenceAfter && samples.has(f.evidenceAfter)) f.evidenceAfter = null;
+    }
+    for (const r of runs) this.scanRuns.delete(r);
+  }
+
+  async deleteEvents(filter: { before: Date; businessId?: string; typePrefix?: string }, opts: { dryRun?: boolean } = {}): Promise<number> {
+    if (!filter.businessId && !filter.typePrefix) throw new Error("deleteEvents needs a businessId or a typePrefix");
+    const hit = (e: EventRow) =>
+      new Date(e.at).getTime() < filter.before.getTime() && e.type.startsWith(filter.typePrefix ?? "") && (!filter.businessId || e.businessId === filter.businessId);
+    const n = this.events.filter(hit).length;
+    if (!opts.dryRun) this.events = this.events.filter((e) => !hit(e));
+    return n;
+  }
+
   async latestFacts(businessId: string): Promise<Facts | null> {
     const list = this.facts.get(businessId);
     return list && list.length ? { ...list[list.length - 1]! } : null;
@@ -441,6 +467,18 @@ export class MemDb implements Db {
       decisionsForSenderToday: today.filter((r) => r.from_email === fromEmail).length,
       modelCallsToday: today.reduce((n, r) => n + (r.model_calls ?? 0), 0),
     };
+  }
+
+  async purgeSupportAutoreplyLog(lastContactBefore: Date, opts: { dryRun?: boolean } = {}): Promise<number> {
+    const last = new Map<string, number>();
+    for (const r of this.supportLog) {
+      const k = r.from_email.toLowerCase();
+      last.set(k, Math.max(last.get(k) ?? 0, new Date(r.createdAt).getTime()));
+    }
+    const hit = (r: { from_email: string }) => (last.get(r.from_email.toLowerCase()) ?? Infinity) < lastContactBefore.getTime();
+    const n = this.supportLog.filter(hit).length;
+    if (!opts.dryRun) this.supportLog = this.supportLog.filter((r) => !hit(r));
+    return n;
   }
 
   async recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }> {

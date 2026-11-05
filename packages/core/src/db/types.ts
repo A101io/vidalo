@@ -159,6 +159,15 @@ export interface Db {
    * and its jobs that have not run. The owner's "verwijder mijn gegevens".
    */
   deleteBusiness(id: string): Promise<void>;
+  /**
+   * Removes these scan runs with their samples, claims and the findings (with
+   * fixes) last seen in them. A finding of a later run that pointed at one of
+   * their samples as evidence stays and loses only that pointer. The retention
+   * purge (shared/retention.ts).
+   */
+  deleteScanRuns(ids: string[]): Promise<void>;
+  /** Events older than `before`, of one business and/or with a type prefix (one of the two is required). Returns how many; `dryRun` only counts. */
+  deleteEvents(filter: { before: Date; businessId?: string; typePrefix?: string }, opts?: { dryRun?: boolean }): Promise<number>;
   getBusinessByOwner(opts: { userId?: string | null; email?: string | null }): Promise<BusinessRecord | null>;
 
   // --- facts (versioned, owner-asserted) ---
@@ -220,6 +229,8 @@ export interface Db {
   supportAutoreplyCounters(fromEmail: string, threadId: string | null): Promise<RelayCounters>;
   /** One row per decision. `duplicate` when this provider message id was recorded before: the relay must not send again. */
   recordSupportAutoreply(row: SupportLogRow): Promise<{ duplicate: boolean }>;
+  /** Every row of each sender whose last row is older than `lastContactBefore` (privacy: 2 years after the last contact). Returns how many; `dryRun` only counts. */
+  purgeSupportAutoreplyLog(lastContactBefore: Date, opts?: { dryRun?: boolean }): Promise<number>;
   /** Addresses on the list that have not unsubscribed. */
   countWaitlist(): Promise<number>;
   /** Addresses on the list that have not unsubscribed, oldest first (the launch mail, scripts/launch-mail.mts). */

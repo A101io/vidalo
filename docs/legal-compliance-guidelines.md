@@ -39,7 +39,7 @@ Vidalo processes business facts, mostly not personal data; owner emails and Goog
 
 ## Open questions for counsel
 1. ~~Terms, privacy and a cookie statement from the masters~~ final texts written 26 Oct 2026 from Sonable's counsel-reviewed set (Julian: no outside counsel in this phase); routes stay `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`). Points for a later lawyer are in that PR.
-2. ~~Retention~~ set in the privacy text: free check 12 months, closed accounts 90 days + one check + 30 days. **No purge job exists yet**; build it before launch.
+2. ~~Retention~~ set in the privacy text: free check 12 months, closed accounts 90 days + one check + 30 days. Purged daily by the worker cron (`packages/core/src/shared/retention.ts`, 5 Nov 2026).
 3. ~~Reminder unsubscribe sentence~~ done.
 4. ~~Hosting processors~~ Cloudflare, in the privacy text and `docs/processors.md`.
 5. Whether "Wij zorgen dat het antwoord klopt" needs a qualifier next to it.
