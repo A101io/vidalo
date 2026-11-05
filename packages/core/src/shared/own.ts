@@ -58,12 +58,13 @@ export const OWN_FACTS: Facts = {
     { day: 6, open: null, close: null, closed: true },
   ],
   servicesYes: [
-    "Controleren wat ChatGPT, Google AI en Copilot over een bedrijf zeggen",
+    "Controleren wat ChatGPT, Google AI, Gemini, Perplexity en Claude over een bedrijf zeggen",
     "Een feitenpagina publiceren op het eigen domein van het bedrijf",
-    "Bedrijfsgegevens doorzetten naar Google, Bing, Apple en de Nederlandse gidsen",
-    "Fouten herstellen bij de bron, met bewijs voor en na",
+    "Laten zien wat er bij Google, Bing, Apple en de Nederlandse gidsen anders staat dan de bevestigde gegevens",
+    "Bronnen met een fout om correctie vragen, of laten zien wat de eigenaar moet aanpassen, met bewijs voor en na",
+    "Een eenvoudige website maken, op aanvraag",
   ],
-  servicesNo: ["Websites bouwen", "Advertenties plaatsen", "Reviews schrijven of laten verwijderen"],
+  servicesNo: ["Advertenties plaatsen", "Reviews schrijven of laten verwijderen"],
   prices: [
     { label: "Vidalo Scan", amount: PRICES.setupEur, unit: "eenmalig, excl. btw" },
     { label: "Vidalo Monthly", amount: PRICES.monitorEurPerMonth, unit: "per maand, excl. btw" },

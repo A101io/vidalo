@@ -45,7 +45,7 @@ export const VIDALO_DENY_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
 export const VIDALO_SUPPORT_CONFIG: SupportBrainConfig = {
   brand: "Vidalo",
   productDescription:
-    "an AI facts check for Dutch businesses: it checks what ChatGPT, Google AI and Copilot say about a business, finds wrong facts and their sources, publishes a facts page on the owner's domain and corrects the sources. Customers are Dutch business owners.",
+    "an AI facts check for Dutch businesses: it checks what ChatGPT, Google AI, Gemini, Perplexity and Claude say about a business, finds wrong facts and their sources, publishes a facts page on the owner's domain, and asks sources for a correction or shows the owner what to change. Customers are Dutch business owners.",
   supportEmail: "support@vidalo.io",
   salesEmail: "hello@vidalo.io",
   identityLine: supportIdentityLine,

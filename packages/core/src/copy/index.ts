@@ -67,7 +67,7 @@ export const copy = {
       grid: "rggrrxrggrxrrggrxrggrxrrggrxrggrxrrggrxrrggrxrggrxgrrgrxrggrrxgrgrxrgrgrxgrrgrxgrrgrxgrgrxgrgrxrggrx",
       /** The animated hero: one answer, built from four sources, put right at the source. */
       viz: {
-        label: "Zo werkt het: een AI bouwt een antwoord uit bronnen. Eén verouderde bron maakte het antwoord fout. Vidalo herstelt die bron en het antwoord klopt weer.",
+        label: "Zo werkt het: een AI bouwt een antwoord uit bronnen. Eén verouderde bron maakte het antwoord fout. Vidalo vindt die bron; als die is aangepast, klopt het antwoord weer.",
         question: "Is Bakkerij De Vries op zondag open?",
         engine: "ChatGPT",
         wrong: "Ja, zondag van 9:00 tot 17:00.",
@@ -79,7 +79,7 @@ export const copy = {
           { name: "Krantenbericht", meta: "naamgenoot, Heemstede" },
         ],
         vidalo: ["Controleert de bronnen", "Fout gevonden: openingstijden.nl", "Bron hersteld · antwoord klopt"],
-        caption: "Voorbeeld: één verouderde bron bepaalt het antwoord. Wij herstellen die bron.",
+        caption: "Voorbeeld: één verouderde bron bepaalt het antwoord. Wij vinden die bron en vragen om correctie, of laten zien wat jij moet aanpassen.",
       },
     },
     veranderd: {
@@ -129,7 +129,7 @@ export const copy = {
       body: "AI vertrouwt niet op je website alleen. Het combineert Wikipedia, bedrijvengidsen, nieuwsberichten en een bedrijf met dezelfde naam. In een controle van 10.000 bedrijven klopte bij de helft minstens één antwoord niet; bij 1 op de 3 was het telefoonnummer verkeerd.",
       examples: [
         { where: "Bakkerij, Centrum", wrong: "“zondag open”", right: "gesloten", source: "ChatGPT · bron: gidsvermelding uit 2022" },
-        { where: "Fysiotherapie, Schalkwijk", wrong: "oud nummer", right: "023 535…", source: "Copilot · bron: telefoonboek" },
+        { where: "Fysiotherapie, Schalkwijk", wrong: "oud nummer", right: "023 535…", source: "Perplexity · bron: telefoonboek" },
         { where: "Installateur, Noord", wrong: "“geen warmtepompen”", right: "wel", source: "Google AI · bron: eigen site, 2019" },
         { where: "Kapsalon, Zuid", wrong: "“permanent gesloten”", right: "open", source: "ChatGPT · bron: naamgenoot in Hoofddorp" },
       ],
@@ -147,10 +147,10 @@ export const copy = {
     },
     loket: {
       h2: "Je kunt het antwoord niet aanpassen. Wel de bronnen.",
-      body: "Er is geen loket bij ChatGPT of Google dat het antwoord corrigeert. De enige weg die werkt: vind de bron waar de AI het vandaan haalde, en herstel die. Dat is precies wat Vidalo doet.",
+      body: "Er is geen loket bij ChatGPT of Google dat het antwoord corrigeert. De enige weg die werkt: vind de bron waar de AI het vandaan haalde, en laat die aanpassen. Vidalo zoekt die bron op en vraagt om correctie, of laat je zien wat je zelf moet aanpassen.",
       timeline: [
         { stip: "rood", text: "openingstijden.nl zegt: zondag 9–17", meta: "bron gevonden" },
-        { stip: "oranje", text: "Correctie ingediend, bewijs bewaard", meta: "dag 1" },
+        { stip: "oranje", text: "Correctie gevraagd, bewijs bewaard", meta: "dag 1" },
         { stip: "oranje", text: "openingstijden.nl bijgewerkt", meta: "dag 9" },
         { stip: "groen", text: "ChatGPT zegt: zondag gesloten", meta: "dag 14, hercontrole" },
       ],
@@ -160,16 +160,16 @@ export const copy = {
       sub: "Jij doet vijf minuten werk bij de start. De rest loopt vanzelf, elke maand.",
       steps: [
         { n: "1", tone: "ink", title: "Vastleggen", body: "Je gegevens één keer goed: adres, telefoon, openingstijden, wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
-        { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Dezelfde gegevens naar Google, Bing, Apple en de bedrijvengidsen.", meta: "Live zodra je DNS-regel staat" },
+        { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Voor Google, Bing, Apple en de bedrijvengidsen zie je wat daar anders staat en wat je moet aanpassen.", meta: "Live zodra je DNS-regel staat" },
         { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
-        { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Hersteld waar wij bij kunnen, aangeschreven waar het moet, namens jou. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
+        { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Waar een bron een correctie van ons aanneemt, vragen we die namens jou; waar alleen de eigenaar iets kan wijzigen, zie je precies wat je moet aanpassen. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
       ],
       note: "Meerdere keren vragen is nodig: AI geeft zelden twee keer precies hetzelfde antwoord. Daarom tellen we hoe vaak een fout terugkomt.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twaalf feiten die een klant laten komen, of afhaken",
-      body: "We controleren alleen wat jij zelf kunt bevestigen en wat wij kunnen herstellen. Geen meningen, geen rankings. Drie groepen, op volgorde van schade.",
+      body: "We controleren alleen wat jij zelf kunt bevestigen en wat aan de bron aan te passen is. Geen meningen, geen rankings. Drie groepen, op volgorde van schade.",
       groups: {
         afhaker: { title: "Afhakers", body: "Eén fout en de klant komt niet. Eén verkeerd antwoord is al een bevinding." },
         misleider: { title: "Misleiders", body: "De klant komt wel, maar voor het verkeerde, en gaat teleurgesteld weg." },
@@ -251,16 +251,16 @@ export const copy = {
       label: "voorbeeld",
       cards: [
         { business: "Bakkerij De Vries, Haarlem", before: "ChatGPT: “gesloten op maandag”", after: "nu: open 9–18", source: "Bron: openingstijden.nl · hersteld in 12 dagen" },
-        { business: "Fysiotherapie Van Dijk, Zwolle", before: "Copilot: oud telefoonnummer", after: "nu: 038 – 422 11 90", source: "Bron: oude gidsvermelding · hersteld in 9 dagen" },
+        { business: "Fysiotherapie Van Dijk, Zwolle", before: "Perplexity: oud telefoonnummer", after: "nu: 038 – 422 11 90", source: "Bron: oude gidsvermelding · hersteld in 9 dagen" },
         { business: "Installatiebedrijf Hendriks, Breda", before: "Google AI: “doet geen warmtepompen”", after: "nu: warmtepompen sinds 2022", source: "Bron: eigen website · hersteld in 3 dagen" },
       ],
     },
     missie: {
       h2: "Ieder bedrijf verdient een plek in het antwoord.",
-      body: "De meeste bedrijven in Nederland zijn klein, hebben een eenvoudige website of geen, en staan in geen enkele bron die een AI leest. Niet fout, maar onzichtbaar. Een grijze stip. Vidalo geeft ze een feitenpagina die AI kan lezen, zet ze in de gidsen die AI gebruikt, en controleert of ze daarna genoemd worden.",
+      body: "De meeste bedrijven in Nederland zijn klein, hebben een eenvoudige website of geen, en staan in geen enkele bron die een AI leest. Niet fout, maar onzichtbaar. Een grijze stip. Vidalo geeft ze een feitenpagina die AI kan lezen, laat zien in welke gidsen die AI gebruikt ze moeten staan, en controleert of ze daarna genoemd worden.",
       timeline: [
         { stip: "grijs", text: "“Ik kan niets vinden over Installatiebedrijf Hendriks.”", meta: "dag 0" },
-        { stip: "oranje", text: "Feitenpagina live, Google en gidsen gevuld", meta: "dag 2" },
+        { stip: "oranje", text: "Feitenpagina live", meta: "na je DNS-regel" },
         { stip: "groen", text: "“Hendriks in Breda doet warmtepompen, open ma–vr 8–17.”", meta: "dag 21" },
       ],
       footnote: "Fictief voorbeeld. Of en wanneer een AI je gaat noemen bepalen wij niet; of het je kán vinden wel.",
@@ -298,7 +298,7 @@ export const copy = {
           wrong: "Een kapsalon met dezelfde naam in Hoofddorp ging dicht. De AI haalt de twee door elkaar.",
           source: "Nieuwsbericht over de naamgenoot in Hoofddorp, 2024",
           cost: "Wie dit leest, boekt meteen bij een ander. Je hoort er nooit van.",
-          fix: "Je feitenpagina zegt wie je bent, met adres en KvK. De gidsen krijgen dezelfde gegevens, zodat de AI de twee kan scheiden.",
+          fix: "Je feitenpagina zegt wie je bent, met adres en KvK. Voor de gidsen zie je wat er moet veranderen, zodat de AI de twee kan scheiden.",
           fixed: "Kapsalon Mirte in Haarlem is open, van dinsdag tot zaterdag. Let op: een salon met dezelfde naam in Hoofddorp is gesloten.",
         },
         {
@@ -310,7 +310,7 @@ export const copy = {
           wrong: "Bakker werkt al jaren in heel Haarlem en omgeving. De oude website noemt alleen Haarlem-Noord.",
           source: "Eigen website, pagina ‘Werkgebied’ uit 2019",
           cost: "Elke klus buiten Haarlem-Noord, ook spoed om de hoek, gaat naar een ander.",
-          fix: "We leggen je werkgebied vast als lijst van plaatsen, op je feitenpagina en in de gidsen, en geven je de zin die op je website moet.",
+          fix: "We leggen je werkgebied vast als lijst van plaatsen op je feitenpagina, en geven je de zin die op je website en in de gidsen moet.",
           fixed: "Ja, Bakker komt in heel Haarlem, Heemstede en Bloemendaal, ook voor spoed.",
         },
         {
@@ -322,7 +322,7 @@ export const copy = {
           wrong: "Hendriks plaatst sinds 2022 warmtepompen. De dienstenpagina is nooit bijgewerkt.",
           source: "Eigen website, pagina ‘Diensten’ uit 2019",
           cost: "De grootste klussen van het jaar gaan naar een concurrent, met een verwijzing van de AI erbij.",
-          fix: "Diensten die je wel én niet doet staan op je feitenpagina en in de gidsen. Na drie weken vragen we het opnieuw.",
+          fix: "Diensten die je wel én niet doet staan op je feitenpagina; voor de gidsen zie je wat er moet veranderen. Na drie weken vragen we het opnieuw.",
           fixed: "Ja, Hendriks plaatst sinds 2022 warmtepompen en helpt ook met de subsidieaanvraag.",
         },
         {
@@ -346,7 +346,7 @@ export const copy = {
           wrong: "De Wit rekent €45. Het bedrag van €89 komt uit een oude vermelding met een APK-pakket inclusief onderhoud.",
           source: "Opendi-vermelding uit 2021",
           cost: "Je lijkt twee keer zo duur als je bent. De klant belt niet om het te vragen.",
-          fix: "Je vanafprijzen staan met datum op je feitenpagina. De oude vermelding passen we aan bij de gids zelf.",
+          fix: "Je vanafprijzen staan met datum op je feitenpagina. Voor de oude vermelding vragen we de gids om een correctie.",
           fixed: "Een APK kost bij Garage De Wit €45. Op werkdagen kan het zonder afspraak.",
         },
         {
@@ -358,7 +358,7 @@ export const copy = {
           wrong: "De Vries neemt al jaren pin en contactloos aan.",
           source: "Eigen website, 2019, en een review uit 2018",
           cost: "Wie geen contant geld bij zich heeft, loopt door naar de supermarkt.",
-          fix: "Betaalmogelijkheden staan op je feitenpagina en in Google. Daar kijkt de AI het eerst.",
+          fix: "Betaalmogelijkheden staan op je feitenpagina, en je ziet wat er in je Google-profiel moet veranderen. Daar kijkt de AI het eerst.",
           fixed: "Ja, bij Bakkerij De Vries kun je pinnen en contactloos betalen.",
         },
         {
@@ -382,7 +382,7 @@ export const copy = {
           wrong: "Lindeboom beheert al twaalf jaar kleine VvE's, maar staat in geen enkele bron die de AI leest.",
           source: "Geen bron noemt Lindeboom",
           cost: "Je bent geen optie. Elke vraag zonder jou is een klant voor een ander.",
-          fix: "Een feitenpagina die de AI kan lezen, je gegevens in Google, Bing, Apple en de gidsen, en na drie weken een hercontrole.",
+          fix: "Een feitenpagina die de AI kan lezen, een lijst van wat je bij Google, Bing, Apple en de gidsen moet invullen, en na drie weken een hercontrole.",
           fixed: "Drie opties: Domstad Beheer, Vastgoedbeheer Lindeboom (gespecialiseerd in VvE's tot 30 appartementen) en VvE Partners Utrecht.",
         },
       ],
@@ -431,7 +431,7 @@ export const copy = {
       regel: {
         h3: "Straks bestelt de AI. Wie volgens de gegevens dicht is, valt af.",
         body: "Een klant laat de AI-assistent bestellen. Die zoekt bakkers, kijkt wie zondag open is en kiest. Staat er in één gids nog dat je zondag dicht bent, dan doe je niet mee. Niemand vertelt het je.",
-        label: "Voorbeeld: een klant laat een AI-assistent croissants bestellen voor zondag. Bakkerij Smit is zondag open, maar een gids uit 2021 zegt gesloten. De assistent bestelt bij een andere bakker. Nadat Vidalo die gids heeft hersteld, gaat de bestelling naar Bakkerij Smit.",
+        label: "Voorbeeld: een klant laat een AI-assistent croissants bestellen voor zondag. Bakkerij Smit is zondag open, maar een gids uit 2021 zegt gesloten. De assistent bestelt bij een andere bakker. Nadat die gids is aangepast, gaat de bestelling naar Bakkerij Smit.",
         phaseWrong: "Met een verouderde gids",
         phaseRight: "Na herstel aan de bron",
         ask: "Regel voor zondag 12 croissants bij een bakker in Haarlem.",
@@ -454,9 +454,9 @@ export const copy = {
       bel: {
         h3: "Eén oud nummer in drie gidsen. Wie belt, krijgt niemand.",
         body: "De AI geeft het nummer dat het vaakst voorkomt. Staat je oude nummer nog in drie gidsen, dan belt de klant dat. Hij hoort “niet in gebruik” en belt de volgende.",
-        label: "Voorbeeld: een klant vraagt Copilot het nummer van Fysiotherapie Van Dijk en krijgt het oude nummer, dat nog in drie gidsen staat. De klant hoort dat het nummer niet in gebruik is, en zo gaat het met elke beller. Vidalo past de drie gidsen aan; daarna geeft Copilot het juiste nummer en komt de klant binnen.",
+        label: "Voorbeeld: een klant vraagt Perplexity het nummer van Fysiotherapie Van Dijk en krijgt het oude nummer, dat nog in drie gidsen staat. De klant hoort dat het nummer niet in gebruik is, en zo gaat het met elke beller. Vidalo vindt de drie gidsen; als die zijn aangepast, geeft Perplexity het juiste nummer en komt de klant binnen.",
         ask: "Wat is het nummer van Fysiotherapie Van Dijk?",
-        engine: "Copilot",
+        engine: "Perplexity",
         wrong: "038 – 421 07 33",
         right: "038 – 422 11 90",
         calling: "Bellen…",
@@ -477,8 +477,8 @@ export const copy = {
       },
       gidsen: {
         h3: "Eén keer vastleggen, overal hetzelfde",
-        body: "Zolang zestien bronnen drie verschillende nummers noemen, kiest de AI er zelf een. Wij zetten je feitenpagina live en sturen dezelfde gegevens naar Google, Bing, Apple en dertien bedrijvengidsen. Dan valt er niets meer te kiezen.",
-        label: "Voorbeeld: zestien bronnen noemen drie verschillende telefoonnummers en ChatGPT, Google AI en Copilot geven een oud nummer. Vidalo publiceert een feitenpagina en zet dezelfde gegevens in alle zestien bronnen. Daarna klopt het antwoord bij alle drie.",
+        body: "Zolang zestien bronnen drie verschillende nummers noemen, kiest de AI er zelf een. Wij zetten je feitenpagina live en laten bij Google, Bing, Apple en dertien bedrijvengidsen zien wat er anders staat en wat er moet veranderen. Zeggen ze allemaal hetzelfde, dan valt er niets meer te kiezen.",
+        label: "Voorbeeld: zestien bronnen noemen drie verschillende telefoonnummers en ChatGPT, Google AI en Perplexity geven een oud nummer. Vidalo publiceert een feitenpagina en laat zien wat er in elke bron moet veranderen. Als alle zestien hetzelfde zeggen, klopt het antwoord bij alle drie.",
         before: "16 bronnen · 3 verschillende nummers",
         after: "16 bronnen · één versie van de feiten",
         factsTitle: "Feitenpagina",
@@ -503,25 +503,25 @@ export const copy = {
           ["Tripadvisor", "x"],
           ["AlleBedrijvenIn", "r"],
         ],
-        engines: ["ChatGPT", "Google AI", "Copilot"],
+        engines: ["ChatGPT", "Google AI", "Perplexity"],
         engineWrong: "oud nummer",
         engineRight: "klopt",
-        caption: "Voorbeeld met een fictieve praktijk. De bronnen zijn de echte zestien waar wij je gegevens naartoe sturen.",
+        caption: "Voorbeeld met een fictieve praktijk. De bronnen zijn de echte zestien die wij voor je nalopen.",
       },
       controle: {
         h3: "Eén keer vragen zegt niets",
         body: "AI geeft zelden twee keer hetzelfde antwoord. Wie één keer kijkt, ziet “alles klopt” en mist de fout die elke derde klant krijgt. Daarom stellen we elke vraag tot tien keer aan elke assistent, en tellen we.",
-        label: "Voorbeeld: dezelfde vraag tien keer gesteld aan ChatGPT, Google AI en Copilot. De eerste keer klopt alles. Over tien keer geeft Copilot drie keer een oud nummer, ChatGPT één keer. Eén keer vragen had die fout gemist.",
+        label: "Voorbeeld: dezelfde vraag tien keer gesteld aan ChatGPT, Google AI en Perplexity. De eerste keer klopt alles. Over tien keer geeft Perplexity drie keer een oud nummer, ChatGPT één keer. Eén keer vragen had die fout gemist.",
         ask: "Wat is het nummer van Fysiotherapie Van Dijk?",
         once: "Eén keer gevraagd: alles klopt",
         many: "Tien keer gevraagd",
         rows: [
           { engine: "ChatGPT", wrong: [6], result: "1 van 10 fout · instabiel", tone: "amber" },
           { engine: "Google AI", wrong: [], result: "0 van 10 fout · klopt", tone: "green" },
-          { engine: "Copilot", wrong: [2, 5, 8], result: "3 van 10 fout · bron: Telefoonboek.nl", tone: "red" },
+          { engine: "Perplexity", wrong: [2, 5, 8], result: "3 van 10 fout · bron: Telefoonboek.nl", tone: "red" },
         ],
         verdict: "Eén keer vragen had deze fout gemist.",
-        caption: "Voorbeeld. Een fout die zelden opduikt noemen we instabiel; komt hij vaak terug, dan herstellen we de bron.",
+        caption: "Voorbeeld. Een fout die zelden opduikt noemen we instabiel; komt hij vaak terug, dan gaan we naar de bron.",
       },
       gevonden: {
         h3: "Niet genoemd is ook een antwoord",
@@ -537,7 +537,7 @@ export const copy = {
         consequence: "De klant belt de eerste.",
         steps: [
           { day: "dag 0", text: "niet gevonden" },
-          { day: "dag 2", text: "feitenpagina en gidsen" },
+          { day: "week 1", text: "feitenpagina live" },
           { day: "dag 21", text: "hercontrole" },
         ],
         caption: "Fictief voorbeeld. Of de AI je noemt bepalen wij niet; of het je kán vinden wel.",
@@ -564,13 +564,13 @@ export const copy = {
       setup: {
         name: "Vidalo Scan",
         chip: "Eerste controle gratis",
-        audience: "Eén keer alles recht: elke fout uit je controle hersteld en je gegevens overal gelijk.",
+        audience: "Eén keer alles recht: elke fout uit je controle aangepakt bij de bron, en je gegevens op één plek vastgelegd.",
         price: "€149",
         unit: "eenmalig",
         includes: [
-          "Herstel aan de bron van elke fout die de controle vond.¹",
+          "Voor elke fout uit de controle: een correctieverzoek aan de bron, of precies wat je zelf moet aanpassen.¹",
           "Een feitenpagina op je eigen domein, met datum, die AI kan lezen.",
-          "Dezelfde gegevens bij Google, Bing, Apple en de bedrijvengidsen.",
+          "Voor Google, Bing, Apple en de bedrijvengidsen: wat daar anders staat en wat je moet aanpassen.",
         ],
         limit: "1 vestiging · eenmalige betaling",
         button: "Begin met de gratis check",
@@ -583,7 +583,7 @@ export const copy = {
         unit: "per maand",
         includes: [
           "Elke maand dezelfde vragen opnieuw bij ChatGPT, Google AI, Gemini, Perplexity en Claude.",
-          "Herstel aan de bron bij elke nieuwe fout.¹",
+          "Bij elke nieuwe fout: een correctieverzoek aan de bron, of precies wat je zelf moet aanpassen.¹",
           "Een maandelijks rapport met bewijs van wat er is hersteld.",
         ],
         limit: "1 vestiging · maandelijks opzegbaar · start met Vidalo Scan (€149 eenmalig)",
@@ -634,13 +634,13 @@ export const copy = {
       h2: "Vragen",
       items: [
         { q: "Ik heb toch een website?", a: "AI leest die als één bron van vele. De boekwinkel die “permanent gesloten” werd genoemd had ook een website." },
-        { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij herstellen de bronnen waar AI uit put, zodat ze allemaal hetzelfde zeggen." },
-        { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie herstellen we meestal binnen weken. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
-        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een." },
+        { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij zoeken de bronnen waar AI uit put en vragen om correctie, of laten zien wat je zelf moet aanpassen, zodat ze allemaal hetzelfde zeggen." },
+        { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie veranderen meestal binnen weken nadat de bron is aangepast. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
+        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een. Bij grote platforms kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout." },
-        { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
-        { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple doen we wel. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
+        { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
+        { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple nemen we wel mee. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
         { q: "Wat als AI mijn concurrent noemt?", a: "Dat kunnen we niet verbieden. Wel zorgen we dat de AI over jou de juiste feiten heeft, zodat je niet wegvalt omdat het denkt dat je dicht bent of iets niet doet." },
       ],
     },
@@ -676,21 +676,21 @@ export const copy = {
     },
     home: {
       title: "Klopt wat ChatGPT over je bedrijf zegt? Gratis AI-controle",
-      description: "Gratis controle: wat zeggen ChatGPT en Google AI over je bedrijf? We vinden elke fout en de bron, en herstellen die bron. Vidalo Scan €149 eenmalig, Vidalo Monthly €49 per maand, excl. btw.",
+      description: "Gratis controle: wat zeggen ChatGPT en Google AI over je bedrijf? We laten zien welke antwoorden niet kloppen en uit welke bron ze lijken te komen. Vidalo Scan €149 eenmalig, Vidalo Monthly €49 per maand, excl. btw.",
     },
     why: {
       crumb: "Waarom",
       title: "Waarom AI-assistenten fout antwoorden over je bedrijf",
-      description: "Hoe ChatGPT, Google AI en Copilot een antwoord over je bedrijf in elkaar zetten, waarom een oude gidsvermelding vaak wint, en wat dat een bedrijf kost.",
+      description: "Hoe ChatGPT, Google AI en Gemini een antwoord over je bedrijf in elkaar zetten, waarom een oude gidsvermelding vaak wint, en wat dat een bedrijf kost.",
       h1: "Waarom de AI soms fout antwoordt over je bedrijf",
       intro: "Een AI-assistent kent je niet. Bij elke vraag haalt hij op wat er online over je staat en maakt er één antwoord van. Hier lees je hoe dat gaat, waar het misgaat en wat je eraan kunt doen.",
     },
     how: {
       crumb: "Zo werkt het",
       title: "Zo werkt Vidalo: vastleggen, publiceren, controleren, herstellen",
-      description: "Je gegevens één keer vastleggen, overal hetzelfde publiceren, elke maand tot tien keer per vraag controleren bij ChatGPT, Google AI, Gemini, Perplexity en Claude, en fouten aan de bron herstellen met bewijs.",
+      description: "Je gegevens één keer vastleggen, op je feitenpagina publiceren, elke maand tot tien keer per vraag controleren bij ChatGPT, Google AI, Gemini, Perplexity en Claude, en fouten aan de bron aanpakken, met bewijs.",
       h1: "Zo werkt Vidalo",
-      intro: "Vijf minuten werk voor jou bij de start. Daarna controleren we elke maand wat AI-assistenten over je zeggen, en herstellen we elke fout bij de bron.",
+      intro: "Vijf minuten werk voor jou bij de start. Daarna controleren we elke maand wat AI-assistenten over je zeggen, en pakken we elke fout aan bij de bron.",
     },
     next: {
       crumb: "Straks",
@@ -1403,18 +1403,18 @@ export const copy = {
       h2Green: "Zo blijft je stip groen",
       h2Grey: "Zo word je gevonden",
       /** Red/orange: three steps from the findings. */
-      stepSources: (sources: string) => `${sources} aanschrijven of bijwerken, met bewijs. Google-profiel direct via je login.`,
+      stepSources: (sources: string) => `${sources}: we vragen om correctie of laten zien wat je moet aanpassen, met bewijs.`,
       stepSourcesNone: "Je gegevens één keer vastleggen en een feitenpagina publiceren die AI kan lezen.",
-      stepFacts: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en dezelfde gegevens naar Google, Bing, Apple en de gidsen.`,
+      stepFacts: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.`,
       stepRecheck: (days: number, questions: number) => `Na ${days} dagen dezelfde ${questions} vragen opnieuw. Je ziet voor en na.`,
       stepsGreen: [
         "Je gegevens één keer vastleggen, zodat elke bron hetzelfde zegt.",
-        "Een feitenpagina op je eigen domein, met datum, en dezelfde gegevens naar Google, Bing, Apple en de gidsen.",
+        "Een feitenpagina op je eigen domein, met datum, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.",
         "Elke maand dezelfde vragen opnieuw. Verandert er iets, dan zie je het als eerste.",
       ],
       stepsGrey: {
         facts: "Je gegevens één keer vastleggen: adres, telefoon, openingstijden, wat je doet en niet doet. Vijf minuten.",
-        publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen. Google-profiel geclaimd en gevuld. Bing, Apple en de gidsen gevuld met dezelfde gegevens.`,
+        publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en precies wat je bij Google, Bing, Apple en de gidsen moet invullen.`,
         recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Daarna elke maand. Je ziet wanneer de AI je gaat noemen.`,
       },
       noteGrey: "Of en wanneer een AI je noemt bepalen wij niet. Of het je kán vinden wel. Antwoorden zonder zoekfunctie veranderen pas bij een nieuwe modelversie.",
@@ -1455,7 +1455,7 @@ export const copy = {
     factsH2: (noun: string) => `Drie feiten die voor een ${noun} de doorslag geven`,
     factQuestion: "Controlevraag:",
     checkH2: (nounPlural: string) => `Wat we voor ${nounPlural} controleren`,
-    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Copilot, Gemini, Perplexity en Claude.`,
+    checkIntro: (n: number) => `De twaalf basisfeiten, plus ${n} vragen die alleen in dit vak tellen. Elke maand, bij ChatGPT, Google AI, Gemini, Perplexity en Claude.`,
     table: { question: "Vraag die een klant stelt", criterium: "Feit", severity: "Ernst als het fout is" },
     why: {
       h2: "Waarom je dit niet ziet aan je telefoon",
@@ -1507,12 +1507,12 @@ export const copy = {
         before: [
           { q: "“Wie installeert warmtepompen in Breda?”", a: "Google AI noemt drie anderen. Hendriks staat er niet bij." },
           { q: "“Komt Hendriks ook in Oosterhout?”", a: "ChatGPT: “Daar is geen informatie over.”" },
-          { q: "“Heeft Hendriks een storingsdienst?”", a: "Copilot: “Nee, alleen op werkdagen.”" },
+          { q: "“Heeft Hendriks een storingsdienst?”", a: "Perplexity: “Nee, alleen op werkdagen.”" },
         ],
         after: [
           { q: "“Wie installeert warmtepompen in Breda?”", a: "Google AI: “…en Installatiebedrijf Hendriks, erkend warmtepompinstallateur.”" },
           { q: "“Komt Hendriks ook in Oosterhout?”", a: "ChatGPT: “Ja, Hendriks werkt in Breda, Oosterhout en Etten-Leur.”" },
-          { q: "“Heeft Hendriks een storingsdienst?”", a: "Copilot: “Ja, 7 dagen per week via 076 – 530 12 44.”" },
+          { q: "“Heeft Hendriks een storingsdienst?”", a: "Perplexity: “Ja, 7 dagen per week via 076 – 530 12 44.”" },
         ],
         sources: "eigen website uit 2019, Google-profiel zonder diensten, geen gidsen",
         fixed: "feitenpagina op hendriks-installatie.nl, Google-profiel aangevuld, 9 gidsen gevuld",
@@ -1533,7 +1533,6 @@ export const copy = {
         { title: "Naamgenoot", body: "Een bouwbedrijf met jouw naam in een andere stad, of een faillissement van jaren geleden, kleeft in de bronnen aan jou vast. De AI ziet het verschil niet.", question: "“Is X hetzelfde als X in Z?”" },
         { title: "Prijs en werkgebied", body: "Een oude tarievenpagina of een gids die alleen je vestigingsplaats kent. De klant hoort een prijs van vijf jaar terug, of dat je niet in zijn dorp komt.", question: "“Wat rekent X voor een schilderbeurt?”" },
       ],
-      whyStat: { n: "3 namen", body: "noemt een AI gemiddeld bij een vraag om een aannemer. De rest bestaat niet voor die klant", source: "eigen steekproef, 2026" },
       example: {
         name: "Bouwbedrijf Jansen",
         beforeDate: "7 oktober",
@@ -1541,12 +1540,12 @@ export const copy = {
         before: [
           { q: "“Wie plaatst dakkapellen in Alkmaar?”", a: "Google AI noemt drie anderen. Jansen staat er niet bij." },
           { q: "“Geeft Jansen een gratis offerte?”", a: "ChatGPT: “Daar is geen informatie over.”" },
-          { q: "“Is Bouwbedrijf Jansen failliet?”", a: "Copilot: “Ja, in 2021.” (een naamgenoot in Zwolle)" },
+          { q: "“Is Bouwbedrijf Jansen failliet?”", a: "Perplexity: “Ja, in 2021.” (een naamgenoot in Zwolle)" },
         ],
         after: [
           { q: "“Wie plaatst dakkapellen in Alkmaar?”", a: "Google AI: “…en Bouwbedrijf Jansen, gespecialiseerd in dakkapellen.”" },
           { q: "“Geeft Jansen een gratis offerte?”", a: "ChatGPT: “Ja, Jansen komt gratis langs voor een offerte.”" },
-          { q: "“Is Bouwbedrijf Jansen failliet?”", a: "Copilot: “Nee, Bouwbedrijf Jansen in Alkmaar is actief; niet te verwarren met Jansen in Zwolle.”" },
+          { q: "“Is Bouwbedrijf Jansen failliet?”", a: "Perplexity: “Nee, Bouwbedrijf Jansen in Alkmaar is actief; niet te verwarren met Jansen in Zwolle.”" },
         ],
         sources: "eigen website zonder dienstenpagina, krantenbericht over een naamgenoot, geen gidsen",
         fixed: "feitenpagina op bouwbedrijfjansen.nl, Google-profiel aangevuld, 8 gidsen gevuld",
@@ -1567,7 +1566,6 @@ export const copy = {
         { title: "Tarief per appartement", body: "Een bestuur vergelijkt op prijs per appartement per maand. Staat jouw tarief nergens, dan vult de AI een landelijk gemiddelde in, of noemt alleen wie het wél vermeldt.", question: "“Wat kost beheer per appartement bij X?”" },
         { title: "Lidmaatschap en erkenning", body: "Besturen vragen naar VvE-Belang of een keurmerk. De AI kan dat alleen zeggen als het ergens leesbaar staat.", question: "“Is X aangesloten bij VvE-Belang?”" },
       ],
-      whyStat: { n: "grijs", body: "is de stip van de meeste VvE-beheerders: de AI vindt niets, en noemt dus een ander", source: "eigen steekproef, 40 beheerders, 2026" },
       example: {
         name: "Boogaard VvE-beheer",
         beforeDate: "7 oktober",
@@ -1575,12 +1573,12 @@ export const copy = {
         before: [
           { q: "“VvE-beheerder voor 12 appartementen in Amersfoort, wie kan dat doen?”", a: "ChatGPT noemt drie anderen. Boogaard staat er niet bij." },
           { q: "“Bestaat Boogaard VvE-beheer?”", a: "Google AI: “Ik kan geen informatie vinden over dit bedrijf.”" },
-          { q: "“Wat kost beheer per appartement bij Boogaard?”", a: "Copilot: “Daar is geen informatie over.”" },
+          { q: "“Wat kost beheer per appartement bij Boogaard?”", a: "Perplexity: “Daar is geen informatie over.”" },
         ],
         after: [
           { q: "“VvE-beheerder voor 12 appartementen in Amersfoort, wie kan dat doen?”", a: "ChatGPT: “…en Boogaard VvE-beheer, financieel en technisch beheer vanaf 12 appartementen.”" },
           { q: "“Bestaat Boogaard VvE-beheer?”", a: "Google AI: “Ja, Boogaard VvE-beheer in Amersfoort, opgericht in 2014.”" },
-          { q: "“Wat kost beheer per appartement bij Boogaard?”", a: "Copilot: “Vanaf € 14 per appartement per maand.”" },
+          { q: "“Wat kost beheer per appartement bij Boogaard?”", a: "Perplexity: “Vanaf € 14 per appartement per maand.”" },
         ],
         sources: "website met alleen een contactformulier, geen Google-profiel, geen gidsen",
         fixed: "feitenpagina op boogaardvve.nl, Google-profiel aangemaakt, 10 gidsen gevuld",
@@ -1601,7 +1599,6 @@ export const copy = {
         { title: "Spoed en vandaag", body: "Bij pijn telt alleen wie vandaag kan. Staat je spoedregeling en je avondspreekuur nergens, dan besta je niet voor die vraag.", question: "“Kan ik vandaag nog terecht bij X?”" },
         { title: "Verwijzing, verzekeraar en registratie", body: "Zonder verwijzing, gecontracteerd of niet, BIG-geregistreerd: de klant vraagt het, de AI raadt het als het nergens staat.", question: "“Kan ik bij X terecht zonder verwijzing?”" },
       ],
-      whyStat: { n: "2021", body: "is het jaar van het bericht “patiëntenstop” dat AI nog steeds leest over praktijken die allang weer plek hebben", source: "eigen steekproef, 2026" },
       example: {
         name: "Fysiotherapie Van Dijk",
         beforeDate: "7 oktober",
@@ -1609,12 +1606,12 @@ export const copy = {
         before: [
           { q: "“Welke fysio in Zwolle neemt nieuwe patiënten aan?”", a: "Google AI noemt drie anderen. Van Dijk staat er niet bij." },
           { q: "“Kan ik bij Van Dijk terecht zonder verwijzing?”", a: "ChatGPT: “Daar is geen informatie over.”" },
-          { q: "“Wat is het telefoonnummer van Van Dijk?”", a: "Copilot: “038 – 421 77 30” (oud nummer)" },
+          { q: "“Wat is het telefoonnummer van Van Dijk?”", a: "Perplexity: “038 – 421 77 30” (oud nummer)" },
         ],
         after: [
           { q: "“Welke fysio in Zwolle neemt nieuwe patiënten aan?”", a: "Google AI: “…en Fysiotherapie Van Dijk, nieuwe patiënten welkom.”" },
           { q: "“Kan ik bij Van Dijk terecht zonder verwijzing?”", a: "ChatGPT: “Ja, Van Dijk is direct toegankelijk zonder verwijzing.”" },
-          { q: "“Wat is het telefoonnummer van Van Dijk?”", a: "Copilot: “038 – 422 11 90.”" },
+          { q: "“Wat is het telefoonnummer van Van Dijk?”", a: "Perplexity: “038 – 422 11 90.”" },
         ],
         sources: "oude gidsvermelding, Google-profiel zonder diensten, geen pagina over verwijzing",
         fixed: "feitenpagina op fysiovandijk.nl, Google-profiel aangevuld, 11 gidsen gevuld",
@@ -1643,12 +1640,12 @@ export const copy = {
         before: [
           { q: "“Is De Brug op maandag open?”", a: "ChatGPT: “Nee, maandag gesloten.”" },
           { q: "“Kan ik bij De Brug reserveren voor 6?”", a: "Google AI: “Daar is geen informatie over.”" },
-          { q: "“Welk eetcafé in Deventer heeft een terras?”", a: "Copilot noemt drie anderen. De Brug staat er niet bij." },
+          { q: "“Welk eetcafé in Deventer heeft een terras?”", a: "Perplexity noemt drie anderen. De Brug staat er niet bij." },
         ],
         after: [
           { q: "“Is De Brug op maandag open?”", a: "ChatGPT: “Ja, maandag open van 16:00 tot 23:00.”" },
           { q: "“Kan ik bij De Brug reserveren voor 6?”", a: "Google AI: “Ja, reserveren kan telefonisch of via de website.”" },
-          { q: "“Welk eetcafé in Deventer heeft een terras?”", a: "Copilot: “…en Eetcafé De Brug, met terras aan de IJssel.”" },
+          { q: "“Welk eetcafé in Deventer heeft een terras?”", a: "Perplexity: “…en Eetcafé De Brug, met terras aan de IJssel.”" },
         ],
         sources: "gidsvermelding uit 2022, Google-profiel met oude tijden, geen pagina over reserveren",
         fixed: "feitenpagina op eetcafedebrug.nl, Google-profiel bijgewerkt, 7 gidsen gevuld",
@@ -1676,12 +1673,12 @@ export const copy = {
         afterDate: "4 november",
         before: [
           { q: "“Is De Vries zondag open?”", a: "ChatGPT: “Ja, van 9:00 tot 17:00.” (zondag gesloten)" },
-          { q: "“Wat is het telefoonnummer van De Vries?”", a: "Copilot: “023 532 00 41” (oud nummer)" },
+          { q: "“Wat is het telefoonnummer van De Vries?”", a: "Perplexity: “023 532 00 41” (oud nummer)" },
           { q: "“Verkoopt De Vries glutenvrij brood?”", a: "Google AI: “Ik kan geen informatie vinden.”" },
         ],
         after: [
           { q: "“Is De Vries zondag open?”", a: "ChatGPT: “Nee, Bakkerij De Vries is op zondag gesloten.”" },
-          { q: "“Wat is het telefoonnummer van De Vries?”", a: "Copilot: “023 535 22 18.”" },
+          { q: "“Wat is het telefoonnummer van De Vries?”", a: "Perplexity: “023 535 22 18.”" },
           { q: "“Verkoopt De Vries glutenvrij brood?”", a: "Google AI: “Ja, op bestelling.”" },
         ],
         sources: "openingstijden.nl uit 2022, telefoonboek.nl, eigen website met tekst uit 2019",
@@ -1696,25 +1693,24 @@ export const copy = {
       nounYour: "garage",
       h1: "Een klant vraagt AI wat een APK kost bij jou. Welke prijs hoort hij?",
       intro: "Bij een garage of fietsenmaker vergelijkt de klant op prijs, specialisatie en of hij zonder afspraak terecht kan. Een oude prijs op je website is genoeg voor een verkeerde vergelijking.",
-      chat: { question: "Wat kost een APK bij Autobedrijf Smit in Apeldoorn en kan ik zonder afspraak komen?", engine: "Copilot", intro: "Bij Autobedrijf Smit in Apeldoorn kost een APK € 29,95. Je kunt er alleen op afspraak terecht.", answers: [] },
+      chat: { question: "Wat kost een APK bij Autobedrijf Smit in Apeldoorn en kan ik zonder afspraak komen?", engine: "Perplexity", intro: "Bij Autobedrijf Smit in Apeldoorn kost een APK € 29,95. Je kunt er alleen op afspraak terecht.", answers: [] },
       miss: { strong: "Allebei fout.", body: "De prijs komt van een actiepagina uit 2019; “alleen op afspraak” uit een gids. De klant belt de buurman." },
       facts: [
         { title: "Wat een APK of reparatie kost", body: "De klant vergelijkt prijzen zonder te bellen. Een oude actieprijs op je website of in een gids wordt de prijs die hij verwacht.", question: "“Wat kost een APK bij X?”" },
         { title: "Welke merken en soorten je doet", body: "Elektrische fietsen, campers, hybride auto’s: de klant vraagt ernaar. Staat het nergens, dan noemt de AI de dealer.", question: "“Repareert X ook elektrische fietsen?”" },
         { title: "Zonder afspraak", body: "Kan ik vandaag langskomen? Een gids die “alleen op afspraak” zegt, houdt de klant met een lekke band weg.", question: "“Kan ik bij X zonder afspraak langskomen?”" },
       ],
-      whyStat: { n: "2019", body: "is het jaar van de actieprijs die AI nog steeds noemt als jouw APK-tarief", source: "eigen steekproef, 2026" },
       example: {
         name: "Autobedrijf Smit",
         beforeDate: "7 oktober",
         afterDate: "4 november",
         before: [
-          { q: "“Wat kost een APK bij Smit?”", a: "Copilot: “€ 29,95” (actieprijs uit 2019)" },
+          { q: "“Wat kost een APK bij Smit?”", a: "Perplexity: “€ 29,95” (actieprijs uit 2019)" },
           { q: "“Doet Smit ook hybride auto’s?”", a: "ChatGPT: “Daar is geen informatie over.”" },
           { q: "“Welke garage in Apeldoorn helpt zonder afspraak?”", a: "Google AI noemt drie anderen. Smit staat er niet bij." },
         ],
         after: [
-          { q: "“Wat kost een APK bij Smit?”", a: "Copilot: “€ 49, inclusief afmelden.”" },
+          { q: "“Wat kost een APK bij Smit?”", a: "Perplexity: “€ 49, inclusief afmelden.”" },
           { q: "“Doet Smit ook hybride auto’s?”", a: "ChatGPT: “Ja, Smit onderhoudt ook hybride en elektrische auto’s.”" },
           { q: "“Welke garage in Apeldoorn helpt zonder afspraak?”", a: "Google AI: “…en Autobedrijf Smit, inloop op werkdagen tot 17:00.”" },
         ],
@@ -1737,7 +1733,6 @@ export const copy = {
         { title: "Wat knippen kost", body: "Klanten vergelijken op prijs voordat ze binnenstappen. Een oude prijslijst in een gids wordt jouw prijs.", question: "“Wat kost knippen bij X?”" },
         { title: "Je openingstijden", body: "Avondopenstelling, maandag dicht, zaterdag tot 17:00. De AI leest het uit de gids, niet uit je raam.", question: "“Is X op maandag open?”" },
       ],
-      whyStat: { n: "grijs", body: "is de stip van de meeste salons zonder website: de AI vindt alleen een adres", source: "eigen steekproef, 2026" },
       example: {
         name: "Kapsalon Mila",
         beforeDate: "7 oktober",
@@ -1745,12 +1740,12 @@ export const copy = {
         before: [
           { q: "“Kapper in Leiden zonder afspraak?”", a: "ChatGPT noemt drie anderen. Mila staat er niet bij." },
           { q: "“Wat kost knippen bij Mila?”", a: "Google AI: “Ik kan geen informatie vinden.”" },
-          { q: "“Is Mila op maandag open?”", a: "Copilot: “Daar is geen informatie over.”" },
+          { q: "“Is Mila op maandag open?”", a: "Perplexity: “Daar is geen informatie over.”" },
         ],
         after: [
           { q: "“Kapper in Leiden zonder afspraak?”", a: "ChatGPT: “…en Kapsalon Mila, inloop van dinsdag tot zaterdag.”" },
           { q: "“Wat kost knippen bij Mila?”", a: "Google AI: “Knippen vanaf € 32.”" },
-          { q: "“Is Mila op maandag open?”", a: "Copilot: “Nee, maandag gesloten; dinsdag tot zaterdag van 9:00 tot 18:00.”" },
+          { q: "“Is Mila op maandag open?”", a: "Perplexity: “Nee, maandag gesloten; dinsdag tot zaterdag van 9:00 tot 18:00.”" },
         ],
         sources: "geen website, één gidsvermelding met alleen een adres, Google-profiel niet geclaimd",
         fixed: "feitenpagina op kapsalonmila.nl, Google-profiel geclaimd en gevuld, 10 gidsen gevuld",
@@ -1771,7 +1766,6 @@ export const copy = {
         { title: "Of je ook particulieren helpt", body: "Veel kantoren zeggen op hun website niets over wie ze helpen. De AI vult dan “alleen zakelijk” in, en de particulier belt niet.", question: "“Helpt X ook particulieren?”" },
         { title: "Naamgenoot met een tuchtzaak", body: "Een uitspraak over een naamgenoot in een andere stad komt bij jou terecht. De AI ziet het verschil niet; de klant ook niet.", question: "“Is X hetzelfde als X in Z?”" },
       ],
-      whyStat: { n: "1 artikel", body: "over een naamgenoot is genoeg om een kantoor uit het antwoord te houden", source: "eigen steekproef, 2026" },
       example: {
         name: "Advocatenkantoor De Bruin",
         beforeDate: "7 oktober",
@@ -1779,12 +1773,12 @@ export const copy = {
         before: [
           { q: "“Welke advocaat arbeidsrecht in Arnhem helpt particulieren?”", a: "Google AI noemt drie anderen. De Bruin staat er niet bij." },
           { q: "“Heeft De Bruin een tuchtzaak gehad?”", a: "ChatGPT: “Ja, in 2020.” (een naamgenoot in Groningen)" },
-          { q: "“Wat kost een eerste gesprek bij De Bruin?”", a: "Copilot: “Daar is geen informatie over.”" },
+          { q: "“Wat kost een eerste gesprek bij De Bruin?”", a: "Perplexity: “Daar is geen informatie over.”" },
         ],
         after: [
           { q: "“Welke advocaat arbeidsrecht in Arnhem helpt particulieren?”", a: "Google AI: “…en Advocatenkantoor De Bruin, arbeidsrecht voor particulieren en bedrijven.”" },
           { q: "“Heeft De Bruin een tuchtzaak gehad?”", a: "ChatGPT: “Nee. Niet te verwarren met De Bruin Advocaten in Groningen.”" },
-          { q: "“Wat kost een eerste gesprek bij De Bruin?”", a: "Copilot: “Het eerste gesprek van een half uur is gratis.”" },
+          { q: "“Wat kost een eerste gesprek bij De Bruin?”", a: "Perplexity: “Het eerste gesprek van een half uur is gratis.”" },
         ],
         sources: "website zonder specialismen, artikel over een naamgenoot, geen gidsen",
         fixed: "feitenpagina op debruinadvocaten.nl, Google-profiel aangevuld, 6 gidsen gevuld",
@@ -1805,7 +1799,6 @@ export const copy = {
         { title: "Lidmaatschap", body: "NVM, VBO, Erkend Hypotheekadviseur: de klant vraagt het als keurmerk. De AI kan het alleen noemen als het ergens leesbaar staat.", question: "“Is X NVM-makelaar?”" },
         { title: "In welke plaatsen je werkt", body: "Je staat ingeschreven in één plaats. De AI leest dat als: werkt alleen dáár. De verkoper in het buurdorp krijgt een ander te horen.", question: "“Werkt X ook in Z?”" },
       ],
-      whyStat: { n: "3 jaar", body: "oud is de tariefpagina die AI gemiddeld citeert bij een vraag over courtage", source: "eigen steekproef, 2026" },
       example: {
         name: "Makelaardij Peters",
         beforeDate: "7 oktober",
@@ -1813,12 +1806,12 @@ export const copy = {
         before: [
           { q: "“Welke makelaar in Hilversum werkt met een vaste prijs?”", a: "ChatGPT noemt drie anderen. Peters staat er niet bij." },
           { q: "“Wat rekent Peters voor de verkoop van een huis?”", a: "Google AI: “1,2% courtage.” (oude pagina)" },
-          { q: "“Werkt Peters ook in Laren?”", a: "Copilot: “Daar is geen informatie over.”" },
+          { q: "“Werkt Peters ook in Laren?”", a: "Perplexity: “Daar is geen informatie over.”" },
         ],
         after: [
           { q: "“Welke makelaar in Hilversum werkt met een vaste prijs?”", a: "ChatGPT: “…en Makelaardij Peters, vaste prijs van € 2.950.”" },
           { q: "“Wat rekent Peters voor de verkoop van een huis?”", a: "Google AI: “Een vaste prijs van € 2.950, inclusief fotografie.”" },
-          { q: "“Werkt Peters ook in Laren?”", a: "Copilot: “Ja, Peters werkt in Hilversum, Laren en Blaricum.”" },
+          { q: "“Werkt Peters ook in Laren?”", a: "Perplexity: “Ja, Peters werkt in Hilversum, Laren en Blaricum.”" },
         ],
         sources: "oude tarievenpagina, Google-profiel zonder werkgebied, 2 gidsen met alleen een adres",
         fixed: "feitenpagina op makelaardijpeters.nl, oude pagina weg, Google-profiel aangevuld, 8 gidsen gevuld",
@@ -1839,7 +1832,6 @@ export const copy = {
         { title: "Je openingstijden", body: "Vroeg open, laat dicht, zaterdag les: ouders en sporters plannen erop. De AI leest het uit de gids, niet van je deur.", question: "“Hoe laat gaat X op maandag open?”" },
         { title: "Wat je aanbiedt", body: "Babygroep, automaat, groepslessen, vroege opvang. Staat het nergens, dan stuurt de AI de klant naar wie het wél vermeldt.", question: "“Heeft X een babygroep?”" },
       ],
-      whyStat: { n: "2023", body: "is het jaar van het bericht “wachtlijst” dat AI nog steeds leest over locaties die allang weer plek hebben", source: "eigen steekproef, 2026" },
       example: {
         name: "Kinderopvang De Boomhut",
         beforeDate: "7 oktober",
@@ -1847,12 +1839,12 @@ export const copy = {
         before: [
           { q: "“Welke kinderopvang in Amersfoort heeft plek voor een baby?”", a: "Google AI noemt drie anderen. De Boomhut staat er niet bij." },
           { q: "“Heeft De Boomhut een wachtlijst?”", a: "ChatGPT: “Ja, voor de babygroep.” (bericht uit 2023)" },
-          { q: "“Hoe laat gaat De Boomhut open?”", a: "Copilot: “Daar is geen informatie over.”" },
+          { q: "“Hoe laat gaat De Boomhut open?”", a: "Perplexity: “Daar is geen informatie over.”" },
         ],
         after: [
           { q: "“Welke kinderopvang in Amersfoort heeft plek voor een baby?”", a: "Google AI: “…en Kinderopvang De Boomhut, direct plek in de babygroep.”" },
           { q: "“Heeft De Boomhut een wachtlijst?”", a: "ChatGPT: “Nee, De Boomhut heeft plek op alle groepen.”" },
-          { q: "“Hoe laat gaat De Boomhut open?”", a: "Copilot: “Om 7:00, en tot 18:30 open.”" },
+          { q: "“Hoe laat gaat De Boomhut open?”", a: "Perplexity: “Om 7:00, en tot 18:30 open.”" },
         ],
         sources: "nieuwsbericht uit 2023, Google-profiel zonder tijden, geen gidsen",
         fixed: "feitenpagina op deboomhut.nl, Google-profiel aangevuld, 9 gidsen gevuld",
@@ -1873,15 +1865,15 @@ export const copy = {
   },
 
   /** Fix path for a not_found finding (there is no wrong source; we make the business findable). */
-  fixPathNotFound: "We maken een feitenpagina die AI kan lezen, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren na 3 weken of je genoemd wordt.",
+  fixPathNotFound: "We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren na 3 weken of je genoemd wordt.",
 
   fixPath: {
     owned_facts_page: "We publiceren je feitenpagina opnieuw en melden de wijziging aan. Hercontrole na 7 dagen.",
     owned_website: "We sturen je precies welke pagina en welke tekst op je website moet veranderen. Hercontrole na 14 dagen.",
-    directory_api: "We synchroniseren je gegevens opnieuw met deze gids. Hercontrole na 7 dagen.",
-    directory_form: "We dienen een correctie in bij deze gids en bewaren het bewijs. Hercontrole na 14 dagen.",
-    third_party: "We sturen namens jou een correctieverzoek naar deze website. Hercontrole na 30 dagen.",
-    other_entity: "We zetten op je feitenpagina en in de gidsen duidelijk dat dit een ander bedrijf is. Hercontrole na 30 dagen.",
+    directory_api: "We vragen deze gids om je gegevens bij te werken, of laten zien wat je zelf moet aanpassen. Hercontrole na 7 dagen.",
+    directory_form: "We vragen deze gids om een correctie en bewaren het bewijs, of laten zien wat je zelf moet aanpassen. Hercontrole na 14 dagen.",
+    third_party: "We vragen deze website namens jou om een correctie, of laten zien wat je zelf moet aanpassen. Hercontrole na 30 dagen.",
+    other_entity: "We zetten op je feitenpagina duidelijk dat dit een ander bedrijf is, en laten zien wat er in de gidsen moet veranderen. Hercontrole na 30 dagen.",
     none: "Hier is geen bron om te herstellen. We controleren opnieuw bij een nieuwe versie van het model.",
   },
 
@@ -1943,7 +1935,7 @@ export const copy = {
     grijs: "AI kent je niet",
   },
   stipLine: {
-    rood: "Minstens één antwoord stuurt klanten weg. Dat herstellen we eerst.",
+    rood: "Minstens één antwoord stuurt klanten weg. Daar beginnen we mee.",
     oranje: "Geen afhakers, maar de klant krijgt wel verkeerde details.",
     groen: "Alles wat we controleerden klopt.",
     grijs: "AI vindt (bijna) niets over je. Je bestaat niet in het antwoord.",
@@ -2421,7 +2413,7 @@ export const copy = {
     introPending: (version: number | null, date: string | null) =>
       `Google heeft nog een oudere versie van je gegevens${version && date ? `; op ${date} bevestigde je versie ${version}` : ""}. Hieronder staat je profiel zoals Google het nu toont en zoals het wordt. We veranderen niets voordat jij het goedkeurt.`,
     introSame: "Alles wat we bijhouden staat op Google zoals in je gegevens.",
-    introDirectory: "Deze gids passen we niet zelf aan: we sturen een correctie namens jou en bewaren het bewijs. Hieronder staat wat er afwijkt en wat we deden.",
+    introDirectory: "Deze gids passen we niet zelf aan: waar het kan, vragen we namens jou om een correctie en bewaren we het bewijs; anders zie je hier wat je zelf moet aanpassen. Hieronder staat wat er afwijkt en wat we deden.",
     introDeclined: (date: string) => `Je koos op ${date} om deze wijziging niet door te voeren. Google toont nog de oude regels; de volgende controle meldt het verschil opnieuw.`,
     introApproved: (date: string) => `Je keurde deze wijziging goed op ${date}. We zetten hem binnen een uur op Google; daarna staat hier het antwoord van Google.`,
     openAtGoogle: "Open je profiel bij Google",
@@ -2912,13 +2904,13 @@ export const copy = {
       unknown: (name: string) => `AI vindt (bijna) niets over ${name}. Je bestaat niet in het antwoord.`,
       partial: (name: string) => `AI kent ${name} maar half: een deel van de antwoorden is leeg.`,
     },
-    notCounted: "Dat tellen we niet als fout, maar het betekent wel dat een klant die het vraagt, geen antwoord krijgt. We maken je feitenpagina, zetten je in Google, Bing, Apple en de Nederlandse gidsen, en controleren na 3 weken of je genoemd wordt.",
+    notCounted: "Dat tellen we niet als fout, maar het betekent wel dat een klant die het vraagt, geen antwoord krijgt. We maken je feitenpagina, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren na 3 weken of je genoemd wordt.",
     /** What happens once Vidalo works on it, in the order and the time the fix paths take (fixer/paths.ts: 7 to 30 days). */
     howWeFix: {
       title: "Zo herstellen wij het",
       items: [
         { when: "Dag 1", what: "We leggen je gegevens vast en zetten je feitenpagina live." },
-        { when: "Week 1", what: "We dienen correcties in bij de bronnen: de gidsen, Google, Bing en Apple." },
+        { when: "Week 1", what: "We vragen de bronnen met een fout om correctie, en laten zien wat je zelf moet aanpassen bij Google, Bing, Apple en de gidsen." },
         { when: "Week 1 tot 4", what: "We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt." },
         { when: "Elke maand", what: "Een nieuwe controle van alle vragen, met een kort rapport." },
       ],
@@ -2933,12 +2925,12 @@ export const copy = {
       subject: (name: string) => `Welkom bij Vidalo: 4 stappen voor ${name}`,
       preheader: "Vier stappen, samen ongeveer 5 minuten. Daarna doen wij de rest.",
       headline: (name: string) => `Welkom. Zo starten we voor ${name}.`,
-      intro: (name: string) => `Bedankt voor je bestelling. Vanaf nu controleren we wat AI over ${name} zegt en herstellen we fouten bij de bron. Om te starten vragen we 4 dingen van je. Samen ongeveer 5 minuten.`,
+      intro: (name: string) => `Bedankt voor je bestelling. Vanaf nu controleren we wat AI over ${name} zegt en pakken we fouten aan bij de bron. Om te starten vragen we 4 dingen van je. Samen ongeveer 5 minuten.`,
       facts: { title: "1. Bevestig je gegevens", line: "Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na." },
       dns: { title: "2. Eén DNS-regel", lead: "Maak bij je domeinbeheerder een CNAME aan:", check: "Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres." },
       noDomain: { title: "2. Feitenpagina", line: (url: string) => `Je hebt geen eigen domein opgegeven. We zetten je feitenpagina op ${url}. Later verhuizen kan altijd.`, ourAddress: "ons adres" },
       google: { title: "3. Log één keer in bij Google", line: "Daarmee mogen we je Google Bedrijfsprofiel lezen en de openingstijden, het telefoonnummer en de website gelijk zetten." },
-      rest: { title: "4. Wij doen de rest", line: "Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we direct bij; bij Bing en Apple dienen we de wijziging in en bewaken we de verwerking." },
+      rest: { title: "4. Wij doen de rest", line: "Zodra je DNS-regel staat, is je feitenpagina live. Je Google-profiel werken we bij zodra Google ons daarvoor toegang geeft; voor Bing en Apple zie je in je overzicht wat je moet aanpassen, en daarna controleren we of het klopt." },
       cta: "Bevestig je gegevens",
       ctaNote: (url: string) => `Je overzicht, met alles wat we doen: ${url}`,
       after: {
@@ -2971,7 +2963,7 @@ export const copy = {
       more: (n: number, where: string) => `En nog ${n} ${n === 1 ? "fout" : "fouten"}. Alles staat ${where}, met de bron van elke fout en wat we eraan doen.`,
       next: {
         title: "Wat er nu gebeurt",
-        today: { when: "Vandaag", what: "We dienen de eerste correcties in bij de bronnen." },
+        today: { when: "Vandaag", what: "We vragen de eerste bronnen om correctie, of zetten klaar wat je zelf moet aanpassen." },
         firstRechecks: "De eerste hercontroles. Je hoort het zodra een antwoord weer klopt.",
         lastRechecks: "De laatste bronnen opnieuw gecontroleerd.",
       },
