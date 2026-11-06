@@ -22,7 +22,7 @@ export const OWN_BUSINESS: Business = {
   name: "Vidalo",
   place: "Rotterdam",
   country: "NL",
-  domain: "vidalo.io",
+  domain: "vidalo.ai",
   kvk: "42057858",
   googlePlaceId: null,
   sector: null,
@@ -46,7 +46,7 @@ export const OWN_FACTS: Facts = {
   postcode: "3071 AV",
   phone: "+31 85 109 1393",
   email: "hello@vidalo.io",
-  website: "https://vidalo.io",
+  website: "https://vidalo.ai",
   openStatus: "open",
   hours: [
     { day: 0, open: "09:00", close: "17:00", closed: false },

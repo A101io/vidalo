@@ -23,8 +23,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const template = readFileSync(path.join(root, "docs/auth-email/sign-in.html"), "utf8");
 const subject = "Je inloglink voor Vidalo · Your Vidalo sign-in link";
 const wanted = {
-  site_url: "https://vidalo.io",
+  site_url: "https://vidalo.ai",
   uri_allow_list: [
+    "https://vidalo.ai/**",
     "https://vidalo.io/**",
     "https://vidalo-web-staging.julian-devriend.workers.dev/**",
     "https://vidalo-web-preview.julian-devriend.workers.dev/**",

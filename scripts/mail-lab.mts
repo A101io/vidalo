@@ -32,7 +32,7 @@ const OUT = path.resolve(process.env.MAIL_LAB_DIR ?? "out/mail-lab");
 await rm(OUT, { recursive: true, force: true });
 process.env.VIDALO_MOCK = "1";
 process.env.VIDALO_OUT_DIR = OUT;
-// The site the links point to. mail:send builds with https://vidalo.io so a test mail's links open the real site.
+// The site the links point to. mail:send builds with https://vidalo.ai so a test mail's links open the real site.
 process.env.PUBLIC_BASE_URL = process.env.MAIL_LAB_BASE_URL ?? "http://localhost:3000";
 // Commercial mail is never sent without a working opt-out; a lab value makes the links signable.
 process.env.UNSUBSCRIBE_SECRET ??= "mail-lab-only-not-a-secret";
