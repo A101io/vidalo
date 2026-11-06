@@ -653,7 +653,7 @@ export const copy = {
         { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie veranderen meestal binnen weken nadat de bron is aangepast. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
         { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een. Bij grote platforms kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
         { q: "Moet ik iets installeren?", a: "Nee." },
-        { q: "Hoe vaak controleren jullie?", a: "Elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout." },
+        { q: "Hoe vaak controleren jullie?", a: "Met Vidalo Monthly elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout. Met alleen Vidalo Scan doen we één volledige controle en controleren we daarna de herstelde fouten opnieuw." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
         { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple nemen we wel mee. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
         { q: "Wat als AI mijn concurrent noemt?", a: "Dat kunnen we niet verbieden. Wel zorgen we dat de AI over jou de juiste feiten heeft, zodat je niet wegvalt omdat het denkt dat je dicht bent of iets niet doet." },
@@ -1448,12 +1448,12 @@ export const copy = {
       stepsGreen: [
         "Je gegevens één keer vastleggen, zodat elke bron hetzelfde zegt.",
         "Een feitenpagina op je eigen domein, met datum, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.",
-        "Elke maand dezelfde vragen opnieuw. Verandert er iets, dan zie je het als eerste.",
+        "Met Vidalo Monthly: elke maand dezelfde vragen opnieuw. Verandert er iets, dan zie je het als eerste.",
       ],
       stepsGrey: {
         facts: "Je gegevens één keer vastleggen: adres, telefoon, openingstijden, wat je doet en niet doet. Vijf minuten.",
         publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en precies wat je bij Google, Bing, Apple en de gidsen moet invullen.`,
-        recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Daarna elke maand. Je ziet wanneer de AI je gaat noemen.`,
+        recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wanneer de AI je gaat noemen.`,
       },
       noteGrey: "Of en wanneer een AI je noemt bepalen wij niet. Of het je kán vinden wel. Antwoorden zonder zoekfunctie veranderen pas bij een nieuwe modelversie.",
       monitor: "Vidalo Scan + Monthly · €149 + €49/mnd",
@@ -2219,6 +2219,8 @@ export const copy = {
       { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein, of laat Vidalo een domein registreren.", href: "/app/domein", cta: "Domein instellen" },
       { title: "Wacht op de eerste controle", body: "Daarna krijg je elke maand een rapport. Je hoeft niets te installeren.", href: "/app", cta: "Naar je overzicht" },
     ],
+    /** Step 4 for Vidalo Scan alone: no monthly check (review CMP-01). */
+    lastStepScan: { title: "Wacht op de eerste controle", body: "We controleren de herstelde fouten opnieuw. Elke maand controleren hoort bij Vidalo Monthly.", href: "/app", cta: "Naar je overzicht" },
     loginHint: "Je ontvangt een inloglink per e-mail. Geen wachtwoord nodig.",
   },
 
@@ -2232,7 +2234,7 @@ export const copy = {
     noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
     rateLimited: "Je hebt net al een inloglink gevraagd. Kijk in je mailbox, of probeer het over een paar minuten opnieuw.",
     signedInH1: "Je bent ingelogd",
-    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Start met een gratis controle en laat het rapport naar dit adres mailen: daarna vind je je bedrijf hier.`,
+    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Heb je betaald? Log dan in met het adres waarmee je betaalde, of mail support@vidalo.io, dan koppelen we je bedrijf. Nog niet gecontroleerd? Start met een gratis controle.`,
     startCheck: "Start een gratis controle",
     otherEmail: "Ander e-mailadres? Log uit",
     linkExpired: "Deze inloglink werkt niet meer: hij is al gebruikt of verlopen. Vraag hieronder een nieuwe aan.",
@@ -2249,7 +2251,7 @@ export const copy = {
     statusLine: (ok: number, total: number) => `${ok} van ${total} antwoorden kloppen`,
     notFoundLine: (n: number) => `${n} ${n === 1 ? "antwoord" : "antwoorden"}: niet gevonden.`,
     checkNow: "Controleer nu",
-    checkQueued: "Controle ingepland. Je ziet het resultaat hier binnen een uur.",
+    checkQueued: "Controle ingepland. Je ziet het resultaat hier zodra de controle klaar is, meestal binnen een uur.",
     checkRefused: {
       not_monthly: "Een extra controle hoort bij Vidalo Monthly. Met Vidalo Scan krijg je één volledige controle.",
       paused: "Je abonnement staat stil. Een extra controle kan weer zodra het doorloopt.",
@@ -2359,6 +2361,12 @@ export const copy = {
     proofLabels: { finding: "Bekijk", report: "Rapport", factsPage: "Feitenpagina", channel: "Antwoord van Google", facts: "Gegevens" },
     nextCheck: "Volgende controle",
     nextCheckNote: (day: number, rechecks: string) => `Elke maand op de ${day}e.${rechecks ? ` Tussendoor vragen we alleen de foute antwoorden opnieuw: ${rechecks}.` : ""}`,
+    /** The rail for Vidalo Scan alone: no monthly date, no "Controleer nu" (review CMP-01). */
+    scanOnly: {
+      label: "Elke maand controleren",
+      body: "Je hebt Vidalo Scan. De herstelde fouten controleren we opnieuw. Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €49 per maand excl. btw, maandelijks opzegbaar.",
+      cta: "Vidalo Monthly toevoegen",
+    },
     expand: "Uitbreiden",
     expandItems: [
       { title: "Extra volledige controle", body: "Alle vragen, alle systemen, vandaag.", cta: "Vraag een controle aan", subject: "Extra controle" },
@@ -2987,6 +2995,8 @@ export const copy = {
           { when: "Daarna", what: "Een mail zodra een antwoord weer klopt, met het antwoord van voor en na." },
           { when: "Elke maand", what: "Een nieuwe controle en een kort rapport. Alles staat in je overzicht." },
         ],
+        /** Replaces "Elke maand" for Vidalo Scan alone (review CMP-01). */
+        scanItem: { when: "Opnieuw", what: "We controleren de herstelde fouten opnieuw. Elke maand controleren hoort bij Vidalo Monthly." },
       },
       questions: "Vragen? Antwoord op deze mail.",
     },

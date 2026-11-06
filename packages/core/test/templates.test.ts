@@ -44,6 +44,7 @@ const baselineStipData: Parameters<typeof baselineSummaryEmail>[0] = {
 const all: Record<string, Mail | { subject: string; text: string }> = {
   welcome: welcomeEmail({
     business,
+    plan: "monitor",
     cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" },
     links: { ...links, confirmFactsUrl: "https://vidalo.io/dashboard/feiten", googleConnectUrl: "https://vidalo.io/dashboard/google" },
   }),
@@ -138,6 +139,17 @@ describe("email templates", () => {
     expect(t).toMatch(/3\. Log één keer in bij Google/);
     expect(t).toMatch(/4\. Wij doen de rest/);
     expect(t).toContain("feiten.bakkerijjansen.nl  →  feiten.vidalo.io");
+  });
+
+  it("welcome promises a check every month only with Vidalo Monthly (review CMP-01)", () => {
+    const links2 = { ...links, confirmFactsUrl: "x", googleConnectUrl: "y" };
+    const monthly = welcomeEmail({ business, plan: "monitor", cname: null, links: links2 }).text;
+    const scan = welcomeEmail({ business, plan: "setup", cname: null, links: links2 }).text;
+    expect(monthly).toContain("Een nieuwe controle en een kort rapport.");
+    expect(scan).not.toContain("Een nieuwe controle en een kort rapport.");
+    expect(scan).toContain("Elke maand controleren hoort bij Vidalo Monthly.");
+    const scanEn = welcomeEmail({ lang: "en", business, plan: "setup", cname: null, links: links2 }).text;
+    expect(scanEn).toContain("A check every month comes with Vidalo Monthly.");
   });
 
   it("status line follows the messaging brief", () => {
@@ -249,8 +261,8 @@ const linksEn = { dashboardUrl: "https://vidalo.io/en/app", factsPageUrl: "https
 const en = "en" as const;
 
 const allEn: Record<string, Mail | { subject: string; text: string }> = {
-  welcome: welcomeEmail({ lang: en, business, cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" }, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
-  welcomeNoDomain: welcomeEmail({ lang: en, business, cname: null, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
+  welcome: welcomeEmail({ lang: en, business, plan: "monitor", cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" }, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
+  welcomeNoDomain: welcomeEmail({ lang: en, business, plan: "monitor", cname: null, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
   baseline: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, offer: { setupEur: 149, monitorEur: 49 } }),
   baselinePaying: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, paying: true }),
   baselineClean: baselineSummaryEmail({ lang: en, business, checkedAt: "2026-10-02T03:00:00Z", totalAnswers: 100, wrongAnswers: 0, findings: [], engines: ["chatgpt"], links: linksEn }),

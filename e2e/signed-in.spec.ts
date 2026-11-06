@@ -62,6 +62,13 @@ test("signed in, coming from /welkom: one button links the business, then the da
   await page.getByRole("button", { name: "Ja, koppel dit bedrijf" }).click();
   await page.waitForURL(/\/app(\?|$)/);
   await expect(page.locator("main")).toBeVisible();
+  // No Vidalo Monthly: no monthly date and no "Controleer nu", the add-on instead (review CMP-01).
+  await expect(page.locator("[data-rail='scan-only']")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Controleer nu" })).toHaveCount(0);
+  await expect(page.getByText("Volgende controle")).toHaveCount(0);
+  // An unknown ?controle= value is ignored, not a server error.
+  const odd = await page.goto("/app?controle=constructor");
+  expect(odd?.status()).toBe(200);
   // Signed in with a business: /inloggen goes straight to the dashboard.
   await page.goto("/inloggen");
   await expect(page).toHaveURL(/\/app(\?|$)/);

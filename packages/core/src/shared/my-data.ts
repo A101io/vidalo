@@ -40,6 +40,21 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
     fixes,
     channels: await db.listChannels(businessId),
     googleIndex: await db.getGoogleIndex(businessId),
-    events: await db.listEvents(businessId, 10_000),
+    events: (await db.listEvents(businessId, 10_000)).map((e) => ({ ...e, payload: ownAddressesOnly(e.payload, business.ownerEmail) })),
   };
+}
+
+/**
+ * An event may name someone else's address: the person who asked for the free
+ * report, a payer, a directory. The export goes to the owner, so only the
+ * owner's own address stays (review CMP-03 / SEC-03).
+ */
+export function ownAddressesOnly(payload: Record<string, unknown>, ownerEmail: string | null | undefined): Record<string, unknown> {
+  const own = ownerEmail?.trim().toLowerCase() || null;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if ((k === "email" || k === "to") && typeof v === "string" && v.includes("@") && v.trim().toLowerCase() !== own) continue;
+    out[k] = v;
+  }
+  return out;
 }

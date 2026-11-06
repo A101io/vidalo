@@ -311,6 +311,8 @@ export interface WelcomeData {
   /** CNAME instruction when the owner has a domain */
   cname?: { host: string; target: string } | null;
   lang?: Lang;
+  /** The plan bought; only Vidalo Monthly ("monitor") promises a check every month (review CMP-01). */
+  plan?: Business["plan"];
 }
 
 export function welcomeEmail(d: WelcomeData): Mail {
@@ -336,7 +338,7 @@ export function welcomeEmail(d: WelcomeData): Mail {
         ],
       },
       { kind: "cta", label: W.cta, url: d.links.confirmFactsUrl, note: W.ctaNote(d.links.dashboardUrl) },
-      { kind: "steps", title: W.after.title, items: W.after.items.map((i) => ({ ...i })) },
+      { kind: "steps", title: W.after.title, items: W.after.items.map((i, n) => (n === W.after.items.length - 1 && d.plan !== "monitor" ? { ...W.after.scanItem } : { ...i })) },
       { kind: "note", text: W.questions },
     ],
   });
