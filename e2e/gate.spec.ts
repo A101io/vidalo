@@ -37,6 +37,14 @@ test("@gate no public preview button; only the preview key opens the whole site"
   const chat = await request.post("/api/chat", { data: { messages: [{ role: "user", content: "hoi" }], lang: "nl" } });
   expect(chat.status()).toBe(404);
 
+  // A hand-made cookie changes nothing: its value must come from the key (go-live J4, security check 4 Nov 2026).
+  await page.context().addCookies([{ name: "vidalo_preview", value: "1", url: page.url() }]);
+  await page.goto("/");
+  expect(await page.locator("form[action='/api/scan']").count()).toBe(0);
+  const forgedChat = await page.request.post("/api/chat", { data: { messages: [{ role: "user", content: "hoi" }], lang: "nl" } });
+  expect(forgedChat.status()).toBe(404);
+  await page.context().clearCookies({ name: "vidalo_preview" });
+
   // A wrong key changes nothing.
   await page.request.post("/api/preview", { form: { key: "wrong-key", lang: "nl" }, maxRedirects: 0 });
   await page.goto("/");

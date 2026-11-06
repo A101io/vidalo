@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { fromUrl } from "@/lib/lang-paths";
-import { gateRoute, PREVIEW_COOKIE } from "@vidalo/core/shared/gate";
+import { gateRoute, PREVIEW_COOKIE, previewToken, samePreviewToken } from "@vidalo/core/shared/gate";
 
 /**
  * /en/... is the same page in English: rewrite to the Dutch route and tell
@@ -15,9 +15,9 @@ import { gateRoute, PREVIEW_COOKIE } from "@vidalo/core/shared/gate";
  *
  * The launch gate (core/shared/gate.ts) sits on the same rewrite: while
  * VIDALO_COMING_SOON=1 the marketing routes render /binnenkort, unless the
- * browser carries the preview cookie.
+ * browser carries the preview cookie, whose value only the key can make.
  */
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const fromPath = fromUrl(req.nextUrl.pathname);
   // On Cloudflare (OpenNext) a rewrite runs the middleware a second time, on
   // the rewritten Dutch route: without this the second pass sets "nl" over the
@@ -26,7 +26,10 @@ export function middleware(req: NextRequest) {
   const prior = req.headers.get("x-vidalo-lang");
   const keep = fromPath.lang === "nl" && prior === "en" && req.headers.get("x-vidalo-route") === fromPath.route;
   const { lang, route: asked } = keep ? { lang: "en" as const, route: fromPath.route } : fromPath;
-  const route = gateRoute(asked, { comingSoon: process.env.VIDALO_COMING_SOON === "1", preview: req.cookies.get(PREVIEW_COOKIE)?.value === "1" });
+  const comingSoon = process.env.VIDALO_COMING_SOON === "1";
+  const key = process.env.VIDALO_PREVIEW_KEY?.trim();
+  const preview = comingSoon && samePreviewToken(req.cookies.get(PREVIEW_COOKIE)?.value, key ? await previewToken(key) : null);
+  const route = gateRoute(asked, { comingSoon, preview });
   const headers = new Headers(req.headers);
   headers.set("x-vidalo-lang", lang);
   headers.set("x-vidalo-route", route);
