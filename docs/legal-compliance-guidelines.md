@@ -21,7 +21,7 @@ Read before writing anything a customer will read. This is a compliance aid, not
 B2B only. Prices are shown **excl. btw** everywhere, with "Alle prijzen excl. btw" next to them. Stripe uses a fixed 21% tax rate, exclusive (`STRIPE_TAX_RATE_ID`); checkout refuses without it. If Vidalo ever sells to consumers, prices must be shown incl. btw and the B2C rules (withdrawal right) apply: flag before doing it.
 
 ## Personal data
-See `docs/records-of-processing.md` and `docs/processors.md`. Cookies the app sets (all functional, no consent needed; no analytics yet):
+See `docs/records-of-processing.md` and `docs/processors.md`. Cookies the app sets. Functional, no consent needed:
 
 | Name | Purpose | Lifetime |
 |---|---|---|
@@ -32,10 +32,17 @@ See `docs/records-of-processing.md` and `docs/processors.md`. Cookies the app se
 | `vidalo_preview` | Build phase only: opens the site behind `/binnenkort` | Session |
 | `vidalo_mock_session` | Development only (mock mode) | Session |
 
-The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step (`packages/core/test/legal.test.ts` fails when they differ). Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Third-party script: Cloudflare Turnstile (`challenges.cloudflare.com`) on the free check and sign-in, treated as strictly necessary security and named in the cookie statement. Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
+With consent only (6 Nov 2026; `lib/trackers.ts`, `components/Trackers.tsx`). Each tracker is off until its id is set (`GA4_MEASUREMENT_ID`, `META_PIXEL_ID`); with an id set the notice asks for its category (refuse first, same size), no script loads before the choice, GA4 runs in Consent Mode v2 denied by default, and withdrawal clears the cookies below. The consent cookie went to version 2, so every earlier "Begrepen" is asked again.
+
+| Name | Category | Purpose | Lifetime |
+|---|---|---|---|
+| `_ga`, `_ga_<id>` (Google Analytics 4) | analytics | Visitor statistics | 2 years |
+| `_fbp` (Meta pixel) | marketing | Ad measurement and retargeting; Vidalo and Meta are joint controllers for collection and transmission (CJEU C-40/17 Fashion ID) | 3 months |
+
+The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step (`packages/core/test/legal.test.ts` fails when they differ). Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Third-party script: Cloudflare Turnstile (`challenges.cloudflare.com`) on the free check and sign-in, treated as strictly necessary security and named in the cookie statement. Google Analytics (`www.googletagmanager.com`) and the Meta pixel (`connect.facebook.net`) load only after consent (table above). Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
 
 ## DPIA screening (P3)
-Vidalo processes business facts, mostly not personal data; owner emails and Google account ids are ordinary personal data; no special categories, no location tracking of people, no profiling of individuals, not large scale. **Screening outcome: a full DPIA is not indicated.** Re-screen if Vidalo starts monitoring people (e.g. sole traders at scale) or adds analytics.
+Vidalo processes business facts, mostly not personal data; owner emails and Google account ids are ordinary personal data; no special categories, no location tracking of people, no profiling of individuals, not large scale. **Screening outcome: a full DPIA is not indicated.** Re-screen if Vidalo starts monitoring people (e.g. sole traders at scale). Re-screened 6 Nov 2026 for GA4 and the Meta pixel: consent-gated website measurement and ad audiences of visitors, no special categories, not large scale; a full DPIA is still not indicated.
 
 ## Open questions for counsel
 1. ~~Terms, privacy and a cookie statement from the masters~~ final texts written 26 Oct 2026 from Sonable's counsel-reviewed set (Julian: no outside counsel in this phase); routes stay `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`). Points for a later lawyer are in that PR.

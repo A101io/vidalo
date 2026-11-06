@@ -1064,7 +1064,8 @@ export const en: CopyShape = {
           p: [
             "Our website runs on Cloudflare. On every visit Cloudflare receives your IP address, your browser and the page you request, to deliver the page and protect the site.",
             "On the free check and on signing in we use Cloudflare Turnstile to tell people from robots. To do so, Turnstile reads characteristics of your browser and device.",
-            "Basis: our legitimate interest in a website that works and is secure. We do not measure visitor statistics, set no advertising cookies and do not follow you across other websites. Which cookies we use is stated in our cookie policy.",
+            "Basis: our legitimate interest in a website that works and is secure.",
+            "Only if you consent in the cookie notice do we measure with Google Analytics how the site is used (statistics) and with the Meta pixel whether our advertisements on Facebook and Instagram lead to visits (advertising). Google and Meta then receive your IP address, your browser and the pages you view. For the Meta pixel we and Meta are jointly responsible for collecting and passing on the data. Basis: your consent, which you can always withdraw through ‘Cookie settings’ at the foot of every page. How long: see the durations in our cookie policy; in Google Analytics we keep data for 14 months.",
           ],
         },
         {
@@ -1080,6 +1081,8 @@ export const en: CopyShape = {
               "OpenAI: ChatGPT for the checks, and the assistant on our website; United States.",
               "Anthropic: Claude for the checks; United States.",
               "Twilio: calling or texting the code with which you show that you manage the business; United States.",
+              "Google Analytics: visitor statistics, only with your consent; EU and United States.",
+              "Meta (Facebook, Instagram): measuring our advertisements, only with your consent; EU and United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
               "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",
@@ -1136,13 +1139,13 @@ export const en: CopyShape = {
     },
     cookies: {
       title: "Cookies",
-      intro: "Vidalo uses only cookies that are needed to make the website work. No tracking cookies, no advertising cookies, no statistics. Here is exactly what we put on your device and what other parties do.",
+      intro: "Vidalo sets cookies that are needed to make the website work. Only if you consent are cookies added for statistics (Google Analytics) and for advertising (Meta). Here is exactly what we put on your device and what other parties do.",
       sections: [
         { h: "What a cookie is", p: ["A cookie is a small file a website puts on your device so the site recognises you when you change pages or come back. Where this cookie policy speaks of cookies, it also means similar techniques for storing or reading data on your device, such as browser storage (local storage). We do not use that storage."] },
-        { h: "Consent", p: ["Cookies needed to make the site work may be set without consent (article 11.7a of the Dutch Telecommunications Act); we do tell you they are there. We use no other cookies. If we ever do, for example for visitor statistics, we will ask for your consent first, with a button to refuse that is as easy as the button to accept, and set nothing before you choose."] },
+        { h: "Consent", p: ["Cookies needed to make the site work may be set without consent (article 11.7a of the Dutch Telecommunications Act); we do tell you they are there. For statistics and advertising we ask your consent first, with a button to refuse that is as easy as the button to accept. Before you choose, we load no script from Google or Meta and set none of their cookies. If you refuse, it stays that way."] },
         {
           h: "Which cookies we set",
-          p: ["All cookies below are necessary and come from vidalo.ai itself."],
+          p: ["These cookies are necessary and come from vidalo.ai itself."],
           table: {
             head: ["Name", "Purpose", "Duration"],
             rows: [
@@ -1154,8 +1157,27 @@ export const en: CopyShape = {
             ],
           },
         },
-        { h: "Other parties", p: ["On the free check and on signing in we load Cloudflare Turnstile from challenges.cloudflare.com. Turnstile reads characteristics of your browser and device to tell people from robots. This is needed to protect the check and signing in against abuse. See Cloudflare's privacy policy at cloudflare.com/privacypolicy.", "If you pay, you go to a Stripe page; Stripe's cookie policy and privacy policy apply there. If you connect your Google account, you sign in at Google; Google's rules apply there.", "Otherwise we load no scripts, fonts, buttons or advertisements from other parties on vidalo.ai. If we add a service of another party, it will be listed here before we use it."] },
-        { h: "Changing your choice", p: ["As soon as there is something to choose, ‘Cookie settings’ appears at the foot of every page. There you see your choice and change it. You can also always delete cookies through your browser settings; you will then be signed out."] },
+        {
+          h: "Statistics, only with your consent",
+          p: ["With Google Analytics we see how many people visit the site, how they arrive and which pages they read. For this Google receives your IP address, your browser and the pages you view; Google Analytics does not store the IP address. We do not share this data with Google for advertising and do not link it to your account."],
+          table: {
+            head: ["Name", "Purpose", "Duration"],
+            rows: [
+              ["_ga", "Recognises your browser as a returning visitor, with a random number (Google Analytics).", "2 years"],
+              ["_ga_…", "Keeps track of your current visit (Google Analytics).", "2 years"],
+            ],
+          },
+        },
+        {
+          h: "Advertising, only with your consent",
+          p: ["With the Meta pixel we measure whether people who clicked a Vidalo advertisement on Facebook or Instagram visit the site and start a check, and we can show advertisements to people who visited the site before. For this Meta receives your IP address, your browser, the pages you view and, if you are signed in to Facebook or Instagram, the link to that account. We and Meta are jointly responsible for collecting and passing on this data; what Meta does with it afterwards falls under Meta's privacy policy at facebook.com/privacy/policy."],
+          table: {
+            head: ["Name", "Purpose", "Duration"],
+            rows: [["_fbp", "Recognises your browser on a later visit, so Meta can link a visit to an advertisement (Meta pixel).", "3 months"]],
+          },
+        },
+        { h: "Other parties", p: ["On the free check and on signing in we load Cloudflare Turnstile from challenges.cloudflare.com. Turnstile reads characteristics of your browser and device to tell people from robots. This is needed to protect the check and signing in against abuse. See Cloudflare's privacy policy at cloudflare.com/privacypolicy.", "If you pay, you go to a Stripe page; Stripe's cookie policy and privacy policy apply there. If you connect your Google account, you sign in at Google; Google's rules apply there.", "If you consent, we load Google Analytics from www.googletagmanager.com and the Meta pixel from connect.facebook.net, as described above. Otherwise we load no scripts, fonts, buttons or advertisements from other parties on vidalo.ai. If we add a service of another party, it will be listed here before we use it."] },
+        { h: "Changing your choice", p: ["‘Cookie settings’ is at the foot of every page. There you see your choice and change it or withdraw your consent; we then delete the Google Analytics and Meta cookies we can reach. You can also always delete cookies through your browser settings; you will then be signed out."] },
         { h: "More information", p: ["How we handle your data and which rights you have is stated in our privacy policy at vidalo.ai/en/privacy. We update this cookie policy when the site changes; the date at the top says which version you are reading."] },
       ],
     },
@@ -1226,7 +1248,7 @@ export const en: CopyShape = {
   consent: {
     title: "Cookies",
     body: "We only use cookies the site needs to work. No tracking cookies.",
-    bodyWithChoice: "Necessary cookies are always on. For statistics we ask your consent. Refusing is as easy as accepting.",
+    bodyWithChoice: "Necessary cookies are always on. For the choices below we ask your consent. Refusing is as easy as accepting.",
     link: "Cookie statement",
     ok: "Got it",
     refuse: "Necessary only",
@@ -1235,7 +1257,8 @@ export const en: CopyShape = {
     close: "Close",
     categories: {
       necessary: { label: "Necessary", body: "Signing in and your cookie choice. Always on." },
-      analytics: { label: "Statistics", body: "Which pages are visited, without who you are." },
+      analytics: { label: "Statistics", body: "Which pages are visited (Google Analytics)." },
+      marketing: { label: "Advertising", body: "Whether our advertisements on Facebook and Instagram lead to visits (Meta)." },
     },
     current: "Your choice",
     on: "on",
