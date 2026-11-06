@@ -9,6 +9,8 @@ import { PreviewBar } from "@/components/PreviewBar";
 import { ChatWidget } from "@/components/ChatWidget";
 import { FormMessages } from "@/components/FormMessages";
 import { behindGate } from "@/lib/gate-state";
+import { Trackers } from "@/components/Trackers";
+import { consentCategories, trackerIds } from "@/lib/trackers";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-jakarta", display: "swap" });
 
@@ -27,12 +29,15 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, colo
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [lang, copy, gated] = [await getLang(), await getCopy(), await behindGate()];
+  const trackers = trackerIds();
   return (
     <html lang={lang} className={jakarta.variable}>
       <body className="font-sans">
         {children}
         <FormMessages messages={copy.errors.field} />
-        <CookieConsent copy={copy.consent} cookiesHref={localizeHref("/cookies", lang)} />
+        <CookieConsent copy={copy.consent} cookiesHref={localizeHref("/cookies", lang)} categories={consentCategories(trackers)} />
+        {/* GA4 and the Meta pixel: off without their id, and only after consent. */}
+        <Trackers ids={trackers} />
         {/* Temporary, only while the launch gate is on and this browser previews the site. */}
         <PreviewBar copy={copy.comingSoon} lang={lang} />
         {/* The assistant explains the open product; behind the launch gate there is nothing to ask about yet. */}

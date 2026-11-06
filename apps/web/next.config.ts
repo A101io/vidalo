@@ -26,18 +26,20 @@ for (const file of [".env", ".env.local"]) {
  * only: the dev server needs eval for hot reload. 'unsafe-inline' for
  * scripts stays until Next's inline bootstrap gets a nonce; everything else
  * is locked to this origin, Supabase (auth) and the two places a form or
- * redirect may go: Stripe Checkout and Google sign-in.
+ * redirect may go: Stripe Checkout and Google sign-in. GA4 and the Meta pixel
+ * are allowed here but load only with their id set and after consent
+ * (lib/trackers.ts).
  */
 const supabase = process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : "https://*.supabase.co";
 const csp = [
   "default-src 'self'",
   // challenges.cloudflare.com: the Turnstile bot check on the scan and sign-in forms (lib/turnstile.ts).
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com https://connect.facebook.net",
   "frame-src 'self' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${supabase}`,
+  `connect-src 'self' ${supabase} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.facebook.com https://connect.facebook.net`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",

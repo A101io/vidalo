@@ -1084,7 +1084,8 @@ export const copy = {
           p: [
             "Onze website draait bij Cloudflare. Cloudflare ontvangt bij elk bezoek je IP-adres, je browser en de pagina die je opvraagt, om de pagina te leveren en de site te beveiligen.",
             "Bij de gratis controle en bij inloggen gebruiken we Cloudflare Turnstile om mensen van robots te onderscheiden. Turnstile leest daarvoor kenmerken van je browser en apparaat.",
-            "Grondslag: ons gerechtvaardigd belang bij een website die werkt en veilig is. We meten geen bezoekersstatistieken, plaatsen geen advertentiecookies en volgen je niet over andere websites. Welke cookies we gebruiken, staat in ons cookiebeleid.",
+            "Grondslag: ons gerechtvaardigd belang bij een website die werkt en veilig is.",
+            "Alleen als je daar in de cookiemelding toestemming voor geeft, meten we met Google Analytics hoe de site gebruikt wordt (statistieken) en met de Meta-pixel of onze advertenties op Facebook en Instagram tot bezoeken leiden (advertenties). Google en Meta krijgen dan je IP-adres, je browser en de pagina’s die je bekijkt. Voor de Meta-pixel zijn wij en Meta samen verantwoordelijk voor het verzamelen en doorgeven. Grondslag: je toestemming, die je altijd intrekt via ‘Cookie-instellingen’ onderaan elke pagina. Hoe lang: zie de bewaartermijnen in ons cookiebeleid; in Google Analytics bewaren we gegevens 14 maanden.",
           ],
         },
         {
@@ -1100,6 +1101,8 @@ export const copy = {
               "OpenAI: ChatGPT voor de controles, en de assistent op onze website; Verenigde Staten.",
               "Anthropic: Claude voor de controles; Verenigde Staten.",
               "Twilio: het bellen of sms'en van de code waarmee je aantoont dat je het bedrijf beheert; Verenigde Staten.",
+              "Google Analytics: bezoekersstatistieken, alleen met je toestemming; EU en Verenigde Staten.",
+              "Meta (Facebook, Instagram): het meten van onze advertenties, alleen met je toestemming; EU en Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
               "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
@@ -1156,13 +1159,13 @@ export const copy = {
     },
     cookies: {
       title: "Cookies",
-      intro: "Vidalo gebruikt alleen cookies die nodig zijn om de website te laten werken. Geen volgcookies, geen advertentiecookies, geen statistieken. Hier staat precies wat we op je apparaat zetten en wat andere partijen doen.",
+      intro: "Vidalo zet cookies die nodig zijn om de website te laten werken. Alleen als je daar toestemming voor geeft, komen daar cookies bij voor statistieken (Google Analytics) en voor advertenties (Meta). Hier staat precies wat we op je apparaat zetten en wat andere partijen doen.",
       sections: [
         { h: "Wat een cookie is", p: ["Een cookie is een klein bestand dat een website op je apparaat zet, zodat de site je herkent als je van pagina wisselt of terugkomt. Waar we in dit cookiebeleid over cookies spreken, bedoelen we ook vergelijkbare technieken om gegevens op je apparaat op te slaan of uit te lezen, zoals opslag in je browser (local storage). Die opslag gebruiken we niet."] },
-        { h: "Toestemming", p: ["Cookies die nodig zijn om de site te laten werken, mogen we zonder toestemming plaatsen (artikel 11.7a Telecommunicatiewet); we vertellen je wel dat ze er zijn. Andere cookies gebruiken we niet. Gaan we dat ooit wel doen, bijvoorbeeld voor bezoekersstatistieken, dan vragen we eerst je toestemming, met een knop om te weigeren die net zo makkelijk is als de knop om te accepteren, en plaatsen we niets voordat je kiest."] },
+        { h: "Toestemming", p: ["Cookies die nodig zijn om de site te laten werken, mogen we zonder toestemming plaatsen (artikel 11.7a Telecommunicatiewet); we vertellen je wel dat ze er zijn. Voor statistieken en advertenties vragen we eerst je toestemming, met een knop om te weigeren die net zo makkelijk is als de knop om te accepteren. Voordat je kiest, laden we geen script van Google of Meta en plaatsen we geen van hun cookies. Weiger je, dan blijft dat zo."] },
         {
           h: "Welke cookies we zetten",
-          p: ["Alle cookies hieronder zijn noodzakelijk en komen van vidalo.ai zelf."],
+          p: ["Deze cookies zijn noodzakelijk en komen van vidalo.ai zelf."],
           table: {
             head: ["Naam", "Waarvoor", "Hoe lang"],
             rows: [
@@ -1174,8 +1177,27 @@ export const copy = {
             ],
           },
         },
-        { h: "Andere partijen", p: ["Bij de gratis controle en bij inloggen laden we Cloudflare Turnstile van challenges.cloudflare.com. Turnstile leest kenmerken van je browser en apparaat om mensen van robots te onderscheiden. Dat is nodig om de controle en het inloggen te beschermen tegen misbruik. Zie het privacybeleid van Cloudflare op cloudflare.com/privacypolicy.", "Betaal je, dan ga je naar een pagina van Stripe; daar gelden het cookiebeleid en het privacybeleid van Stripe. Koppel je je Google-account, dan log je in bij Google; daar gelden de regels van Google.", "Verder laden we op vidalo.ai geen scripts, lettertypen, knoppen of advertenties van andere partijen. Voegen we een dienst van een andere partij toe, dan staat die hier voordat we hem gebruiken."] },
-        { h: "Jouw keuze aanpassen", p: ["Zodra er iets te kiezen valt, staat onderaan elke pagina ‘Cookie-instellingen’. Daar zie je je keuze en pas je die aan. Cookies verwijderen kan ook altijd via de instellingen van je browser; je wordt dan uitgelogd."] },
+        {
+          h: "Statistieken, alleen met je toestemming",
+          p: ["Met Google Analytics zien we hoeveel mensen de site bezoeken, via welke weg ze binnenkomen en welke pagina’s ze lezen. Google krijgt daarvoor je IP-adres, je browser en de pagina’s die je bekijkt; het IP-adres slaat Google Analytics niet op. We delen deze gegevens niet met Google voor advertenties en we koppelen ze niet aan je account."],
+          table: {
+            head: ["Naam", "Waarvoor", "Hoe lang"],
+            rows: [
+              ["_ga", "Herkent je browser als terugkerende bezoeker, met een willekeurig nummer (Google Analytics).", "2 jaar"],
+              ["_ga_…", "Houdt je huidige bezoek bij (Google Analytics).", "2 jaar"],
+            ],
+          },
+        },
+        {
+          h: "Advertenties, alleen met je toestemming",
+          p: ["Met de Meta-pixel meten we of mensen die op een advertentie van Vidalo op Facebook of Instagram klikten de site bezoeken en een controle starten, en kunnen we advertenties laten zien aan mensen die de site eerder bezochten. Meta krijgt daarvoor je IP-adres, je browser, de pagina’s die je bekijkt en, als je bent ingelogd bij Facebook of Instagram, de koppeling met dat account. Voor het verzamelen en doorgeven zijn wij en Meta samen verantwoordelijk; wat Meta daarna met de gegevens doet, valt onder het privacybeleid van Meta op facebook.com/privacy/policy."],
+          table: {
+            head: ["Naam", "Waarvoor", "Hoe lang"],
+            rows: [["_fbp", "Herkent je browser bij een volgend bezoek, zodat Meta een bezoek aan een advertentie kan koppelen (Meta-pixel).", "3 maanden"]],
+          },
+        },
+        { h: "Andere partijen", p: ["Bij de gratis controle en bij inloggen laden we Cloudflare Turnstile van challenges.cloudflare.com. Turnstile leest kenmerken van je browser en apparaat om mensen van robots te onderscheiden. Dat is nodig om de controle en het inloggen te beschermen tegen misbruik. Zie het privacybeleid van Cloudflare op cloudflare.com/privacypolicy.", "Betaal je, dan ga je naar een pagina van Stripe; daar gelden het cookiebeleid en het privacybeleid van Stripe. Koppel je je Google-account, dan log je in bij Google; daar gelden de regels van Google.", "Geef je toestemming, dan laden we Google Analytics van www.googletagmanager.com en de Meta-pixel van connect.facebook.net, zoals hierboven beschreven. Verder laden we op vidalo.ai geen scripts, lettertypen, knoppen of advertenties van andere partijen. Voegen we een dienst van een andere partij toe, dan staat die hier voordat we hem gebruiken."] },
+        { h: "Jouw keuze aanpassen", p: ["Onderaan elke pagina staat ‘Cookie-instellingen’. Daar zie je je keuze en pas je die aan of trek je je toestemming in; we verwijderen dan de cookies van Google Analytics en Meta die we kunnen bereiken. Cookies verwijderen kan ook altijd via de instellingen van je browser; je wordt dan uitgelogd."] },
         { h: "Meer weten", p: ["Hoe we met je gegevens omgaan en welke rechten je hebt, staat in ons privacybeleid op vidalo.ai/privacy. We passen dit cookiebeleid aan als de site verandert; de datum bovenaan zegt welke versie je leest."] },
       ],
     },
@@ -1251,7 +1273,7 @@ export const copy = {
   consent: {
     title: "Cookies",
     body: "We gebruiken alleen cookies die nodig zijn om de site te laten werken. Geen volgcookies.",
-    bodyWithChoice: "Noodzakelijke cookies staan altijd aan. Voor statistieken vragen we je toestemming. Weigeren is net zo makkelijk als accepteren.",
+    bodyWithChoice: "Noodzakelijke cookies staan altijd aan. Voor statistieken en advertenties vragen we je toestemming. Weigeren is net zo makkelijk als accepteren.",
     link: "Cookiebeleid",
     ok: "Begrepen",
     refuse: "Alleen noodzakelijk",
@@ -1260,7 +1282,8 @@ export const copy = {
     close: "Sluiten",
     categories: {
       necessary: { label: "Noodzakelijk", body: "Inloggen en je cookiekeuze. Altijd aan." },
-      analytics: { label: "Statistieken", body: "Welke pagina’s bezocht worden, zonder wie je bent." },
+      analytics: { label: "Statistieken", body: "Welke pagina’s bezocht worden (Google Analytics)." },
+      marketing: { label: "Advertenties", body: "Of onze advertenties op Facebook en Instagram tot bezoeken leiden (Meta)." },
     },
     current: "Je keuze",
     on: "aan",

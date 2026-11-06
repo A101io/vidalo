@@ -16,6 +16,8 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Twilio | Processor: rings, texts or WhatsApps the ownership code (Verify; WhatsApp goes through Meta as sub-processor) | The business phone number Google lists, the code, call/SMS/WhatsApp logs | US | DPF / SCCs | open: Twilio DPA (Console → Legal) |
 | Cloudflare | Processor: hosting of web and worker (Workers, queue), facts pages, DNS, Turnstile | Visitor IPs and request data; everything the database holds, in transit; browser signals (Turnstile, on the free check and sign-in) | Global edge (US company) | DPF / SCCs | open |
 | Google Workspace | Processor: the vidalo.io mailbox (hello@, support@) | Whatever people mail us | EU/US | DPF / SCCs | open: part of the Workspace terms |
+| Google Analytics 4 | Processor (Google Ads data sharing off): visitor statistics, only after "Statistieken" consent | Visitor IP (not stored by GA4), browser, pages, `_ga` id | EU/US | DPF | open: accept the Data Processing Terms in GA Admin → Account settings |
+| Meta (pixel) | Joint controller with Vidalo for collection and transmission; Meta independent controller afterwards. Only after "Advertenties" consent | Visitor IP, browser, pages, `_fbp` id, Facebook/Instagram login link | EU/US | DPF | open: Meta Business Tools Terms + Controller Addendum, accepted when the pixel is created in Events Manager |
 | WhatsApp (Meta) | Contact channel on /contact | Messages people send us there | EU/US | WhatsApp's own terms | n/a: only if the visitor chooses WhatsApp |
 | Sources with an error (sites, directories) | Recipients of correction requests | The business's confirmed facts | NL/EU | n/a | n/a |
 
