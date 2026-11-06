@@ -44,3 +44,5 @@ Vidalo processes business facts, mostly not personal data; owner emails and Goog
 4. ~~Hosting processors~~ Cloudflare, in the privacy text and `docs/processors.md`.
 5. Whether "Wij zorgen dat het antwoord klopt" needs a qualifier next to it.
 6. The EU AI Act: Vidalo uses AI providers to ask questions; it does not offer an AI system to the public. Confirm no transparency duty applies beyond saying which assistants we ask.
+7. (Legal review 6 Nov 2026) AI Act art. 50(1), applicable since 2 Aug 2026: the website assistant and, once switched on, the support@ auto-reply talk to people. Both say they are automated (`copy.chat`, `kit-support.ts` DISCLOSURE). Confirm Vidalo is the "provider" of these two systems (built on OpenAI) and that the disclosure as shown meets art. 50(1) and (5).
+8. (Legal review 6 Nov 2026) US transfers rest on the EU-US Data Privacy Framework where the vendor is certified, else SCCs. The appeal against the General Court's Latombe judgment (C-703/25 P) is pending. Confirm per vendor which basis applies (processors.md "DPF / SCCs" is not yet checked per vendor) and whether the SCC fallback is in each DPA.

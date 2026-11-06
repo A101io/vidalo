@@ -728,7 +728,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 26 oktober 2026",
+    updated: "Versie van 6 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -981,7 +981,7 @@ export const copy = {
           p: [
             "Vraag je een gratis controle aan, dan zoeken we het bedrijf op en stellen we AI-assistenten vragen erover.",
             [
-              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, als je het rapport per e-mail wilt. Om misbruik te beperken bewaren we per dag een onomkeerbaar versleutelde vorm van je IP-adres.",
+              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, als je het rapport per e-mail wilt. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf en de bronnen die AI-assistenten noemen.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
               "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan gelden de termijnen bij ‘Een betaald plan’.",
