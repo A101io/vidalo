@@ -5,23 +5,27 @@
  *   1. monthly scans on the anniversary day, spread 02:00–06:00 Europe/Amsterdam
  *   2. due rechecks → recheck jobs
  *   3. DNS / Cloudflare polls for unverified custom facts hosts
- *   4. lifecycle: paused → churned after 60 days; churned → free re-scan after 90 days
+ *   4. lifecycle: paused → churned after 60 days; Vidalo Scan → churned 12 months after payment; churned → free re-scan after 90 days
  *   5. follow-ups for scanned-but-not-purchased businesses at day 7 / day 21
  *   6. own-website check every 30 days for paying businesses
  *   7. Google index check of the facts page: daily until Google has it, then weekly
  *   8. "Klopt dit nog?": one mail a year after the owner last confirmed the facts
  *   9. owner's pause and cancel: reminder a week before a pause ends, the end of a pause, a cancel Stripe never closed
+ *  10. retention purge, once a day (core/shared/retention.ts)
  */
 import { pollFactsHost } from "@vidalo/core/publisher";
 import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
 import { duePauseMail } from "@vidalo/core/billing";
 import { sendSubscriptionMail } from "@vidalo/core/reporter";
-import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
+import { dayStart, getDb as sharedDb, listBusinessesByStatus, purgeExpired, RETENTION_EVENT, setBusinessStatus, UNSUBSCRIBED_EVENT, type RetentionCounts } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
 
 export const TZ = "Europe/Amsterdam";
+
+/** How long Vidalo Scan (paid once) runs: facts page, fixes and rechecks for 12 months after payment. */
+export const SCAN_TERM_DAYS = 365;
 
 /** { y, m, d, hh, mm } of `date` in Europe/Amsterdam. */
 export function amsterdamParts(date = new Date()): { y: number; m: number; d: number; hh: number; mm: number } {
@@ -135,12 +139,23 @@ export async function lifecycleTransitions(now = new Date()): Promise<{ churned:
     }
   }
 
+  // Vidalo Scan (paid once) → churned 12 months after payment, then the same end path as a cancelled subscription (privacy text, 'Een betaald plan')
+  for (const b of await listBusinessesByStatus(["trial"])) {
+    if (b.plan !== "setup") continue;
+    const paidAt = lastEvent(await events(b.id), (e) => e.type === "checkout.completed" && e.payload.plan === "setup")?.at ?? null;
+    if (!paidAt || daysSince(paidAt, now) < SCAN_TERM_DAYS) continue;
+    await setBusinessStatus(b.id, "churned", { reason: "scan_term_ended" });
+    churned++;
+    log.info("cron.lifecycle.churned", { businessId: b.id, reason: "scan_term_ended" });
+  }
+
   // churned → one free re-scan after 90 days (re-engagement)
   for (const b of await listBusinessesByStatus(["churned"])) {
     const evs = await events(b.id);
     const churnedAt = lastEvent(evs, (e) => e.type === "business.status" && e.payload.status === "churned")?.at ?? null;
     if (!churnedAt || daysSince(churnedAt, now) < 90) continue;
-    if (lastEvent(evs, (e) => e.type === "scan.enqueued" && e.payload.reason === "reengagement")) continue;
+    // Only a check after the latest churn counts: a customer who came back and left again gets one too (and the purge waits for it).
+    if (lastEvent(evs, (e) => e.type === "scan.enqueued" && e.payload.reason === "reengagement" && new Date(e.at) >= new Date(churnedAt))) continue;
     const job = await db.enqueueJob("scan", { businessId: b.id, kind: "free", then: [] });
     await db.logEvent(b.id, "scan.enqueued", { kind: "free", reason: "reengagement", jobId: job.id });
     rescans++;
@@ -262,6 +277,19 @@ export async function ownerSubscriptionChanges(now = new Date()): Promise<{ remi
   return { reminders, resumed, closed };
 }
 
+/**
+ * The retention purge, at the first tick of each UTC day. VIDALO_RETENTION_DRY_RUN=1
+ * only counts. The event and the log line carry counts, never names or addresses.
+ */
+export async function retentionPurge(now = new Date()): Promise<RetentionCounts | null> {
+  const db = sharedDb();
+  if ((await db.countEventsSince(RETENTION_EVENT, dayStart(now))) > 0) return null;
+  const counts = await purgeExpired(db, now, { dryRun: process.env.VIDALO_RETENTION_DRY_RUN === "1" });
+  await db.logEvent(null, RETENTION_EVENT, { ...counts });
+  log.info("cron.retention", { ...counts });
+  return counts;
+}
+
 export async function cronTick(now = new Date()): Promise<void> {
   const started = Date.now();
   const out: Record<string, unknown> = {};
@@ -275,6 +303,7 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["indexChecks", () => enqueueIndexChecks(now)],
     ["reconfirm", () => enqueueReconfirmations(now)],
     ["ownerSubscription", () => ownerSubscriptionChanges(now)],
+    ["retention", () => retentionPurge(now)],
   ];
   for (const [name, fn] of steps) {
     try {

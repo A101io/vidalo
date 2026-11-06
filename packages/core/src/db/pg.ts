@@ -335,6 +335,28 @@ export class PgDb implements Db {
     });
   }
 
+  async deleteScanRuns(ids: string[]): Promise<void> {
+    if (!ids.length) return;
+    // sample, claim and finding cascade from scan_run (fix from finding); only
+    // the evidence pointers of findings in other runs have no cascade.
+    await this.sql.begin(async (tx) => {
+      const gone = tx`select id from sample where scan_run_id in ${tx(ids)}`;
+      await tx`update finding set evidence_before = null where evidence_before in (${gone})`;
+      await tx`update finding set evidence_after = null where evidence_after in (${gone})`;
+      await tx`delete from scan_run where id in ${tx(ids)}`;
+    });
+  }
+
+  async deleteEvents(filter: { before: Date; businessId?: string; typePrefix?: string }, opts: { dryRun?: boolean } = {}): Promise<number> {
+    if (!filter.businessId && !filter.typePrefix) throw new Error("deleteEvents needs a businessId or a typePrefix");
+    const like = `${(filter.typePrefix ?? "").replace(/[\\%_]/g, "\\$&")}%`;
+    const where = this.sql`at < ${filter.before} and type like ${like} and (${filter.businessId ?? null}::uuid is null or business_id = ${filter.businessId ?? null}::uuid)`;
+    const [row] = opts.dryRun
+      ? await this.sql`select count(*)::int as n from event where ${where}`
+      : await this.sql`with d as (delete from event where ${where} returning 1) select count(*)::int as n from d`;
+    return Number(row?.n ?? 0);
+  }
+
   async latestFacts(businessId: string): Promise<Facts | null> {
     const rows = await this.sql`select * from facts where business_id = ${businessId} order by version desc limit 1`;
     return rows[0] ? mapFacts(rows[0]) : null;
@@ -619,6 +641,14 @@ export class PgDb implements Db {
       on conflict (provider_message_id) where provider_message_id is not null do nothing
       returning id`;
     return { duplicate: rows.length === 0 };
+  }
+
+  async purgeSupportAutoreplyLog(lastContactBefore: Date, opts: { dryRun?: boolean } = {}): Promise<number> {
+    const senders = this.sql`select lower(from_email) from support_autoreply_log group by lower(from_email) having max(created_at) < ${lastContactBefore}`;
+    const [row] = opts.dryRun
+      ? await this.sql`select count(*)::int as n from support_autoreply_log where lower(from_email) in (${senders})`
+      : await this.sql`with d as (delete from support_autoreply_log where lower(from_email) in (${senders}) returning 1) select count(*)::int as n from d`;
+    return Number(row?.n ?? 0);
   }
 
   async listWaitlist(): Promise<{ email: string; language: "nl" | "en" }[]> {

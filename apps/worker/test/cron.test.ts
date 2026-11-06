@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
-import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
+import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, lifecycleTransitions, monthlySlot, ownerSubscriptionChanges, retentionPurge, SCAN_TERM_DAYS } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -142,5 +142,75 @@ describe("owner's pause and cancel", () => {
     expect((await ownerSubscriptionChanges(new Date("2026-11-13T00:00:00Z"))).closed).toBe(0);
     expect((await ownerSubscriptionChanges(new Date("2026-11-14T01:00:00Z"))).closed).toBe(1);
     expect((await db.getBusiness(b.id))?.status).toBe("churned");
+  });
+});
+
+describe("retention after the end of a paid plan", () => {
+  let db: MemDb;
+  beforeEach(() => {
+    db = new MemDb();
+    setDb(db);
+    stamped = 0;
+  });
+  const day = (n: number) => new Date(Date.UTC(2026, 10, 1) + n * 86_400_000);
+  /** Events carry the real clock; stamp the ones logged since the last stamp with the fake date. */
+  let stamped = 0;
+  const stamp = (at: Date) => {
+    for (const e of db.events.slice(stamped)) e.at = at.toISOString();
+    stamped = db.events.length;
+  };
+
+  it("keeps 90 days, does one free check, deletes within 30 days of it; runs once a day", async () => {
+    const b = await db.upsertBusiness({ name: "Fietsen Bakker", place: "Haarlem", status: "churned", plan: "monitor", ownerEmail: "eigenaar@x.nl" });
+    await db.logEvent(b.id, "business.status", { status: "churned", from: "active" });
+    stamp(day(0));
+
+    expect(await lifecycleTransitions(day(89))).toEqual({ churned: 0, rescans: 0 });
+    expect((await retentionPurge(day(89)))?.endedCustomers).toBe(0);
+    expect(await lifecycleTransitions(day(90))).toEqual({ churned: 0, rescans: 1 });
+    stamp(day(90));
+    expect([...db.jobs.values()].filter((j) => j.kind === "scan" && j.payload.businessId === b.id)).toHaveLength(1);
+
+    expect((await retentionPurge(day(117)))?.endedCustomers).toBe(0);
+    stamp(day(117));
+    expect(await retentionPurge(day(117))).toBeNull(); // once a day
+    expect(await db.getBusiness(b.id)).not.toBeNull();
+    const counts = await retentionPurge(day(118));
+    expect(counts?.endedCustomers).toBe(1);
+    expect(await db.getBusiness(b.id)).toBeNull();
+    // The run is logged with counts only.
+    const logged = db.events.filter((e) => e.type === "retention.purged").at(-1);
+    expect(Object.values(logged!.payload).every((v) => typeof v === "number" || typeof v === "boolean")).toBe(true);
+  });
+
+  it("gives a customer who came back and left again a new free check before deleting", async () => {
+    const b = await db.upsertBusiness({ name: "Garage Pit", place: "Haarlem", status: "churned", plan: "monitor" });
+    await db.logEvent(b.id, "business.status", { status: "churned", from: "active" });
+    stamp(day(0));
+    await lifecycleTransitions(day(90));
+    stamp(day(90));
+    await db.logEvent(b.id, "business.status", { status: "trial", from: "churned" });
+    stamp(day(100));
+    await db.logEvent(b.id, "business.status", { status: "churned", from: "trial" });
+    stamp(day(200));
+    expect((await retentionPurge(day(250)))?.endedCustomers).toBe(0);
+    expect((await lifecycleTransitions(day(290))).rescans).toBe(1);
+  });
+
+  it("ends Vidalo Scan 12 months after payment, not a day before, and leaves Monthly alone", async () => {
+    const scan = await db.upsertBusiness({ name: "Kapsalon Mia", place: "Haarlem", status: "trial", plan: "setup" });
+    const monthly = await db.upsertBusiness({ name: "Bakkerij Jan", place: "Haarlem", status: "trial", plan: "monitor" });
+    await db.logEvent(scan.id, "checkout.completed", { plan: "setup" });
+    await db.logEvent(monthly.id, "checkout.completed", { plan: "monitor" });
+    stamp(day(0));
+
+    expect((await lifecycleTransitions(day(SCAN_TERM_DAYS - 1))).churned).toBe(0);
+    expect((await db.getBusiness(scan.id))?.status).toBe("trial");
+    expect((await lifecycleTransitions(day(SCAN_TERM_DAYS))).churned).toBe(1);
+    expect((await db.getBusiness(scan.id))?.status).toBe("churned");
+    expect((await db.getBusiness(monthly.id))?.status).toBe("trial");
+    // One status event, with the reason; from here the cancelled-subscription path (tested above) takes over.
+    const ended = db.events.filter((e) => e.businessId === scan.id && e.type === "business.status");
+    expect(ended.map((e) => e.payload)).toEqual([{ status: "churned", from: "trial", reason: "scan_term_ended" }]);
   });
 });
