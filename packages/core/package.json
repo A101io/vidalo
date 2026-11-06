@@ -25,7 +25,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "scan": "tsx src/cli/scan.ts"
+    "scan": "tsx src/cli/scan.ts",
+    "legal:lock": "UPDATE_LEGAL_LOCK=1 vitest run test/legal.test.ts"
   },
   "dependencies": {
     "postgres": "^3.4.5",

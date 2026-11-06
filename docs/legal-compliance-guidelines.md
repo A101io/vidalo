@@ -32,7 +32,7 @@ See `docs/records-of-processing.md` and `docs/processors.md`. Cookies the app se
 | `vidalo_preview` | Build phase only: opens the site behind `/binnenkort` | Session |
 | `vidalo_mock_session` | Development only (mock mode) | Session |
 
-The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step. Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Third-party script: Cloudflare Turnstile (`challenges.cloudflare.com`) on the free check and sign-in, treated as strictly necessary security and named in the cookie statement. Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
+The public inventory is `copy.legal.cookies` (`/cookies`); keep both in step (`packages/core/test/legal.test.ts` fails when they differ). Browser storage: none (the assistant's conversation lives in component state). Fonts are self-hosted by Next (no Google Fonts request from the visitor). Third-party script: Cloudflare Turnstile (`challenges.cloudflare.com`) on the free check and sign-in, treated as strictly necessary security and named in the cookie statement. Adding any storage write or tracker means a row here and a cookie statement entry in the same change.
 
 ## DPIA screening (P3)
 Vidalo processes business facts, mostly not personal data; owner emails and Google account ids are ordinary personal data; no special categories, no location tracking of people, no profiling of individuals, not large scale. **Screening outcome: a full DPIA is not indicated.** Re-screen if Vidalo starts monitoring people (e.g. sole traders at scale) or adds analytics.
