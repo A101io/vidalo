@@ -11,8 +11,11 @@
  * same change.
  */
 export const CONSENT_COOKIE = "vidalo_consent";
-/** 2 since GA4 and the Meta pixel (6 Nov 2026): a choice made before them is asked again. */
-export const CONSENT_VERSION = 2;
+/**
+ * Bump on every new category, so a choice made before it is asked again.
+ * 2: GA4 (6 Nov 2026). 3: the Meta pixel, "Advertenties" (6 Nov 2026).
+ */
+export const CONSENT_VERSION = 3;
 /** Twelve months, in seconds. */
 export const CONSENT_MAX_AGE = 60 * 60 * 24 * 365;
 
