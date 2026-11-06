@@ -74,10 +74,16 @@ describe("legal texts: cookies", () => {
   };
   /** Set by @supabase/ssr, not by a constant in our code; prefix `sb-<ref>-`. */
   const SUPABASE = ["sb-…-auth-token", "sb-…-auth-token-code-verifier"];
+  /** Set by a third-party script the code loads (components/Trackers.tsx, after consent): script host → its cookies. */
+  const SCRIPT_COOKIES: Record<string, string[]> = {
+    "www.googletagmanager.com": ["_ga", "_ga_…"],
+    "connect.facebook.net": ["_fbp"],
+  };
 
   const inCode = [...new Set(source.flatMap(({ text }) => [...text.matchAll(/export const \w*COOKIE\w* = "([\w-]+)"/g)].map((m) => m[1])))];
   const supabaseInUse = readFileSync(join(ROOT, "apps/web/package.json"), "utf8").includes('"@supabase/ssr"');
-  const expected = [...inCode.filter((n) => !NOT_ON_SITE[n]), ...(supabaseInUse ? SUPABASE : [])].sort();
+  const scripts = Object.entries(SCRIPT_COOKIES).filter(([host]) => source.some(({ text }) => text.includes(`https://${host}/`)));
+  const expected = [...inCode.filter((n) => !NOT_ON_SITE[n]), ...(supabaseInUse ? SUPABASE : []), ...scripts.flatMap(([, names]) => names)].sort();
 
   const tableNames = (legal: typeof copy.legal) => {
     const rows = legal.cookies.sections.flatMap((s) => ("table" in s && s.table ? s.table.rows : []));
@@ -121,6 +127,8 @@ describe("legal texts: recipients", () => {
     "challenges.cloudflare.com": v("Cloudflare"),
     "api.cloudflare.com": v("Cloudflare"),
     "wa.me": v("WhatsApp"),
+    "googletagmanager.com": v("Google Analytics"),
+    "connect.facebook.net": { processors: "Meta (pixel)", nl: "Meta (Facebook, Instagram)", en: "Meta (Facebook, Instagram)" },
   };
   for (const d of DIRECTORIES) HOSTS[d.domain] = SOURCES;
 
@@ -129,6 +137,7 @@ describe("legal texts: recipients", () => {
     "schema.org": "vocabulary URL inside JSON-LD, never fetched",
     "www.sitemaps.org": "XML namespace in the sitemap, never fetched",
     "vidalo.io": "our own domain",
+    "vidalo.ai": "our own domain",
     "www.google.com": "Maps links on the facts page; the visitor follows them, we send nothing",
     "api.indexnow.org": "receives only public facts-page URLs to recrawl (publisher/indexnow.ts)",
     "developers.cloudflare.com": "documentation link in a comment",
