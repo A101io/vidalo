@@ -10,7 +10,8 @@ import { ready } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { getI18n } from "@/lib/i18n";
 import { passesTurnstile } from "@/lib/turnstile";
-import { clientIp } from "@vidalo/core/shared";
+import { claimPaidBusiness, clientIp } from "@vidalo/core/shared";
+import { checkoutLoader } from "@/lib/stripe";
 
 export async function sendMagicLink(form: FormData) {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -18,27 +19,26 @@ export async function sendMagicLink(form: FormData) {
   // Only same-site paths: "next" comes from the query string.
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\") ? rawNext : "/app";
   const businessId = String(form.get("business") ?? "");
-  const q = `next=${encodeURIComponent(next)}`;
+  const checkoutSessionId = String(form.get("session_id") ?? "");
+  // Errors come back here with the checkout link intact, or the payer cannot link the business afterwards.
+  const q = `next=${encodeURIComponent(next)}${businessId ? `&business=${encodeURIComponent(businessId)}` : ""}${checkoutSessionId ? `&session_id=${encodeURIComponent(checkoutSessionId)}` : ""}`;
   const { href } = await getI18n();
   if (!isEmail(email)) redirect(href(`/inloggen?fout=1&${q}`));
   // Bot check before anything is stored or mailed.
   if (!(await passesTurnstile(form, clientIp({ headers: await headers() })))) redirect(href(`/inloggen?fout=check&${q}`));
 
-  // Coming from /welkom after checkout: remember who asked for this business,
-  // so the first sign-in finds it. A claim, not proof: ownership is proven by
-  // Google later (shared/ownership.ts), and a verified owner replaces any claim.
+  // Coming from /welkom after checkout: the link lands back on this page signed
+  // in, where one button links the business if the checkout session is paid
+  // (claimBusiness). Nothing is stored before that: anyone can post this form.
   const db = await ready();
-  if (businessId) {
-    const b = await db.getBusiness(businessId);
-    if (b && !b.ownerEmail) await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: email });
-  }
+  const after = businessId ? `/inloggen?${q}` : next;
 
   const supabase = await createServerSupabase();
   if (supabase) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       // The Vidalo template appends token_hash and type to this (docs/auth-email/README.md).
-      options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(next))}` },
+      options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(after))}` },
     });
     if (error) {
       console.error("sign-in link refused", error.status, error.code, error.message);
@@ -54,28 +54,29 @@ export async function sendMagicLink(form: FormData) {
   const store = await cookies();
   const owned = await db.getBusinessByOwner({ email });
   store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned?.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
-  redirect(href(next));
+  redirect(href(after));
 }
 
 /**
  * From /welkom after checkout, for a visitor who is already signed in: link
- * the business to this account and continue. Only a business that nobody
- * claimed yet (or that this address already claimed) can be linked; ownership
- * is proven by Google afterwards (shared/ownership.ts), same as the claim a
- * magic link makes.
+ * the business to this account and continue. Only with the paid Stripe
+ * Checkout session for this business (session_id from /welkom), checked with
+ * Stripe (core/shared/claim.ts, review SEC-01); ownership is proven by Google
+ * afterwards (shared/ownership.ts).
  */
 export async function claimBusiness(form: FormData): Promise<void> {
   const { href } = await getI18n();
   const rawNext = String(form.get("next") ?? "/app");
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\") ? rawNext : "/app";
   const businessId = String(form.get("business") ?? "");
+  const checkoutSessionId = String(form.get("session_id") ?? "") || null;
   const session = await getSession();
-  if (!session) redirect(href(`/inloggen?next=${encodeURIComponent(next)}&business=${encodeURIComponent(businessId)}`));
+  if (!session) redirect(href(`/inloggen?next=${encodeURIComponent(next)}&business=${encodeURIComponent(businessId)}${checkoutSessionId ? `&session_id=${encodeURIComponent(checkoutSessionId)}` : ""}`));
   const db = await ready();
-  const b = businessId ? await db.getBusiness(businessId) : null;
-  if (!b) redirect(href(`/inloggen?fout=geen&next=${encodeURIComponent(next)}`));
-  const mine = !b.ownerEmail || b.ownerEmail.toLowerCase() === session.email.toLowerCase();
-  if (!mine || (b.ownerUserId && b.ownerUserId !== session.userId)) redirect(href(`/inloggen?fout=bezet&next=${encodeURIComponent(next)}`));
-  await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: session.email, ownerUserId: session.userId });
+  const out = await claimPaidBusiness(db, { businessId, userId: session.userId, email: session.email, checkoutSessionId, loadCheckout: await checkoutLoader() });
+  if (!out.ok) {
+    const fout = out.reason === "not_found" ? "geen" : out.reason === "taken" ? "bezet" : "betaling";
+    redirect(href(`/inloggen?fout=${fout}&next=${encodeURIComponent(next)}`));
+  }
   redirect(href(next));
 }

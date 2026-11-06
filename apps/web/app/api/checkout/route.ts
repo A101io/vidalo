@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { safeOrigin } from "@/lib/origin";
 import { getSession, getOwnedBusiness } from "@/lib/session";
-import { HOME_COUNTRY, isVerifiedOwner } from "@vidalo/core/shared";
+import { HOME_COUNTRY, isVerifiedOwner, onlyOwnerMayBuy } from "@vidalo/core/shared";
 import { copyFor, PRICES } from "@vidalo/core/copy";
 import { localizeHref } from "@/lib/lang-paths";
 import { langFromReferer } from "@/lib/request-lang";
@@ -52,6 +52,14 @@ export async function POST(req: Request) {
     // Adding monitoring changes an existing customer's bill: owner only.
     const session = await getSession();
     if (!session || !isVerifiedOwner(business, session.userId)) return NextResponse.redirect(page(`/app/google?eerst=1`), 303);
+  } else if (onlyOwnerMayBuy(business)) {
+    // Paid before: a stranger's checkout would be fresh proof for claimBusiness (review SEC-01).
+    const session = await getSession();
+    const owned = session ? await getOwnedBusiness(session) : null;
+    if (owned?.id !== business.id) {
+      await db.logEvent(business.id, "checkout.refused", { reason: "already_paid", plan });
+      return NextResponse.redirect(`${back}?betaling=betaald`, 303);
+    }
   }
 
   const stripe = await getStripe();

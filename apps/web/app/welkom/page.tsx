@@ -59,7 +59,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
                 <h2 className="h3">{s.title}</h2>
                 <p className="mt-1 text-[15px] text-ink-2">{s.body}</p>
               </div>
-              <Link href={href(session ? s.href : `/inloggen?next=${encodeURIComponent(s.href)}${sp.business ? `&business=${sp.business}` : ""}`)} className={i === 0 ? "btn-primary h-[52px]" : "btn-sm"}>
+              <Link href={href(session && !sp.business ? s.href : `/inloggen?next=${encodeURIComponent(s.href)}${sp.business ? `&business=${encodeURIComponent(sp.business)}` : ""}${sp.session_id ? `&session_id=${encodeURIComponent(sp.session_id)}` : ""}`)} className={i === 0 ? "btn-primary h-[52px]" : "btn-sm"}>
                 {s.cta}
               </Link>
             </li>

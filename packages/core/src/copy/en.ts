@@ -2060,6 +2060,7 @@ export const en: CopyShape = {
     mockNotice: "Payment simulated (no Stripe key set).",
     cancelled: "Your payment was not completed. Nothing has been charged. You can try again below.",
     abroad: "Paying for a business outside the Netherlands is not possible yet. Nothing has been charged. Email support@vidalo.io and we will set it up for you.",
+    alreadyPaid: "This business has already been paid for. Nothing has been charged. Log in with the email address of that payment, or email support@vidalo.io.",
     error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.io.",
     productSetup: "Vidalo Scan (one-off)",
     productMonitor: "Vidalo Monthly (per month)",
@@ -2197,6 +2198,7 @@ export const en: CopyShape = {
     linkBusiness: (name: string, place: string) => `Link ${name} (${place}) to this account?`,
     linkButton: "Yes, link this business",
     linkTaken: "This business is already linked to another account. Email support@vidalo.io if that is wrong.",
+    linkUnpaid: "We see no payment for this business with this link yet. Log in with the email address you paid with, or email support@vidalo.io.",
   },
 
   dashboard: {
