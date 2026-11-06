@@ -41,9 +41,9 @@ Mock mode uses deterministic fake engine answers (≈35 % contain an injected wr
 |---|---|---|
 | Database | `DATABASE_URL`, `SUPABASE_*` | run `supabase/migrations/0001_init.sql`; set `VIDALO_MOCK=0` |
 | ChatGPT | `OPENAI_API_KEY` | Responses API + web search; also used for claim extraction (`EXTRACTION_MODEL`) |
-| Gemini | `GEMINI_API_KEY` | Google Search grounding |
-| Perplexity | `PERPLEXITY_API_KEY` | sonar |
-| Claude | `ANTHROPIC_API_KEY` | Messages API + web search; model from `CLAUDE_MODEL` (default `claude-opus-5-5`) |
+| Gemini | `GEMINI_API_KEY` | Google Search grounding; model from `GEMINI_MODEL` (default `gemini-3.1-flash-lite`) |
+| Perplexity | `PERPLEXITY_API_KEY` | Agent API (`/v1/agent`) + fast web search; effort from `PERPLEXITY_EFFORT` (default `fast`, the old sonar) |
+| Claude | `ANTHROPIC_API_KEY` | Messages API + web search; model from `CLAUDE_MODEL` (default `claude-haiku-5-5`), one search per answer |
 | Google AI Overviews | `SERPAPI_KEY` | nl-NL SERP, parses the AI overview block |
 | Copilot | `COPILOT_ENABLED=1` + a Playwright adapter (`setCopilotAdapter`) | no API; lowest priority, skipped on failure |
 | Business lookup | `GOOGLE_PLACES_API_KEY`, `KVK_API_KEY` | otherwise one synthetic candidate |
