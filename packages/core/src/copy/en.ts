@@ -1248,7 +1248,7 @@ export const en: CopyShape = {
   consent: {
     title: "Cookies",
     body: "We only use cookies the site needs to work. No tracking cookies.",
-    bodyWithChoice: "Necessary cookies are always on. For statistics and advertising we ask your consent. Refusing is as easy as accepting.",
+    bodyWithChoice: "Necessary cookies are always on. For the choices below we ask your consent. Refusing is as easy as accepting.",
     link: "Cookie statement",
     ok: "Got it",
     refuse: "Necessary only",

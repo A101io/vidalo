@@ -1273,7 +1273,7 @@ export const copy = {
   consent: {
     title: "Cookies",
     body: "We gebruiken alleen cookies die nodig zijn om de site te laten werken. Geen volgcookies.",
-    bodyWithChoice: "Noodzakelijke cookies staan altijd aan. Voor statistieken en advertenties vragen we je toestemming. Weigeren is net zo makkelijk als accepteren.",
+    bodyWithChoice: "Noodzakelijke cookies staan altijd aan. Voor de keuzes hieronder vragen we je toestemming. Weigeren is net zo makkelijk als accepteren.",
     link: "Cookiebeleid",
     ok: "Begrepen",
     refuse: "Alleen noodzakelijk",
