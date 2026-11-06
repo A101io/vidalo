@@ -63,6 +63,12 @@ export async function POST(req: Request) {
   }
 
   const stripe = await getStripe();
+  // Without Stripe the checkout below marks the business as trial for free: only ever in mock mode.
+  if (!stripe && !env.mock) {
+    console.error("checkout refused: no Stripe key outside mock mode");
+    await db.logEvent(business.id, "checkout.refused", { reason: "no_stripe", plan });
+    return NextResponse.redirect(`${back}?betaling=fout`, 303);
+  }
   if (!stripe) {
     const storedPlan = plan === "setup" ? "setup" : "monitor";
     await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, plan: storedPlan });
