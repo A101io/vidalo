@@ -86,8 +86,22 @@ function clearCookies(names: (n: string) => boolean) {
   }
 }
 
+/**
+ * The Stripe checkout session id in the /welkom and /inloggen URLs is proof of
+ * payment for linking the business (core/shared/claim.ts); GA4 and Meta report
+ * the full URL, so it leaves the address bar before either loads. The links and
+ * forms on the page were rendered with it already.
+ */
+function dropCheckoutId() {
+  const url = new URL(location.href);
+  if (!url.searchParams.has("session_id")) return;
+  url.searchParams.delete("session_id");
+  history.replaceState(history.state, "", url);
+}
+
 function apply(ids: TrackerIds, consent: Consent | null) {
   if (!consent) return;
+  if ((ids.ga4 && consent.analytics) || (ids.metaPixel && consent.marketing)) dropCheckoutId();
   if (ids.ga4) {
     if (consent.analytics) loadGa4(ids.ga4, consent);
     else {
