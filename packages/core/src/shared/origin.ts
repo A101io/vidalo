@@ -1,4 +1,4 @@
-import { CANONICAL_HOST } from "./canonical.js";
+import { CANONICAL_HOST, REDIRECT_HOSTS } from "./canonical.js";
 
 /**
  * The origin to send a visitor back to after Stripe Checkout, the customer
@@ -11,7 +11,7 @@ import { CANONICAL_HOST } from "./canonical.js";
  */
 export function isOwnHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  return h === CANONICAL_HOST || h === `www.${CANONICAL_HOST}` || h.endsWith(".workers.dev") || h === "localhost" || h === "127.0.0.1";
+  return h === CANONICAL_HOST || (REDIRECT_HOSTS as readonly string[]).includes(h) || h.endsWith(".workers.dev") || h === "localhost" || h === "127.0.0.1";
 }
 
 export function safeOrigin(headers: { get(name: string): string | null }, fallback: string): string {

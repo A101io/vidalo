@@ -6,9 +6,9 @@
  *   pnpm mail:send --to you@example.com --lang en   the owner mails as an owner who chose English gets them
  *
  * It first runs the mail lab itself into out/mail-send with links to
- * https://vidalo.io (MAIL_LAB_BASE_URL), so the links in the inbox open the
+ * https://vidalo.ai (MAIL_LAB_BASE_URL), so the links in the inbox open the
  * real site, and refuses any mail that still links to localhost. The lab's
- * test businesses do not exist on vidalo.io, so their report and
+ * test businesses do not exist on vidalo.ai, so their report and
  * unsubscribe links land on the not-found or invalid-link page.
  *
  * Every mail goes to --to and nowhere else: the owner and third-party
@@ -54,7 +54,7 @@ try {
 // sendMail only uses Resend outside mock mode.
 delete process.env.VIDALO_MOCK;
 
-const site = process.env.MAIL_LAB_BASE_URL ?? "https://vidalo.io";
+const site = process.env.MAIL_LAB_BASE_URL ?? "https://vidalo.ai";
 const labDir = path.resolve("out/mail-send");
 console.log(`Building the mails (mail lab, links to ${site}) …`);
 try {

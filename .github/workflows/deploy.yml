@@ -7,7 +7,7 @@ name: Deploy to Cloudflare
 #   preview     vidalo-web-preview: the site on mock data (no database, no keys)
 #   staging     vidalo-worker-staging + vidalo-web-staging: the production
 #               build and settings on workers.dev, with their own database
-#               and queue (vidalo-scans-staging); never vidalo.io
+#               and queue (vidalo-scans-staging); never vidalo.ai
 #   production  vidalo-worker (jobs, cron, scan queue, facts pages) and
 #               vidalo-web; refuses to serve without its database (worker.ts)
 #
@@ -31,12 +31,12 @@ jobs:
       name: ${{ inputs.target }}
       # Literals, not a repository variable: a variable outside the repo can
       # name a dead host for weeks (Sitty's DEPLOY_URL did).
-      url: ${{ inputs.target == 'production' && 'https://vidalo.io' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
+      url: ${{ inputs.target == 'production' && 'https://vidalo.ai' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
     permissions:
       contents: read
       deployments: write
     env:
-      SITE: ${{ inputs.target == 'production' && 'https://vidalo.io' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
+      SITE: ${{ inputs.target == 'production' && 'https://vidalo.ai' || format('https://vidalo-web-{0}.julian-devriend.workers.dev', inputs.target) }}
       # wrangler's --env: none for production, otherwise the target's name.
       WRANGLER_ENV: ${{ inputs.target != 'production' && inputs.target || '' }}
       # Staging and production run the background worker and the scan queue.
@@ -138,8 +138,8 @@ jobs:
       - name: Verify what is live
         run: node scripts/verify-deploy.mjs "$SITE"
 
-      # Production only: www must send visitors to vidalo.io, same path,
-      # permanently.
-      - name: Verify the redirect to vidalo.io
+      # Production only: www and the old vidalo.io must send visitors to
+      # vidalo.ai, same path, permanently.
+      - name: Verify the redirects to vidalo.ai
         if: inputs.target == 'production'
-        run: node scripts/verify-deploy.mjs --redirects https://vidalo.io www.vidalo.io
+        run: node scripts/verify-deploy.mjs --redirects https://vidalo.ai www.vidalo.ai vidalo.io www.vidalo.io

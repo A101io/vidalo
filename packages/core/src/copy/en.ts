@@ -722,12 +722,12 @@ export const en: CopyShape = {
             "You, your: the business or legal entity that requests a check, takes a plan or otherwise uses Vidalo, and the person acting on behalf of that business.",
             "Service: everything Vidalo provides to you: the free check, the plans and what comes with them, your account and the assistant on our website.",
             "Free check: a one-off check, without payment, of what AI assistants answer about a business, with a report that can be viewed through a link for 30 days.",
-            "Plan: ‘Vidalo Scan’ (one-off) or ‘Vidalo Monthly’ (a monthly subscription), as described at vidalo.io/en/pricing at the time you order.",
+            "Plan: ‘Vidalo Scan’ (one-off) or ‘Vidalo Monthly’ (a monthly subscription), as described at vidalo.ai/en/pricing at the time you order.",
             "AI assistant: a service of another party that answers questions using artificial intelligence, such as ChatGPT, Google AI, Gemini or Perplexity.",
             "Source: a website, directory, profile or other public record from which an AI assistant takes its answer.",
             "Details: the details of your business that you confirm to us, such as name, address, opening hours, phone number, services and prices.",
             "Facts page: the page we publish with your confirmed Details, in a form that people and AI assistants can read.",
-            "Account: your own area on vidalo.io, which you sign in to with a link sent by email.",
+            "Account: your own area on vidalo.ai, which you sign in to with a link sent by email.",
             "Agreement: the arrangements between you and Vidalo about the Service, including these terms.",
             "In writing: on paper or by email.",
           ],
@@ -874,7 +874,7 @@ export const en: CopyShape = {
         {
           h: "The assistant on our website",
           p: [
-            "On vidalo.io you can ask questions to an assistant. That assistant is an AI system, not a person; the chat window says so too.",
+            "On vidalo.ai you can ask questions to an assistant. That assistant is an AI system, not a person; the chat window says so too.",
             "The assistant answers only questions about Vidalo, using information from our own website. An answer may be incomplete or wrong and does not bind us. What these terms, the pricing page and your confirmation say prevails.",
             "The assistant gives no legal, tax or other personal advice. Do not type personal data or confidential information into the chat window. If you want to talk to a person, email support@vidalo.io.",
           ],
@@ -882,7 +882,7 @@ export const en: CopyShape = {
         {
           h: "Personal data",
           p: [
-            "To the extent we process personal data in providing the Service, we do so as an independent controller within the meaning of the General Data Protection Regulation (GDPR), in accordance with our privacy policy at vidalo.io/en/privacy.",
+            "To the extent we process personal data in providing the Service, we do so as an independent controller within the meaning of the General Data Protection Regulation (GDPR), in accordance with our privacy policy at vidalo.ai/en/privacy.",
             "If you confirm Details that contain personal data, such as the name or phone number of an employee, you make sure you may share them and have them published.",
             "We protect personal data with appropriate technical and organisational measures. We expect the same of you.",
           ],
@@ -940,7 +940,7 @@ export const en: CopyShape = {
     },
     privacy: {
       title: "Privacy policy",
-      intro: "This privacy policy applies to the personal data processed by A101 B.V., trading as Vidalo: on vidalo.io, in the free check, in your account, in the plans and facts pages, in our emails and in the assistant on our website.",
+      intro: "This privacy policy applies to the personal data processed by A101 B.V., trading as Vidalo: on vidalo.ai, in the free check, in your account, in the plans and facts pages, in our emails and in the assistant on our website.",
       sections: [
         {
           h: "Who is responsible",
@@ -1040,7 +1040,7 @@ export const en: CopyShape = {
         {
           h: "The assistant on our website",
           p: [
-            "The assistant on vidalo.io is an AI system. To answer, we send your question and the earlier messages of the same conversation to OpenAI.",
+            "The assistant on vidalo.ai is an AI system. To answer, we send your question and the earlier messages of the same conversation to OpenAI.",
             [
               "Data: what you type in the chat window. We do not store the conversation; it exists only in your browser tab. To limit abuse we keep your IP address in memory for a few minutes.",
               "Basis: our legitimate interest in answering questions about Vidalo quickly.",
@@ -1142,7 +1142,7 @@ export const en: CopyShape = {
         { h: "Consent", p: ["Cookies needed to make the site work may be set without consent (article 11.7a of the Dutch Telecommunications Act); we do tell you they are there. We use no other cookies. If we ever do, for example for visitor statistics, we will ask for your consent first, with a button to refuse that is as easy as the button to accept, and set nothing before you choose."] },
         {
           h: "Which cookies we set",
-          p: ["All cookies below are necessary and come from vidalo.io itself."],
+          p: ["All cookies below are necessary and come from vidalo.ai itself."],
           table: {
             head: ["Name", "Purpose", "Duration"],
             rows: [
@@ -1154,9 +1154,9 @@ export const en: CopyShape = {
             ],
           },
         },
-        { h: "Other parties", p: ["On the free check and on signing in we load Cloudflare Turnstile from challenges.cloudflare.com. Turnstile reads characteristics of your browser and device to tell people from robots. This is needed to protect the check and signing in against abuse. See Cloudflare's privacy policy at cloudflare.com/privacypolicy.", "If you pay, you go to a Stripe page; Stripe's cookie policy and privacy policy apply there. If you connect your Google account, you sign in at Google; Google's rules apply there.", "Otherwise we load no scripts, fonts, buttons or advertisements from other parties on vidalo.io. If we add a service of another party, it will be listed here before we use it."] },
+        { h: "Other parties", p: ["On the free check and on signing in we load Cloudflare Turnstile from challenges.cloudflare.com. Turnstile reads characteristics of your browser and device to tell people from robots. This is needed to protect the check and signing in against abuse. See Cloudflare's privacy policy at cloudflare.com/privacypolicy.", "If you pay, you go to a Stripe page; Stripe's cookie policy and privacy policy apply there. If you connect your Google account, you sign in at Google; Google's rules apply there.", "Otherwise we load no scripts, fonts, buttons or advertisements from other parties on vidalo.ai. If we add a service of another party, it will be listed here before we use it."] },
         { h: "Changing your choice", p: ["As soon as there is something to choose, ‘Cookie settings’ appears at the foot of every page. There you see your choice and change it. You can also always delete cookies through your browser settings; you will then be signed out."] },
-        { h: "More information", p: ["How we handle your data and which rights you have is stated in our privacy policy at vidalo.io/en/privacy. We update this cookie policy when the site changes; the date at the top says which version you are reading."] },
+        { h: "More information", p: ["How we handle your data and which rights you have is stated in our privacy policy at vidalo.ai/en/privacy. We update this cookie policy when the site changes; the date at the top says which version you are reading."] },
       ],
     },
   },

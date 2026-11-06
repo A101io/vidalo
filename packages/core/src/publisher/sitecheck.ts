@@ -23,7 +23,7 @@ import { dashboardUrl } from "../reporter/links.js";
 import { copyFor, type Lang } from "../copy/index.js";
 import { bareDomain, defaultFactsHost } from "./host.js";
 
-export const SITECHECK_USER_AGENT = "Vidalo-Sitecheck/1.0 (+https://vidalo.io)";
+export const SITECHECK_USER_AGENT = "Vidalo-Sitecheck/1.0 (+https://vidalo.ai)";
 
 /** Robots that fetch pages to answer a question, per engine Vidalo checks. */
 export const ANSWER_ROBOTS: { token: string; engines: Engine[] }[] = [

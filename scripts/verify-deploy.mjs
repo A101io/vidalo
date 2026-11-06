@@ -4,7 +4,7 @@
  * diagnosis of a failing check was wrong because it only said "failed").
  *
  *   node scripts/verify-deploy.mjs https://vidalo-web-preview.julian-devriend.workers.dev
- *   node scripts/verify-deploy.mjs --redirects https://vidalo.io www.vidalo.io
+ *   node scripts/verify-deploy.mjs --redirects https://vidalo.ai www.vidalo.ai vidalo.io www.vidalo.io
  *
  * --redirects: every host given must answer 301 with Location on the target,
  * same path and query.
