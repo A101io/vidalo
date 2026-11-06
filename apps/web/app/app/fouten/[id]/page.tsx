@@ -40,7 +40,8 @@ function evidenceLines(fix: Fix, copy: Awaited<ReturnType<typeof getI18n>>["copy
   const obj = (k: string) => (ev[k] && typeof ev[k] === "object" && !Array.isArray(ev[k]) ? (ev[k] as Record<string, unknown>) : null);
   const at = (o: Record<string, unknown> | null, k = "at") => (o && typeof o[k] === "string" ? (o[k] as string) : fix.scheduledAt);
   const publish = obj("publish");
-  if (publish) out.push({ at: at(publish), text: E.publish(typeof publish.factsVersion === "number" ? publish.factsVersion : null), tone: "groen", proof: typeof publish.url === "string" ? { href: publish.url, label: P.factsPage, external: true } : undefined });
+  if (publish?.waiting) out.push({ at: at(publish), text: E.publishWaiting, tone: "oranje", proof: { href: href("/app/gegevens"), label: copy.dashboard.you.facts } });
+  else if (publish) out.push({ at: at(publish), text: E.publish(typeof publish.factsVersion === "number" ? publish.factsVersion : null), tone: "groen", proof: typeof publish.url === "string" ? { href: publish.url, label: P.factsPage, external: true } : undefined });
   const sync = obj("sync");
   if (sync) out.push({ at: fix.scheduledAt, text: E.sync(String(sync.channelName ?? copy.sourceType.directory_api), copy.channelStatus[(sync.status as keyof typeof copy.channelStatus) ?? "pending"] ?? String(sync.status)), tone: sync.status === "synced" ? "groen" : "oranje", proof: typeof sync.channelId === "string" ? { href: href(`/app/vermeldingen/${sync.channelId}`), label: P.channel } : undefined });
   if (Array.isArray(ev.sync)) out.push({ at: fix.scheduledAt, text: E.syncMany(ev.sync.length), tone: "groen" });

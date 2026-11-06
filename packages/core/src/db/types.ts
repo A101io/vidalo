@@ -179,6 +179,8 @@ export interface Db {
   getScanRun(id: string): Promise<ScanRun | null>;
   /** Scan runs for a business, newest first. */
   listScanRuns(businessId: string, limit?: number): Promise<ScanRun[]>;
+  /** When the business's latest scan run of this kind started; null if it never had one. */
+  lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null>;
   insertSamples(samples: SampleInput[]): Promise<Sample[]>;
   listSamples(scanRunId: string): Promise<Sample[]>;
   insertClaims(claims: ClaimInput[]): Promise<Claim[]>;

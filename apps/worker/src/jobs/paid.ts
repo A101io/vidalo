@@ -51,9 +51,14 @@ export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unkno
     await getDb().logEvent(business.id, "job.skipped", { kind, reason: "paused_by_owner", until: business.pauseUntil });
     return "paused_by_owner";
   }
-  if (ondemand && ondemandRefusal(business, null)) {
-    await getDb().logEvent(business.id, "job.skipped", { kind, reason: "ondemand_not_monthly", plan: business.plan });
-    return "ondemand_not_monthly";
+  if (ondemand) {
+    // The 7-day limit counts what actually ran (scan_run), so a double click or a burst of
+    // other events cannot slip a second paid check through (review QA-03 / SEC-04).
+    const refused = ondemandRefusal(business, await getDb().lastScanRunStartedAt(business.id, "ondemand"));
+    if (refused) {
+      await getDb().logEvent(business.id, "job.skipped", { kind, reason: `ondemand_${refused}`, plan: business.plan });
+      return `ondemand_${refused}`;
+    }
   }
   if (!business.ownerVerifiedAt) {
     // Paid but not yet proven: the Google callback enqueues setup once it is.

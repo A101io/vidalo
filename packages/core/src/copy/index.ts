@@ -2404,6 +2404,7 @@ export const copy = {
     notPlanned: "Geen hercontrole gepland.",
     evidence: {
       publish: (version: number | null) => `Feitenpagina opnieuw gepubliceerd${version ? `, versie ${version}` : ""}.`,
+      publishWaiting: "Feitenpagina wacht op je bevestiging: bevestig je gegevens, dan publiceren we hem.",
       sync: (channel: string, status: string) => `${channel}: gegevens opnieuw gezet (${status}).`,
       syncMany: (n: number) => `${n} bronnen gelijkgezet.`,
       email: (to: string) => `Correctieverzoek namens jou gestuurd naar ${to}.`,

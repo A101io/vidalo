@@ -74,6 +74,20 @@ describe("Controleer nu (on-demand scan)", () => {
     expect(await paidOnlyBlock("scan", { businessId: monthly.id, kind: "ondemand" })).toBeNull();
     expect(await paidOnlyBlock("scan", { businessId: unpaid.id, kind: "free" })).toBeNull();
   });
+
+  it("runs one on-demand scan per 7 days, counted from the scans that ran (a double click queues two jobs)", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const b = await db.upsertBusiness({ name: "Maandelijks", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: new Date().toISOString() });
+    expect(await paidOnlyBlock("scan", { businessId: b.id, kind: "ondemand" })).toBeNull();
+    await db.createScanRun({ businessId: b.id, kind: "ondemand", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    expect(await paidOnlyBlock("scan", { businessId: b.id, kind: "ondemand" })).toBe("ondemand_too_soon");
+    // Control: rechecks and monthly scans are not on-demand checks and do not count.
+    const other = await db.upsertBusiness({ name: "Ander", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: new Date().toISOString() });
+    await db.createScanRun({ businessId: other.id, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 1, status: "done" });
+    await db.createScanRun({ businessId: other.id, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 1, status: "done" });
+    expect(await paidOnlyBlock("scan", { businessId: other.id, kind: "ondemand" })).toBeNull();
+  });
 });
 
 describe("an owner's pause", () => {

@@ -85,7 +85,7 @@ export const email: Handler<"email"> = async (p) => {
     case "welcome":
       return { mode: (await sendWelcome(p.businessId))?.mode ?? null };
     case "baseline":
-      return { mode: (await sendBaselineSummary(p.scanRunId))?.mode ?? null };
+      return { mode: (await sendBaselineSummary(p.scanRunId, p.to ? { email: p.to, lang: p.lang === "en" ? "en" : "nl" } : undefined))?.mode ?? null };
     case "report":
       return { mode: (await sendMonthlyReport(p.businessId, { scanRunId: p.scanRunId }))?.mode ?? null };
     case "followup":

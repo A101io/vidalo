@@ -94,8 +94,10 @@ export async function checkNow() {
   const { business } = await requireVerifiedOwner();
   const db = await ready();
   const { href } = await getI18n();
-  const last = (await db.listEvents(business.id, 500)).find((e) => e.type === ONDEMAND_EVENT)?.at ?? null;
-  const refused = ondemandRefusal(business, last);
+  // The last check that ran, or one asked for and not started yet; the worker checks the runs again.
+  const ran = await db.lastScanRunStartedAt(business.id, "ondemand");
+  const asked = (await db.listEvents(business.id, 50)).find((e) => e.type === ONDEMAND_EVENT)?.at ?? null;
+  const refused = ondemandRefusal(business, [ran, asked].filter(Boolean).sort().at(-1) ?? null);
   if (refused) redirect(href(`/app?controle=${refused}`));
   await db.enqueueJob("scan", { businessId: business.id, kind: "ondemand", then: ["fixes"] });
   await db.logEvent(business.id, ONDEMAND_EVENT, {});

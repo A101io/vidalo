@@ -2367,6 +2367,7 @@ export const en: CopyShape = {
     notPlanned: "No recheck planned.",
     evidence: {
       publish: (version: number | null) => `Facts page published again${version ? `, version ${version}` : ""}.`,
+      publishWaiting: "Facts page waits for your confirmation: confirm your details and we publish it.",
       sync: (channel: string, status: string) => `${channel}: details put back (${status}).`,
       syncMany: (n: number) => `${n} sources aligned.`,
       email: (to: string) => `Correction request sent on your behalf to ${to}.`,

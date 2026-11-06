@@ -192,8 +192,8 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
         ev.publish = { dedupedInBatch: true, at: now.toISOString() };
       } else {
         const pub = await publishFactsPage(business.id);
-        deps.republished?.add(business.id);
-        ev.publish = { url: pub.url, factsVersion: pub.factsVersion, at: now.toISOString() };
+        if (!pub.waiting) deps.republished?.add(business.id);
+        ev.publish = pub.waiting ? { waiting: true, at: now.toISOString() } : { url: pub.url, factsVersion: pub.factsVersion, at: now.toISOString() };
       }
       await ensurePlatformChannels(business.id);
       const discovered = await discoverDirectories(business.id);
@@ -209,15 +209,17 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
           ev.publish = { dedupedInBatch: true, at: now.toISOString() };
         } else {
           const pub = await publishFactsPage(business.id);
-          deps.republished?.add(business.id);
-          ev.publish = { url: pub.url, factsVersion: pub.factsVersion, at: now.toISOString() };
+          // A publish that only waited for the owner's confirmation did nothing: not deduped, not executed.
+          if (!pub.waiting) deps.republished?.add(business.id);
+          ev.publish = pub.waiting ? { waiting: true, at: now.toISOString() } : { url: pub.url, factsVersion: pub.factsVersion, at: now.toISOString() };
         }
         if (finding.sourceType === "other_entity") {
           const sync = await syncAllChannels(business.id);
           ev.sync = sync.results.map((r) => ({ channel: r.channelId, status: r.status }));
           note = "Disambiguation republished and place synced everywhere.";
         }
-        executed = true;
+        executed = !(ev.publish as { waiting?: boolean }).waiting;
+        if (!executed) note = "Facts page waits for the owner to confirm the facts.";
         break;
       }
       case "sync": {

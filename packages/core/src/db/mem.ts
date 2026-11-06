@@ -237,6 +237,11 @@ export class MemDb implements Db {
     return { ...row };
   }
 
+  async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
+    const runs = [...this.scanRuns.values()].filter((r) => r.businessId === businessId && r.kind === kind).map((r) => r.startedAt).sort();
+    return runs.at(-1) ?? null;
+  }
+
   async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
     return [...this.scanRuns.values()]
       .filter((r) => r.businessId === businessId)

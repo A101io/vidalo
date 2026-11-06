@@ -186,13 +186,14 @@ export async function sendWelcome(businessId: string): Promise<MailResult | null
   return deliver(business, m, "welcome");
 }
 
-export async function sendBaselineSummary(scanRunId: string): Promise<MailResult | null> {
+export async function sendBaselineSummary(scanRunId: string, requester?: { email: string; lang: Lang }): Promise<MailResult | null> {
   const db = getDb();
   const run = await db.getScanRun(scanRunId);
   if (!run) throw new Error(`scan_run ${scanRunId} not found`);
   const owned = await requireBusiness(run.businessId);
-  // No owner yet: the mail goes to whoever asked for it on the report page, in that page's language.
-  const asker = owned.ownerEmail ? null : await reportRequester(owned.id);
+  // No owner yet: the mail goes to the address this job was asked for, in the report page's language
+  // (jobs queued before the address rode along fall back to the last asker).
+  const asker = owned.ownerEmail ? null : (requester ?? (await reportRequester(owned.id)));
   const business = asker ? { ...owned, language: asker.lang } : owned;
   const findings = await db.listFindingsByScanRun(scanRunId);
   const prompts = await db.listPrompts(business.id, { activeOnly: true });

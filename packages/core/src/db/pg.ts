@@ -397,6 +397,11 @@ export class PgDb implements Db {
     return mapScanRun(rows[0]);
   }
 
+  async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
+    const [row] = await this.sql`select max(coalesce(started_at, created_at)) as at from scan_run where business_id = ${businessId} and kind = ${kind}`;
+    return row?.at ? new Date(row.at as string).toISOString() : null;
+  }
+
   async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
     const rows = await this.sql`select * from scan_run where business_id = ${businessId} order by created_at desc limit ${limit}`;
     return rows.map(mapScanRun);

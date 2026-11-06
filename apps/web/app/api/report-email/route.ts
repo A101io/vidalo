@@ -22,9 +22,15 @@ export async function POST(req: Request) {
   if (!isEmail(email)) return NextResponse.redirect(`${back}?mail=fout#report-email`, 303);
   const db = await ready();
   const business = await db.getBusiness(businessId);
-  if (!business) return NextResponse.redirect(back, 303);
-  // Logged before the job, which reads the address and the report page's language from this event.
-  await db.logEvent(business.id, REPORT_EMAIL_EVENT, { scanRunId, email, lang: langFromReferer(req) });
-  await db.enqueueJob("email", { template: "baseline", scanRunId, businessId: business.id });
+  const run = business ? await db.getScanRun(scanRunId) : null;
+  if (!business || run?.businessId !== business.id) return NextResponse.redirect(back, 303);
+  // A business with an owner gets its mails there; this form must not become a way to fill that inbox.
+  // Same "ok" either way, and once per (scan, address), so the answer says nothing about the business.
+  const asked = (await db.listEvents(business.id, 500)).some((e) => e.type === REPORT_EMAIL_EVENT && e.payload.scanRunId === scanRunId && e.payload.email === email);
+  if (!business.ownerEmail && !asked) {
+    const lang = langFromReferer(req);
+    await db.logEvent(business.id, REPORT_EMAIL_EVENT, { scanRunId, email, lang });
+    await db.enqueueJob("email", { template: "baseline", scanRunId, businessId: business.id, to: email, lang });
+  }
   return NextResponse.redirect(`${back}?mail=ok`, 303);
 }
