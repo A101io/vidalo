@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { CopyShape } from "@vidalo/core/copy";
-import { CONSENT_COOKIE, OPTIONAL_CATEGORIES, consentCookie, parseConsent, type Consent } from "@/lib/consent";
+import { CONSENT_COOKIE, consentCookie, parseConsent, type Consent, type ConsentChoice, type OptionalCategory } from "@/lib/consent";
 
 /** The event the footer's "Cookie-instellingen" button sends to reopen the notice. */
 export const OPEN_CONSENT_EVENT = "vidalo:consent:open";
@@ -17,14 +17,17 @@ function readConsent(): Consent | null {
 
 /**
  * The cookie notice. Informs when only necessary cookies exist; asks (refuse
- * and accept, same size, refuse first) once an optional category is listed.
+ * and accept, same size, refuse first) for the categories of the configured
+ * trackers (lib/trackers.ts consentCategories).
  * Renders nothing until it knows the cookie state, so the server HTML and
  * the first client render agree (no hydration mismatch, no flash).
  */
-export function CookieConsent({ copy, cookiesHref }: { copy: CopyShape["consent"]; cookiesHref: string }) {
+export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopyShape["consent"]; cookiesHref: string; categories: OptionalCategory[] }) {
   const [open, setOpen] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
-  const asksChoice = OPTIONAL_CATEGORIES.length > 0;
+  const asksChoice = categories.length > 0;
+  const none: ConsentChoice = { analytics: false, marketing: false };
+  const all: ConsentChoice = { analytics: categories.includes("analytics"), marketing: categories.includes("marketing") };
 
   useEffect(() => {
     const current = readConsent();
@@ -38,7 +41,7 @@ export function CookieConsent({ copy, cookiesHref }: { copy: CopyShape["consent"
     return () => window.removeEventListener(OPEN_CONSENT_EVENT, reopen);
   }, []);
 
-  function save(choice: { analytics: boolean }) {
+  function save(choice: ConsentChoice) {
     document.cookie = consentCookie(choice, location.protocol === "https:");
     const next = readConsent();
     setConsent(next);
@@ -66,7 +69,7 @@ export function CookieConsent({ copy, cookiesHref }: { copy: CopyShape["consent"
             </span>
             <span className="text-muted">{copy.on}</span>
           </li>
-          {OPTIONAL_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <li key={cat} className="flex items-center justify-between gap-4 py-2.5">
               <span>
                 <span className="font-semibold">{copy.categories[cat].label}</span> <span className="text-muted">{copy.categories[cat].body}</span>
@@ -80,15 +83,15 @@ export function CookieConsent({ copy, cookiesHref }: { copy: CopyShape["consent"
         {asksChoice ? (
           <>
             {/* Refuse first, same variant and size as accept: the legal review's instruction, not a style choice. */}
-            <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save({ analytics: false })}>
+            <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save(none)}>
               {copy.refuse}
             </button>
-            <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save({ analytics: true })}>
+            <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save(all)}>
               {copy.accept}
             </button>
           </>
         ) : (
-          <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save({ analytics: false })}>
+          <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save(none)}>
             {copy.ok}
           </button>
         )}
