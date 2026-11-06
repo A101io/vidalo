@@ -8,9 +8,11 @@ import type { Business } from "../types.js";
 /** Which block the dashboard rail shows. */
 export type PlanRail = "monthly" | "paused" | "scan" | "none";
 
-export function planRail(b: Pick<Business, "plan" | "status">): PlanRail {
-  if (b.plan === "monitor" && (b.status === "trial" || b.status === "active")) return "monthly";
-  if (b.plan === "monitor" && b.status === "paused") return "paused";
+export function planRail(b: Pick<Business, "plan" | "status"> & { pauseUntil?: string | null }, now: Date = new Date()): PlanRail {
+  // A pause the owner chose keeps status "active" and sets pauseUntil.
+  const chosenPause = Boolean(b.pauseUntil && new Date(b.pauseUntil) > now);
+  if (b.plan === "monitor" && (b.status === "trial" || b.status === "active") && !chosenPause) return "monthly";
+  if (b.plan === "monitor" && (b.status === "paused" || chosenPause)) return "paused";
   if (b.plan === "setup" && b.status !== "churned") return "scan";
   return "none";
 }

@@ -9,6 +9,9 @@ describe("what a plan promises", () => {
     expect(planRail({ plan: "monitor", status: "trial" })).toBe("monthly");
     expect(planRail({ plan: "monitor", status: "paused" })).toBe("paused");
     expect(planRail({ plan: "monitor", status: "churned" })).toBe("none");
+    const now = new Date("2026-11-06T12:00:00Z");
+    expect(planRail({ plan: "monitor", status: "active", pauseUntil: "2026-12-06T00:00:00Z" }, now)).toBe("paused");
+    expect(planRail({ plan: "monitor", status: "active", pauseUntil: "2026-10-06T00:00:00Z" }, now)).toBe("monthly");
     expect(planRail({ plan: "setup", status: "active" })).toBe("scan");
     expect(planRail({ plan: "setup", status: "trial" })).toBe("scan");
     expect(planRail({ plan: "none", status: "scanned" })).toBe("none");

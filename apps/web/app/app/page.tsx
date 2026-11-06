@@ -279,7 +279,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             // No running Vidalo Monthly: no monthly date and no "Controleer nu" (review CMP-01).
             <div className="card flex flex-col gap-3.5 p-6" data-rail={rail}>
               <RailLabel>{rail === "paused" ? d.nextCheck : d.scanOnly.label}</RailLabel>
-              <p className="m-0 text-[14px] text-muted">{rail === "paused" ? copy.billing.pausedNote : rail === "scan" ? d.scanOnly.body : d.scanOnly.bodyNone}</p>
+              <p className="m-0 text-[14px] text-muted">{rail === "paused" ? (business.pauseUntil && new Date(business.pauseUntil) > new Date() ? copy.billing.manage.pausedNote(dateLong(business.pauseUntil)) : copy.billing.pausedNote) : rail === "scan" ? d.scanOnly.body : d.scanOnly.bodyNone}</p>
               <Link href={href("/app/abonnement")} className="btn-sm w-full">
                 {rail === "paused" ? d.scanOnly.pausedCta : d.scanOnly.cta}
               </Link>
