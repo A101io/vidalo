@@ -32,6 +32,7 @@ describe("downloading my data", () => {
     await db.upsertBusiness({ id: b.id, name: b.name, place: b.place, ownerEmail: "Eigenaar@Example.nl" });
     await db.logEvent(b.id, "checkout.completed", { plan: "scan", email: "eigenaar@example.nl" });
     await sendFollowUp(b.id, 14);
+    await db.logEvent(b.id, "email.directory_correction", { to: "info@openingstijden.nl", directory: "openingstijden.nl" });
 
     const types = (await db.listEvents(b.id, 100)).filter((e) => e.type.startsWith("email.followup_"));
     expect(types.map((e) => e.payload.to).sort()).toEqual(["owner", "requester"]);
@@ -40,11 +41,17 @@ describe("downloading my data", () => {
     expect(json).not.toMatch(/eerste@example\.nl/i);
     expect(json).not.toMatch(/tweede@example\.nl/i);
     expect(json).toMatch(/eigenaar@example\.nl/i);
+    expect(json).toContain("info@openingstijden.nl");
     const checkout = (await exportMyData(db, b.id))!.events.find((e) => e.type === "checkout.completed");
     expect(checkout?.payload.email).toBe("eigenaar@example.nl");
   });
 
   it("leaves words and other fields alone", () => {
     expect(ownAddressesOnly({ to: "owner", email: "x@y.nl", lang: "en" }, null)).toEqual({ to: "owner", lang: "en" });
+  });
+
+  it("drops an earlier claimant's address nested in owner.verified, keeps the owner's", () => {
+    const p = { via: "phone_code", email: "Nieuw@x.nl", previous: { ownerEmail: "oud@x.nl", verifiedAt: "2026-11-01" }, cc: ["oud@x.nl", "nieuw@x.nl"] };
+    expect(ownAddressesOnly(p, "nieuw@x.nl")).toEqual({ via: "phone_code", email: "Nieuw@x.nl", previous: { verifiedAt: "2026-11-01" }, cc: ["nieuw@x.nl"] });
   });
 });

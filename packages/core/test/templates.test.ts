@@ -152,6 +152,22 @@ describe("email templates", () => {
     expect(scanEn).toContain("A check every month comes with Vidalo Monthly.");
   });
 
+  it("mails after payment promise a monthly check only with Vidalo Monthly (review CMP-01)", () => {
+    const scanBiz = { ...business, plan: "setup" as const };
+    const paid = baselineSummaryEmail({ ...baselineStipData, business: scanBiz, paying: true }).text;
+    expect(paid).not.toContain("maandcontrole");
+    expect(paid).toContain("Elke maand controleren hoort bij Vidalo Monthly.");
+    const clean = baselineSummaryEmail({ business: scanBiz, paying: true, checkedAt: "2026-10-02T03:00:00Z", totalAnswers: 100, wrongAnswers: 0, findings: [], engines: ["chatgpt"], links });
+    expect(clean.text).not.toContain("We controleren elke maand opnieuw");
+    const res = resolutionNoticeEmail({ business: scanBiz, finding: { ...finding, status: "resolved" }, before: { quote: "a", at: "2026-10-02T03:00:00Z" }, after: { quote: "b", at: "2026-10-14T03:00:00Z" }, days: 12, links }).text;
+    expect(res).not.toContain("elke maand");
+    const unf = unfixableNoticeEmail({ business: scanBiz, finding: { ...finding, sourceType: "none", sourceUrl: null }, note: "x", triedDays: 45, links }).text;
+    expect(unf).not.toContain("controleren het elke maand");
+    expect(unf).toContain("Elke maand controleren hoort bij Vidalo Monthly.");
+    const resMonthly = resolutionNoticeEmail({ business, finding: { ...finding, status: "resolved" }, before: { quote: "a", at: "2026-10-02T03:00:00Z" }, after: { quote: "b", at: "2026-10-14T03:00:00Z" }, days: 12, links }).text;
+    expect(resMonthly).toContain("elke maand controleren");
+  });
+
   it("status line follows the messaging brief", () => {
     expect(statusLine({ totalAnswers: 12, wrongAnswers: 0, resolved: 0, inProgress: 0 })).toBe("12 van 12 antwoorden kloppen");
     expect(statusLine({ totalAnswers: 12, wrongAnswers: 1, resolved: 1, inProgress: 1 })).toBe("2 fouten gevonden, 1 hersteld, 1 in behandeling");

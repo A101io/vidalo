@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getSession } from "@/lib/session";
 import { getStripe } from "@/lib/stripe";
 import { ready } from "@/lib/db";
+import { env } from "@/lib/env";
+import { welcomeStepsFor } from "@vidalo/core/shared";
 
 type PaymentState = "paid" | "processing" | "failed" | "unknown";
 
@@ -30,9 +32,10 @@ async function paymentState(sessionId?: string): Promise<{ state: PaymentState; 
  * comes from the checkout session; in mock mode, from the business the mock
  * checkout just marked paid.
  */
-async function boughtMonthly(pay: { plan?: string }, mock: boolean, businessId?: string): Promise<boolean> {
+async function boughtMonthly(pay: { plan?: string }, businessId?: string): Promise<boolean> {
   if (pay.plan) return pay.plan === "monitor";
-  if (!mock || !businessId) return false;
+  // Only when the server itself runs without Stripe (the mock checkout): `?mock=1` in the URL must not reveal a business's plan.
+  if (env.hasStripe || !businessId) return false;
   const db = await ready();
   return (await db.getBusiness(businessId))?.plan === "monitor";
 }
@@ -45,7 +48,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
   const { copy, href } = await getI18n();
   const w = copy.welcome;
   const pay = await paymentState(sp.session_id);
-  const steps = (await boughtMonthly(pay, sp.mock === "1", sp.business)) ? w.steps : [...w.steps.slice(0, -1), w.lastStepScan];
+  const steps = welcomeStepsFor(w.steps, w.lastStepScan, await boughtMonthly(pay, sp.business));
   return (
     <>
       <SiteHeader variant="minimal" />

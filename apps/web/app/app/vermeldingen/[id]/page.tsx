@@ -192,7 +192,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
                   ))}
                   <li className="border-t-[1px] border-b-[1px] border-line py-3.5 text-muted">
                     <Dot tone="grijs" />
-                    {gbp ? C.next : C.nextDirectory}
+                    {business.plan === "monitor" ? (gbp ? C.next : C.nextDirectory) : gbp ? C.nextScan : C.nextDirectoryScan}
                   </li>
                 </ol>
               </>

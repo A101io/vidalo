@@ -10,6 +10,7 @@ import { buildLog } from "@/lib/owner-log";
 import { dateLong, dateShort, dayMonth, hostOf } from "@/lib/format";
 import { questionFor, wrongText, correctText } from "@/lib/questions";
 import { pendingDiffOf } from "@vidalo/core/publisher";
+import { planRail } from "@vidalo/core/shared";
 import { checkNow, markFixed } from "./actions";
 
 const statusTone: Record<FindingStatus, StipColour> = { open: "rood", fixing: "oranje", recheck: "oranje", resolved: "groen", unfixable: "grijs" };
@@ -83,6 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .map((x) => dayMonth(x)),
     ),
   ].slice(0, 3);
+  const rail = planRail(business);
   const sources = data.channels.filter((c) => c.type !== "directory" || c.status !== "synced").slice(0, 8);
 
   return (
@@ -260,8 +262,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         {/* Rail */}
         <aside className="flex min-w-0 flex-col gap-10">
-          {business.plan === "monitor" ? (
-            <div className="card flex flex-col gap-3.5 p-6">
+          {rail === "monthly" ? (
+            <div className="card flex flex-col gap-3.5 p-6" data-rail="monthly">
               <RailLabel>{d.nextCheck}</RailLabel>
               <div className="text-[34px] font-extrabold leading-none" style={{ letterSpacing: "-1.5px" }}>
                 {data.nextCheckAt ? dateShort(data.nextCheckAt) : "—"}
@@ -274,12 +276,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </form>
             </div>
           ) : (
-            // Vidalo Scan alone: no monthly date and no "Controleer nu" (review CMP-01).
-            <div className="card flex flex-col gap-3.5 p-6" data-rail="scan-only">
-              <RailLabel>{d.scanOnly.label}</RailLabel>
-              <p className="m-0 text-[14px] text-muted">{d.scanOnly.body}</p>
+            // No running Vidalo Monthly: no monthly date and no "Controleer nu" (review CMP-01).
+            <div className="card flex flex-col gap-3.5 p-6" data-rail={rail}>
+              <RailLabel>{rail === "paused" ? d.nextCheck : d.scanOnly.label}</RailLabel>
+              <p className="m-0 text-[14px] text-muted">{rail === "paused" ? copy.billing.pausedNote : rail === "scan" ? d.scanOnly.body : d.scanOnly.bodyNone}</p>
               <Link href={href("/app/abonnement")} className="btn-sm w-full">
-                {d.scanOnly.cta}
+                {rail === "paused" ? d.scanOnly.pausedCta : d.scanOnly.cta}
               </Link>
             </div>
           )}

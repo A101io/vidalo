@@ -2325,7 +2325,9 @@ export const en: CopyShape = {
     scanOnly: {
       label: "A check every month",
       body: "You have Vidalo Scan. We check the fixed errors again. All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
+      bodyNone: "All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
       cta: "Add Vidalo Monthly",
+      pausedCta: "Go to your subscription",
     },
     expand: "Add more",
     expandItems: [
@@ -2464,6 +2466,8 @@ export const en: CopyShape = {
       `${date} · ${n === 0 ? "all the same" : status === "synced" ? `${n} ${n === 1 ? "field" : "fields"} aligned` : status === "mismatch" ? `${n} ${n === 1 ? "field differs" : "fields differ"}` : `${n} ${n === 1 ? "field" : "fields"} reported, ${status.toLowerCase()}`}`,
     next: "Next: after your approval above, then every month after the check.",
     nextDirectory: "Next: every month after the check, and a reminder 30 days after a correction.",
+    nextScan: "Next: after your approval above. Syncing every month comes with Vidalo Monthly.",
+    nextDirectoryScan: "Next: a reminder 30 days after a correction. Syncing every month comes with Vidalo Monthly.",
     flash: {
       approved: "Approved. We put the change on Google within an hour.",
       declined: "Not applied. Your profile stays as it is.",
@@ -2915,6 +2919,7 @@ export const en: CopyShape = {
       free: { label: "See your full result", where: "in your result" },
     },
     nextMonthly: "Your next monthly check.",
+    nextScan: { when: "After that", what: "A check every month comes with Vidalo Monthly." },
     welcome: {
       subject: (name: string) => `Welcome to Vidalo: 4 steps for ${name}`,
       preheader: "Four steps, about 5 minutes in all. Then we do the rest.",
@@ -2951,7 +2956,7 @@ export const en: CopyShape = {
         partial: (name: string) => `AI does not find part of ${name}`,
         clean: (total: number, name: string) => `All ${total} answers about ${name} are right`,
       },
-      preheader: { wrong: (where: string) => `The most important errors are in this email, the rest ${where}.`, clean: "We check again every month." },
+      preheader: { wrong: (where: string) => `The most important errors are in this email, the rest ${where}.`, clean: "We check again every month.", cleanScan: "All answers are right. A check every month comes with Vidalo Monthly." },
       intro: (date: string, total: number, name: string, engines: string) => `On ${date} we put ${total} questions about ${name} to ${engines}.`,
       stats: { checked: "answers checked", wrong: (n: number) => (n === 1 ? "was wrong" : "were wrong"), empty: "were empty" },
       cardsTitle: (n: number) => (n === 1 ? "The error" : "The most important errors"),
@@ -2971,6 +2976,7 @@ export const en: CopyShape = {
       before: (date: string) => `Before (${date})`,
       after: (date: string) => `After (${date})`,
       source: (source: string, days: string) => `Source: ${source}, fixed in ${days}. We keep checking this answer every month.`,
+      sourceScan: (source: string, days: string) => `Source: ${source}, fixed in ${days}.`,
       cta: "See your overview",
     },
     monthly: {
@@ -3020,6 +3026,7 @@ export const en: CopyShape = {
       why: (note: string) => `Why it did not work: ${note}`,
       did: (label: string) => `What we did: ${label}`,
       next: (tail: string) => `What now: we keep this answer in your overview and check it again every month. ${tail}`,
+      nextScan: (tail: string) => `What now: we keep this answer in your overview. A check every month comes with Vidalo Monthly. ${tail}`,
       tail: {
         notFound: "Your facts page and your profiles stay in place. As soon as AI does name you, you see it in your report.",
         memory: "Answers from the model's memory only change with a new version of that model. As soon as that happens, you see it in your report.",

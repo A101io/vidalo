@@ -2365,7 +2365,11 @@ export const copy = {
     scanOnly: {
       label: "Elke maand controleren",
       body: "Je hebt Vidalo Scan. De herstelde fouten controleren we opnieuw. Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €49 per maand excl. btw, maandelijks opzegbaar.",
+      /** No running plan (nothing paid yet, or cancelled). */
+      bodyNone: "Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €49 per maand excl. btw, maandelijks opzegbaar.",
       cta: "Vidalo Monthly toevoegen",
+      /** Vidalo Monthly, stopped because a payment failed. */
+      pausedCta: "Naar je abonnement",
     },
     expand: "Uitbreiden",
     expandItems: [
@@ -2506,6 +2510,9 @@ export const copy = {
       `${date} · ${n === 0 ? "alles gelijk" : status === "synced" ? `${n} ${n === 1 ? "veld" : "velden"} gelijkgezet` : status === "mismatch" ? `${n} ${n === 1 ? "veld wijkt" : "velden wijken"} af` : `${n} ${n === 1 ? "veld" : "velden"} gemeld, ${status.toLowerCase()}`}`,
     next: "Volgende: na jouw goedkeuring hierboven, daarna elke maand na de controle.",
     nextDirectory: "Volgende: elke maand na de controle, en 30 dagen na een correctie een herinnering.",
+    /** Vidalo Scan alone: no monthly sync (review CMP-01). */
+    nextScan: "Volgende: na jouw goedkeuring hierboven. Elke maand gelijkzetten hoort bij Vidalo Monthly.",
+    nextDirectoryScan: "Volgende: 30 dagen na een correctie een herinnering. Elke maand gelijkzetten hoort bij Vidalo Monthly.",
     flash: {
       approved: "Goedgekeurd. We zetten de wijziging binnen een uur op Google.",
       declined: "Niet doorgevoerd. Je profiel blijft zoals het staat.",
@@ -2976,6 +2983,8 @@ export const copy = {
       free: { label: "Bekijk je volledige resultaat", where: "in je resultaat" },
     },
     nextMonthly: "Je volgende maandcontrole.",
+    /** Vidalo Scan alone, in place of nextMonthly (review CMP-01). */
+    nextScan: { when: "Daarna", what: "Elke maand controleren hoort bij Vidalo Monthly." },
     welcome: {
       subject: (name: string) => `Welkom bij Vidalo: 4 stappen voor ${name}`,
       preheader: "Vier stappen, samen ongeveer 5 minuten. Daarna doen wij de rest.",
@@ -3013,7 +3022,7 @@ export const copy = {
         partial: (name: string) => `AI vindt een deel van ${name} niet`,
         clean: (total: number, name: string) => `Alle ${total} antwoorden over ${name} kloppen`,
       },
-      preheader: { wrong: (where: string) => `De belangrijkste fouten staan in deze mail, de rest ${where}.`, clean: "We controleren elke maand opnieuw." },
+      preheader: { wrong: (where: string) => `De belangrijkste fouten staan in deze mail, de rest ${where}.`, clean: "We controleren elke maand opnieuw.", cleanScan: "Alle antwoorden kloppen. Elke maand controleren hoort bij Vidalo Monthly." },
       intro: (date: string, total: number, name: string, engines: string) => `Op ${date} stelden we ${total} vragen over ${name} aan ${engines}.`,
       stats: { checked: "antwoorden gecontroleerd", wrong: (n: number) => (n === 1 ? "klopte niet" : "klopten niet"), empty: "waren leeg" },
       cardsTitle: (n: number) => (n === 1 ? "De fout" : "De belangrijkste fouten"),
@@ -3033,6 +3042,7 @@ export const copy = {
       before: (date: string) => `Voor (${date})`,
       after: (date: string) => `Na (${date})`,
       source: (source: string, days: string) => `Bron: ${source}, hersteld in ${days}. We blijven dit antwoord elke maand controleren.`,
+      sourceScan: (source: string, days: string) => `Bron: ${source}, hersteld in ${days}.`,
       cta: "Bekijk je overzicht",
     },
     monthly: {
@@ -3082,6 +3092,7 @@ export const copy = {
       why: (note: string) => `Waarom het niet lukte: ${note}`,
       did: (label: string) => `Wat we deden: ${label}`,
       next: (tail: string) => `Wat nu: we laten dit antwoord in je overzicht staan en controleren het elke maand opnieuw. ${tail}`,
+      nextScan: (tail: string) => `Wat nu: we laten dit antwoord in je overzicht staan. Elke maand controleren hoort bij Vidalo Monthly. ${tail}`,
       tail: {
         notFound: "Je feitenpagina en je profielen blijven staan. Zodra AI je wel noemt, zie je het in je rapport.",
         memory: "Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe versie van dat model. Zodra dat gebeurt, zie je het in je rapport.",

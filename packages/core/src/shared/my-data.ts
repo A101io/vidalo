@@ -40,7 +40,8 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
     fixes,
     channels: await db.listChannels(businessId),
     googleIndex: await db.getGoogleIndex(businessId),
-    events: (await db.listEvents(businessId, 10_000)).map((e) => ({ ...e, payload: ownAddressesOnly(e.payload, business.ownerEmail) })),
+    // Letters to directories go out in the owner's name to a directory's public address: those stay (AVG art. 15).
+    events: (await db.listEvents(businessId, 10_000)).map((e) => (e.type === "email.directory_correction" ? e : { ...e, payload: ownAddressesOnly(e.payload, business.ownerEmail) })),
   };
 }
 
@@ -51,10 +52,16 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
  */
 export function ownAddressesOnly(payload: Record<string, unknown>, ownerEmail: string | null | undefined): Record<string, unknown> {
   const own = ownerEmail?.trim().toLowerCase() || null;
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(payload)) {
-    if ((k === "email" || k === "to") && typeof v === "string" && v.includes("@") && v.trim().toLowerCase() !== own) continue;
-    out[k] = v;
-  }
-  return out;
+  const foreign = (v: unknown) => typeof v === "string" && v.includes("@") && v.trim().toLowerCase() !== own;
+  // Nested too: `owner.verified` keeps `previous.ownerEmail`, an earlier claimant's address.
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.filter((x) => !foreign(x)).map(walk);
+    if (v && typeof v === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [k, x] of Object.entries(v)) if (!foreign(x)) out[k] = walk(x);
+      return out;
+    }
+    return v;
+  };
+  return walk(payload) as Record<string, unknown>;
 }
