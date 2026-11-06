@@ -80,7 +80,7 @@ describe("renderFactsPage", () => {
 
   it("falls back to the vidalo host when none is given", () => {
     const p = renderFactsPage(facts, business);
-    expect(p.canonicalUrl).toBe("https://bakkerij-jansen-haarlem.feiten.vidalo.io/");
+    expect(p.canonicalUrl).toBe("https://bakkerij-jansen-haarlem-feiten.vidalo.io/");
   });
 
   it("formats Dutch dates", () => {

@@ -158,7 +158,7 @@ describe("checkGoogleIndex", () => {
   });
 
   it("starts over for a new facts host, and waits for an unverified one", async () => {
-    const b = await seed("x.feiten.vidalo.io");
+    const b = await seed("x-feiten.vidalo.io");
     const { api, calls } = fakeApi();
     await checkGoogleIndex(b.id, { api });
     await db.upsertBusiness({ id: b.id, name: b.name, place: b.place, factsHost: "feiten.bakkerijjansen.nl" });

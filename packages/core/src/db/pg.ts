@@ -294,7 +294,8 @@ export class PgDb implements Db {
   }
 
   async getBusinessByFactsHost(host: string): Promise<BusinessRecord | null> {
-    const rows = await this.sql`select * from business where lower(facts_host) = ${host.toLowerCase()} limit 1`;
+    // The earliest verified holder wins over anyone who only typed the same host.
+    const rows = await this.sql`select * from business where lower(facts_host) = ${host.toLowerCase()} order by facts_host_verified_at asc nulls last, created_at limit 1`;
     return rows[0] ? mapBusiness(rows[0]) : null;
   }
 

@@ -12,6 +12,20 @@
   "observability": { "enabled": true },
   "workers_dev": true,
   "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io" },
+  // Facts pages (docs/go-live-checklist.md D5, D6). Production only: env.staging
+  // sets "routes": [] so it never touches vidalo.io.
+  //   feiten.vidalo.io      the CNAME target and Cloudflare for SaaS fallback
+  //                         origin (its proxied DNS record is set by hand)
+  //   *-feiten.vidalo.io    fallback hosts {slug}-feiten.vidalo.io (wildcard
+  //                         DNS record `*`, proxied, set by hand)
+  // Customers' own feiten.{domain} hosts each get a route `{host}/*` from
+  // publisher/host.ts when their custom hostname is created. No `*/*`: a route
+  // beats a Custom Domain on the same hostname and would take vidalo.io and
+  // www.vidalo.io from vidalo-web.
+  "routes": [
+    { "pattern": "feiten.vidalo.io/*", "zone_name": "vidalo.io" },
+    { "pattern": "*-feiten.vidalo.io/*", "zone_name": "vidalo.io" }
+  ],
   "triggers": {
     // Every minute: run queued jobs. Every ten minutes: the cron tick
     // (monthly scans, rechecks, host polls, follow-ups). src/cloudflare.ts
@@ -32,6 +46,8 @@
     "staging": {
       "name": "vidalo-worker-staging",
       "workers_dev": true,
+      // routes inherit from the top level; staging never answers on vidalo.io.
+      "routes": [],
       "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io" },
       "triggers": { "crons": ["* * * * *", "*/10 * * * *"] },
       "queues": {

@@ -3,7 +3,9 @@
  * The Node entry (index.ts) runs the same work in loops; here Cloudflare
  * invokes it:
  *
- *   fetch      facts pages on customers' domains (core's handleFactsRequest)
+ *   fetch      facts pages (core's handleFactsRequest) on feiten.vidalo.io,
+ *              {slug}-feiten.vidalo.io and customers' feiten.{domain}
+ *              (routes: wrangler.jsonc and publisher/host.ts)
  *   scheduled  every minute: run queued jobs for up to 10 minutes;
  *              every 10 minutes also the cron tick (cron.ts)
  *   queue      "vidalo-scans": a free scan started on the website
@@ -61,7 +63,11 @@ function scoped<T>(env: Env, fn: () => Promise<T>): Promise<T> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    return scoped(env, () => handleFactsRequest(request)).catch((err) => {
+    // The host is the one Cloudflare routed on (request.url / Host). A client's
+    // own X-Forwarded-Host must not pick which business's page answers.
+    const req = new Request(request);
+    req.headers.delete("x-forwarded-host");
+    return scoped(env, () => handleFactsRequest(req)).catch((err) => {
       log.error("cf.fetch.error", { error: errorMessage(err) });
       return new Response("Not available right now.\n", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
     });

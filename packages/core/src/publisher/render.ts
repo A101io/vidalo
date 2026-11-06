@@ -187,9 +187,29 @@ export function safeWebUrl(raw: string | null | undefined): string | null {
   return null;
 }
 
+/** The fallback label ends in this, so it never equals one of our own names (`www`, `feiten`). */
+export const FALLBACK_LABEL_END = "-feiten";
+/** A DNS label holds at most 63 characters. */
+const MAX_LABEL = 63;
+
+/**
+ * Fallback facts host for a business without a domain of its own:
+ * `{slug}-feiten.{FACTS_HOST_SUFFIX}`. One level under the suffix, so the
+ * zone's Universal SSL certificate (`*.vidalo.io`) covers it. A slug too long
+ * for one label is cut and given a short hash, so two long slugs stay apart.
+ */
 export function defaultFactsHost(business: Pick<Business, "slug">): string {
   const suffix = process.env.FACTS_HOST_SUFFIX || "vidalo.io";
-  return `${business.slug}.feiten.${suffix}`;
+  const max = MAX_LABEL - FALLBACK_LABEL_END.length;
+  const slug = business.slug.length <= max ? business.slug : `${business.slug.slice(0, max - 7).replace(/-+$/, "")}-${shortHash(business.slug)}`;
+  return `${slug}${FALLBACK_LABEL_END}.${suffix}`;
+}
+
+/** FNV-1a, six base-36 characters. */
+function shortHash(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(36).padStart(6, "0").slice(-6);
 }
 
 function formatPrice(p: PriceItem, facts: Facts): string {

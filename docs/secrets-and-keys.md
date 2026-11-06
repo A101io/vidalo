@@ -46,7 +46,7 @@ Cloudflare has moved to Workers *roles* (Admin / Editor / Metadata Read-Only) ne
 
 ### The runtime token (facts hosts, later)
 
-`CLOUDFLARE_API_TOKEN` as a **Worker secret** on `vidalo-worker` is a different token from the deploy token: it verifies customers' facts hosts through Cloudflare for SaaS. Create it only when D6 (fallback origin on `feiten.vidalo.io`) is built. Permissions: *Zone · SSL and Certificates · Edit* and *Zone · DNS · Edit*, zone `vidalo.io` only, with `CLOUDFLARE_ZONE_ID` = `5d39e2dacc81b8603d5dc69a163b6bca`. Nothing from the deploy token.
+`CLOUDFLARE_API_TOKEN` as a **Worker secret** on `vidalo-worker` is a different token from the deploy token: it verifies customers' facts hosts through Cloudflare for SaaS. Permissions: *Zone · SSL and Certificates · Edit* (custom hostnames), *Zone · Workers Routes · Edit* (since 5 Nov 2026: each customer's `feiten.{domain}` gets a route `feiten.{domain}/*` → `vidalo-worker`, `packages/core/src/publisher/host.ts`) and *Zone · DNS · Edit*, zone `vidalo.io` only, with `CLOUDFLARE_ZONE_ID` = `5d39e2dacc81b8603d5dc69a163b6bca`. Nothing from the deploy token. A token made before 5 Nov 2026 lacks Workers Routes: edit it at https://dash.cloudflare.com/profile/api-tokens → the token's `…` → Edit → + Add more → `Zone` · `Workers Routes` · `Edit` → Continue to summary → Update token (the value stays the same, so the Worker secret needs no change). Without it a custom hostname is created but its first poll fails with `cloudflare /workers/routes failed: 403`.
 
 ## On the Workers (`wrangler secret put NAME --name vidalo-web` / `--name vidalo-worker`)
 
