@@ -708,7 +708,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 26 October 2026",
+    updated: "Version of 6 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -961,7 +961,7 @@ export const en: CopyShape = {
           p: [
             "When you request a free check, we look up the business and ask AI assistants questions about it.",
             [
-              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, if you want the report by email. To limit abuse we keep an irreversibly encrypted form of your IP address per day.",
+              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, if you want the report by email. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website and the sources AI assistants name.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
               "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, the periods under ‘A paid plan’ apply.",
