@@ -9,11 +9,12 @@ function Check({ light }: { light?: boolean }) {
   );
 }
 
-/** The two plans on the dark pricing band, Vidalo Scan (€149) and Vidalo Monthly (€49 per maand), and the websites by request. */
+/** The two plans on the dark pricing band, Vidalo Scan (€149) and Vidalo Monthly (€49 per maand), and the websites and extra locations by request. */
 export async function PriceBlock() {
   const { copy, href } = await getI18n();
   const P = copy.landing.prijs;
   const W = P.website;
+  const L = P.locations;
   return (
     <div className="flex flex-col gap-9">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -95,6 +96,27 @@ export async function PriceBlock() {
           <span>{W.note}</span>
           <a href="mailto:hello@vidalo.io" className="text-[15px] font-bold text-blue-light">
             {W.ask}
+          </a>
+        </div>
+      </div>
+      <div className="flex flex-col gap-5 rounded-[20px] border-[1.5px] border-dark-panel p-7 sm:p-[30px]">
+        <div>
+          <h3 className="mb-1 text-[18px] font-extrabold">{L.h3}</h3>
+          <p className="text-[15px] text-dark-text">{L.sub}</p>
+        </div>
+        <ul className="flex flex-col gap-2 text-[15px] leading-[1.5] text-dark-text">
+          {L.includes.map((t) => (
+            <li key={t} className="flex gap-2.5">
+              <Check />
+              <span>{t}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-[15px] font-extrabold">{L.price}</p>
+        <div className="flex flex-wrap items-center justify-between gap-4 text-[13px] text-grijs">
+          <span>{L.note}</span>
+          <a href="mailto:hello@vidalo.io" className="text-[15px] font-bold text-blue-light">
+            {L.ask}
           </a>
         </div>
       </div>

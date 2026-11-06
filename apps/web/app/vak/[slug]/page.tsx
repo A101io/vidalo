@@ -135,7 +135,7 @@ export default async function SectorPage({ params }: { params: Promise<{ slug: s
               <p className="text-[17px] leading-[1.55] text-dark-text">{S.why.body}</p>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-6">
-              {[S.why.stats[0]!, P.whyStat, S.why.stats[1]!].map((s) => (
+              {[S.why.stats[0]!, ...("whyStat" in P ? [P.whyStat] : []), S.why.stats[1]!].map((s) => (
                 <div key={s.body} className="rounded-2xl bg-dark-panel p-[22px]">
                   <div className="text-[34px] font-extrabold leading-none" style={{ letterSpacing: "-1px" }}>
                     {s.n}

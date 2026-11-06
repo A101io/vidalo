@@ -35,13 +35,20 @@ export * from "./stip";
 export * from "./recommendations";
 export * from "./progress";
 
+/**
+ * Engines a scan asks. Copilot stays out until its adapter ships
+ * (engines/copilot.ts is a stub that never answers): asking it only put
+ * "Copilot: overgeslagen" on every report, and the copy no longer names it.
+ */
+export const ASKED_ENGINES: Engine[] = ENGINES.filter((e) => e !== "copilot");
+
 /** Defaults per scan kind (ARCHITECTURE.md workflows A and C). */
 export const SCAN_DEFAULTS: Record<ScanKind, { engines: Engine[]; samplesPerPrompt: number }> = {
-  free: { engines: ["chatgpt", "google_ai", "copilot"], samplesPerPrompt: 3 },
-  baseline: { engines: ENGINES, samplesPerPrompt: 10 },
-  monthly: { engines: ENGINES, samplesPerPrompt: 10 },
-  recheck: { engines: ENGINES, samplesPerPrompt: 10 },
-  ondemand: { engines: ENGINES, samplesPerPrompt: 5 },
+  free: { engines: ["chatgpt", "google_ai"], samplesPerPrompt: 3 },
+  baseline: { engines: ASKED_ENGINES, samplesPerPrompt: 10 },
+  monthly: { engines: ASKED_ENGINES, samplesPerPrompt: 10 },
+  recheck: { engines: ASKED_ENGINES, samplesPerPrompt: 10 },
+  ondemand: { engines: ASKED_ENGINES, samplesPerPrompt: 5 },
 };
 
 /**

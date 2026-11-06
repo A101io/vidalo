@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { withMockDb } from "../src/db";
 import { ENGINES } from "../src/types";
 import { generatePrompts } from "../src/prompts";
-import { buildReport, runScan, samplesFor } from "../src/scanner";
+import { ASKED_ENGINES, buildReport, runScan, samplesFor } from "../src/scanner";
 
 /** Samples one prompt collects over these engines (google_ai is capped at one). */
 const perPrompt = (engines: readonly string[], n: number) => engines.reduce((sum, e) => sum + samplesFor(e as (typeof ENGINES)[number], n), 0);
@@ -42,8 +42,9 @@ describe("runScan (mock pipeline)", () => {
     // A full scan asks the core and six recommendation questions from the bank, to every engine (six since Claude joined);
     // only the fact questions count as answers.
     const factCore = core.filter((p) => p.kind !== "recommendation").length;
-    expect(report.totalAnswers).toBe(factCore * perPrompt(ENGINES, 3));
+    expect(report.totalAnswers).toBe(factCore * perPrompt(ASKED_ENGINES, 3));
     expect(ENGINES).toHaveLength(6);
+    expect(ASKED_ENGINES).not.toContain("copilot");
     expect(report.engines.map((e) => e.engine)).toContain("claude");
     const recs = report.recommendations ?? [];
     expect(recs.filter((r) => r.pool === "core")).toHaveLength(6);
@@ -54,13 +55,13 @@ describe("runScan (mock pipeline)", () => {
     expect(recs.every((r) => r.others.every((o) => !o.name.includes("De Vries")))).toBe(true);
     expect(recs.some((r) => r.others.length > 0)).toBe(true);
     expect(["rood", "oranje", "groen", "grijs"]).toContain(report.stip);
-    expect(report.engineStips).toHaveLength(ENGINES.length);
+    expect(report.engineStips).toHaveLength(ASKED_ENGINES.length);
     expect(report.findingsBySeverity.afhaker.length + report.findingsBySeverity.misleider.length + report.findingsBySeverity.verwarring.length).toBe(report.findings.length);
     expect(report.wrongAnswers).toBeGreaterThan(0);
     expect(report.wrongAnswers).toBeLessThan(report.totalAnswers);
     expect(report.findings.length).toBeGreaterThan(0);
     expect(report.correct.length).toBeGreaterThan(0);
-    expect(report.engines).toHaveLength(ENGINES.length);
+    expect(report.engines).toHaveLength(ASKED_ENGINES.length);
     expect(report.engines.every((e) => !e.skipped)).toBe(true);
 
     for (const f of report.findings) {
@@ -80,7 +81,7 @@ describe("runScan (mock pipeline)", () => {
     const run = await db.getScanRun(report.scanRunId);
     expect(run?.status).toBe("done");
     // Every asked answer is stored; the recommendation answers are not counted in totalAnswers.
-    expect(await db.listSamples(report.scanRunId)).toHaveLength((core.length + 6) * perPrompt(ENGINES, 3));
+    expect(await db.listSamples(report.scanRunId)).toHaveLength((core.length + 6) * perPrompt(ASKED_ENGINES, 3));
     expect((await db.listEvents(prepared.business.id)).map((e) => e.type)).toContain("scan.finished");
 
     // buildReport reconstructs the same numbers from storage.
@@ -128,9 +129,9 @@ describe("runScan (mock pipeline)", () => {
     const db = withMockDb();
     const prepared = await prepareBusiness({ name: "Kapsalon Mooi", place: "Leiden", db });
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
-    expect(report.engines.map((e) => e.engine)).toEqual(["chatgpt", "google_ai", "copilot"]);
+    expect(report.engines.map((e) => e.engine)).toEqual(["chatgpt", "google_ai"]);
     // 6 prompts: 3 fact questions count as answers, 3 recommendation questions are reported on their own.
-    expect(report.totalAnswers).toBe(3 * perPrompt(["chatgpt", "google_ai", "copilot"], 3));
+    expect(report.totalAnswers).toBe(3 * perPrompt(["chatgpt", "google_ai"], 3));
     expect(report.findings.every((f) => f.evidenceKind !== "recommendation")).toBe(true);
   });
 
@@ -168,7 +169,7 @@ describe("runScan on a business the AI has never heard of", () => {
 
     const report = await runScan({ businessId: prepared.business.id, kind: "free", db });
     // No sector, so no recommendation questions: all six are fact questions.
-    expect(report.totalAnswers).toBe(6 * perPrompt(["chatgpt", "google_ai", "copilot"], 3));
+    expect(report.totalAnswers).toBe(6 * perPrompt(["chatgpt", "google_ai"], 3));
     expect(report.visibility).toBe("unknown");
     expect(report.notFoundAnswers / report.totalAnswers).toBeGreaterThanOrEqual(0.6);
     expect(report.wrongAnswers + report.notFoundAnswers).toBeLessThanOrEqual(report.totalAnswers);

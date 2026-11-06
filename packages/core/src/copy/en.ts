@@ -54,7 +54,7 @@ export const en: CopyShape = {
       grid: "rggrrxrggrxrrggrxrggrxrrggrxrggrxrrggrxrrggrxrggrxgrrgrxrggrrxgrgrxrgrgrxgrrgrxgrrgrxgrgrxgrgrxrggrx",
       /** The animated hero: one answer, built from four sources, put right at the source. */
       viz: {
-        label: "How it works: an AI builds an answer from sources. One outdated source made the answer wrong. Vidalo fixes that source and the answer is right again.",
+        label: "How it works: an AI builds an answer from sources. One outdated source made the answer wrong. Vidalo finds that source; once it is corrected, the answer is right again.",
         question: "Is Bakkerij De Vries open on Sunday?",
         engine: "ChatGPT",
         wrong: "Yes, Sunday from 9:00 to 17:00.",
@@ -66,7 +66,7 @@ export const en: CopyShape = {
           { name: "News article", meta: "same name, Heemstede" },
         ],
         vidalo: ["Checks the sources", "Error found: openingstijden.nl", "Source fixed · answer is right"],
-        caption: "Example: one outdated source decides the answer. We fix that source.",
+        caption: "Example: one outdated source decides the answer. We find that source and ask for a correction, or show you what to change.",
       },
     },
     veranderd: {
@@ -116,7 +116,7 @@ export const en: CopyShape = {
       body: "AI does not rely on your website alone. It combines Wikipedia, business directories, news articles and a business with the same name. In a check of 10,000 businesses, half had at least one wrong answer; for 1 in 3 the phone number was wrong.",
       examples: [
         { where: "Bakery, Centrum", wrong: "“open on Sunday”", right: "closed", source: "ChatGPT · source: directory listing from 2022" },
-        { where: "Physiotherapy, Schalkwijk", wrong: "old number", right: "023 535…", source: "Copilot · source: phone directory" },
+        { where: "Physiotherapy, Schalkwijk", wrong: "old number", right: "023 535…", source: "Perplexity · source: phone directory" },
         { where: "Installer, Noord", wrong: "“no heat pumps”", right: "yes, they do", source: "Google AI · source: own site, 2019" },
         { where: "Hair salon, Zuid", wrong: "“permanently closed”", right: "open", source: "ChatGPT · source: business with the same name in Hoofddorp" },
       ],
@@ -134,10 +134,10 @@ export const en: CopyShape = {
     },
     loket: {
       h2: "You cannot change the answer. You can change the sources.",
-      body: "There is no desk at ChatGPT or Google that corrects the answer. The only way that works: find the source the AI took it from, and fix that. That is exactly what Vidalo does.",
+      body: "There is no desk at ChatGPT or Google that corrects the answer. The only way that works: find the source the AI took it from, and get it corrected. Vidalo looks up that source and asks for a correction, or shows you what to change yourself.",
       timeline: [
         { stip: "rood", text: "openingstijden.nl says: Sunday 9–17", meta: "source found" },
-        { stip: "oranje", text: "Correction submitted, proof kept", meta: "day 1" },
+        { stip: "oranje", text: "Correction requested, proof kept", meta: "day 1" },
         { stip: "oranje", text: "openingstijden.nl updated", meta: "day 9" },
         { stip: "groen", text: "ChatGPT says: closed on Sunday", meta: "day 14, recheck" },
       ],
@@ -147,16 +147,16 @@ export const en: CopyShape = {
       sub: "You do five minutes of work at the start. The rest runs by itself, every month.",
       steps: [
         { n: "1", tone: "ink", title: "Record", body: "Your details right, once: address, phone, opening hours, what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
-        { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. The same details to Google, Bing, Apple and the business directories.", meta: "Live as soon as your DNS record is in place" },
+        { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. For Google, Bing, Apple and the business directories you see what differs there and what to change.", meta: "Live as soon as your DNS record is in place" },
         { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
-        { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Fixed where we can reach the source, requested in writing where we cannot, on your behalf. Then we ask again and you see before and after.", meta: "Proof for every error" },
+        { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Where a source accepts a correction from us, we request it on your behalf; where only the owner can change something, you see exactly what to change. Then we ask again and you see before and after.", meta: "Proof for every error" },
       ],
       note: "Asking several times is necessary: AI rarely gives exactly the same answer twice. That is why we count how often an error comes back.",
-      engines: ["ChatGPT", "Google AI", "Gemini", "Copilot", "Perplexity", "Claude"],
+      engines: ["ChatGPT", "Google AI", "Gemini", "Perplexity", "Claude"],
     },
     criteria: {
       h2: "Twelve facts that make a customer come, or drop out",
-      body: "We only check what you can confirm yourself and what we can fix. No opinions, no rankings. Three groups, in order of damage.",
+      body: "We only check what you can confirm yourself and what can be corrected at the source. No opinions, no rankings. Three groups, in order of damage.",
       groups: {
         afhaker: { title: "Deal-breakers", body: "One error and the customer does not come. One wrong answer is already a finding." },
         misleider: { title: "Misleaders", body: "The customer does come, but for the wrong thing, and leaves disappointed." },
@@ -238,16 +238,16 @@ export const en: CopyShape = {
       label: "example",
       cards: [
         { business: "Bakkerij De Vries, Haarlem", before: "ChatGPT: “closed on Monday”", after: "now: open 9–18", source: "Source: openingstijden.nl · fixed in 12 days" },
-        { business: "Fysiotherapie Van Dijk, Zwolle", before: "Copilot: old phone number", after: "now: 038 – 422 11 90", source: "Source: old directory listing · fixed in 9 days" },
+        { business: "Fysiotherapie Van Dijk, Zwolle", before: "Perplexity: old phone number", after: "now: 038 – 422 11 90", source: "Source: old directory listing · fixed in 9 days" },
         { business: "Installatiebedrijf Hendriks, Breda", before: "Google AI: “does not do heat pumps”", after: "now: heat pumps since 2022", source: "Source: own website · fixed in 3 days" },
       ],
     },
     missie: {
       h2: "Every business deserves a place in the answer.",
-      body: "Most businesses in the Netherlands are small, have a simple website or none, and appear in no source an AI reads. Not wrong, but invisible. A grey dot. Vidalo gives them a facts page AI can read, puts them in the directories AI uses, and checks whether they are named afterwards.",
+      body: "Most businesses in the Netherlands are small, have a simple website or none, and appear in no source an AI reads. Not wrong, but invisible. A grey dot. Vidalo gives them a facts page AI can read, shows which directories AI uses they should be in, and checks whether they are named afterwards.",
       timeline: [
         { stip: "grijs", text: "“I cannot find anything about Installatiebedrijf Hendriks.”", meta: "day 0" },
-        { stip: "oranje", text: "Facts page live, Google and directories filled in", meta: "day 2" },
+        { stip: "oranje", text: "Facts page live", meta: "after your DNS record" },
         { stip: "groen", text: "“Hendriks in Breda does heat pumps, open Mon–Fri 8–17.”", meta: "day 21" },
       ],
       footnote: "Fictional example. Whether and when an AI names you is not up to us. Whether it can find you is.",
@@ -285,7 +285,7 @@ export const en: CopyShape = {
           wrong: "A hair salon with the same name in Hoofddorp closed. The AI mixes the two up.",
           source: "News article about the business with the same name in Hoofddorp, 2024",
           cost: "Whoever reads this books with someone else straight away. You never hear about it.",
-          fix: "Your facts page says who you are, with address and KvK number. The directories get the same details, so the AI can tell the two apart.",
+          fix: "Your facts page says who you are, with address and KvK number. For the directories you see what needs to change, so the AI can tell the two apart.",
           fixed: "Kapsalon Mirte in Haarlem is open, Tuesday to Saturday. Note: a salon with the same name in Hoofddorp is closed.",
         },
         {
@@ -297,7 +297,7 @@ export const en: CopyShape = {
           wrong: "Bakker has worked across Haarlem and the surrounding area for years. The old website only mentions Haarlem-Noord.",
           source: "Own website, ‘Service area’ page from 2019",
           cost: "Every job outside Haarlem-Noord, even an urgent one around the corner, goes to someone else.",
-          fix: "We record your service area as a list of towns, on your facts page and in the directories, and give you the sentence that belongs on your website.",
+          fix: "We record your service area as a list of towns on your facts page, and give you the sentence that belongs on your website and in the directories.",
           fixed: "Yes, Bakker comes to all of Haarlem, Heemstede and Bloemendaal, for urgent work too.",
         },
         {
@@ -309,7 +309,7 @@ export const en: CopyShape = {
           wrong: "Hendriks has installed heat pumps since 2022. The services page was never updated.",
           source: "Own website, ‘Services’ page from 2019",
           cost: "The biggest jobs of the year go to a competitor, with a referral from the AI on top.",
-          fix: "Services you do and do not offer are on your facts page and in the directories. After three weeks we ask again.",
+          fix: "Services you do and do not offer are on your facts page; for the directories you see what needs to change. After three weeks we ask again.",
           fixed: "Yes, Hendriks has installed heat pumps since 2022 and also helps with the subsidy application.",
         },
         {
@@ -333,7 +333,7 @@ export const en: CopyShape = {
           wrong: "De Wit charges €45. The €89 comes from an old listing for an MOT package including servicing.",
           source: "Opendi listing from 2021",
           cost: "You look twice as expensive as you are. The customer does not call to ask.",
-          fix: "Your starting prices are on your facts page, with a date. We correct the old listing at the directory itself.",
+          fix: "Your starting prices are on your facts page, with a date. For the old listing we ask the directory for a correction.",
           fixed: "An MOT at Garage De Wit costs €45. On weekdays you can come without an appointment.",
         },
         {
@@ -345,7 +345,7 @@ export const en: CopyShape = {
           wrong: "De Vries has accepted card and contactless payments for years.",
           source: "Own website, 2019, and a review from 2018",
           cost: "Anyone without cash on them walks on to the supermarket.",
-          fix: "Payment options are on your facts page and in Google. That is where the AI looks first.",
+          fix: "Payment options are on your facts page, and you see what needs to change in your Google profile. That is where the AI looks first.",
           fixed: "Yes, at Bakkerij De Vries you can pay by card and contactless.",
         },
         {
@@ -369,7 +369,7 @@ export const en: CopyShape = {
           wrong: "Lindeboom has managed small associations for twelve years, but appears in no source the AI reads.",
           source: "No source mentions Lindeboom",
           cost: "You are not an option. Every question without you is a customer for someone else.",
-          fix: "A facts page the AI can read, your details in Google, Bing, Apple and the directories, and a recheck after three weeks.",
+          fix: "A facts page the AI can read, a list of what to fill in at Google, Bing, Apple and the directories, and a recheck after three weeks.",
           fixed: "Three options: Domstad Beheer, Vastgoedbeheer Lindeboom (specialised in associations of up to 30 apartments) and VvE Partners Utrecht.",
         },
       ],
@@ -418,7 +418,7 @@ export const en: CopyShape = {
       regel: {
         h3: "Soon the AI places the order. Whoever is closed according to the data drops out.",
         body: "A customer lets the AI assistant order. It looks for bakeries, checks who is open on Sunday and chooses. If one directory still says you are closed on Sunday, you are out. Nobody tells you.",
-        label: "Example: a customer lets an AI assistant order croissants for Sunday. Bakkerij Smit is open on Sunday, but a directory from 2021 says closed. The assistant orders from another bakery. After Vidalo has fixed that directory, the order goes to Bakkerij Smit.",
+        label: "Example: a customer lets an AI assistant order croissants for Sunday. Bakkerij Smit is open on Sunday, but a directory from 2021 says closed. The assistant orders from another bakery. Once that directory is corrected, the order goes to Bakkerij Smit.",
         phaseWrong: "With an outdated directory",
         phaseRight: "After the fix at the source",
         ask: "Order 12 croissants for Sunday from a bakery in Haarlem.",
@@ -441,9 +441,9 @@ export const en: CopyShape = {
       bel: {
         h3: "One old number in three directories. Whoever calls gets no one.",
         body: "The AI gives the number that appears most often. If your old number is still in three directories, that is the one the customer calls. They hear “not in service” and call the next one.",
-        label: "Example: a customer asks Copilot for the number of Fysiotherapie Van Dijk and gets the old number, which is still in three directories. The customer hears that the number is not in service, and so it goes with every caller. Vidalo corrects the three directories; after that Copilot gives the right number and the customer gets through.",
+        label: "Example: a customer asks Perplexity for the number of Fysiotherapie Van Dijk and gets the old number, which is still in three directories. The customer hears that the number is not in service, and so it goes with every caller. Vidalo finds the three directories; once they are corrected, Perplexity gives the right number and the customer gets through.",
         ask: "What is the number of Fysiotherapie Van Dijk?",
-        engine: "Copilot",
+        engine: "Perplexity",
         wrong: "038 – 421 07 33",
         right: "038 – 422 11 90",
         calling: "Calling…",
@@ -464,8 +464,8 @@ export const en: CopyShape = {
       },
       gidsen: {
         h3: "Record it once, the same everywhere",
-        body: "As long as sixteen sources give three different numbers, the AI picks one itself. We put your facts page live and send the same details to Google, Bing, Apple and thirteen business directories. Then there is nothing left to choose.",
-        label: "Example: sixteen sources give three different phone numbers and ChatGPT, Google AI and Copilot give an old number. Vidalo publishes a facts page and puts the same details in all sixteen sources. After that the answer is right with all three.",
+        body: "As long as sixteen sources give three different numbers, the AI picks one itself. We put your facts page live and show, at Google, Bing, Apple and thirteen business directories, what differs and what needs to change. Once they all say the same, there is nothing left to choose.",
+        label: "Example: sixteen sources give three different phone numbers and ChatGPT, Google AI and Perplexity give an old number. Vidalo publishes a facts page and shows what needs to change in each source. Once all sixteen say the same, the answer is right with all three.",
         before: "16 sources · 3 different numbers",
         after: "16 sources · one version of the facts",
         factsTitle: "Facts page",
@@ -490,25 +490,25 @@ export const en: CopyShape = {
           ["Tripadvisor", "x"],
           ["AlleBedrijvenIn", "r"],
         ],
-        engines: ["ChatGPT", "Google AI", "Copilot"],
+        engines: ["ChatGPT", "Google AI", "Perplexity"],
         engineWrong: "old number",
         engineRight: "correct",
-        caption: "Example with a fictional practice. The sources are the real sixteen we send your details to.",
+        caption: "Example with a fictional practice. The sources are the real sixteen we go through for you.",
       },
       controle: {
         h3: "Asking once tells you nothing",
         body: "AI rarely gives the same answer twice. Whoever looks once sees “everything is right” and misses the error every third customer gets. That is why we ask every question up to ten times to every assistant, and count.",
-        label: "Example: the same question asked ten times to ChatGPT, Google AI and Copilot. The first time everything is right. Over ten times, Copilot gives an old number three times, ChatGPT once. Asking once would have missed that error.",
+        label: "Example: the same question asked ten times to ChatGPT, Google AI and Perplexity. The first time everything is right. Over ten times, Perplexity gives an old number three times, ChatGPT once. Asking once would have missed that error.",
         ask: "What is the number of Fysiotherapie Van Dijk?",
         once: "Asked once: everything is right",
         many: "Asked ten times",
         rows: [
           { engine: "ChatGPT", wrong: [6], result: "1 of 10 wrong · unstable", tone: "amber" },
           { engine: "Google AI", wrong: [], result: "0 of 10 wrong · correct", tone: "green" },
-          { engine: "Copilot", wrong: [2, 5, 8], result: "3 of 10 wrong · source: Telefoonboek.nl", tone: "red" },
+          { engine: "Perplexity", wrong: [2, 5, 8], result: "3 of 10 wrong · source: Telefoonboek.nl", tone: "red" },
         ],
         verdict: "Asking once would have missed this error.",
-        caption: "Example. An error that rarely shows up we call unstable; if it comes back often, we fix the source.",
+        caption: "Example. An error that rarely shows up we call unstable; if it comes back often, we go to the source.",
       },
       gevonden: {
         h3: "Not being named is an answer too",
@@ -524,7 +524,7 @@ export const en: CopyShape = {
         consequence: "The customer calls the first one.",
         steps: [
           { day: "day 0", text: "not found" },
-          { day: "day 2", text: "facts page and directories" },
+          { day: "week 1", text: "facts page live" },
           { day: "day 21", text: "recheck" },
         ],
         caption: "Fictional example. Whether the AI names you is not up to us. Whether it can find you is.",
@@ -551,13 +551,13 @@ export const en: CopyShape = {
       setup: {
         name: "Vidalo Scan",
         chip: "First check free",
-        audience: "Everything right once: every error from your check fixed and your details the same everywhere.",
+        audience: "Everything right once: every error from your check taken to its source, and your details recorded in one place.",
         price: "€149",
         unit: "one-off",
         includes: [
-          "A fix at the source for every error the check found.¹",
+          "For every error the check found: a correction request to the source, or exactly what to change yourself.¹",
           "A facts page on your own domain, with a date, that AI can read.",
-          "The same details at Google, Bing, Apple and the business directories.",
+          "For Google, Bing, Apple and the business directories: what differs there and what to change.",
         ],
         limit: "1 location · one-off payment",
         button: "Start with the free check",
@@ -570,7 +570,7 @@ export const en: CopyShape = {
         unit: "per month",
         includes: [
           "The same questions again every month with ChatGPT, Google AI, Gemini, Perplexity and Claude.",
-          "A fix at the source for every new error.¹",
+          "For every new error: a correction request to the source, or exactly what to change yourself.¹",
           "A monthly report with proof of what was fixed.",
         ],
         limit: "1 location · cancel any month · start with Vidalo Scan (€149 one-off)",
@@ -604,6 +604,19 @@ export const en: CopyShape = {
         note: "With a Vidalo plan. The domain is in your name. Ordering and payments on the website are not included.",
         ask: "Ask for a website",
       },
+      /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
+      locations: {
+        h3: "More locations?",
+        sub: "AI often mixes up locations: one location's opening hours given for another, the head office number, or an address you have already left. So each location gets its own questions and its own facts page, in one overview.",
+        includes: [
+          "Each location is asked about its own town, address, opening hours and phone number.",
+          "You see it when AI confuses one location with another, or still names a location that moved or closed.",
+          "On the question of whom AI recommends, you see per town whether you are named, not only where you are best known.",
+        ],
+        price: "€99 one-off and €39 per month per extra location",
+        note: "For your second to tenth location, on top of the plan for your first.",
+        ask: "Ask for more locations",
+      },
     },
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
@@ -621,13 +634,13 @@ export const en: CopyShape = {
       h2: "Questions",
       items: [
         { q: "But I have a website?", a: "AI reads it as one source among many. The bookshop that was called “permanently closed” had a website too." },
-        { q: "Can you make ChatGPT say what I want?", a: "No, nobody can. We fix the sources AI draws on, so they all say the same thing." },
-        { q: "Does it always work?", a: "Answers that use search we usually fix within weeks. Answers from the model's memory only change with a new model version. We say so honestly in your report." },
-        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we arrange one." },
+        { q: "Can you make ChatGPT say what I want?", a: "No, nobody can. We find the sources AI draws on and ask for a correction, or show you what to change yourself, so they all say the same thing." },
+        { q: "Does it always work?", a: "Answers that use search usually change within weeks of the source being corrected. Answers from the model's memory only change with a new model version. We say so honestly in your report." },
+        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we arrange one. On large platforms only the owner can change anything; there we show you exactly what to change." },
         { q: "Do I need to install anything?", a: "No." },
         { q: "How often do you check?", a: "Every month, and again after every change to your details and after every fixed error." },
-        { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, put you in Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
-        { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do. Paying for a business outside the Netherlands we still set up with you through support@vidalo.io." },
+        { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
+        { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do include. Paying for a business outside the Netherlands we still set up with you through support@vidalo.io." },
         { q: "What if AI names my competitor?", a: "We cannot prevent that. What we do make sure of is that the AI has the right facts about you, so you do not drop out because it thinks you are closed or do not do something." },
       ],
     },
@@ -666,21 +679,21 @@ export const en: CopyShape = {
     },
     home: {
       title: "Is what ChatGPT says about your business right? Free AI check",
-      description: "Free check: what do ChatGPT and Google AI say about your business? We find every error and its source, and fix that source. Vidalo Scan €149 once, Vidalo Monthly €49 a month, excl. VAT.",
+      description: "Free check: what do ChatGPT and Google AI say about your business? We show which answers are wrong and which source they seem to come from. Vidalo Scan €149 once, Vidalo Monthly €49 a month, excl. VAT.",
     },
     why: {
       crumb: "Why",
       title: "Why AI assistants get your business wrong",
-      description: "How ChatGPT, Google AI and Copilot put together an answer about your business, why an old directory listing often wins, and what that costs a business.",
+      description: "How ChatGPT, Google AI and Gemini put together an answer about your business, why an old directory listing often wins, and what that costs a business.",
       h1: "Why AI sometimes gets your business wrong",
       intro: "An AI assistant does not know you. For every question it gathers what is online about you and turns it into one answer. Here is how that works, where it goes wrong and what you can do about it.",
     },
     how: {
       crumb: "How it works",
       title: "How Vidalo works: record, publish, check, fix",
-      description: "Record your details once, publish them the same everywhere, check every question up to ten times a month with ChatGPT, Google AI, Gemini, Perplexity and Claude, and fix errors at the source with proof.",
+      description: "Record your details once, publish them on your facts page, check every question up to ten times a month with ChatGPT, Google AI, Gemini, Perplexity and Claude, and take errors to their source, with proof.",
       h1: "How Vidalo works",
-      intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and fix every error at its source.",
+      intro: "Five minutes of work for you at the start. After that we check every month what AI assistants say about you, and take every error to its source.",
     },
     next: {
       crumb: "What's next",
@@ -819,7 +832,7 @@ export const en: CopyShape = {
         {
           h: "Prices and payment",
           p: [
-            "Vidalo Scan costs €149 once. Vidalo Monthly costs €49 per month. All prices are in euros, excluding 21% VAT and other government charges. The free check costs nothing.",
+            "Vidalo Scan costs €149 once. Vidalo Monthly costs €49 per month. An extra location, the second to the tenth, costs €99 once and €39 per month per location. All prices are in euros, excluding 21% VAT and other government charges. The free check costs nothing.",
             "You pay in advance through our payment service Stripe, by iDEAL, card or SEPA Direct Debit. Vidalo Monthly is charged automatically every month. You receive an invoice for each payment.",
             "A paid part starts only once your payment has arrived. With SEPA Direct Debit that can take a few working days.",
             "If a payment fails, Stripe tries again a few times and you are notified. If it still fails, we may suspend the subscription until it is paid. If a payment is still outstanding after sixty days, we may end the subscription.",
@@ -1401,18 +1414,18 @@ export const en: CopyShape = {
       h2Green: "How your dot stays green",
       h2Grey: "How you get found",
       /** Red/orange: three steps from the findings. */
-      stepSources: (sources: string) => `Write to or update ${sources}, with proof. Google profile directly through your login.`,
+      stepSources: (sources: string) => `${sources}: we ask for a correction or show you what to change, with proof.`,
       stepSourcesNone: "Record your details once and publish a facts page AI can read.",
-      stepFacts: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and the same details to Google, Bing, Apple and the directories.`,
+      stepFacts: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and for Google, Bing, Apple and the directories what to change there.`,
       stepRecheck: (days: number, questions: number) => `After ${days} days, the same ${questions} questions again. You see before and after.`,
       stepsGreen: [
         "Record your details once, so every source says the same thing.",
-        "A facts page on your own domain, with a date, and the same details to Google, Bing, Apple and the directories.",
+        "A facts page on your own domain, with a date, and for Google, Bing, Apple and the directories what to change there.",
         "The same questions again every month. If something changes, you are the first to see it.",
       ],
       stepsGrey: {
         facts: "Record your details once: address, phone, opening hours, what you do and do not do. Five minutes.",
-        publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read. Google profile claimed and filled in. Bing, Apple and the directories filled in with the same details.`,
+        publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and exactly what to fill in at Google, Bing, Apple and the directories.`,
         recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. Then every month. You see when the AI starts naming you.`,
       },
       noteGrey: "Whether and when an AI names you is not up to us. Whether it can find you is. Answers without search only change with a new model version.",
@@ -1453,7 +1466,7 @@ export const en: CopyShape = {
     factsH2: (noun: string) => `Three facts that make the difference for a ${noun}`,
     factQuestion: "Check question:",
     checkH2: (nounPlural: string) => `What we check for ${nounPlural}`,
-    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Copilot, Gemini, Perplexity and Claude.`,
+    checkIntro: (n: number) => `The twelve basic facts, plus ${n} questions that only count in this trade. Every month, with ChatGPT, Google AI, Gemini, Perplexity and Claude.`,
     table: { question: "Question a customer asks", criterium: "Fact", severity: "Severity if it is wrong" },
     why: {
       h2: "Why you do not notice this on your phone",
@@ -1505,12 +1518,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Who installs heat pumps in Breda?”", a: "Google AI names three others. Hendriks is not on the list." },
           { q: "“Does Hendriks also come to Oosterhout?”", a: "ChatGPT: “There is no information about that.”" },
-          { q: "“Does Hendriks have an emergency service?”", a: "Copilot: “No, only on weekdays.”" },
+          { q: "“Does Hendriks have an emergency service?”", a: "Perplexity: “No, only on weekdays.”" },
         ],
         after: [
           { q: "“Who installs heat pumps in Breda?”", a: "Google AI: “…and Installatiebedrijf Hendriks, accredited heat pump installer.”" },
           { q: "“Does Hendriks also come to Oosterhout?”", a: "ChatGPT: “Yes, Hendriks works in Breda, Oosterhout and Etten-Leur.”" },
-          { q: "“Does Hendriks have an emergency service?”", a: "Copilot: “Yes, 7 days a week on 076 – 530 12 44.”" },
+          { q: "“Does Hendriks have an emergency service?”", a: "Perplexity: “Yes, 7 days a week on 076 – 530 12 44.”" },
         ],
         sources: "own website from 2019, Google profile without services, no directories",
         fixed: "facts page on hendriks-installatie.nl, Google profile completed, 9 directories filled in",
@@ -1531,7 +1544,6 @@ export const en: CopyShape = {
         { title: "Same name", body: "A building company with your name in another town, or a bankruptcy from years ago, sticks to you in the sources. The AI does not see the difference.", question: "“Is X the same as X in Z?”" },
         { title: "Price and service area", body: "An old rates page or a directory that only knows your home town. The customer hears a price from five years ago, or that you do not come to their village.", question: "“What does X charge for a paint job?”" },
       ],
-      whyStat: { n: "3 names", body: "is what an AI names on average when asked for a builder. The rest do not exist for that customer", source: "our own sample, 2026" },
       example: {
         name: "Bouwbedrijf Jansen",
         beforeDate: "7 October",
@@ -1539,12 +1551,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Who fits dormer windows in Alkmaar?”", a: "Google AI names three others. Jansen is not on the list." },
           { q: "“Does Jansen give a free quote?”", a: "ChatGPT: “There is no information about that.”" },
-          { q: "“Has Bouwbedrijf Jansen gone bankrupt?”", a: "Copilot: “Yes, in 2021.” (a business with the same name in Zwolle)" },
+          { q: "“Has Bouwbedrijf Jansen gone bankrupt?”", a: "Perplexity: “Yes, in 2021.” (a business with the same name in Zwolle)" },
         ],
         after: [
           { q: "“Who fits dormer windows in Alkmaar?”", a: "Google AI: “…and Bouwbedrijf Jansen, specialised in dormer windows.”" },
           { q: "“Does Jansen give a free quote?”", a: "ChatGPT: “Yes, Jansen visits for a free quote.”" },
-          { q: "“Has Bouwbedrijf Jansen gone bankrupt?”", a: "Copilot: “No, Bouwbedrijf Jansen in Alkmaar is active; not to be confused with Jansen in Zwolle.”" },
+          { q: "“Has Bouwbedrijf Jansen gone bankrupt?”", a: "Perplexity: “No, Bouwbedrijf Jansen in Alkmaar is active; not to be confused with Jansen in Zwolle.”" },
         ],
         sources: "own website without a services page, news article about a business with the same name, no directories",
         fixed: "facts page on bouwbedrijfjansen.nl, Google profile completed, 8 directories filled in",
@@ -1565,7 +1577,6 @@ export const en: CopyShape = {
         { title: "Rate per apartment", body: "A board compares on price per apartment per month. If your rate is nowhere to be found, the AI fills in a national average, or only names those who do mention it.", question: "“What does management per apartment cost at X?”" },
         { title: "Membership and accreditation", body: "Boards ask about VvE-Belang or a quality mark. The AI can only say so if it is readable somewhere.", question: "“Is X a member of VvE-Belang?”" },
       ],
-      whyStat: { n: "grey", body: "is the dot of most homeowners' association managers: the AI finds nothing, and so names someone else", source: "our own sample, 40 managers, 2026" },
       example: {
         name: "Boogaard VvE-beheer",
         beforeDate: "7 October",
@@ -1573,12 +1584,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Homeowners' association manager for 12 apartments in Amersfoort, who can do that?”", a: "ChatGPT names three others. Boogaard is not on the list." },
           { q: "“Does Boogaard VvE-beheer exist?”", a: "Google AI: “I cannot find any information about this business.”" },
-          { q: "“What does management per apartment cost at Boogaard?”", a: "Copilot: “There is no information about that.”" },
+          { q: "“What does management per apartment cost at Boogaard?”", a: "Perplexity: “There is no information about that.”" },
         ],
         after: [
           { q: "“Homeowners' association manager for 12 apartments in Amersfoort, who can do that?”", a: "ChatGPT: “…and Boogaard VvE-beheer, financial and technical management from 12 apartments.”" },
           { q: "“Does Boogaard VvE-beheer exist?”", a: "Google AI: “Yes, Boogaard VvE-beheer in Amersfoort, founded in 2014.”" },
-          { q: "“What does management per apartment cost at Boogaard?”", a: "Copilot: “From €14 per apartment per month.”" },
+          { q: "“What does management per apartment cost at Boogaard?”", a: "Perplexity: “From €14 per apartment per month.”" },
         ],
         sources: "website with only a contact form, no Google profile, no directories",
         fixed: "facts page on boogaardvve.nl, Google profile created, 10 directories filled in",
@@ -1599,7 +1610,6 @@ export const en: CopyShape = {
         { title: "Urgent care and today", body: "When someone is in pain, only whoever can see them today counts. If your urgent care arrangements and evening hours are nowhere to be found, you do not exist for that question.", question: "“Can I still be seen at X today?”" },
         { title: "Referral, insurer and registration", body: "Without a referral, contracted or not, BIG-registered: the customer asks, and the AI guesses if it is nowhere to be found.", question: "“Can I go to X without a referral?”" },
       ],
-      whyStat: { n: "2021", body: "is the year of the “no new patients” notice that AI still reads about practices that have long had room again", source: "our own sample, 2026" },
       example: {
         name: "Fysiotherapie Van Dijk",
         beforeDate: "7 October",
@@ -1607,12 +1617,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Which physio in Zwolle is taking new patients?”", a: "Google AI names three others. Van Dijk is not on the list." },
           { q: "“Can I go to Van Dijk without a referral?”", a: "ChatGPT: “There is no information about that.”" },
-          { q: "“What is Van Dijk's phone number?”", a: "Copilot: “038 – 421 77 30” (old number)" },
+          { q: "“What is Van Dijk's phone number?”", a: "Perplexity: “038 – 421 77 30” (old number)" },
         ],
         after: [
           { q: "“Which physio in Zwolle is taking new patients?”", a: "Google AI: “…and Fysiotherapie Van Dijk, new patients welcome.”" },
           { q: "“Can I go to Van Dijk without a referral?”", a: "ChatGPT: “Yes, Van Dijk is directly accessible without a referral.”" },
-          { q: "“What is Van Dijk's phone number?”", a: "Copilot: “038 – 422 11 90.”" },
+          { q: "“What is Van Dijk's phone number?”", a: "Perplexity: “038 – 422 11 90.”" },
         ],
         sources: "old directory listing, Google profile without services, no page about referrals",
         fixed: "facts page on fysiovandijk.nl, Google profile completed, 11 directories filled in",
@@ -1641,12 +1651,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Is De Brug open on Monday?”", a: "ChatGPT: “No, closed on Monday.”" },
           { q: "“Can I book at De Brug for 6?”", a: "Google AI: “There is no information about that.”" },
-          { q: "“Which café in Deventer has a terrace?”", a: "Copilot names three others. De Brug is not on the list." },
+          { q: "“Which café in Deventer has a terrace?”", a: "Perplexity names three others. De Brug is not on the list." },
         ],
         after: [
           { q: "“Is De Brug open on Monday?”", a: "ChatGPT: “Yes, open on Monday from 16:00 to 23:00.”" },
           { q: "“Can I book at De Brug for 6?”", a: "Google AI: “Yes, you can book by phone or through the website.”" },
-          { q: "“Which café in Deventer has a terrace?”", a: "Copilot: “…and Eetcafé De Brug, with a terrace on the IJssel.”" },
+          { q: "“Which café in Deventer has a terrace?”", a: "Perplexity: “…and Eetcafé De Brug, with a terrace on the IJssel.”" },
         ],
         sources: "directory listing from 2022, Google profile with old hours, no page about reservations",
         fixed: "facts page on eetcafedebrug.nl, Google profile updated, 7 directories filled in",
@@ -1674,12 +1684,12 @@ export const en: CopyShape = {
         afterDate: "4 November",
         before: [
           { q: "“Is De Vries open on Sunday?”", a: "ChatGPT: “Yes, from 9:00 to 17:00.” (closed on Sunday)" },
-          { q: "“What is De Vries's phone number?”", a: "Copilot: “023 532 00 41” (old number)" },
+          { q: "“What is De Vries's phone number?”", a: "Perplexity: “023 532 00 41” (old number)" },
           { q: "“Does De Vries sell gluten-free bread?”", a: "Google AI: “I cannot find any information.”" },
         ],
         after: [
           { q: "“Is De Vries open on Sunday?”", a: "ChatGPT: “No, Bakkerij De Vries is closed on Sunday.”" },
-          { q: "“What is De Vries's phone number?”", a: "Copilot: “023 535 22 18.”" },
+          { q: "“What is De Vries's phone number?”", a: "Perplexity: “023 535 22 18.”" },
           { q: "“Does De Vries sell gluten-free bread?”", a: "Google AI: “Yes, to order.”" },
         ],
         sources: "openingstijden.nl from 2022, telefoonboek.nl, own website with text from 2019",
@@ -1694,25 +1704,24 @@ export const en: CopyShape = {
       nounYour: "garage",
       h1: "A customer asks AI what an MOT costs at your garage. Which price do they hear?",
       intro: "At a garage or bike repair shop, the customer compares on price, specialisation and whether they can come without an appointment. An old price on your website is enough for a wrong comparison.",
-      chat: { question: "What does an MOT cost at Autobedrijf Smit in Apeldoorn and can I come without an appointment?", engine: "Copilot", intro: "At Autobedrijf Smit in Apeldoorn an MOT costs €29.95. You can only come by appointment.", answers: [] },
+      chat: { question: "What does an MOT cost at Autobedrijf Smit in Apeldoorn and can I come without an appointment?", engine: "Perplexity", intro: "At Autobedrijf Smit in Apeldoorn an MOT costs €29.95. You can only come by appointment.", answers: [] },
       miss: { strong: "Both wrong.", body: "The price comes from a promotion page from 2019; “by appointment only” from a directory. The customer calls the garage next door." },
       facts: [
         { title: "What an MOT or repair costs", body: "The customer compares prices without calling. An old promotional price on your website or in a directory becomes the price they expect.", question: "“What does an MOT cost at X?”" },
         { title: "Which makes and types you do", body: "Electric bikes, campers, hybrid cars: the customer asks about them. If it is nowhere to be found, the AI names the dealer.", question: "“Does X also repair electric bikes?”" },
         { title: "Without an appointment", body: "Can I drop by today? A directory that says “by appointment only” keeps the customer with a flat tyre away.", question: "“Can I drop by X without an appointment?”" },
       ],
-      whyStat: { n: "2019", body: "is the year of the promotional price AI still gives as your MOT rate", source: "our own sample, 2026" },
       example: {
         name: "Autobedrijf Smit",
         beforeDate: "7 October",
         afterDate: "4 November",
         before: [
-          { q: "“What does an MOT cost at Smit?”", a: "Copilot: “€29.95” (promotional price from 2019)" },
+          { q: "“What does an MOT cost at Smit?”", a: "Perplexity: “€29.95” (promotional price from 2019)" },
           { q: "“Does Smit also do hybrid cars?”", a: "ChatGPT: “There is no information about that.”" },
           { q: "“Which garage in Apeldoorn helps without an appointment?”", a: "Google AI names three others. Smit is not on the list." },
         ],
         after: [
-          { q: "“What does an MOT cost at Smit?”", a: "Copilot: “€49, including registration of the result.”" },
+          { q: "“What does an MOT cost at Smit?”", a: "Perplexity: “€49, including registration of the result.”" },
           { q: "“Does Smit also do hybrid cars?”", a: "ChatGPT: “Yes, Smit also services hybrid and electric cars.”" },
           { q: "“Which garage in Apeldoorn helps without an appointment?”", a: "Google AI: “…and Autobedrijf Smit, walk-in on weekdays until 17:00.”" },
         ],
@@ -1735,7 +1744,6 @@ export const en: CopyShape = {
         { title: "What a haircut costs", body: "Customers compare on price before they walk in. An old price list in a directory becomes your price.", question: "“What does a haircut cost at X?”" },
         { title: "Your opening hours", body: "Late opening, closed on Monday, Saturday until 17:00. The AI reads it from the directory, not from your window.", question: "“Is X open on Monday?”" },
       ],
-      whyStat: { n: "grey", body: "is the dot of most salons without a website: the AI only finds an address", source: "our own sample, 2026" },
       example: {
         name: "Kapsalon Mila",
         beforeDate: "7 October",
@@ -1743,12 +1751,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Hairdresser in Leiden without an appointment?”", a: "ChatGPT names three others. Mila is not on the list." },
           { q: "“What does a haircut cost at Mila?”", a: "Google AI: “I cannot find any information.”" },
-          { q: "“Is Mila open on Monday?”", a: "Copilot: “There is no information about that.”" },
+          { q: "“Is Mila open on Monday?”", a: "Perplexity: “There is no information about that.”" },
         ],
         after: [
           { q: "“Hairdresser in Leiden without an appointment?”", a: "ChatGPT: “…and Kapsalon Mila, walk-in from Tuesday to Saturday.”" },
           { q: "“What does a haircut cost at Mila?”", a: "Google AI: “A haircut from €32.”" },
-          { q: "“Is Mila open on Monday?”", a: "Copilot: “No, closed on Monday; Tuesday to Saturday from 9:00 to 18:00.”" },
+          { q: "“Is Mila open on Monday?”", a: "Perplexity: “No, closed on Monday; Tuesday to Saturday from 9:00 to 18:00.”" },
         ],
         sources: "no website, one directory listing with only an address, Google profile not claimed",
         fixed: "facts page on kapsalonmila.nl, Google profile claimed and filled in, 10 directories filled in",
@@ -1769,7 +1777,6 @@ export const en: CopyShape = {
         { title: "Whether you also help private clients", body: "Many firms say nothing on their website about whom they help. The AI then fills in “business clients only”, and the private client does not call.", question: "“Does X also help private clients?”" },
         { title: "Same name with a disciplinary case", body: "A ruling about a firm with the same name in another town ends up with you. The AI does not see the difference; neither does the customer.", question: "“Is X the same as X in Z?”" },
       ],
-      whyStat: { n: "1 article", body: "about a firm with the same name is enough to keep a firm out of the answer", source: "our own sample, 2026" },
       example: {
         name: "Advocatenkantoor De Bruin",
         beforeDate: "7 October",
@@ -1777,12 +1784,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Which employment lawyer in Arnhem helps private clients?”", a: "Google AI names three others. De Bruin is not on the list." },
           { q: "“Has De Bruin had a disciplinary case?”", a: "ChatGPT: “Yes, in 2020.” (a firm with the same name in Groningen)" },
-          { q: "“What does a first meeting cost at De Bruin?”", a: "Copilot: “There is no information about that.”" },
+          { q: "“What does a first meeting cost at De Bruin?”", a: "Perplexity: “There is no information about that.”" },
         ],
         after: [
           { q: "“Which employment lawyer in Arnhem helps private clients?”", a: "Google AI: “…and Advocatenkantoor De Bruin, employment law for private clients and businesses.”" },
           { q: "“Has De Bruin had a disciplinary case?”", a: "ChatGPT: “No. Not to be confused with De Bruin Advocaten in Groningen.”" },
-          { q: "“What does a first meeting cost at De Bruin?”", a: "Copilot: “The first half-hour meeting is free.”" },
+          { q: "“What does a first meeting cost at De Bruin?”", a: "Perplexity: “The first half-hour meeting is free.”" },
         ],
         sources: "website without specialisms, article about a firm with the same name, no directories",
         fixed: "facts page on debruinadvocaten.nl, Google profile completed, 6 directories filled in",
@@ -1803,7 +1810,6 @@ export const en: CopyShape = {
         { title: "Membership", body: "NVM, VBO, Erkend Hypotheekadviseur: the customer asks about it as a quality mark. The AI can only mention it if it is readable somewhere.", question: "“Is X an NVM estate agent?”" },
         { title: "Which towns you work in", body: "You are registered in one town. The AI reads that as: works only there. The seller in the next village is told about someone else.", question: "“Does X also work in Z?”" },
       ],
-      whyStat: { n: "3 years", body: "is the average age of the rates page AI quotes when asked about commission", source: "our own sample, 2026" },
       example: {
         name: "Makelaardij Peters",
         beforeDate: "7 October",
@@ -1811,12 +1817,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Which estate agent in Hilversum works with a fixed fee?”", a: "ChatGPT names three others. Peters is not on the list." },
           { q: "“What does Peters charge for selling a house?”", a: "Google AI: “1.2% commission.” (old page)" },
-          { q: "“Does Peters also work in Laren?”", a: "Copilot: “There is no information about that.”" },
+          { q: "“Does Peters also work in Laren?”", a: "Perplexity: “There is no information about that.”" },
         ],
         after: [
           { q: "“Which estate agent in Hilversum works with a fixed fee?”", a: "ChatGPT: “…and Makelaardij Peters, fixed fee of €2,950.”" },
           { q: "“What does Peters charge for selling a house?”", a: "Google AI: “A fixed fee of €2,950, including photography.”" },
-          { q: "“Does Peters also work in Laren?”", a: "Copilot: “Yes, Peters works in Hilversum, Laren and Blaricum.”" },
+          { q: "“Does Peters also work in Laren?”", a: "Perplexity: “Yes, Peters works in Hilversum, Laren and Blaricum.”" },
         ],
         sources: "old rates page, Google profile without service area, 2 directories with only an address",
         fixed: "facts page on makelaardijpeters.nl, old page removed, Google profile completed, 8 directories filled in",
@@ -1837,7 +1843,6 @@ export const en: CopyShape = {
         { title: "Your opening hours", body: "Early opening, late closing, lessons on Saturday: parents and people who play sport plan around it. The AI reads it from the directory, not from your door.", question: "“What time does X open on Monday?”" },
         { title: "What you offer", body: "Baby group, automatic car, group classes, early care. If it is nowhere to be found, the AI sends the customer to whoever does mention it.", question: "“Does X have a baby group?”" },
       ],
-      whyStat: { n: "2023", body: "is the year of the “waiting list” notice that AI still reads about locations that have long had places again", source: "our own sample, 2026" },
       example: {
         name: "Kinderopvang De Boomhut",
         beforeDate: "7 October",
@@ -1845,12 +1850,12 @@ export const en: CopyShape = {
         before: [
           { q: "“Which childcare centre in Amersfoort has a place for a baby?”", a: "Google AI names three others. De Boomhut is not on the list." },
           { q: "“Does De Boomhut have a waiting list?”", a: "ChatGPT: “Yes, for the baby group.” (notice from 2023)" },
-          { q: "“What time does De Boomhut open?”", a: "Copilot: “There is no information about that.”" },
+          { q: "“What time does De Boomhut open?”", a: "Perplexity: “There is no information about that.”" },
         ],
         after: [
           { q: "“Which childcare centre in Amersfoort has a place for a baby?”", a: "Google AI: “…and Kinderopvang De Boomhut, places available now in the baby group.”" },
           { q: "“Does De Boomhut have a waiting list?”", a: "ChatGPT: “No, De Boomhut has places in all groups.”" },
-          { q: "“What time does De Boomhut open?”", a: "Copilot: “At 7:00, and open until 18:30.”" },
+          { q: "“What time does De Boomhut open?”", a: "Perplexity: “At 7:00, and open until 18:30.”" },
         ],
         sources: "news article from 2023, Google profile without hours, no directories",
         fixed: "facts page on deboomhut.nl, Google profile completed, 9 directories filled in",
@@ -1871,15 +1876,15 @@ export const en: CopyShape = {
   },
 
   /** Fix path for a not_found finding (there is no wrong source; we make the business findable). */
-  fixPathNotFound: "We make a facts page AI can read, put you in Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.",
+  fixPathNotFound: "We make a facts page AI can read, show how to get into Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.",
 
   fixPath: {
     owned_facts_page: "We republish your facts page and announce the change. Recheck after 7 days.",
     owned_website: "We send you exactly which page and which text on your website needs to change. Recheck after 14 days.",
-    directory_api: "We sync your details with this directory again. Recheck after 7 days.",
-    directory_form: "We submit a correction to this directory and keep the proof. Recheck after 14 days.",
-    third_party: "We send a correction request to this website on your behalf. Recheck after 30 days.",
-    other_entity: "We state clearly on your facts page and in the directories that this is a different business. Recheck after 30 days.",
+    directory_api: "We ask this directory to update your details, or show you what to change yourself. Recheck after 7 days.",
+    directory_form: "We ask this directory for a correction and keep the proof, or show you what to change yourself. Recheck after 14 days.",
+    third_party: "We ask this website for a correction on your behalf, or show you what to change yourself. Recheck after 30 days.",
+    other_entity: "We state clearly on your facts page that this is a different business, and show what needs to change in the directories. Recheck after 30 days.",
     none: "There is no source to fix here. We check again when there is a new version of the model.",
   },
 
@@ -1941,7 +1946,7 @@ export const en: CopyShape = {
     grijs: "AI does not know you",
   },
   stipLine: {
-    rood: "At least one answer sends customers away. We fix that first.",
+    rood: "At least one answer sends customers away. We start there.",
     oranje: "No deal-breakers, but the customer does get wrong details.",
     groen: "Everything we checked is right.",
     grijs: "AI finds (almost) nothing about you. You do not exist in the answer.",
@@ -2081,6 +2086,7 @@ export const en: CopyShape = {
       { q: "How do I cancel?", a: "Whenever you like, under ‘Subscription’ in your account. There is no notice period; the current month runs out." },
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
+      { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
       { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
@@ -2314,7 +2320,7 @@ export const en: CopyShape = {
     expandItems: [
       { title: "Extra full check", body: "Every question, every system, today.", cta: "Request a check", subject: "Extra check" },
       { title: "More AI systems", body: "New systems join once enough people in the Netherlands use them; you get a message.", cta: "Let me know", subject: "More AI systems" },
-      { title: "Second location", body: "Its own facts page, its own check, one overview.", cta: "Add a location", subject: "Second location" },
+      { title: "Second location", body: "Its own facts page, its own check, one overview. €99 one-off and €39 per month.", cta: "Add a location", subject: "Second location" },
     ],
     expandNote: "Prices follow; mail us and we arrange it.",
     sources: "Sources",
@@ -2408,7 +2414,7 @@ export const en: CopyShape = {
     introPending: (version: number | null, date: string | null) =>
       `Google still has an older version of your details${version && date ? `; on ${date} you confirmed version ${version}` : ""}. Below is your profile as Google shows it now and as it will be. We change nothing before you approve it.`,
     introSame: "Everything we keep up to date is on Google as it is in your details.",
-    introDirectory: "We do not change this directory ourselves: we send a correction on your behalf and keep the evidence. Below is what differs and what we did.",
+    introDirectory: "We do not change this directory ourselves: where possible we ask for a correction on your behalf and keep the evidence; otherwise you see here what to change yourself. Below is what differs and what we did.",
     introDeclined: (date: string) => `On ${date} you chose not to apply this change. Google still shows the old lines; the next check reports the difference again.`,
     introApproved: (date: string) => `You approved this change on ${date}. We put it on Google within an hour; Google's answer then shows here.`,
     openAtGoogle: "Open your profile at Google",
@@ -2881,12 +2887,12 @@ export const en: CopyShape = {
       unknown: (name: string) => `AI finds (almost) nothing about ${name}. You do not exist in the answer.`,
       partial: (name: string) => `AI only half knows ${name}: some of the answers are empty.`,
     },
-    notCounted: "We do not count that as an error, but it does mean a customer who asks gets no answer. We build your facts page, put you in Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.",
+    notCounted: "We do not count that as an error, but it does mean a customer who asks gets no answer. We build your facts page, show how to get into Google, Bing, Apple and the Dutch directories, and check after 3 weeks whether you are named.",
     howWeFix: {
       title: "How we fix it",
       items: [
         { when: "Day 1", what: "We record your details and put your facts page live." },
-        { when: "Week 1", what: "We submit corrections to the sources: the directories, Google, Bing and Apple." },
+        { when: "Week 1", what: "We ask the sources with an error for a correction, and show what to change yourself at Google, Bing, Apple and the directories." },
         { when: "Weeks 1 to 4", what: "We check every source again. You see per answer whether it is right again." },
         { when: "Every month", what: "A new check of all questions, with a short report." },
       ],
@@ -2901,12 +2907,12 @@ export const en: CopyShape = {
       subject: (name: string) => `Welcome to Vidalo: 4 steps for ${name}`,
       preheader: "Four steps, about 5 minutes in all. Then we do the rest.",
       headline: (name: string) => `Welcome. This is how we start for ${name}.`,
-      intro: (name: string) => `Thank you for your order. From now on we check what AI says about ${name} and fix errors at the source. To start, we need 4 things from you, about 5 minutes in all.`,
+      intro: (name: string) => `Thank you for your order. From now on we check what AI says about ${name} and take errors to their source. To start, we need 4 things from you, about 5 minutes in all.`,
       facts: { title: "1. Confirm your details", line: "Address, phone, opening hours, what you do and do not do. We have filled them in already; you check them." },
       dns: { title: "2. One DNS record", lead: "Create a CNAME record with your domain provider:", check: "We check every 10 minutes whether it is there. If it does not work, we put the page on our own address." },
       noDomain: { title: "2. Facts page", line: (url: string) => `You did not give us a domain of your own. We put your facts page on ${url}. You can always move it later.`, ourAddress: "our address" },
       google: { title: "3. Log in to Google once", line: "This lets us read your Google Business Profile and bring the opening hours, the phone number and the website in line." },
-      rest: { title: "4. We do the rest", line: "Once your DNS record is in place, your facts page is live. We update your Google profile straight away; at Bing and Apple we submit the change and follow it until it is processed." },
+      rest: { title: "4. We do the rest", line: "Once your DNS record is in place, your facts page is live. We update your Google profile as soon as Google gives us access to do so; for Bing and Apple your overview shows what to change, and afterwards we check that it is right." },
       cta: "Confirm your details",
       ctaNote: (url: string) => `Your overview, with everything we do: ${url}`,
       after: {
@@ -2939,7 +2945,7 @@ export const en: CopyShape = {
       more: (n: number, where: string) => `And ${n} more ${n === 1 ? "error" : "errors"}. Everything is ${where}, with the source of each error and what we do about it.`,
       next: {
         title: "What happens now",
-        today: { when: "Today", what: "We submit the first corrections to the sources." },
+        today: { when: "Today", what: "We ask the first sources for a correction, or set out what to change yourself." },
         firstRechecks: "The first rechecks. You hear from us as soon as an answer is right again.",
         lastRechecks: "The last sources checked again.",
       },
