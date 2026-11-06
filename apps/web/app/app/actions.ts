@@ -11,7 +11,7 @@ import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
-import { canDeleteMyData } from "@vidalo/core/shared";
+import { canDeleteMyData, ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
 
 /** The language row on the account page: save it, then show the account in that language. */
 export async function setLanguage(formData: FormData) {
@@ -93,10 +93,14 @@ export async function declineChannelDiff(formData: FormData) {
 export async function checkNow() {
   const { business } = await requireVerifiedOwner();
   const db = await ready();
+  const { href } = await getI18n();
+  const last = (await db.listEvents(business.id, 500)).find((e) => e.type === ONDEMAND_EVENT)?.at ?? null;
+  const refused = ondemandRefusal(business, last);
+  if (refused) redirect(href(`/app?controle=${refused}`));
   await db.enqueueJob("scan", { businessId: business.id, kind: "ondemand", then: ["fixes"] });
-  await db.logEvent(business.id, "scan.ondemand_requested", {});
+  await db.logEvent(business.id, ONDEMAND_EVENT, {});
   revalidatePath("/app");
-  redirect((await getI18n()).href("/app?controle=ingepland"));
+  redirect(href("/app?controle=ingepland"));
 }
 
 /** Option B on the domain page: let Vidalo register a domain. */

@@ -3,6 +3,7 @@ import { email, fixes, followup, indexCheck, operatorTask, publish, recheck, rep
 import { scan } from "./scan.js";
 import { setup } from "./setup.js";
 import { paidOnlyBlock } from "./paid.js";
+import { spendBlock } from "./spend.js";
 import type { Handler, JobKind, JobPayloads } from "./types.js";
 
 export * from "./types.js";
@@ -31,6 +32,8 @@ export function handlerFor(kind: string): AnyHandler | null {
   return async (payload, job) => {
     const blocked = await paidOnlyBlock(kind as JobKind, (payload ?? {}) as Record<string, unknown>);
     if (blocked) return { skipped: blocked };
+    const deferredTo = await spendBlock(kind as JobKind, (payload ?? {}) as Record<string, unknown>);
+    if (deferredTo) return { skipped: "daily_ai_cap", deferredTo };
     return h(payload, job);
   };
 }

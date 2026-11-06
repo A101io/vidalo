@@ -23,7 +23,7 @@ import { findAllListings } from "./channels/directories.js";
 import { checkFactsHost, defaultFactsHost, isFallbackHost, preferredFactsHost } from "./host.js";
 import { pingIndexNow } from "./indexnow.js";
 import { renderFactsPage, type RenderedFactsPage } from "./render.js";
-import { clearServeCache } from "./serve.js";
+import { clearServeCache, confirmedFacts } from "./serve.js";
 
 export * from "./render.js";
 export * from "./host.js";
@@ -42,6 +42,8 @@ export interface PublishResult {
   verified: boolean;
   indexNow: { skipped: boolean; status?: number };
   outputDir: string | null;
+  /** True when nothing was published because the owner has not confirmed any facts yet. */
+  waiting?: boolean;
 }
 
 export function factsPageUrl(business: Pick<BusinessRecord, "slug" | "factsHost">): string {
@@ -101,10 +103,13 @@ async function writeMockOutput(host: string, page: RenderedFactsPage): Promise<s
 export async function publishFactsPage(businessId: string): Promise<PublishResult> {
   const db = getDb();
   const business = await ensureFactsHost(businessId);
-  const facts = await db.latestFacts(business.id);
-  if (!facts) throw new Error(`business ${businessId} has no facts yet`);
-  if (facts.provisional && !facts.verifiedAt) {
-    log.warn("publish.provisional_facts", { businessId, version: facts.version });
+  if (!(await db.latestFacts(business.id))) throw new Error(`business ${businessId} has no facts yet`);
+  const facts = await confirmedFacts(business.id);
+  if (!facts) {
+    // Only the draft exists: nothing goes out until the owner confirms (/app/gegevens queues publish again).
+    await db.logEvent(business.id, "facts_page.waiting", { reason: "facts_not_confirmed", host: business.factsHost });
+    log.info("publish.waiting_for_confirmation", { businessId });
+    return { businessId, host: business.factsHost!, url: factsPageUrl(business), factsVersion: 0, verified: false, indexNow: { skipped: true }, outputDir: null, waiting: true };
   }
   const host = business.factsHost!;
   const page = renderFactsPage(facts, business, { host, verifiedAt: new Date().toISOString() });

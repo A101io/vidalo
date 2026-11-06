@@ -24,21 +24,18 @@ export async function sendMagicLink(form: FormData) {
   // Bot check before anything is stored or mailed.
   if (!(await passesTurnstile(form, clientIp({ headers: await headers() })))) redirect(href(`/inloggen?fout=check&${q}`));
 
-  // Coming from /welkom after checkout: remember who asked for this business,
-  // so the first sign-in finds it. A claim, not proof: ownership is proven by
-  // Google later (shared/ownership.ts), and a verified owner replaces any claim.
+  // Coming from /welkom after checkout: the link lands back on this page signed
+  // in, where one button links the business (claimBusiness). Nothing is stored
+  // before the address is confirmed: anyone can post this form (review R-03).
   const db = await ready();
-  if (businessId) {
-    const b = await db.getBusiness(businessId);
-    if (b && !b.ownerEmail) await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: email });
-  }
+  const after = businessId ? `/inloggen?next=${encodeURIComponent(next)}&business=${encodeURIComponent(businessId)}` : next;
 
   const supabase = await createServerSupabase();
   if (supabase) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       // The Vidalo template appends token_hash and type to this (docs/auth-email/README.md).
-      options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(next))}` },
+      options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(after))}` },
     });
     if (error) {
       console.error("sign-in link refused", error.status, error.code, error.message);
@@ -54,7 +51,7 @@ export async function sendMagicLink(form: FormData) {
   const store = await cookies();
   const owned = await db.getBusinessByOwner({ email });
   store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned?.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
-  redirect(href(next));
+  redirect(href(after));
 }
 
 /**

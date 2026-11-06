@@ -206,6 +206,8 @@ export interface Db {
   listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
+  /** Engine cost of every scan run started at or after `since`, free checks excluded (the daily ceiling, review R-11). */
+  paidScanCentsSince(since: Date): Promise<number>;
 
   // --- coming-soon list ---
   /**

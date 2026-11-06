@@ -385,11 +385,23 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
   });
   const ev: Record<string, unknown> = { ...fix.evidence, recheckScanRunId: report.scanRunId, lastRecheckAt: now.toISOString() };
   const history = Array.isArray(ev.rechecks) ? (ev.rechecks as unknown[]) : [];
+  const samples = await db.listSamples(report.scanRunId);
+  const promptIds = new Set(prompts.map((p) => p.id));
+  const answered = samples.filter((s) => s.engine === finding.engine && promptIds.has(s.promptId) && s.answerText.trim());
+
+  // No answer from the AI system (an outage, a rotated key, a rate limit): a
+  // missing wrong answer proves nothing. Ask again tomorrow (review R-05).
+  if (!answered.length) {
+    const retryAt = addDays(now, 1).toISOString();
+    ev.rechecks = [...history, { at: now.toISOString(), scanRunId: report.scanRunId, outcome: "no_answers" }];
+    await db.updateFix(fix.id, { recheckAt: retryAt, evidence: ev });
+    await db.logEvent(business.id, "recheck.no_answers", { findingId: finding.id, fixId: fix.id, engine: finding.engine, scanRunId: report.scanRunId, retryAt });
+    log.warn("recheck.no_answers", { fixId: fix.id, findingId: finding.id, engine: finding.engine, scanRunId: report.scanRunId });
+    return { fixId: fix.id, findingId: finding.id, result: "skipped", scanRunId: report.scanRunId, nextRecheckAt: retryAt, step: "no_answers" };
+  }
 
   if (!stillPresent(finding, report)) {
-    const samples = await db.listSamples(report.scanRunId);
-    const promptIds = new Set(prompts.map((p) => p.id));
-    const after = samples.find((s) => s.engine === finding.engine && promptIds.has(s.promptId)) ?? samples[0] ?? null;
+    const after = answered[0] ?? null;
     await db.markFindingResolved(finding.id, after?.id ?? null);
     ev.rechecks = [...history, { at: now.toISOString(), scanRunId: report.scanRunId, outcome: "resolved" }];
     await db.updateFix(fix.id, { resolvedAt: now.toISOString(), recheckAt: null, evidence: ev });

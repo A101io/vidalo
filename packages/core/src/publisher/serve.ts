@@ -37,10 +37,21 @@ export interface ServeOptions {
   now?: () => Date;
 }
 
+/**
+ * The newest facts the owner confirmed. A facts page says "zoals vastgelegd
+ * door de eigenaar", so it is built from these only, never from the draft the
+ * free check made from Google (CONTRACT: facts are owner-asserted).
+ */
+export async function confirmedFacts(businessId: string): Promise<Facts | null> {
+  const all = await getDb().listFacts(businessId);
+  return all.filter((f) => !f.provisional || f.verifiedAt).sort((a, b) => b.version - a.version)[0] ?? null;
+}
+
 async function defaultResolve(host: string): Promise<{ business: BusinessRecord; facts: Facts; googleSiteVerification: string | null } | null> {
   const business = await getBusinessByFactsHost(host);
   if (!business) return null;
-  const facts = await getDb().latestFacts(business.id);
+  // Only facts the owner confirmed are served; before that the host answers as unknown.
+  const facts = await confirmedFacts(business.id);
   if (!facts) return null;
   return { business, facts, googleSiteVerification: await googleVerificationToken(business.id, host) };
 }
