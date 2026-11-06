@@ -82,14 +82,23 @@ async function activate(business: BusinessRecord, session: Record<string, unknow
   const db = getDb();
   const plan = meta(session).plan === "setup" ? "setup" : "monitor";
   const addon = meta(session).plan === "monitor_addon";
-  const email = (session.customer_details as { email?: string } | undefined)?.email ?? null;
+  const email = (session.customer_details as { email?: string } | undefined)?.email?.toLowerCase() ?? null;
+  // The buyer's address wins over one that no payment stands behind (review
+  // SEC-01): a proven owner, an earlier paying customer, or a claim made with
+  // this very checkout session keep theirs; anyone else is unlinked.
+  const tied =
+    Boolean(business.ownerVerifiedAt || business.stripeCustomerId) ||
+    (await db.listEvents(business.id, 1000)).some((e) => e.type === "owner.claimed" && e.payload.sessionId === session.id);
+  const ownerEmail = tied || !email ? business.ownerEmail ?? email : email;
+  const replaced = Boolean(business.ownerEmail && ownerEmail !== business.ownerEmail.toLowerCase());
   await db.upsertBusiness({
     id: business.id,
     slug: business.slug,
     name: business.name,
     place: business.place,
     plan,
-    ownerEmail: business.ownerEmail ?? email,
+    ownerEmail,
+    ...(replaced ? { ownerUserId: null } : {}),
     stripeCustomerId: str(session.customer) ?? business.stripeCustomerId,
     stripeSubscriptionId: str(session.subscription) ?? business.stripeSubscriptionId,
   });

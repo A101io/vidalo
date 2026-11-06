@@ -2091,6 +2091,7 @@ export const copy = {
     mockNotice: "Betaling gesimuleerd (geen Stripe-sleutel ingesteld).",
     cancelled: "Je betaling is niet afgerond. Er is niets afgeschreven. Je kunt het hieronder opnieuw proberen.",
     abroad: "Betalen voor een bedrijf buiten Nederland kan nog niet. Er is niets afgeschreven. Mail support@vidalo.io, dan zetten we het voor je klaar.",
+    alreadyPaid: "Voor dit bedrijf is al betaald. Er is niets afgeschreven. Log in met het e-mailadres van die betaling, of mail support@vidalo.io.",
     error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op support@vidalo.io.",
     productSetup: "Vidalo Scan (eenmalig)",
     productMonitor: "Vidalo Monthly (per maand)",
@@ -2232,6 +2233,7 @@ export const copy = {
     linkBusiness: (name: string, place: string) => `Koppel ${name} (${place}) aan dit account?`,
     linkButton: "Ja, koppel dit bedrijf",
     linkTaken: "Dit bedrijf is al aan een ander account gekoppeld. Mail support@vidalo.io als dat niet klopt.",
+    linkUnpaid: "We zien nog geen betaling voor dit bedrijf bij deze link. Log in met het e-mailadres waarmee je betaalde, of mail support@vidalo.io.",
   },
 
   dashboard: {
