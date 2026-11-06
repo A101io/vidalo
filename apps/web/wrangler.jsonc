@@ -34,9 +34,11 @@
   // /binnenkort, which collects the coming-soon list. The full site opens only
   // with VIDALO_PREVIEW_KEY (a secret, `wrangler secret put`) via /api/preview;
   // the public "have a look" button was removed 18 Oct 2026.
-  // GA4_MEASUREMENT_ID: GA account A101 → property Vidalo → stream vidalo.ai
-  // (lib/trackers.ts). Production only, so previews do not count as visits.
-  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.ai", "VIDALO_COMING_SOON": "1", "GA4_MEASUREMENT_ID": "G-YVTPVR4EQJ" },
+  // GA4_MEASUREMENT_ID: GA account A101 → property Vidalo → stream vidalo.ai.
+  // META_PIXEL_ID: Meta business portfolio A101 → dataset "Vidalo"
+  // (automatic advanced matching, automatic events and AI page details off).
+  // Both in lib/trackers.ts; production only, so previews do not count as visits.
+  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.ai", "VIDALO_COMING_SOON": "1", "GA4_MEASUREMENT_ID": "G-YVTPVR4EQJ", "META_PIXEL_ID": "1478191657494181" },
   // Hyperdrive pools the Supabase connections (one handle per request,
   // worker.ts). `vidalo-db`, created in the dashboard 16 Oct 2026: Supabase
   // session pooler aws-0-eu-west-1.pooler.supabase.com:5432, user
