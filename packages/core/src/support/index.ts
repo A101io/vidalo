@@ -52,8 +52,8 @@ export const VIDALO_SUPPORT_CONFIG: SupportBrainConfig = {
   knowledge: (lang) => buildKnowledge(copyFor(lang), lang),
   responseRules: [...assistantRules("nl"), ...assistantRules("en")].join("\n"),
   productNames: ["Vidalo"],
-  ownDomains: ["vidalo.io", "a101.io"],
-  allowedLinkHosts: ["vidalo.io", "www.vidalo.io"],
+  ownDomains: ["vidalo.ai", "vidalo.io", "a101.io"],
+  allowedLinkHosts: ["vidalo.ai", "www.vidalo.ai", "vidalo.io", "www.vidalo.io"],
   denyPatterns: VIDALO_DENY_PATTERNS,
 };
 

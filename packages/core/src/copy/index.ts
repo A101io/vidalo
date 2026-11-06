@@ -728,7 +728,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 26 oktober 2026",
+    updated: "Versie van 6 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -742,12 +742,12 @@ export const copy = {
             "Jij, je: de onderneming of rechtspersoon die een controle aanvraagt, een plan afneemt of op een andere manier Vidalo gebruikt, en de persoon die namens die onderneming handelt.",
             "Dienst: alles wat Vidalo je levert: de gratis controle, de plannen en wat daarbij hoort, je account en de assistent op onze website.",
             "Gratis controle: een eenmalige controle zonder betaling van wat AI-assistenten over een bedrijf antwoorden, met een rapport dat 30 dagen via een link te zien is.",
-            "Plan: ‘Vidalo Scan’ (eenmalig) of ‘Vidalo Monthly’ (een abonnement per maand), zoals beschreven op vidalo.io/prijzen op het moment dat je bestelt.",
+            "Plan: ‘Vidalo Scan’ (eenmalig) of ‘Vidalo Monthly’ (een abonnement per maand), zoals beschreven op vidalo.ai/prijzen op het moment dat je bestelt.",
             "AI-assistent: een dienst van een andere partij die vragen beantwoordt met kunstmatige intelligentie, zoals ChatGPT, Google AI, Gemini of Perplexity.",
             "Bron: een website, gids, profiel of ander openbaar gegeven waaruit een AI-assistent zijn antwoord haalt.",
             "Gegevens: de gegevens over je bedrijf die jij aan ons bevestigt, zoals naam, adres, openingstijden, telefoonnummer, diensten en prijzen.",
             "Feitenpagina: de pagina die wij met jouw bevestigde gegevens publiceren, in een vorm die mensen en AI-assistenten kunnen lezen.",
-            "Account: je eigen omgeving op vidalo.io, waar je inlogt met een link per e-mail.",
+            "Account: je eigen omgeving op vidalo.ai, waar je inlogt met een link per e-mail.",
             "Overeenkomst: de afspraken tussen jou en Vidalo over de Dienst, met deze voorwaarden.",
             "Schriftelijk: op papier of per e-mail.",
           ],
@@ -894,7 +894,7 @@ export const copy = {
         {
           h: "De assistent op onze website",
           p: [
-            "Op vidalo.io kun je vragen stellen aan een assistent. Die assistent is een AI-systeem, geen mens; dat staat ook in het chatvenster.",
+            "Op vidalo.ai kun je vragen stellen aan een assistent. Die assistent is een AI-systeem, geen mens; dat staat ook in het chatvenster.",
             "De assistent beantwoordt alleen vragen over Vidalo, met informatie van onze eigen website. Een antwoord kan onvolledig of fout zijn en bindt ons niet. Wat in deze voorwaarden, op de prijspagina en in je bevestiging staat, gaat voor.",
             "De assistent geeft geen juridisch, fiscaal of ander persoonlijk advies. Typ geen persoonsgegevens of vertrouwelijke informatie in het chatvenster. Wil je een mens spreken, mail dan support@vidalo.io.",
           ],
@@ -902,7 +902,7 @@ export const copy = {
         {
           h: "Persoonsgegevens",
           p: [
-            "Voor zover we bij de Dienst persoonsgegevens verwerken, doen we dat als zelfstandig verwerkingsverantwoordelijke in de zin van de Algemene verordening gegevensbescherming (AVG), volgens ons privacybeleid op vidalo.io/privacy.",
+            "Voor zover we bij de Dienst persoonsgegevens verwerken, doen we dat als zelfstandig verwerkingsverantwoordelijke in de zin van de Algemene verordening gegevensbescherming (AVG), volgens ons privacybeleid op vidalo.ai/privacy.",
             "Bevestig je Gegevens waarin persoonsgegevens staan, zoals de naam of het telefoonnummer van een medewerker, dan zorg jij dat je die mag delen en laten publiceren.",
             "We beveiligen persoonsgegevens met passende technische en organisatorische maatregelen. Dat verwachten we ook van jou.",
           ],
@@ -960,7 +960,7 @@ export const copy = {
     },
     privacy: {
       title: "Privacybeleid",
-      intro: "Dit privacybeleid geldt voor de persoonsgegevens die A101 B.V., handelend onder de naam Vidalo, verwerkt: op vidalo.io, bij de gratis controle, in je account, bij de plannen en de feitenpagina's, in onze e-mails en bij de assistent op onze website.",
+      intro: "Dit privacybeleid geldt voor de persoonsgegevens die A101 B.V., handelend onder de naam Vidalo, verwerkt: op vidalo.ai, bij de gratis controle, in je account, bij de plannen en de feitenpagina's, in onze e-mails en bij de assistent op onze website.",
       sections: [
         {
           h: "Wie verantwoordelijk is",
@@ -1060,7 +1060,7 @@ export const copy = {
         {
           h: "De assistent op onze website",
           p: [
-            "De assistent op vidalo.io is een AI-systeem. Om te antwoorden sturen we je vraag en de eerdere berichten van hetzelfde gesprek naar OpenAI.",
+            "De assistent op vidalo.ai is een AI-systeem. Om te antwoorden sturen we je vraag en de eerdere berichten van hetzelfde gesprek naar OpenAI.",
             [
               "Gegevens: wat je in het chatvenster typt. Wij slaan het gesprek niet op; het staat alleen in je browsertabblad. Om misbruik te beperken houden we je IP-adres een paar minuten in het geheugen bij.",
               "Grondslag: ons gerechtvaardigd belang om vragen over Vidalo snel te beantwoorden.",
@@ -1162,7 +1162,7 @@ export const copy = {
         { h: "Toestemming", p: ["Cookies die nodig zijn om de site te laten werken, mogen we zonder toestemming plaatsen (artikel 11.7a Telecommunicatiewet); we vertellen je wel dat ze er zijn. Andere cookies gebruiken we niet. Gaan we dat ooit wel doen, bijvoorbeeld voor bezoekersstatistieken, dan vragen we eerst je toestemming, met een knop om te weigeren die net zo makkelijk is als de knop om te accepteren, en plaatsen we niets voordat je kiest."] },
         {
           h: "Welke cookies we zetten",
-          p: ["Alle cookies hieronder zijn noodzakelijk en komen van vidalo.io zelf."],
+          p: ["Alle cookies hieronder zijn noodzakelijk en komen van vidalo.ai zelf."],
           table: {
             head: ["Naam", "Waarvoor", "Hoe lang"],
             rows: [
@@ -1174,9 +1174,9 @@ export const copy = {
             ],
           },
         },
-        { h: "Andere partijen", p: ["Bij de gratis controle en bij inloggen laden we Cloudflare Turnstile van challenges.cloudflare.com. Turnstile leest kenmerken van je browser en apparaat om mensen van robots te onderscheiden. Dat is nodig om de controle en het inloggen te beschermen tegen misbruik. Zie het privacybeleid van Cloudflare op cloudflare.com/privacypolicy.", "Betaal je, dan ga je naar een pagina van Stripe; daar gelden het cookiebeleid en het privacybeleid van Stripe. Koppel je je Google-account, dan log je in bij Google; daar gelden de regels van Google.", "Verder laden we op vidalo.io geen scripts, lettertypen, knoppen of advertenties van andere partijen. Voegen we een dienst van een andere partij toe, dan staat die hier voordat we hem gebruiken."] },
+        { h: "Andere partijen", p: ["Bij de gratis controle en bij inloggen laden we Cloudflare Turnstile van challenges.cloudflare.com. Turnstile leest kenmerken van je browser en apparaat om mensen van robots te onderscheiden. Dat is nodig om de controle en het inloggen te beschermen tegen misbruik. Zie het privacybeleid van Cloudflare op cloudflare.com/privacypolicy.", "Betaal je, dan ga je naar een pagina van Stripe; daar gelden het cookiebeleid en het privacybeleid van Stripe. Koppel je je Google-account, dan log je in bij Google; daar gelden de regels van Google.", "Verder laden we op vidalo.ai geen scripts, lettertypen, knoppen of advertenties van andere partijen. Voegen we een dienst van een andere partij toe, dan staat die hier voordat we hem gebruiken."] },
         { h: "Jouw keuze aanpassen", p: ["Zodra er iets te kiezen valt, staat onderaan elke pagina ‘Cookie-instellingen’. Daar zie je je keuze en pas je die aan. Cookies verwijderen kan ook altijd via de instellingen van je browser; je wordt dan uitgelogd."] },
-        { h: "Meer weten", p: ["Hoe we met je gegevens omgaan en welke rechten je hebt, staat in ons privacybeleid op vidalo.io/privacy. We passen dit cookiebeleid aan als de site verandert; de datum bovenaan zegt welke versie je leest."] },
+        { h: "Meer weten", p: ["Hoe we met je gegevens omgaan en welke rechten je hebt, staat in ons privacybeleid op vidalo.ai/privacy. We passen dit cookiebeleid aan als de site verandert; de datum bovenaan zegt welke versie je leest."] },
       ],
     },
   },

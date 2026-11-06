@@ -3,7 +3,7 @@
  * customer portal configuration and the webhook endpoint. Checks by default; changes nothing without --apply.
  *
  *   STRIPE_SECRET_KEY=sk_test_... VIDALO_STRIPE_ACCOUNT=acct_... \
- *   PUBLIC_BASE_URL=https://vidalo.io pnpm stripe:setup [--apply] [--live]
+ *   PUBLIC_BASE_URL=https://vidalo.ai pnpm stripe:setup [--apply] [--live]
  *
  * Guards, because a valid key for the wrong account is silent:
  * - VIDALO_STRIPE_ACCOUNT must name the account the key belongs to, or the
@@ -144,7 +144,7 @@ async function main() {
   // confirms by mail and can be undone there; the portal does not offer it.
   // Stripe does not make an API-created configuration the default, so the
   // portal route passes this id (STRIPE_PORTAL_CONFIGURATION).
-  const site = base || "https://vidalo.io";
+  const site = base || "https://vidalo.ai";
   const portals = await stripe.billingPortal.configurations.list({ active: true, limit: 100 });
   let portal = portals.data.find((c) => c.name === "Vidalo");
   if (!portal && apply) {

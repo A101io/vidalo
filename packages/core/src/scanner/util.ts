@@ -96,7 +96,7 @@ export async function fetchText(url: string, opts: { timeoutMs?: number; maxByte
     const res = await fetch(url, {
       signal: ctrl.signal,
       redirect: "follow",
-      headers: { "user-agent": "VidaloBot/0.1 (+https://vidalo.io)", accept: "text/html,text/plain;q=0.9,*/*;q=0.5" },
+      headers: { "user-agent": "VidaloBot/0.1 (+https://vidalo.ai)", accept: "text/html,text/plain;q=0.9,*/*;q=0.5" },
     });
     if (!res.ok || !res.body) return null;
     const reader = res.body.getReader();
