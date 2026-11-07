@@ -14,6 +14,8 @@ export interface ScanJob {
   promptIds?: string[];
   /** what to do when the scan is done (defaults by kind: baseline → fixes+baseline mail, monthly → fixes+report) */
   then?: ("fixes" | "report" | "baseline_summary")[];
+  /** set when the daily AI ceiling moved this baseline or monthly check once; it then runs (jobs/spend.ts) */
+  deferredOnce?: boolean;
 }
 
 export interface SetupJob {

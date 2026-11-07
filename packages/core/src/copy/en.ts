@@ -638,7 +638,7 @@ export const en: CopyShape = {
         { q: "Does it always work?", a: "Answers that use search usually change within weeks of the source being corrected. Answers from the model's memory only change with a new model version. We say so honestly in your report." },
         { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we arrange one. On large platforms only the owner can change anything; there we show you exactly what to change." },
         { q: "Do I need to install anything?", a: "No." },
-        { q: "How often do you check?", a: "Every month, and again after every change to your details and after every fixed error." },
+        { q: "How often do you check?", a: "With Vidalo Monthly every month, and again after every change to your details and after every fixed error. With Vidalo Scan alone we do one full check and then check the fixed errors again." },
         { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
         { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do include. Paying for a business outside the Netherlands we still set up with you through support@vidalo.io." },
         { q: "What if AI names my competitor?", a: "We cannot prevent that. What we do make sure of is that the AI has the right facts about you, so you do not drop out because it thinks you are closed or do not do something." },
@@ -1421,12 +1421,12 @@ export const en: CopyShape = {
       stepsGreen: [
         "Record your details once, so every source says the same thing.",
         "A facts page on your own domain, with a date, and for Google, Bing, Apple and the directories what to change there.",
-        "The same questions again every month. If something changes, you are the first to see it.",
+        "With Vidalo Monthly: the same questions again every month. If something changes, you are the first to see it.",
       ],
       stepsGrey: {
         facts: "Record your details once: address, phone, opening hours, what you do and do not do. Five minutes.",
         publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and exactly what to fill in at Google, Bing, Apple and the directories.`,
-        recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. Then every month. You see when the AI starts naming you.`,
+        recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. With Vidalo Monthly, then every month. You see when the AI starts naming you.`,
       },
       noteGrey: "Whether and when an AI names you is not up to us. Whether it can find you is. Answers without search only change with a new model version.",
       monitor: "Vidalo Scan + Monthly · €149 + €49/month",
@@ -2183,6 +2183,7 @@ export const en: CopyShape = {
       { title: "Choose your domain", body: "One DNS record on your own domain, or let Vidalo register a domain.", href: "/app/domein", cta: "Set up domain" },
       { title: "Wait for the first check", body: "After that you get a report every month. You do not need to install anything.", href: "/app", cta: "Go to your overview" },
     ],
+    lastStepScan: { title: "Wait for the first check", body: "We check the fixed errors again. A check every month comes with Vidalo Monthly.", href: "/app", cta: "Go to your overview" },
     loginHint: "You will receive a login link by email. No password needed.",
   },
 
@@ -2196,7 +2197,7 @@ export const en: CopyShape = {
     noBusiness: "We found no business for this email address. Start with a free check.",
     rateLimited: "You asked for a login link a moment ago. Check your inbox, or try again in a few minutes.",
     signedInH1: "You are logged in",
-    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Start with a free check and have the report emailed to this address: then you will find your business here.`,
+    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Have you paid? Log in with the address you paid with, or email support@vidalo.io and we will link your business. Not checked yet? Start with a free check.`,
     startCheck: "Start a free check",
     otherEmail: "Another email address? Log out",
     linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
@@ -2212,7 +2213,7 @@ export const en: CopyShape = {
     statusLine: (ok: number, total: number) => `${ok} of ${total} answers are right`,
     notFoundLine: (n: number) => `${n} ${n === 1 ? "answer" : "answers"}: not found.`,
     checkNow: "Check now",
-    checkQueued: "Check scheduled. You will see the result here within an hour.",
+    checkQueued: "Check scheduled. You will see the result here as soon as the check is done, usually within an hour.",
     checkRefused: {
       not_monthly: "An extra check is part of Vidalo Monthly. Vidalo Scan includes one full check.",
       paused: "Your plan is paused. An extra check is possible again once it runs.",
@@ -2321,6 +2322,13 @@ export const en: CopyShape = {
     proofLabels: { finding: "View", report: "Report", factsPage: "Facts page", channel: "Google's answer", facts: "Details" },
     nextCheck: "Next check",
     nextCheckNote: (day: number, rechecks: string) => `Every month on day ${day}.${rechecks ? ` In between we ask only the wrong answers again: ${rechecks}.` : ""}`,
+    scanOnly: {
+      label: "A check every month",
+      body: "You have Vidalo Scan. We check the fixed errors again. All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
+      bodyNone: "All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
+      cta: "Add Vidalo Monthly",
+      pausedCta: "Go to your subscription",
+    },
     expand: "Add more",
     expandItems: [
       { title: "Extra full check", body: "Every question, every system, today.", cta: "Request a check", subject: "Extra check" },
@@ -2458,6 +2466,8 @@ export const en: CopyShape = {
       `${date} · ${n === 0 ? "all the same" : status === "synced" ? `${n} ${n === 1 ? "field" : "fields"} aligned` : status === "mismatch" ? `${n} ${n === 1 ? "field differs" : "fields differ"}` : `${n} ${n === 1 ? "field" : "fields"} reported, ${status.toLowerCase()}`}`,
     next: "Next: after your approval above, then every month after the check.",
     nextDirectory: "Next: every month after the check, and a reminder 30 days after a correction.",
+    nextScan: "Next: after your approval above. Syncing every month comes with Vidalo Monthly.",
+    nextDirectoryScan: "Next: a reminder 30 days after a correction. Syncing every month comes with Vidalo Monthly.",
     flash: {
       approved: "Approved. We put the change on Google within an hour.",
       declined: "Not applied. Your profile stays as it is.",
@@ -2909,6 +2919,7 @@ export const en: CopyShape = {
       free: { label: "See your full result", where: "in your result" },
     },
     nextMonthly: "Your next monthly check.",
+    nextScan: { when: "After that", what: "A check every month comes with Vidalo Monthly." },
     welcome: {
       subject: (name: string) => `Welcome to Vidalo: 4 steps for ${name}`,
       preheader: "Four steps, about 5 minutes in all. Then we do the rest.",
@@ -2928,6 +2939,7 @@ export const en: CopyShape = {
           { when: "After that", what: "An email as soon as an answer is right again, with the answer before and after." },
           { when: "Every month", what: "A new check and a short report. Everything is in your overview." },
         ],
+        scanItem: { when: "Again", what: "We check the fixed errors again. A check every month comes with Vidalo Monthly." },
       },
       questions: "Questions? Reply to this email.",
     },
@@ -2944,7 +2956,7 @@ export const en: CopyShape = {
         partial: (name: string) => `AI does not find part of ${name}`,
         clean: (total: number, name: string) => `All ${total} answers about ${name} are right`,
       },
-      preheader: { wrong: (where: string) => `The most important errors are in this email, the rest ${where}.`, clean: "We check again every month." },
+      preheader: { wrong: (where: string) => `The most important errors are in this email, the rest ${where}.`, clean: "We check again every month.", cleanScan: "All answers are right. A check every month comes with Vidalo Monthly." },
       intro: (date: string, total: number, name: string, engines: string) => `On ${date} we put ${total} questions about ${name} to ${engines}.`,
       stats: { checked: "answers checked", wrong: (n: number) => (n === 1 ? "was wrong" : "were wrong"), empty: "were empty" },
       cardsTitle: (n: number) => (n === 1 ? "The error" : "The most important errors"),
@@ -2964,6 +2976,7 @@ export const en: CopyShape = {
       before: (date: string) => `Before (${date})`,
       after: (date: string) => `After (${date})`,
       source: (source: string, days: string) => `Source: ${source}, fixed in ${days}. We keep checking this answer every month.`,
+      sourceScan: (source: string, days: string) => `Source: ${source}, fixed in ${days}.`,
       cta: "See your overview",
     },
     monthly: {
@@ -3013,6 +3026,7 @@ export const en: CopyShape = {
       why: (note: string) => `Why it did not work: ${note}`,
       did: (label: string) => `What we did: ${label}`,
       next: (tail: string) => `What now: we keep this answer in your overview and check it again every month. ${tail}`,
+      nextScan: (tail: string) => `What now: we keep this answer in your overview. A check every month comes with Vidalo Monthly. ${tail}`,
       tail: {
         notFound: "Your facts page and your profiles stay in place. As soon as AI does name you, you see it in your report.",
         memory: "Answers from the model's memory only change with a new version of that model. As soon as that happens, you see it in your report.",
