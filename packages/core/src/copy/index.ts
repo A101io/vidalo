@@ -2250,6 +2250,11 @@ export const copy = {
     notFoundLine: (n: number) => `${n} ${n === 1 ? "antwoord" : "antwoorden"}: niet gevonden.`,
     checkNow: "Controleer nu",
     checkQueued: "Controle ingepland. Je ziet het resultaat hier binnen een uur.",
+    checkRefused: {
+      not_monthly: "Een extra controle hoort bij Vidalo Monthly. Met Vidalo Scan krijg je één volledige controle.",
+      paused: "Je abonnement staat stil. Een extra controle kan weer zodra het doorloopt.",
+      too_soon: "Je vroeg deze week al een extra controle aan. Dat kan één keer per 7 dagen.",
+    },
     sections: {
       status: "Status",
       findings: "Gevonden fouten",
@@ -2409,6 +2414,7 @@ export const copy = {
     notPlanned: "Geen hercontrole gepland.",
     evidence: {
       publish: (version: number | null) => `Feitenpagina opnieuw gepubliceerd${version ? `, versie ${version}` : ""}.`,
+      publishWaiting: "Feitenpagina wacht op je bevestiging: bevestig je gegevens, dan publiceren we hem.",
       sync: (channel: string, status: string) => `${channel}: gegevens opnieuw gezet (${status}).`,
       syncMany: (n: number) => `${n} bronnen gelijkgezet.`,
       email: (to: string) => `Correctieverzoek namens jou gestuurd naar ${to}.`,

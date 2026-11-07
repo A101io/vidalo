@@ -102,6 +102,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <QuietLink href={href("/app/voortgang")}>{d.compare}</QuietLink>
         </p>
         {sp.controle === "ingepland" && <p className="m-0 rounded-xl bg-panel px-4 py-3 text-[15px]">{d.checkQueued}</p>}
+        {sp.controle && sp.controle in d.checkRefused && <p className="m-0 rounded-xl bg-panel px-4 py-3 text-[15px]">{d.checkRefused[sp.controle as keyof typeof d.checkRefused]}</p>}
       </header>
 
       <div className="grid gap-x-[72px] gap-y-12 lg:grid-cols-[minmax(0,1fr)_300px]">

@@ -283,9 +283,10 @@ export class PgDb implements Db {
 
   async businessesDueForMonthlyScan(dayOfMonth: number): Promise<BusinessRecord[]> {
     // On the last day of a short month also pick up anniversaries 29-31.
+    // Only the monthly plan: a one-off Scan customer paid for one check (review R-01).
     const rows = await this.sql`
       select * from business
-      where status in ('trial','active') and anniversary_day is not null
+      where status in ('trial','active') and plan = 'monitor' and anniversary_day is not null
         and (pause_until is null or pause_until <= now())
         and (anniversary_day = ${dayOfMonth}
              or (${dayOfMonth} = extract(day from (date_trunc('month', now()) + interval '1 month - 1 day'))::int and anniversary_day > ${dayOfMonth}))
@@ -394,6 +395,11 @@ export class PgDb implements Db {
       : await this.sql`select * from scan_run where id = ${id}`;
     if (!rows[0]) throw new Error(`scan_run ${id} not found`);
     return mapScanRun(rows[0]);
+  }
+
+  async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
+    const [row] = await this.sql`select max(coalesce(started_at, created_at)) as at from scan_run where business_id = ${businessId} and kind = ${kind}`;
+    return row?.at ? new Date(row.at as string).toISOString() : null;
   }
 
   async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
@@ -572,6 +578,11 @@ export class PgDb implements Db {
 
   async countEventsSince(type: string, since: Date): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from event where type = ${type} and at >= ${since}`;
+    return Number(row?.n ?? 0);
+  }
+
+  async paidScanCentsSince(since: Date): Promise<number> {
+    const [row] = await this.sql`select coalesce(sum(cost_cents), 0)::int as n from scan_run where kind <> 'free' and started_at >= ${since}`;
     return Number(row?.n ?? 0);
   }
 

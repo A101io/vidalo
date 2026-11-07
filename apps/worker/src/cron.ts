@@ -15,7 +15,7 @@
 import { pollFactsHost } from "@vidalo/core/publisher";
 import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
 import { duePauseMail } from "@vidalo/core/billing";
-import { sendSubscriptionMail } from "@vidalo/core/reporter";
+import { reportRequester, sendSubscriptionMail } from "@vidalo/core/reporter";
 import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
@@ -152,7 +152,7 @@ export async function enqueueFollowUps(now = new Date()): Promise<number> {
   const db = getDb();
   let n = 0;
   for (const b of await listBusinessesByStatus(["scanned"])) {
-    if (!b.ownerEmail) continue;
+    if (!b.ownerEmail && !(await reportRequester(b.id))) continue;
     const age = daysSince(b.createdAt, now);
     if (age < 7 || age > 90) continue;
     const evs = await events(b.id);

@@ -1,6 +1,6 @@
 import type { BusinessStatus } from "@vidalo/core/types";
 // The same handle the publisher and fixer use, so the guard sees what they act on.
-import { getDb } from "@vidalo/core/shared";
+import { getDb, ondemandRefusal } from "@vidalo/core/shared";
 import { log } from "../log.js";
 import type { JobKind } from "./types.js";
 
@@ -32,7 +32,9 @@ async function businessFor(kind: JobKind, payload: Record<string, unknown>) {
 
 /** null when the job may run; otherwise the reason it is skipped. */
 export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unknown>): Promise<string | null> {
-  if (!PAID_ONLY.has(kind)) return null;
+  // "Controleer nu" spends a full check: same guard, and only on the monthly plan (review R-02).
+  const ondemand = kind === "scan" && payload.kind === "ondemand";
+  if (!PAID_ONLY.has(kind) && !ondemand) return null;
   const business = await businessFor(kind, payload);
   if (!business) {
     // Fail closed: a job whose business cannot be found must not publish anything.
@@ -48,6 +50,15 @@ export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unkno
     // The owner paused (core/billing/lifecycle.ts): nothing runs until the date they were given.
     await getDb().logEvent(business.id, "job.skipped", { kind, reason: "paused_by_owner", until: business.pauseUntil });
     return "paused_by_owner";
+  }
+  if (ondemand) {
+    // The 7-day limit counts what actually ran (scan_run), so a double click or a burst of
+    // other events cannot slip a second paid check through (review QA-03 / SEC-04).
+    const refused = ondemandRefusal(business, await getDb().lastScanRunStartedAt(business.id, "ondemand"));
+    if (refused) {
+      await getDb().logEvent(business.id, "job.skipped", { kind, reason: `ondemand_${refused}`, plan: business.plan });
+      return `ondemand_${refused}`;
+    }
   }
   if (!business.ownerVerifiedAt) {
     // Paid but not yet proven: the Google callback enqueues setup once it is.

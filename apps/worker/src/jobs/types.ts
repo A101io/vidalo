@@ -60,7 +60,7 @@ export type EmailJob =
   | { template: "resolution"; findingId: string; businessId?: string }
   | { template: "unfixable"; findingId: string; note: string; businessId?: string }
   | { template: "welcome"; businessId: string }
-  | { template: "baseline"; scanRunId: string; businessId?: string }
+  | { template: "baseline"; scanRunId: string; businessId?: string; /** the address that asked on the report page */ to?: string; lang?: "nl" | "en" }
   | { template: "report"; businessId: string; scanRunId?: string }
   | { template: "followup"; businessId: string; day: 7 | 21 }
   | { template: "reconfirm"; businessId: string }

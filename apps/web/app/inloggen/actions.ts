@@ -29,7 +29,7 @@ export async function sendMagicLink(form: FormData) {
 
   // Coming from /welkom after checkout: the link lands back on this page signed
   // in, where one button links the business if the checkout session is paid
-  // (claimBusiness). Nothing is stored before that: anyone can post this form.
+  // (claimBusiness). Nothing is stored before that: anyone can post this form (review R-03).
   const db = await ready();
   const after = businessId ? `/inloggen?${q}` : next;
 

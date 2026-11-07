@@ -51,8 +51,10 @@ async function requireBusiness(businessId: string): Promise<BusinessRecord> {
  * checked here (shared/mail-prefs.ts), so every caller obeys them; required
  * kinds always go. The `lang` tag carries the owner's language (business.language).
  */
-async function deliver(business: BusinessRecord, m: Mail, type: string, extra: Record<string, unknown> = {}, headers?: Record<string, string>): Promise<MailResult | null> {
-  if (!business.ownerEmail) {
+async function deliver(business: BusinessRecord, m: Mail, type: string, extra: Record<string, unknown> = {}, headers?: Record<string, string>, to?: string | null): Promise<MailResult | null> {
+  // `to`: the address that asked for a free report. It is never stored as the owner (review R-03).
+  const recipient = business.ownerEmail ?? to ?? null;
+  if (!recipient) {
     log.warn("reporter.no_owner_email", { businessId: business.id, type });
     return null;
   }
@@ -61,9 +63,22 @@ async function deliver(business: BusinessRecord, m: Mail, type: string, extra: R
     await getDb().logEvent(business.id, "email.skipped", { type, reason: "mail_prefs", ...extra });
     return null;
   }
-  const res = await sendMail({ to: business.ownerEmail, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug, lang: langOf(business) } });
-  await getDb().logEvent(business.id, `email.${type}`, { to: business.ownerEmail, subject: m.subject, mode: res.mode, id: res.id, ...extra });
+  const res = await sendMail({ to: recipient, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug, lang: langOf(business) } });
+  await getDb().logEvent(business.id, `email.${type}`, { to: recipient, subject: m.subject, mode: res.mode, id: res.id, ...extra });
   return res;
+}
+
+/** Event the report page's mail form logs, with the address and the page's language. */
+export const REPORT_EMAIL_EVENT = "report_email.requested";
+
+/**
+ * The address (and language) that last asked for a report on a business that
+ * has no owner yet. Free-check mails go there; it never becomes `ownerEmail`,
+ * which only a payment or a confirmed sign-in sets.
+ */
+export async function reportRequester(businessId: string): Promise<{ email: string; lang: Lang } | null> {
+  const ev = (await getDb().listEvents(businessId, 500)).find((e) => e.type === REPORT_EMAIL_EVENT && typeof e.payload.email === "string");
+  return ev ? { email: String(ev.payload.email), lang: ev.payload.lang === "en" ? "en" : "nl" } : null;
 }
 
 /** The owner's language; Dutch for a record without one. */
@@ -171,11 +186,15 @@ export async function sendWelcome(businessId: string): Promise<MailResult | null
   return deliver(business, m, "welcome");
 }
 
-export async function sendBaselineSummary(scanRunId: string): Promise<MailResult | null> {
+export async function sendBaselineSummary(scanRunId: string, requester?: { email: string; lang: Lang }): Promise<MailResult | null> {
   const db = getDb();
   const run = await db.getScanRun(scanRunId);
   if (!run) throw new Error(`scan_run ${scanRunId} not found`);
-  const business = await requireBusiness(run.businessId);
+  const owned = await requireBusiness(run.businessId);
+  // No owner yet: the mail goes to the address this job was asked for, in the report page's language
+  // (jobs queued before the address rode along fall back to the last asker).
+  const asker = owned.ownerEmail ? null : (requester ?? (await reportRequester(owned.id)));
+  const business = asker ? { ...owned, language: asker.lang } : owned;
   const findings = await db.listFindingsByScanRun(scanRunId);
   const prompts = await db.listPrompts(business.id, { activeOnly: true });
   const samples = await db.listSamples(scanRunId);
@@ -200,7 +219,7 @@ export async function sendBaselineSummary(scanRunId: string): Promise<MailResult
     offer: { setupEur: PRICE_SETUP, monitorEur: PRICE_MONITOR },
     links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business), resultUrl: resultUrl(scanRunId, langOf(business)) },
   });
-  return deliver(business, m, "baseline", { scanRunId, stip: nf?.stip ?? null });
+  return deliver(business, m, "baseline", { scanRunId, stip: nf?.stip ?? null }, undefined, asker?.email);
 }
 
 export async function sendResolutionNotice(findingId: string): Promise<MailResult | null> {
@@ -297,7 +316,9 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
 /** Non-customer follow-up after the free scan (day 7 / day 21). */
 export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<MailResult | null> {
   const db = getDb();
-  const business = await requireBusiness(businessId);
+  const owned = await requireBusiness(businessId);
+  const asker = owned.ownerEmail ? null : await reportRequester(owned.id);
+  const business = asker ? { ...owned, language: asker.lang } : owned;
   if (business.status !== "scanned") {
     log.info("followup.skip", { businessId, status: business.status, day });
     return null;
@@ -335,5 +356,5 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
   );
   // RFC 8058: mail apps show their own "unsubscribe" button and POST here.
   const headers = { "List-Unsubscribe": `<${unsubscribeOneClickUrl(business)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
-  return deliver(business, m, `followup_${day}`, {}, headers);
+  return deliver(business, m, `followup_${day}`, {}, headers, asker?.email);
 }

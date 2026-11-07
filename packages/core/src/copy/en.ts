@@ -2213,6 +2213,11 @@ export const en: CopyShape = {
     notFoundLine: (n: number) => `${n} ${n === 1 ? "answer" : "answers"}: not found.`,
     checkNow: "Check now",
     checkQueued: "Check scheduled. You will see the result here within an hour.",
+    checkRefused: {
+      not_monthly: "An extra check is part of Vidalo Monthly. Vidalo Scan includes one full check.",
+      paused: "Your plan is paused. An extra check is possible again once it runs.",
+      too_soon: "You already asked for an extra check this week. That is possible once every 7 days.",
+    },
     sections: {
       status: "Status",
       findings: "Errors found",
@@ -2370,6 +2375,7 @@ export const en: CopyShape = {
     notPlanned: "No recheck planned.",
     evidence: {
       publish: (version: number | null) => `Facts page published again${version ? `, version ${version}` : ""}.`,
+      publishWaiting: "Facts page waits for your confirmation: confirm your details and we publish it.",
       sync: (channel: string, status: string) => `${channel}: details put back (${status}).`,
       syncMany: (n: number) => `${n} sources aligned.`,
       email: (to: string) => `Correction request sent on your behalf to ${to}.`,

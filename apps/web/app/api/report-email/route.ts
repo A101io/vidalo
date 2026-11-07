@@ -3,10 +3,16 @@ import { ready } from "@/lib/db";
 import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
 import { langFromReferer } from "@/lib/request-lang";
+import { REPORT_EMAIL_EVENT } from "@vidalo/core/reporter";
 
 export const runtime = "nodejs";
 
-/** POST email + scan + business → stores owner_email, enqueues the report e-mail job. */
+/**
+ * POST email + scan + business → enqueues the report e-mail to that address.
+ * The address is kept on the event only, never as the business's owner: anyone
+ * can post this form, so it proves nothing (review R-03). Ownership comes from
+ * a payment or a confirmed sign-in.
+ */
 export async function POST(req: Request) {
   const form = await req.formData();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -16,12 +22,15 @@ export async function POST(req: Request) {
   if (!isEmail(email)) return NextResponse.redirect(`${back}?mail=fout#report-email`, 303);
   const db = await ready();
   const business = await db.getBusiness(businessId);
-  if (!business) return NextResponse.redirect(back, 303);
-  // The first address on a business also sets the language its mails go out in: the language of the report page it was asked on.
-  // Later the owner changes it on the account page; an address already on file keeps both.
-  const first = business.ownerEmail ? {} : { ownerEmail: email, language: langFromReferer(req) };
-  await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ...first });
-  await db.enqueueJob("email", { template: "baseline", scanRunId, businessId: business.id });
-  await db.logEvent(business.id, "report_email.requested", { scanRunId, email });
+  const run = business ? await db.getScanRun(scanRunId) : null;
+  if (!business || run?.businessId !== business.id) return NextResponse.redirect(back, 303);
+  // A business with an owner gets its mails there; this form must not become a way to fill that inbox.
+  // Same "ok" either way, and once per (scan, address), so the answer says nothing about the business.
+  const asked = (await db.listEvents(business.id, 500)).some((e) => e.type === REPORT_EMAIL_EVENT && e.payload.scanRunId === scanRunId && e.payload.email === email);
+  if (!business.ownerEmail && !asked) {
+    const lang = langFromReferer(req);
+    await db.logEvent(business.id, REPORT_EMAIL_EVENT, { scanRunId, email, lang });
+    await db.enqueueJob("email", { template: "baseline", scanRunId, businessId: business.id, to: email, lang });
+  }
   return NextResponse.redirect(`${back}?mail=ok`, 303);
 }
