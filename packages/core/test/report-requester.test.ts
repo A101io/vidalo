@@ -4,7 +4,7 @@ import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "../src/db";
 import { setDb } from "../src/shared";
-import { REPORT_EMAIL_EVENT, reportRequester, sendFollowUp } from "../src/reporter";
+import { REPORT_EMAIL_EVENT, reportRequester, sendBaselineSummary, sendFollowUp } from "../src/reporter";
 
 // Review R-03: the report page's mail form is open to anyone, so the address
 // it takes gets the free-check mails but never becomes the business's owner.
@@ -40,5 +40,16 @@ describe("an address from the report page's mail form", () => {
     const res = await sendFollowUp(b.id, 7);
     const eml = await readFile(res!.file!, "utf8");
     expect(eml).toMatch(/^To: eigenaar@example\.nl/m);
+  });
+
+  it("gets the baseline mail at the address the job was asked for, in that language", async () => {
+    const b = await scanned(null);
+    const run = (await db.listScanRuns(b.id, 1))[0]!;
+    const res = await sendBaselineSummary(run.id, { email: "tweede@example.nl", lang: "nl" });
+    const eml = await readFile(res!.file!, "utf8");
+    expect(eml).toMatch(/^To: tweede@example\.nl/m);
+    expect((await db.getBusiness(b.id))?.ownerEmail).toBeNull();
+    const ev = (await db.listEvents(b.id, 50)).find((e) => e.type === "email.baseline");
+    expect(ev?.payload.to).toBe("requester");
   });
 });

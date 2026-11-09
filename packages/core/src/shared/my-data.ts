@@ -40,6 +40,28 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
     fixes,
     channels: await db.listChannels(businessId),
     googleIndex: await db.getGoogleIndex(businessId),
-    events: await db.listEvents(businessId, 10_000),
+    // Letters to directories go out in the owner's name to a directory's public address: those stay (AVG art. 15).
+    events: (await db.listEvents(businessId, 10_000)).map((e) => (e.type === "email.directory_correction" ? e : { ...e, payload: ownAddressesOnly(e.payload, business.ownerEmail) })),
   };
+}
+
+/**
+ * An event may name someone else's address: the person who asked for the free
+ * report, a payer, a directory. The export goes to the owner, so only the
+ * owner's own address stays (review CMP-03 / SEC-03).
+ */
+export function ownAddressesOnly(payload: Record<string, unknown>, ownerEmail: string | null | undefined): Record<string, unknown> {
+  const own = ownerEmail?.trim().toLowerCase() || null;
+  const foreign = (v: unknown) => typeof v === "string" && v.includes("@") && v.trim().toLowerCase() !== own;
+  // Nested too: `owner.verified` keeps `previous.ownerEmail`, an earlier claimant's address.
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.filter((x) => !foreign(x)).map(walk);
+    if (v && typeof v === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [k, x] of Object.entries(v)) if (!foreign(x)) out[k] = walk(x);
+      return out;
+    }
+    return v;
+  };
+  return walk(payload) as Record<string, unknown>;
 }

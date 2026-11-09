@@ -105,16 +105,6 @@ export async function checkNow() {
   redirect(href("/app?controle=ingepland"));
 }
 
-/** Option B on the domain page: let Vidalo register a domain. */
-export async function registerDomain() {
-  const { business } = await requireVerifiedOwner("/app/domein");
-  const db = await ready();
-  await db.enqueueJob("operator_task", { reason: "domain_register", businessId: business.id, suggestion: `${business.slug}.nl` });
-  await db.logEvent(business.id, "domain.register_requested", {});
-  revalidatePath("/app/domein");
-  redirect((await getI18n()).href("/app/domein?registreren=ingepland"));
-}
-
 /**
  * "Verwijder alles" on the account page (AVG art. 17, core/shared/my-data.ts):
  * the business and everything under it, then the login, then the session.

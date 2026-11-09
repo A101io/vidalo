@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
-import { amsterdamParts, amsterdamToUtc, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
+import { REPORT_EMAIL_EVENT } from "@vidalo/core/reporter";
+import { amsterdamParts, amsterdamToUtc, enqueueFollowUps, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -142,5 +143,22 @@ describe("owner's pause and cancel", () => {
     expect((await ownerSubscriptionChanges(new Date("2026-11-13T00:00:00Z"))).closed).toBe(0);
     expect((await ownerSubscriptionChanges(new Date("2026-11-14T01:00:00Z"))).closed).toBe(1);
     expect((await db.getBusiness(b.id))?.status).toBe("churned");
+  });
+});
+
+// Review R-03: a free check whose report was mailed to an asker gets the
+// follow-ups there; one nobody asked a mail for gets none.
+describe("follow-ups to a report asker", () => {
+  it("are queued for a business with only an asker, not for one with no address", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const asked = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "scanned", ownerEmail: null });
+    await db.logEvent(asked.id, REPORT_EMAIL_EVENT, { scanRunId: "r1", email: "vraagt@example.nl", lang: "nl" });
+    const nobody = await db.upsertBusiness({ name: "Bakkerij Jansen", place: "Haarlem", status: "scanned", ownerEmail: null });
+    const now = new Date(new Date(asked.createdAt).getTime() + 8 * 86_400_000);
+    expect(await enqueueFollowUps(now)).toBe(1);
+    const queued = [...db.jobs.values()].filter((j) => j.kind === "followup");
+    expect(queued.map((j) => [j.payload.businessId, j.payload.day])).toEqual([[asked.id, 7]]);
+    expect(queued.some((j) => j.payload.businessId === nobody.id)).toBe(false);
   });
 });
