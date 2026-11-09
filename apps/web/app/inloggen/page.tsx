@@ -100,6 +100,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             </button>
           </form>
           {!env.hasSupabase && <p className="mt-4 text-[14px] text-muted">{a.mockHint}</p>}
+          <h2 className="h3 mt-10">{a.noAccountH2}</h2>
+          <p className="mt-2 text-[15px] text-ink-2">{a.noAccount}</p>
+          <Link href={href("/#top")} className="mt-3 inline-block underline">
+            {a.startCheck}
+          </Link>
         </>
       )}
     </Shell>

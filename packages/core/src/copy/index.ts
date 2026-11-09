@@ -2122,6 +2122,7 @@ export const copy = {
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
       { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.io. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
+      { q: "Hoe maak ik een account aan?", a: "Niet apart. De gratis controle werkt zonder account. Je account ontstaat bij je eerste aankoop, op het e-mailadres dat je bij het betalen invult. Daarna log je in via een link in je mail, zonder wachtwoord." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Vidalo Scan’ gekozen, dan voeg je ‘Vidalo Monthly’ later toe onder ‘Abonnement’ in je account." },
       { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
@@ -2227,6 +2228,9 @@ export const copy = {
   auth: {
     h1: "Inloggen",
     body: "Vul je e-mailadres in. Je krijgt een link waarmee je direct bent ingelogd.",
+    /** Under the form: there is no separate sign-up (core/shared/claim.ts). */
+    noAccountH2: "Nog geen account?",
+    noAccount: "Een account maak je niet apart aan. De gratis controle werkt zonder account. Koop je daarna Vidalo Scan of Vidalo Monthly, dan ontstaat je account bij die aankoop, op het e-mailadres dat je bij het betalen invult. Daarna log je hier in met dat adres.",
     label: "E-mailadres",
     button: "Stuur inloglink",
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",

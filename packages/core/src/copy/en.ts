@@ -2087,6 +2087,7 @@ export const en: CopyShape = {
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
       { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
+      { q: "How do I create an account?", a: "You do not. The free check works without an account. Your account is created with your first purchase, on the email address you enter at payment. After that you log in through a link in your email, without a password." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
       { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
@@ -2190,6 +2191,8 @@ export const en: CopyShape = {
   auth: {
     h1: "Log in",
     body: "Enter your email address. You will get a link that logs you in straight away.",
+    noAccountH2: "No account yet?",
+    noAccount: "There is no separate sign-up. The free check works without an account. If you then buy Vidalo Scan or Vidalo Monthly, your account is created with that purchase, on the email address you enter at payment. After that you log in here with that address.",
     label: "Email address",
     button: "Send login link",
     sent: "We have sent you a login link. Check your inbox.",
