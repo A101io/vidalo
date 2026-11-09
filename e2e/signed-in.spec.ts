@@ -29,8 +29,8 @@ async function freshBusinessId(page: Page, name: string): Promise<string> {
 }
 
 /** Mock checkout (no Stripe key): marks the business paid, as /welkom?mock=1 follows. */
-async function mockCheckout(page: Page, businessId: string) {
-  const res = await page.request.post("/api/checkout", { form: { business: businessId, plan: "monitor", scan: "" }, maxRedirects: 0 });
+async function mockCheckout(page: Page, businessId: string, plan: "monitor" | "setup" = "monitor") {
+  const res = await page.request.post("/api/checkout", { form: { business: businessId, plan, scan: "" }, maxRedirects: 0 });
   expect(res.headers()["location"]).toContain(`/welkom?mock=1&business=${businessId}`);
 }
 
@@ -54,7 +54,8 @@ test("signed in without a business: no form, a free check and sign-out", async (
 test("signed in, coming from /welkom: one button links the business, then the dashboard opens", async ({ page }) => {
   const email = `koppel-${Date.now()}@example.com`;
   const businessId = await freshBusinessId(page, "Kapsalon Koppel");
-  await mockCheckout(page, businessId);
+  // Vidalo Scan only: the dashboard may not promise a monthly check (review CMP-01).
+  await mockCheckout(page, businessId, "setup");
   await signInWithoutBusiness(page, email);
   await page.goto(`/inloggen?next=%2Fapp&business=${businessId}`);
   await expect(page.getByText("Koppel Kapsalon Koppel (Haarlem) aan dit account?")).toBeVisible();
@@ -62,6 +63,13 @@ test("signed in, coming from /welkom: one button links the business, then the da
   await page.getByRole("button", { name: "Ja, koppel dit bedrijf" }).click();
   await page.waitForURL(/\/app(\?|$)/);
   await expect(page.locator("main")).toBeVisible();
+  // No Vidalo Monthly: no monthly date and no "Controleer nu", the add-on instead (review CMP-01).
+  await expect(page.locator("[data-rail='scan']")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Controleer nu" })).toHaveCount(0);
+  await expect(page.getByText("Volgende controle")).toHaveCount(0);
+  // An unknown ?controle= value is ignored, not a server error.
+  const odd = await page.goto("/app?controle=constructor");
+  expect(odd?.status()).toBe(200);
   // Signed in with a business: /inloggen goes straight to the dashboard.
   await page.goto("/inloggen");
   await expect(page).toHaveURL(/\/app(\?|$)/);

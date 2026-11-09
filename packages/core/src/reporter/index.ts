@@ -65,7 +65,8 @@ async function deliver(business: BusinessRecord, m: Mail, type: string, extra: R
     return null;
   }
   const res = await sendMail({ to: recipient, subject: m.subject, text: m.text, html: m.html, headers, tags: { type, business: business.slug, lang: langOf(business) } });
-  await getDb().logEvent(business.id, `email.${type}`, { to: recipient, subject: m.subject, mode: res.mode, id: res.id, ...extra });
+  // The log names who got it, never the address: an export to the owner must not carry a requester's address (review CMP-03).
+  await getDb().logEvent(business.id, `email.${type}`, { to: business.ownerEmail ? "owner" : "requester", subject: m.subject, mode: res.mode, id: res.id, ...extra });
   return res;
 }
 
@@ -176,6 +177,7 @@ export async function sendWelcome(businessId: string): Promise<MailResult | null
   const m = welcomeEmail({
     lang: langOf(business),
     business,
+    plan: business.plan,
     cname,
     links: {
       dashboardUrl: dashboardUrl(business),

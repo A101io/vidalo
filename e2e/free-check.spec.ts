@@ -49,6 +49,11 @@ for (const plan of ["monitor", "setup"] as const) {
     await page.waitForURL(/\/welkom\?/);
     await expect(page.locator("main")).toBeVisible();
     await expect(page.locator("h1")).toBeVisible();
+    // Only Vidalo Monthly promises a report every month (review CMP-01).
+    const monthly = page.getByText("Daarna krijg je elke maand een rapport.");
+    const scanOnly = page.getByText("Elke maand controleren hoort bij Vidalo Monthly.");
+    await expect(plan === "monitor" ? monthly : scanOnly).toBeVisible();
+    await expect(plan === "monitor" ? scanOnly : monthly).toHaveCount(0);
     await expectNoErrors(errors);
   });
 }

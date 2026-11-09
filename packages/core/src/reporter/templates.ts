@@ -311,6 +311,8 @@ export interface WelcomeData {
   /** CNAME instruction when the owner has a domain */
   cname?: { host: string; target: string } | null;
   lang?: Lang;
+  /** The plan bought; only Vidalo Monthly ("monitor") promises a check every month (review CMP-01). */
+  plan?: Business["plan"];
 }
 
 export function welcomeEmail(d: WelcomeData): Mail {
@@ -336,7 +338,7 @@ export function welcomeEmail(d: WelcomeData): Mail {
         ],
       },
       { kind: "cta", label: W.cta, url: d.links.confirmFactsUrl, note: W.ctaNote(d.links.dashboardUrl) },
-      { kind: "steps", title: W.after.title, items: W.after.items.map((i) => ({ ...i })) },
+      { kind: "steps", title: W.after.title, items: W.after.items.map((i, n) => (n === W.after.items.length - 1 && d.plan !== "monitor" ? { ...W.after.scanItem } : { ...i })) },
       { kind: "note", text: W.questions },
     ],
   });
@@ -347,7 +349,8 @@ export function welcomeEmail(d: WelcomeData): Mail {
 // ---------------------------------------------------------------------------
 
 export interface BaselineData {
-  business: Pick<Business, "name" | "place">;
+  /** `plan`: only Vidalo Monthly ("monitor") is promised a monthly check (review CMP-01) */
+  business: Pick<Business, "name" | "place"> & { plan?: Business["plan"] };
   /** a paying customer: the button goes to the account, else to the report page (links.resultUrl) with the offer */
   paying?: boolean;
   offer?: { setupEur: number; monitorEur: number };
@@ -406,7 +409,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
   return renderMail({
     lang,
     subject,
-    preheader: d.wrongAnswers > 0 ? B.preheader.wrong(full.where) : B.preheader.clean,
+    preheader: d.wrongAnswers > 0 ? B.preheader.wrong(full.where) : d.business.plan === "monitor" ? B.preheader.clean : B.preheader.cleanScan,
     headline,
     stip: d.stip,
     stipText: d.stip ? `${C.stipMeaning[d.stip]}. ${C.stipLine[d.stip]}` : undefined,
@@ -434,8 +437,8 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
               { ...B.next.today, done: true },
               ...(recheck.length ? [{ when: M.around(plus(d.checkedAt, Math.min(...recheck), lang)), what: B.next.firstRechecks }] : []),
               // The last rechecks only get their own line when they fall before the monthly check.
-              ...(recheck.length && Math.max(...recheck) > Math.min(...recheck) && Math.max(...recheck) < 30 ? [{ when: M.around(plus(d.checkedAt, Math.max(...recheck), lang)), what: B.next.lastRechecks }] : []),
-              { when: M.around(plus(d.checkedAt, 30, lang)), what: M.nextMonthly },
+              ...(recheck.length && Math.max(...recheck) > Math.min(...recheck) && (Math.max(...recheck) < 30 || d.business.plan !== "monitor") ? [{ when: M.around(plus(d.checkedAt, Math.max(...recheck), lang)), what: B.next.lastRechecks }] : []),
+              d.business.plan === "monitor" ? { when: M.around(plus(d.checkedAt, 30, lang)), what: M.nextMonthly } : { ...M.nextScan },
             ],
           }
         : howWeFix(lang),
@@ -448,7 +451,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
 // ---------------------------------------------------------------------------
 
 export interface ResolutionData {
-  business: Pick<Business, "name" | "place">;
+  business: Pick<Business, "name" | "place"> & { plan?: Business["plan"] };
   finding: Finding;
   before: { quote: string; at: string };
   after: { quote: string; at: string };
@@ -477,7 +480,7 @@ export function resolutionNoticeEmail(d: ResolutionData): Mail {
           { title: R.after(formatMailDate(d.after.at, lang)), lines: [`"${d.after.quote}"`], tone: "groen" },
         ],
       },
-      { kind: "p", text: R.source(sourceLine(d.finding, lang), M.days(d.days)) },
+      { kind: "p", text: (d.business.plan === "monitor" ? R.source : R.sourceScan)(sourceLine(d.finding, lang), M.days(d.days)) },
       { kind: "cta", label: R.cta, url: d.links.dashboardUrl },
     ],
   });
@@ -637,7 +640,7 @@ export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
 // ---------------------------------------------------------------------------
 
 export interface UnfixableData {
-  business: Pick<Business, "name" | "place">;
+  business: Pick<Business, "name" | "place"> & { plan?: Business["plan"] };
   finding: Finding;
   note: string;
   triedDays: number;
@@ -662,7 +665,7 @@ ${U.why(unfixableNote(d.note, lang))}
 
 ${U.did(fixLabel(path, lang))}
 
-${U.next(tail)}
+${(d.business.plan === "monitor" ? U.next : U.nextScan)(tail)}
 
 ${M.overview(d.links.dashboardUrl)}
 

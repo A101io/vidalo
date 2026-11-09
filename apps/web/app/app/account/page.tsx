@@ -231,7 +231,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <form action={saveMailPrefs} className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
           <p>{A.mails.body}</p>
           <ul className="space-y-3">
-            {MAIL_PREF_KEYS.map((k) => (
+            {MAIL_PREF_KEYS.map((k) =>
+              // The monthly report comes with Vidalo Monthly only; without it the box is hidden and its value kept (review CMP-01).
+              k === "report" && business.plan !== "monitor" ? (
+                business.mailPrefs[k] !== false && <input key={k} type="hidden" name={k} value="aan" />
+              ) : (
               <li key={k}>
                 <label className="flex items-start gap-2">
                   <input type="checkbox" name={k} value="aan" defaultChecked={business.mailPrefs[k] !== false} className="mt-1" />
@@ -241,7 +245,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                   </span>
                 </label>
               </li>
-            ))}
+              ),
+            )}
           </ul>
           <div className="border-t-[1px] border-line pt-4">
             <p className="font-semibold">{A.mails.requiredH}</p>

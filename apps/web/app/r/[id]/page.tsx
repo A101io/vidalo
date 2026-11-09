@@ -13,6 +13,7 @@ import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
 import { getScanReport, latestScanReport } from "@/lib/core";
 import { ready } from "@/lib/db";
+import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
 import { buildReportView, type BuildViewOptions } from "@/lib/report";
 import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, demoGreySources, demoGreyReport, demoReport } from "@/lib/demo";
@@ -63,6 +64,8 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const grey = v.state === "grijs";
   const business = demo ? null : await (await ready()).getBusiness(report.business.id);
   const ownerEmail = business?.ownerEmail ?? null;
+  // The form reads "sent" once the mails have an address: the owner's, or an earlier asker's (review QA-08).
+  const mailsHaveAddress = Boolean(ownerEmail) || (business ? Boolean(await reportRequester(business.id)) : false);
 
   return (
     <>
@@ -238,7 +241,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
         {/* Email + self */}
         <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2 print:hidden">
-          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || Boolean(ownerEmail)} invalid={sp.mail === "fout"} />
+          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} />
           <div className="flex flex-col gap-2.5">
             <h3 className="text-[16px] font-bold">{v.self.h3}</h3>
             <details id="zelf">

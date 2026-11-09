@@ -13,7 +13,7 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Openprovider | Processor: registers and manages a domain an owner buys through Vidalo (the add-on, docs/DOMAINS.md); passes the holder data to the registry (SIDN for .nl, EURid for .eu, Verisign for .com), which is an independent controller for its register | Holder: business name, contact person, address, phone, email, KvK number; the domain name | NL (Hosting Concepts B.V.) | EU | open: Openprovider's reseller agreement and DPA, accepted at sign-up (go-live D9) |
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
-| Resend | Processor: email | Owner email, report links | US | DPF / SCCs | open |
+| Resend | Processor: email | Owner or report-requester email, report links | US | DPF / SCCs | open |
 | Twilio | Processor: rings, texts or WhatsApps the ownership code (Verify; WhatsApp goes through Meta as sub-processor) | The business phone number Google lists, the code, call/SMS/WhatsApp logs | US | DPF / SCCs | open: Twilio DPA (Console → Legal) |
 | Cloudflare | Processor: hosting of web and worker (Workers, queue), facts pages, DNS, Turnstile | Visitor IPs and request data; everything the database holds, in transit; browser signals (Turnstile, on the free check and sign-in) | Global edge (US company) | DPF / SCCs | open |
 | Google Workspace | Processor: the vidalo.io mailbox (hello@, support@) | Whatever people mail us | EU/US | DPF / SCCs | open: part of the Workspace terms |
