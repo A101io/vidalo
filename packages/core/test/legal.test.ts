@@ -126,6 +126,7 @@ describe("legal texts: recipients", () => {
     "api.kvk.nl": v("KvK"),
     "challenges.cloudflare.com": v("Cloudflare"),
     "api.cloudflare.com": v("Cloudflare"),
+    "api.openprovider.eu": v("Openprovider"),
     "wa.me": v("WhatsApp"),
     "googletagmanager.com": v("Google Analytics"),
     "connect.facebook.net": { processors: "Meta (pixel)", nl: "Meta (Facebook, Instagram)", en: "Meta (Facebook, Instagram)" },

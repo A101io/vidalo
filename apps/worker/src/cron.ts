@@ -11,11 +11,12 @@
  *   7. Google index check of the facts page: daily until Google has it, then weekly
  *   8. "Klopt dit nog?": one mail a year after the owner last confirmed the facts
  *   9. owner's pause and cancel: reminder a week before a pause ends, the end of a pause, a cancel Stripe never closed
+ *  10. domain add-on: the renewal reminder 30 days before a registered domain renews (core/billing/domain.ts)
  */
 import { pollFactsHost } from "@vidalo/core/publisher";
 import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
-import { duePauseMail } from "@vidalo/core/billing";
-import { reportRequester, sendSubscriptionMail } from "@vidalo/core/reporter";
+import { duePauseMail, dueDomainReminder } from "@vidalo/core/billing";
+import { reportRequester, sendDomainMail, sendSubscriptionMail } from "@vidalo/core/reporter";
 import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
@@ -262,6 +263,18 @@ export async function ownerSubscriptionChanges(now = new Date()): Promise<{ remi
   return { reminders, resumed, closed };
 }
 
+/** The domain runs on its own yearly subscription, so a business of any status may hold one. */
+export async function domainReminders(now = new Date()): Promise<number> {
+  let n = 0;
+  for (const b of await listBusinessesByStatus(["trial", "active", "paused", "churned"])) {
+    if (b.domainRegistration?.status !== "registered") continue;
+    if (!dueDomainReminder(b.domainRegistration, await events(b.id), now)) continue;
+    await sendDomainMail(b, "domain_renewal");
+    n++;
+  }
+  return n;
+}
+
 export async function cronTick(now = new Date()): Promise<void> {
   const started = Date.now();
   const out: Record<string, unknown> = {};
@@ -275,6 +288,7 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["indexChecks", () => enqueueIndexChecks(now)],
     ["reconfirm", () => enqueueReconfirmations(now)],
     ["ownerSubscription", () => ownerSubscriptionChanges(now)],
+    ["domainReminders", () => domainReminders(now)],
   ];
   for (const [name, fn] of steps) {
     try {

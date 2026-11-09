@@ -36,6 +36,7 @@ export * from "./links.js";
 export * from "./subscription-mails.js";
 export * from "./launch.js";
 export * from "./reconfirm.js";
+export * from "./domain-mails.js";
 
 const PRICE_SETUP = 149;
 const PRICE_MONITOR = 49;

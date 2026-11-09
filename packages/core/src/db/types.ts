@@ -21,6 +21,7 @@ import type {
 } from "../types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 import type { MailPrefs } from "../shared/mail-prefs";
+import type { DomainRegistration } from "../registrar/types";
 
 /** Business plus the operational columns that exist in SQL but not in the shared Business type. */
 export interface BusinessRecord extends Business {
@@ -41,6 +42,8 @@ export interface BusinessRecord extends Business {
   pauseUntil: string | null;
   /** Optional mail groups the owner switched off or on (shared/mail-prefs.ts); absent = on. */
   mailPrefs: MailPrefs;
+  /** The domain Vidalo registers for this business, the paid add-on (migration 0015); null = never asked. */
+  domainRegistration: DomainRegistration | null;
 }
 
 /** What Google's URL Inspection API last said about the facts page. */

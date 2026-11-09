@@ -12,6 +12,10 @@ import { decideChannelDiff } from "@vidalo/core/publisher";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
 import { canDeleteMyData, ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
+import { cancelDomain, domainOptions, undoDomainCancel } from "@vidalo/core/billing";
+import { mailDomainAuthCode } from "@vidalo/core/registrar";
+import { sendDomainMail } from "@vidalo/core/reporter";
+import { subscriptionApi } from "@/lib/subscription";
 
 /** The language row on the account page: save it, then show the account in that language. */
 export async function setLanguage(formData: FormData) {
@@ -105,14 +109,40 @@ export async function checkNow() {
   redirect(href("/app?controle=ingepland"));
 }
 
-/** Option B on the domain page: let Vidalo register a domain. */
-export async function registerDomain() {
-  const { business } = await requireVerifiedOwner("/app/domein");
-  const db = await ready();
-  await db.enqueueJob("operator_task", { reason: "domain_register", businessId: business.id, suggestion: `${business.slug}.nl` });
-  await db.logEvent(business.id, "domain.register_requested", {});
+/**
+ * The domain add-on on /app/domein (core/billing/domain.ts). Buying goes
+ * through POST /api/domain/checkout; these are what an owner does after.
+ * Signed-in owner, not only a Google-verified one: stopping what you pay for
+ * never waits for a proof step. Each change is confirmed by mail.
+ */
+async function domainOwner() {
+  const { business } = await requireOwner("/app/domein");
+  return { business, db: await ready(), api: await subscriptionApi(), href: (await getI18n()).href };
+}
+
+export async function cancelDomainAction() {
+  const { business, db, api, href } = await domainOwner();
+  const r = await cancelDomain(db, api, business);
+  if (!r.ok) redirect(href("/app/domein?domein=nee#registreren"));
+  const after = await db.getBusiness(business.id);
+  if (after) await sendDomainMail(after, "domain_cancelled");
   revalidatePath("/app/domein");
-  redirect((await getI18n()).href("/app/domein?registreren=ingepland"));
+  redirect(href("/app/domein?domein=opgezegd#registreren"));
+}
+
+export async function undoDomainCancelAction() {
+  const { business, db, api, href } = await domainOwner();
+  const r = await undoDomainCancel(db, api, business);
+  if (!r.ok) redirect(href("/app/domein?domein=nee#registreren"));
+  revalidatePath("/app/domein");
+  redirect(href("/app/domein?domein=verlengd#registreren"));
+}
+
+/** The transfer code goes only to the owner's address on record, by mail; it is never shown on the page. */
+export async function mailAuthCodeAction() {
+  const { business, href } = await domainOwner();
+  if (!domainOptions(business.domainRegistration).canGetAuthCode || !(await mailDomainAuthCode(business))) redirect(href("/app/domein?domein=nee#registreren"));
+  redirect(href("/app/domein?domein=code#registreren"));
 }
 
 /**
@@ -125,6 +155,9 @@ export async function deleteMyData(formData: FormData) {
   const { href } = await getI18n();
   if (String(formData.get("confirm") ?? "") !== "ja") redirect(href("/app/account#gegevens"));
   if (!canDeleteMyData(business.status)) redirect(href("/app/account?gegevens=abonnement#gegevens"));
+  // The domain add-on bills on its own: it is stopped first ("Niet verlengen" on /app/domein), like the subscription.
+  const reg = business.domainRegistration;
+  if (reg && (reg.status === "paid" || (reg.status === "registered" && !reg.cancelAt))) redirect(href("/app/account?gegevens=abonnement#gegevens"));
   const db = await ready();
   await db.deleteBusiness(business.id);
   // No business id and no address: only that a deletion happened.

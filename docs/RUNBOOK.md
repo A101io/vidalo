@@ -29,6 +29,7 @@ Each one stops one kind of damage without a deploy. Values in `wrangler.jsonc` `
 | All spend at one AI provider | Revoke the key at the provider (OpenAI → API keys; Google AI Studio; Perplexity; SerpAPI; Anthropic console) | New key → Worker secret | That system is skipped or its jobs fail and retry |
 | Outgoing mail | Resend → API Keys → revoke the key | New key → `RESEND_API_KEY` on both Workers | Not tried: sends then fail with 401 and the job retries |
 | Payments | Stripe → Developers → Webhooks → disable the endpoint (events queue at Stripe for up to 3 days) | Enable; Stripe retries what it held | Checkout still takes money; the service does not start until the webhook is back |
+| Domain registrations (spend at Openprovider) | Remove `OPENPROVIDER_PASSWORD` from both Workers (Dashboard → Settings → Variables and Secrets), or empty the Openprovider balance | Set it again; queue `domain_register` for each paid registration (docs/DOMAINS.md §4) | Option B on `/app/domein` says it is not available; a paid registration that runs meanwhile retries five times, then reaches support as `domain_register_stuck` and stays paid |
 
 ## 3. Roll back the code
 

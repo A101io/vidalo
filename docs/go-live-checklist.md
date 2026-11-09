@@ -92,6 +92,10 @@ Written as if the three domains exist (Julian, 13 Oct 2026: "ga er even van uit"
 | D4 | Cloudflare token gains **Zone · Workers Routes · Edit** on the zone `vidalo.io` (docs/secrets-and-keys.md) | ✓verified 23 Oct 2026: the production deploy bound `vidalo.io` and `www.vidalo.io` as Custom Domains |
 | D5 | Fallback facts hosts `{slug}.feiten.vidalo.io` are two levels deep: Universal SSL covers only `*.vidalo.io`, so they need Advanced Certificate Manager (about $10/month) or a one-level scheme such as `{slug}-feiten.vidalo.io` | decision: Julian |
 | D6 | `feiten.vidalo.io` as the CNAME target for customers' own domains (Cloudflare for SaaS, fallback origin on `vidalo-worker`) | open |
+| D7 | Domain add-on (option B, docs/DOMAINS.md): Openprovider **sandbox** account, API contact `vidalo-api` without IP restrictions, `OPENPROVIDER_*` in the local `.env`; one sandbox registration end to end (check → register → DNS → auth code → auto-renew off) | open: Julian creates the account (docs/DOMAINS.md §5); code written and tested against the mock, never against Openprovider |
+| D8 | `pnpm stripe:setup --apply` in the sandbox creates "Vidalo Domein" €25/year; `STRIPE_PRICE_DOMAIN` on `vidalo-web`; one test checkout of the add-on whose `domain.paid` event reads `termsConsent: "accepted"` | open: Julian runs it (the price is not created by Claude) |
+| D9 | Openprovider **production**: sign-up, .nl (SIDN) and .eu contracts signed, Basic S membership, balance topped up (auto top-up off), reseller agreement and DPA accepted (processors.md), `OPENPROVIDER_USERNAME`, `OPENPROVIDER_PASSWORD`, `OPENPROVIDER_TECH_HANDLE` on `vidalo-web` and `vidalo-worker`. Until then option B says it is not available | open: Julian |
+| D10 | Migration `0015_domain_registration.sql` applied to the hosted project | open: apply with the Supabase MCP on `bbynmqvaxpjdnkaasutd` after merge |
 
 Since 23 Oct 2026 the product is on `vidalo.io`, behind the coming-soon gate (J4). Setting the gate to 0 is now the one-way door below.
 

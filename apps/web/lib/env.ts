@@ -67,6 +67,10 @@ export const env = {
   get stripePriceMonitor() {
     return read("STRIPE_PRICE_MONITOR");
   },
+  /** The domain add-on, yearly (scripts/stripe-setup.mjs, lookup key vidalo_domain_eur_25_year). */
+  get stripePriceDomain() {
+    return read("STRIPE_PRICE_DOMAIN");
+  },
   /**
    * "1" = Stripe Tax works out the VAT per customer (automatic_tax): 21% in the Netherlands, reverse
    * charge for an EU business with a valid VAT number, none outside the EU. Needs Stripe Tax set up on

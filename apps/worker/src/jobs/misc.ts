@@ -12,6 +12,7 @@ import {
   sendUnfixableNotice,
   sendWelcome,
   sendOwnerText,
+  sendDomainMail,
   factsPageUrl,
   textToHtml,
 } from "@vidalo/core/reporter";
@@ -92,6 +93,10 @@ export const email: Handler<"email"> = async (p) => {
       return { mode: (await sendFollowUp(p.businessId, p.day))?.mode ?? null };
     case "reconfirm":
       return { mode: (await sendFactsReconfirm(p.businessId))?.mode ?? null };
+    case "domain": {
+      const business = await getDb().getBusiness(p.businessId);
+      return { mode: business ? ((await sendDomainMail(business, p.kind))?.mode ?? null) : null };
+    }
     case "directory_correction": {
       const db = getDb();
       const business = await db.getBusiness(p.businessId);

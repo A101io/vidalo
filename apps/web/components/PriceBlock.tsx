@@ -9,12 +9,13 @@ function Check({ light }: { light?: boolean }) {
   );
 }
 
-/** The two plans on the dark pricing band, Vidalo Scan (€149) and Vidalo Monthly (€49 per maand), and the websites and extra locations by request. */
+/** The two plans on the dark pricing band, Vidalo Scan (€149) and Vidalo Monthly (€49 per maand), the domain add-on (€25 per jaar, bought in the account), and the websites and extra locations by request. */
 export async function PriceBlock() {
   const { copy, href } = await getI18n();
   const P = copy.landing.prijs;
   const W = P.website;
   const L = P.locations;
+  const D = P.domain;
   return (
     <div className="flex flex-col gap-9">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -98,6 +99,14 @@ export async function PriceBlock() {
             {W.ask}
           </a>
         </div>
+      </div>
+      <div className="flex flex-col gap-3 rounded-[20px] border-[1.5px] border-dark-panel p-7 sm:p-[30px]">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h3 className="text-[18px] font-extrabold">{D.h3}</h3>
+          <p className="text-[22px] font-extrabold">{D.price}</p>
+        </div>
+        <p className="text-[15px] text-dark-text">{D.sub}</p>
+        <p className="text-[13px] text-grijs">{D.note}</p>
       </div>
       <div className="flex flex-col gap-5 rounded-[20px] border-[1.5px] border-dark-panel p-7 sm:p-[30px]">
         <div>

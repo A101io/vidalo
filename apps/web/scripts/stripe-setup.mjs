@@ -1,5 +1,5 @@
 /**
- * Sets up Vidalo's Stripe account: the two prices, the 21% BTW tax rate, the
+ * Sets up Vidalo's Stripe account: the three prices (Scan, Monthly, the yearly domain add-on), the 21% BTW tax rate, the
  * customer portal configuration and the webhook endpoint. Checks by default; changes nothing without --apply.
  *
  *   STRIPE_SECRET_KEY=sk_test_... VIDALO_STRIPE_ACCOUNT=acct_... \
@@ -26,6 +26,8 @@ const OTHER_A101_ACCOUNTS = {
 const PRICES = [
   { lookup: "vidalo_setup_eur_149", product: "Vidalo Scan", amount: 14900, recurring: null, env: "STRIPE_PRICE_SETUP" },
   { lookup: "vidalo_monitor_eur_49", product: "Vidalo Monthly", amount: 4900, recurring: { interval: "month" }, env: "STRIPE_PRICE_MONITOR" },
+  // The domain add-on (docs/DOMAINS.md): DOMAIN_PRICE_EUR_PER_YEAR in packages/core/src/billing/domain.ts, its own yearly subscription.
+  { lookup: "vidalo_domain_eur_25_year", product: "Vidalo Domein", amount: 2500, recurring: { interval: "year" }, env: "STRIPE_PRICE_DOMAIN" },
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -85,7 +87,8 @@ async function main() {
     }
     if (price) {
       if (price.unit_amount !== p.amount) fail(`${p.lookup} exists but costs ${price.unit_amount} cents, not ${p.amount}. Fix it in the dashboard; nothing changed.`);
-      say(`✓ ${p.product} €${p.amount / 100}${p.recurring ? "/maand" : ""} → ${price.id}`);
+      if ((price.recurring?.interval ?? null) !== (p.recurring?.interval ?? null)) fail(`${p.lookup} exists but bills per ${price.recurring?.interval ?? "once"}, not per ${p.recurring?.interval ?? "once"}. Fix it in the dashboard; nothing changed.`);
+      say(`✓ ${p.product} €${p.amount / 100}${p.recurring ? (p.recurring.interval === "year" ? "/jaar" : "/maand") : ""} → ${price.id}`);
       env[p.env] = price.id;
     } else {
       say(`· missing: ${p.product} (${p.lookup})`);

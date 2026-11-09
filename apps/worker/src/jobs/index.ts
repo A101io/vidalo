@@ -1,6 +1,7 @@
 import type { Job } from "@vidalo/core/db";
 import { email, fixes, followup, indexCheck, operatorTask, publish, recheck, report, sitecheck, sync } from "./misc.js";
 import { scan } from "./scan.js";
+import { domainAutoRenew, domainRegister } from "./domain.js";
 import { setup } from "./setup.js";
 import { paidOnlyBlock } from "./paid.js";
 import { spendBlock } from "./spend.js";
@@ -24,6 +25,8 @@ const handlers: { [K in JobKind]: Handler<K> } = {
   operator_task: operatorTask,
   sitecheck,
   index_check: indexCheck,
+  domain_register: domainRegister,
+  domain_autorenew: domainAutoRenew,
 };
 
 export function handlerFor(kind: string): AnyHandler | null {
@@ -62,6 +65,10 @@ export function validatePayload(kind: JobKind, payload: Record<string, unknown>)
         return payload.template ? null : need(["to", "subject", "text"]);
       case "operator_task":
         return need(["reason"]);
+      case "domain_register":
+        return need(["businessId"]);
+      case "domain_autorenew":
+        return need(["businessId", "on"]);
       default:
         return null;
     }

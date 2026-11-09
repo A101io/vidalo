@@ -146,6 +146,33 @@ console.log(`mails: ${mails.length} in ${path.join(out, "mail")}`);
 console.log(`facts page: ${pageDir}`);
 console.log(`findings: ${findings.length}, fixes: ${fixes}, channels: ${channels.length}`);
 
+// 5b. The domain add-on: a paying owner without a domain buys one; the webhook queues the job,
+// the mock registrar registers it and points feiten. at Vidalo, and the facts page moves there.
+step("domain add-on: checkout paid → domain_register → live");
+{
+  const { handleStripeEvent } = await import("@vidalo/core/billing");
+  const shop = await prepareBusiness({ name: "Kapsalon Mila", place: "Leiden", db });
+  const b = await db.upsertBusiness({ id: shop.business.id, slug: shop.business.slug, name: shop.business.name, place: shop.business.place, status: "active", plan: "monitor", ownerEmail: "mila@example.nl", ownerVerifiedAt: new Date().toISOString(), stripeCustomerId: "cus_mila" });
+  const holder = { company: b.name, firstName: "Mila", lastName: "Jansen", street: "Breestraat", houseNumber: "1", postcode: "2311 CH", city: "Leiden", country: "NL", phone: "+31711234567", email: "mila@example.nl", kvk: null };
+  await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, domainRegistration: { name: "kapsalonmila.nl", status: "checkout", holder, registrar: "mock", acceptedAt: new Date().toISOString(), checkoutSessionId: null, stripeSubscriptionId: null, holderHandle: null, registrarId: null, paidAt: null, registeredAt: null, expiresAt: null, autoRenew: true, cancelAt: null, lastError: null } });
+  const outcome = await handleStripeEvent({ id: "evt_e2e_domain", type: "checkout.session.completed", data: { object: { id: "cs_e2e_domain", payment_status: "paid", customer: "cus_mila", subscription: "sub_e2e_domain", metadata: { businessId: b.id, plan: "domain", domain: "kapsalonmila.nl" } } } });
+  assert.equal(outcome, "domain_paid", "webhook marks the domain paid");
+  const kinds: string[] = [];
+  for (let job = await db.claimJob(["domain_register", "publish", "email"]); job; job = await db.claimJob(["domain_register", "publish", "email"])) {
+    await handlerFor(job.kind)!(job.payload, job);
+    await db.completeJob(job.id);
+    kinds.push(job.kind);
+  }
+  const after = (await db.getBusiness(b.id))!;
+  console.log(`jobs: ${kinds.join(", ")}; ${after.domainRegistration?.name} ${after.domainRegistration?.status}, facts host ${after.factsHost}`);
+  assert.equal(after.domainRegistration?.status, "registered", "domain registered");
+  assert.equal(after.factsHost, "feiten.kapsalonmila.nl", "facts page moved to the registered domain");
+  assert.ok(after.factsHostVerifiedAt, "facts host verified");
+  assert.equal(after.status, "active", "the add-on leaves the business status alone");
+  assert.equal(after.stripeSubscriptionId, null, "the add-on's subscription is not the business's subscription");
+  assert.ok(kinds.includes("publish"), "facts page published on the new host");
+}
+
 // 6. Not found: a business the mock AI has never heard of reads as "niet gevonden", not as "nothing wrong".
 step("not found: Polyvale Nieuw, Haarlem");
 const unknown = await prepareBusiness({ name: "Polyvale Nieuw", place: "Haarlem", db });
