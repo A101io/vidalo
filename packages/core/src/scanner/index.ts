@@ -11,7 +11,7 @@ import { withCountry } from "../shared/country";
 import { ENGINES, visibilityFor, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
-import { generatePrompts, promptsForFullScan, selectFreeScanPrompts } from "../prompts";
+import { businessNoun, generatePrompts, promptsForFullScan, selectFreeScanPrompts } from "../prompts";
 import { attributeAll, type AttributionContext } from "./attribute";
 import { compare, groupKey, type ComparableSample, type CompareResult, type SampleVerdict } from "./compare";
 import { computeStip, groupBySeverity } from "./stip";
@@ -346,7 +346,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
 }
 
 function assembleReport(args: {
-  business: { id: string; slug: string; name: string; place: string };
+  business: { id: string; slug: string; name: string; place: string; sector?: SectorSlug | null };
   facts: Facts;
   prompts: Prompt[];
   scanRun: { id: string; kind: ScanKind; startedAt: string; finishedAt?: string | null; costCents?: number };
@@ -400,6 +400,7 @@ function assembleReport(args: {
     instable,
     criteriaNotFound,
     recommendations: summarizeRecommendations({ samples, prompts, verdicts: result.verdicts, facts }),
+    comparedAs: businessNoun(facts, business.sector ?? null),
   };
 }
 

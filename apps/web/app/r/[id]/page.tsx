@@ -133,6 +133,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
                   <Stip tone={a.tone} />
                   <span className="min-w-0 flex-1 text-ink-2">{a.question}</span>
                   <span className="font-semibold">{a.engine}</span>
+                  <span className="text-[13px] text-muted">{a.times}</span>
                   <span className={a.tone === "rood" ? "text-rood" : a.tone === "grijs" ? "text-muted" : "text-groen"}>{a.value}</span>
                 </li>
               ))}
@@ -146,6 +147,11 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             <div className="flex flex-col gap-3.5 lg:col-span-5">
               <h2 className="h2-sm">{R.named.h2}</h2>
               <p className="max-w-[48ch] text-[16px] leading-[1.55] text-ink-2">{R.named.body}</p>
+              {v.profile && (
+                <p className="max-w-[48ch] text-[14px] text-ink-2">
+                  <span className="font-semibold">{v.profile}</span> <span className="text-muted">{R.named.profileHint}</span>
+                </p>
+              )}
               <p className="max-w-[48ch] text-[13px] text-muted">{R.named.note}</p>
             </div>
             <div className="flex flex-col gap-3 lg:col-span-7">

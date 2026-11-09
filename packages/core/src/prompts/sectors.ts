@@ -20,6 +20,7 @@
  */
 import type { CriteriumId, FactKey, Facts, Prompt, PromptKind, PromptPool, RecommendationIntent, Season, SectorSlug } from "../types";
 import { INTENT_SUBJECT, SECTOR_SLUGS } from "../types";
+import { deBesteFor, nounFromGoogleTypes, ownerKind, welkFor } from "./nouns";
 
 export type SectorPromptTemplate = Omit<Prompt, "id" | "businessId"> & { criterium: CriteriumId; kind: PromptKind; pool: PromptPool };
 
@@ -69,7 +70,8 @@ const rec = (category: FactKey, criterium: CriteriumId, textNl: string, probes: 
 
 function ctxFor(facts: Facts, pack: Pick<SectorPack, "slug" | "nouns" | "defaultNoun">): Ctx {
   const types = facts.googleTypes ?? [];
-  const noun = pack.nouns.find((n) => n.match.test(facts.name))?.noun ?? pack.nouns.find((n) => types.some((t) => n.match.test(t)))?.noun ?? pack.defaultNoun;
+  // The comparison profile (prompts/nouns.ts): the owner's word, the pack's patterns, Google's specific type, the default.
+  const noun = ownerKind(facts) ?? pack.nouns.find((n) => n.match.test(facts.name))?.noun ?? pack.nouns.find((n) => types.some((t) => n.match.test(t)))?.noun ?? nounFromGoogleTypes(types, "nl") ?? pack.defaultNoun;
   const open = (day: number) => {
     const h = facts.hours.find((x) => x.day === day);
     return !!h && !h.closed && !!h.open && !!h.close;
@@ -124,10 +126,9 @@ const block = {
 // recommendation intents: one per intent in the core, the rest in the bank
 // ---------------------------------------------------------------------------
 
-/** Nouns that take "het" ("het beste restaurant", "Welk café"). */
-const HET_NOUNS = new Set(["restaurant", "café"]);
-const welk = (c: Ctx) => (HET_NOUNS.has(c.noun) ? "Welk" : "Welke");
-const deBeste = (c: Ctx) => `${HET_NOUNS.has(c.noun) ? "het" : "de"} beste ${c.noun}`;
+/** "Welk café" / "Welke kapper", "het beste Indonesische restaurant" / "de beste snackbar" (prompts/nouns.ts). */
+const welk = (c: Ctx) => welkFor(c.noun);
+const deBeste = (c: Ctx) => deBesteFor(c.noun);
 const upper = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Phrasings per intent; the first one goes in the core, the others in the bank. */

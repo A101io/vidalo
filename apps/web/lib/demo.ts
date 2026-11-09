@@ -62,6 +62,7 @@ export function demoReport(): ScanReport {
     business: { id: "demo", slug: DEMO_SLUG, name: "Bakkerij De Vries", place: "Haarlem" },
     scanRunId: DEMO_IDS.red,
     kind: "free",
+    comparedAs: "bakker",
     checkedAt,
     totalAnswers: 7 * 3 * 3,
     wrongAnswers: 9,
@@ -73,7 +74,8 @@ export function demoReport(): ScanReport {
       { engine: "perplexity", correct: 4, wrong: 2, notFound: 1, skipped: false },
     ],
     findings,
-    correct: demoCorrect,
+    // One entry per answer, as a real report has (Google AI gets one sample, the others three): the "Alle antwoorden" counts read right.
+    correct: demoCorrect.flatMap((c) => Array.from({ length: c.engine === "google_ai" ? 1 : 3 }, () => c)),
     stip: "rood",
     engineStips: demoEngineStips,
     findingsBySeverity: groupBySeverity(findings),

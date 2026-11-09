@@ -1421,6 +1421,8 @@ export const copy = {
       headers: { question: "Vraag van een klant", said: "AI antwoordt", correct: "Klopt", source: "Bron van de fout" },
       notFound: "Ik kan geen informatie vinden.",
       notNamed: "niet genoemd",
+      /** "Alle antwoorden": one line per question and AI system, with how often that answer came. */
+      times: (n: number, total: number) => `${n} van ${total} keer`,
       ok: "klopt",
       none: "—",
       noSource: "geen enkele bron noemt het",
@@ -1439,6 +1441,9 @@ export const copy = {
       sources: "Haalt het uit",
       times: (n: number) => `${n}×`,
       note: "We tellen alleen of je genoemd wordt, nooit op welke plek. Reviews en lijstjes van anderen maken we niet; we laten zien welke het zijn.",
+      /** The comparison profile the questions were built on (prompts/nouns.ts), and where the owner changes it. */
+      profile: (kind: string, place: string) => `Vergeleken als: ${kind} in ${place}.`,
+      profileHint: "Klopt dat niet? Als eigenaar pas je het aan onder ‘Je gegevens’, bij ‘Soort zaak’; de volgende controle vraagt dan naar het juiste soort zaak.",
     },
     sources: {
       h2: "Waar het vandaan komt",
@@ -2717,6 +2722,9 @@ export const copy = {
       urgencyHoursHint: "bijv. 24 uur per dag, 7 dagen per week",
       credentials: "Erkenningen en kwalificaties",
       credentialsHint: "bijv. Erkend installateur, BIG-registratie, NVM-lid",
+      /** The comparison profile (prompts/nouns.ts): the word the recommendation questions are built on. */
+      kind: "Soort zaak, zoals een klant het zegt",
+      kindHint: (derived: string | null) => `Hiermee vergelijken we je: “Wat is de beste … in jouw plaats?”. Bijvoorbeeld “Surinaams restaurant” of “afhaalrestaurant”.${derived ? ` Leeg gebruiken we “${derived}”, afgeleid van je naam en je Google-categorie.` : ""}`,
       sector: "Sector",
       closed: "Gesloten",
       open: "Open",

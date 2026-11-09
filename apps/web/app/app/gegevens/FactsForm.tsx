@@ -139,7 +139,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export function FactsForm({ facts, lang, country, countries }: { facts: Facts; lang: Lang; country: string; countries: { code: string; name: string }[] }) {
+export function FactsForm({ facts, lang, country, countries, kindDefault }: { facts: Facts; lang: Lang; country: string; countries: { code: string; name: string }[]; /** The word the questions use when the owner gives none (prompts/nouns.ts). */ kindDefault: string | null }) {
   const copy = copyFor(lang);
   const F = copy.facts;
   const f = F.fields;
@@ -251,6 +251,11 @@ export function FactsForm({ facts, lang, country, countries }: { facts: Facts; l
             ))}
           </select>
           <p className="mt-1.5 text-[13px] text-muted">{copy.sectorHint}</p>
+        </div>
+        <div className="mt-4 max-w-[420px]">
+          <label htmlFor="kind" className="field-label">{f.kind}</label>
+          <input id="kind" name="kind" type="text" maxLength={60} defaultValue={facts.kind ?? ""} placeholder={kindDefault ?? ""} className="field-sm" />
+          <p className="mt-1.5 text-[13px] text-muted">{f.kindHint(kindDefault)}</p>
         </div>
       </Group>
 
