@@ -2180,7 +2180,7 @@ export const en: CopyShape = {
     steps: [
       { title: "Show that you are the owner", body: "Log in with the account of your Google Business Profile, or ask for a code on your business phone number.", href: "/app/google", cta: "Confirm ownership" },
       { title: "Confirm your details", body: "Check your address, phone, opening hours and what you do and do not do.", href: "/app/gegevens", cta: "Confirm details" },
-      { title: "Choose your domain", body: "One DNS record on your own domain, or let Vidalo register a domain.", href: "/app/domein", cta: "Set up domain" },
+      { title: "Choose your domain", body: "One DNS record on your own domain.", href: "/app/domein", cta: "Set up domain" },
       { title: "Wait for the first check", body: "After that you get a report every month. You do not need to install anything.", href: "/app", cta: "Go to your overview" },
     ],
     lastStepScan: { title: "Wait for the first check", body: "We check the fixed errors again. A check every month comes with Vidalo Monthly.", href: "/app", cta: "Go to your overview" },
@@ -2700,10 +2700,6 @@ export const en: CopyShape = {
     checkButton: "Check DNS",
     verified: (host: string) => `${host} points to Vidalo. Your facts page is live.`,
     notYet: "We do not see the DNS record yet. Usually it is there within an hour, sometimes it takes a day. We check again every 10 minutes.",
-    optionB: "Let Vidalo register a domain",
-    optionBHint: (name: string) => `We register ${name} and set everything up. You do not need to do anything.`,
-    optionBButton: "Register it for me",
-    optionBQueued: "We are registering the domain and will let you know when it is live.",
     noDomain: "We do not know your website yet. Fill it in under your details first.",
     factsStatus: {
       h2: "Your facts page",

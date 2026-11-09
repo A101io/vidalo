@@ -86,8 +86,8 @@ The connector cannot set these; each one needs the account switcher (top left) o
 
 | Setting | Value | Where |
 |---|---|---|
-| Terms of service URL | `https://vidalo.io/voorwaarden` | https://dashboard.stripe.com/settings/public |
-| Privacy policy URL | `https://vidalo.io/privacy` | same page |
+| Terms of service URL | `https://vidalo.ai/voorwaarden` (set on the sandbox 9 Nov 2026 by Claude through the Dashboard; the live account had it already) | https://dashboard.stripe.com/acct_1UR4RAELCe3OOCe2/test/settings/business-details |
+| Privacy policy URL | `https://vidalo.ai/privacy` (same, 9 Nov 2026) | same page |
 | Statement descriptor | `VIDALO` | same page |
 | iDEAL (and Wero, if offered) | on | https://dashboard.stripe.com/test/settings/payment_methods |
 | SEPA Direct Debit | on | same page |

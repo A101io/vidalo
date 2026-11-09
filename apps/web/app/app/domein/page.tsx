@@ -1,7 +1,6 @@
 import { getI18n } from "@/lib/i18n";
 import { requireVerifiedOwner } from "@/lib/owner";
 import { factsHostFor, cnameTarget } from "@/lib/factsPage";
-import { registerDomain } from "../actions";
 import { ready } from "@/lib/core";
 import { dateShort } from "@/lib/format";
 import { Stip, type Tone } from "@/components/Stip";
@@ -75,7 +74,7 @@ function SiteFix({ issue, S, factsUrl }: { issue: SiteIssue; S: SiteCopy; factsU
   }
 }
 
-export default async function DomainPage({ searchParams }: { searchParams: Promise<{ dns?: string; registreren?: string }> }) {
+export default async function DomainPage({ searchParams }: { searchParams: Promise<{ dns?: string }> }) {
   const sp = await searchParams;
   const { business } = await requireVerifiedOwner("/app/domein");
   const { copy } = await getI18n();
@@ -136,20 +135,6 @@ export default async function DomainPage({ searchParams }: { searchParams: Promi
           </>
         ) : (
           <p className="mt-2 text-[15px] text-muted">{D.noDomain}</p>
-        )}
-      </section>
-
-      <section className="card p-5 sm:p-6">
-        <h2 className="h3">{D.optionB}</h2>
-        <p className="mt-2 text-[15px]">{D.optionBHint(`${business.slug}.nl`)}</p>
-        {sp.registreren === "ingepland" ? (
-          <p className="mt-3 text-[15px]">{D.optionBQueued}</p>
-        ) : (
-          <form action={registerDomain} className="mt-4">
-            <button type="submit" className="btn-sm">
-              {D.optionBButton}
-            </button>
-          </form>
         )}
       </section>
 

@@ -2216,7 +2216,7 @@ export const copy = {
     steps: [
       { title: "Laat zien dat jij de eigenaar bent", body: "Log in met het account van je Google-bedrijfsprofiel, of vraag een code via het telefoonnummer van je bedrijf.", href: "/app/google", cta: "Eigenaar bevestigen" },
       { title: "Bevestig je gegevens", body: "Controleer adres, telefoon, openingstijden en wat je wel en niet doet.", href: "/app/gegevens", cta: "Gegevens bevestigen" },
-      { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein, of laat Vidalo een domein registreren.", href: "/app/domein", cta: "Domein instellen" },
+      { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein.", href: "/app/domein", cta: "Domein instellen" },
       { title: "Wacht op de eerste controle", body: "Daarna krijg je elke maand een rapport. Je hoeft niets te installeren.", href: "/app", cta: "Naar je overzicht" },
     ],
     /** Step 4 for Vidalo Scan alone: no monthly check (review CMP-01). */
@@ -2753,10 +2753,6 @@ export const copy = {
     checkButton: "Controleer DNS",
     verified: (host: string) => `${host} wijst naar Vidalo. Je feitenpagina is live.`,
     notYet: "We zien de DNS-regel nog niet. Meestal staat hij binnen een uur, soms duurt het een dag. We controleren elke 10 minuten opnieuw.",
-    optionB: "Laat Vidalo een domein registreren",
-    optionBHint: (name: string) => `We registreren ${name} en richten alles in. Je hoeft niets te doen.`,
-    optionBButton: "Registreer voor mij",
-    optionBQueued: "We registreren het domein en laten je weten als het live is.",
     noDomain: "We kennen je website nog niet. Vul die eerst in bij je gegevens.",
     /** Facts page status: channel facts_page + table google_index (core/publisher/status.ts). */
     factsStatus: {
