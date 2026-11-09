@@ -10,6 +10,7 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Perplexity | Processor: asks the questions | Business facts only | US | SCCs | open |
 | Anthropic (Claude) | Processor: asks the questions | Business facts only | US | DPF / SCCs | open |
 | SerpAPI | Processor: Google AI answers | Business facts only | US | SCCs | open |
+| Openprovider | Processor for Vidalo's reseller account (the add-on, docs/DOMAINS.md); as SIDN registrar and ICANN-accredited registrar also an independent controller for its own registrar duties (escrow, registry data, disclosure); counsel to confirm at sign-up (go-live D9). Passes the holder data to the registry (SIDN for .nl, EURid for .eu: independent controllers for their registers; .com is a thin registry: Verisign gets the name and technical data) | Holder: business name, contact person, address, phone, email, KvK number; the domain name | NL (Hosting Concepts B.V.) | EU | open: Openprovider's reseller agreement and DPA, accepted at sign-up (go-live D9) |
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
 | Resend | Processor: email | Owner or report-requester email, report links | US | DPF / SCCs | open |

@@ -65,7 +65,7 @@ Stripe webhook (local): `stripe listen --forward-to localhost:3000/api/stripe/we
 | `/inloggen`, `/auth/callback`, `POST /auth/uitloggen` | Supabase magic-link auth (mock cookie without Supabase) |
 | `/app` | Dashboard: status, setup checklist, findings, proof cards, channels, invoices, "Controleer nu" (`scan` `{kind:'ondemand', then:['fixes']}`) |
 | `/app/gegevens` | Facts form → new verified facts version + `publish` then `sync` jobs |
-| `/app/domein`, `POST /api/domain/verify` | CNAME instructions and DNS check (option B, Vidalo registers a domain, was taken out of the product 9 Nov 2026: nothing could fulfil it) |
+| `/app/domein`, `POST /api/domain/verify`, `POST /api/domain/checkout` | CNAME instructions and DNS check; or option B, the domain add-on: availability, holder details, Stripe Checkout for the yearly subscription, then the status requested → registered → live (docs/DOMAINS.md) |
 | `/app/google`, `/api/google/start`, `/api/google/callback` | Google Business Profile OAuth: refresh token in `channel.meta.refreshToken`, location in `externalId`, then `sync` |
 | `POST /api/billing/portal` | Stripe customer portal |
 | `/feiten/[slug]` | Owner preview of the facts page |

@@ -604,6 +604,12 @@ export const en: CopyShape = {
         note: "With a Vidalo plan. The domain is in your name. Ordering and payments on the website are not included.",
         ask: "Ask for a website",
       },
+      domain: {
+        h3: "No domain of your own?",
+        sub: "Then we register one in your business's name (.nl, .com or .eu) and put your facts page on it. You do not need to touch DNS.",
+        price: "€25 a year excl. VAT",
+        note: "With a Vidalo plan, chosen in your account. You are the holder and can always take the domain with you. A registered domain cannot be returned.",
+      },
       /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
       locations: {
         h3: "More locations?",
@@ -636,7 +642,7 @@ export const en: CopyShape = {
         { q: "But I have a website?", a: "AI reads it as one source among many. The bookshop that was called “permanently closed” had a website too." },
         { q: "Can you make ChatGPT say what I want?", a: "No, nobody can. We find the sources AI draws on and ask for a correction, or show you what to change yourself, so they all say the same thing." },
         { q: "Does it always work?", a: "Answers that use search usually change within weeks of the source being corrected. Answers from the model's memory only change with a new model version. We say so honestly in your report." },
-        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we arrange one. On large platforms only the owner can change anything; there we show you exactly what to change." },
+        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we register one in your business's name, for €25 a year excluding VAT. On large websites such as Google only the owner can change anything; there we show you exactly what to change." },
         { q: "Do I need to install anything?", a: "No." },
         { q: "How often do you check?", a: "With Vidalo Monthly every month, and again after every change to your details and after every fixed error. With Vidalo Scan alone we do one full check and then check the fixed errors again." },
         { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
@@ -721,7 +727,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 8 November 2026",
+    updated: "Version of 9 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -949,6 +955,18 @@ export const en: CopyShape = {
             "If we cannot resolve a dispute together, the competent court of the District Court of Rotterdam decides.",
           ],
         },
+        {
+          h: "A domain through Vidalo",
+          p: [
+            "With a paid Plan you can have Vidalo register a domain name (.nl, .com or .eu; .eu only for a business established in the European Economic Area) on which we put your Facts page. It costs €25 a year, excluding 21% VAT, and runs as a separate yearly subscription that renews every year by itself, until you say there is no need. It is separate from Vidalo Monthly: if one ends, the other carries on.",
+            "The domain is registered in your business's name: you are the holder. Vidalo registers it through Openprovider, our registrar, and is only the technical contact. The rules of the registry of the extension apply too: for .nl SIDN's general terms and conditions for registrants, for .eu EURid's terms, for .com Openprovider's registration terms and the registrant rights and responsibilities ICANN describes (icann.org/resources/pages/benefits-2013-09-16-en). You give us the correct details of the holder and keep them correct. For .com and .eu the holder may get an email to confirm the email address; if that does not happen, the domain may be suspended.",
+            "A domain that has been registered cannot be returned and is not refunded: registering costs money at the registry of the extension right away. We tell you so before you pay, and you confirm it. If the registration does not succeed, we refund the full amount.",
+            "On the domain we only set up the subdomain feiten. for your Facts page. We put nothing on the domain itself.",
+            "A month before each renewal you get a reminder with the price. If you do not want to renew, choose ‘Do not renew’ on the ‘Your domain’ page in your Account; the domain stays yours until the end of the paid year. After that we no longer renew it and it runs out.",
+            "You can always take the domain to another party. You ask for the transfer code in your Account; we email it to your Account's email address right away, and at the latest within five days of your request. If Vidalo stops the Service or stops offering domains, the domain stays yours and we send you the transfer code.",
+            "If the payment of a renewal fails, you are told and we do not renew the domain until it is paid. If it is not paid by the end date, the domain runs out and someone else can register it. We are not liable for that.",
+          ],
+        },
       ],
     },
     privacy: {
@@ -1028,6 +1046,17 @@ export const en: CopyShape = {
           ],
         },
         {
+          h: "A domain through Vidalo",
+          p: [
+            [
+              "Data: the holder's details you fill in: business name, the contact person's name, address, phone number and email address, and your KvK number if we know it. Also the domain name and where the registration stands.",
+              "What we do with it: we give it to Openprovider, which registers the domain in your business's name with the registry of the extension. Their rules require the real details of the holder. What the registry shows publicly is up to the registry; for a business as holder that may be the business name and the holder's email address, in the public Whois. So preferably use a general address, such as info@.",
+              "Basis: the performance of the agreement with you. For the contact person's name, if that is not you: our legitimate interest in registering the domain correctly (article 6(1)(f) GDPR).",
+              "Retention: as long as the domain runs through us, and after that as for a paid plan. The registry and Openprovider keep the data under their own rules.",
+            ],
+          ],
+        },
+        {
           h: "Payment and invoices",
           p: [
             "You pay through Stripe. Stripe processes your payment details as an independent controller, under its own privacy policy; we do not see your card or account number.",
@@ -1098,6 +1127,7 @@ export const en: CopyShape = {
               "Meta (Facebook, Instagram): measuring our advertisements, only with your consent; EU and United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
+              "Openprovider: registering and managing a domain you take through us; the Netherlands. For our account Openprovider works on our instructions; as a registrar it also has obligations of its own. It passes the holder's details on to the registry of the extension (SIDN for .nl, EURid for .eu), which keeps them in its register as an independent controller. For .com the registry (Verisign, United States) receives the domain name and technical data.",
               "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",
             ],
             "Otherwise we give data to others only with your consent, or when the law requires us to.",
@@ -2069,6 +2099,8 @@ export const en: CopyShape = {
     error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.io.",
     productSetup: "Vidalo Scan (one-off)",
     productMonitor: "Vidalo Monthly (per month)",
+    productDomain: (domain: string) => `Domain ${domain} (per year)`,
+    domainSubmit: (domain: string, terms: string, privacy: string) => `You register ${domain} in your business's name. A registered domain cannot be returned; if the registration does not succeed, you get everything back. Vidalo is a service for businesses. By paying you agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
     consentSubmit: (terms: string, privacy: string) => `Vidalo is a service for businesses, not consumers. By paying you confirm you are buying on behalf of a business and agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
     consentAccept: (terms: string, privacy: string) => `I am authorised to enter into this agreement on behalf of my business and agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
   },
@@ -2089,6 +2121,7 @@ export const en: CopyShape = {
       { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
       { q: "How do I create an account?", a: "You do not. The free check works without an account. Your account is created with your first purchase, on the email address you enter at payment. After that you log in through a link in your email, without a password." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
+      { q: "Can you register a domain for me?", a: "Yes, if you have a Vidalo plan. In your account under ‘Domain’ you choose a name on .nl, .com or .eu. It costs €25 a year excluding VAT and renews every year by itself, until you choose ‘Do not renew’. The domain is in your business's name and you can always take it with you using the transfer code. A registered domain cannot be returned; if the registration does not succeed, you get everything back." },
       { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
   },
@@ -2181,7 +2214,7 @@ export const en: CopyShape = {
     steps: [
       { title: "Show that you are the owner", body: "Log in with the account of your Google Business Profile, or ask for a code on your business phone number.", href: "/app/google", cta: "Confirm ownership" },
       { title: "Confirm your details", body: "Check your address, phone, opening hours and what you do and do not do.", href: "/app/gegevens", cta: "Confirm details" },
-      { title: "Choose your domain", body: "One DNS record on your own domain.", href: "/app/domein", cta: "Set up domain" },
+      { title: "Choose your domain", body: "One DNS record on your own domain, or let Vidalo register one.", href: "/app/domein", cta: "Set up domain" },
       { title: "Wait for the first check", body: "After that you get a report every month. You do not need to install anything.", href: "/app", cta: "Go to your overview" },
     ],
     lastStepScan: { title: "Wait for the first check", body: "We check the fixed errors again. A check every month comes with Vidalo Monthly.", href: "/app", cta: "Go to your overview" },
@@ -2704,6 +2737,60 @@ export const en: CopyShape = {
     verified: (host: string) => `${host} points to Vidalo. Your facts page is live.`,
     notYet: "We do not see the DNS record yet. Usually it is there within an hour, sometimes it takes a day. We check again every 10 minutes.",
     noDomain: "We do not know your website yet. Fill it in under your details first.",
+    register: {
+      h2: "Let Vidalo register a domain",
+      intro: "No domain of your own, or rather not change your DNS? Then we register a domain in your business's name and put your facts page on it.",
+      unavailable: "Registering a domain is not possible yet. Use your own domain above, or write to support@vidalo.io.",
+      notPaying: "This is possible once you use Vidalo. Choose a plan under Subscription first.",
+      ownLive: "Your facts page is already on your own domain. A second domain is not needed.",
+      nameLabel: "Domain name",
+      nameHint: "Ends in .nl, .com or .eu.",
+      checkButton: "Check if it is free",
+      invalid: "This is not a domain name we can register. Use letters, digits and hyphens, followed by .nl, .com or .eu.",
+      available: (d: string) => `${d} is free.`,
+      taken: (d: string) => `${d} is not free.`,
+      alternatives: "These are free:",
+      noAlternatives: "We found no free variant. Try another name.",
+      choose: "Choose this one",
+      price: (excl: string, incl: string) => `€${excl} a year excluding VAT (€${incl} including 21% VAT). You pay a year in advance. We renew every year by ourselves, until you say there is no need.`,
+      ownership: (d: string) => `${d} is registered in your business's name. You are the holder, Vidalo only takes care of the technical side. You can always take the domain to another company with the transfer code.`,
+      refund: "A registered domain cannot be returned: registering costs money at the registry of the extension right away. If the registration does not succeed, you get everything back.",
+      apex: (d: string) => `Your facts page goes on feiten.${d}. We put nothing on ${d} itself; you can use that later for a website.`,
+      holderH: "Details of the holder",
+      holderNote: "These details go to Openprovider, the company that registers the domains for us, and to the registry of the extension (SIDN for .nl). They require the real details of the holder.",
+      emailHint: "May be publicly visible in the domain's Whois. Preferably use a general address, such as info@.",
+      fields: { firstName: "Contact person's first name", lastName: "Contact person's last name", company: "Business name", street: "Street", houseNumber: "House number", postcode: "Postcode", city: "Town", phone: "Phone", email: "Email" },
+      accept: "I agree to the terms for domain registration (article 19) and know that a registered domain cannot be returned.",
+      acceptLink: "Read the terms",
+      pay: "Register and pay",
+      errors: {
+        incomplete: "Fill in every field.",
+        accept: "Tick the box to continue.",
+        taken: "This domain has just been taken. Choose another one.",
+        phone: "We cannot read this phone number.",
+        refused: "A domain is not possible for this business right now. Write to support@vidalo.io and we will look into it.",
+        checkout: "Checkout is not working right now. Nothing was charged. Try again later or write to support@vidalo.io.",
+      },
+      cancelledCheckout: "Your payment was not completed. Nothing was charged.",
+      statusH: (d: string) => `Your domain ${d}`,
+      steps: { requested: "Requested", registered: "Registered", live: "Live" },
+      states: {
+        requested: "Paid. We are registering your domain now; that usually takes a few minutes.",
+        registered: (host: string) => `Registered. We are putting your facts page on ${host}; it is usually there within an hour.`,
+        live: (host: string) => `Your facts page is on ${host}.`,
+        failed: "The registration did not succeed. You get your money back and we will contact you.",
+        ended: (date: string) => `You no longer renew this domain. It stays yours until ${date}.`,
+      },
+      renews: (date: string, excl: string) => `Renews on ${date} for €${excl} excluding VAT.`,
+      endsOn: (date: string) => `Will not be renewed. Stays yours until ${date}.`,
+      cancel: "Do not renew",
+      undo: "Renew after all",
+      authCode: "Email me the transfer code",
+      authCodeSent: "We have emailed you the transfer code.",
+      cancelDone: (date: string) => `Your domain will not be renewed. It stays yours until ${date}.`,
+      undoDone: "Your domain is renewed every year again.",
+      notAllowed: "That is not possible for this domain right now.",
+    },
     factsStatus: {
       h2: "Your facts page",
       pageLabel: "Online",
@@ -3077,6 +3164,54 @@ export const en: CopyShape = {
       intro: (date: string, name: string, ago: string) => `On ${date} you confirmed the details of ${name}. That is ${ago} ago. Address, phone, opening hours and what you do and do not offer sometimes change without you noticing.`,
       ask: 'Would you look them over? If everything is still right, it is one click on "Everything is still right" in your overview. If something has changed, update it. We then update your facts page and the sources.',
       button: "View your details",
+    },
+    domain: {
+      registered: (d: { domain: string; host: string; date: string; url: string }) => ({
+        subject: `${d.domain} is registered`,
+        body: `${d.domain} is registered in your business's name. Your facts page goes on ${d.host}; it is usually there within an hour. You do not need to do anything, except this: if you get an email asking you to confirm the holder's email address, click the link. Otherwise the domain may be suspended after a few weeks.
+
+The domain runs until ${d.date} and is renewed every year after that by itself. You get a reminder a month before.
+
+Your domain: ${d.url}`,
+      }),
+      failed: (d: { domain: string }) => ({
+        subject: `${d.domain} could not be registered`,
+        body: `We did not manage to register ${d.domain} for you. Nothing is in your name and you get the full amount back. We will contact you within two working days about another name.`,
+      }),
+      renewal: (d: { domain: string; date: string; price: string; url: string }) => ({
+        subject: `${d.domain} renews on ${d.date}`,
+        body: `On ${d.date} we renew ${d.domain} for a year. You then pay €${d.price} excluding VAT, the same way as last year.
+
+Rather not keep the domain, or take it to another company? Choose "Do not renew" at ${d.url} before ${d.date}. You can ask for the transfer code there too.`,
+      }),
+      paymentFailed: (d: { domain: string; date: string; url: string }) => ({
+        subject: `The renewal of ${d.domain} was not paid`,
+        body: `We could not collect the renewal of ${d.domain}. We will try a few more times in the coming days.
+
+Until it is paid we do not renew the domain. If it is not paid by ${d.date}, the domain runs out and someone else can register it.
+
+Update your payment details or take the domain with you: ${d.url}`,
+      }),
+      cancelled: (d: { domain: string; date: string; url: string }) => ({
+        subject: `${d.domain} will not be renewed`,
+        body: `You chose not to renew ${d.domain}. The domain stays yours until ${d.date}; until then your facts page stays on it. After that we charge nothing more.
+
+Want to keep the domain with another company? Ask for the transfer code at ${d.url} before ${d.date}. Renewing after all is possible there too, until ${d.date}.`,
+      }),
+      ended: (d: { domain: string; date: string; url: string }) => ({
+        subject: `${d.domain} is no longer renewed`,
+        body: `The renewal of ${d.domain} has stopped. The domain stays yours until ${d.date}. After that it runs out and someone else can register it.
+
+Want to keep it? Ask for the transfer code at ${d.url} before ${d.date} and move the domain to another company.`,
+      }),
+      authCode: (d: { domain: string; code: string }) => ({
+        subject: `The transfer code of ${d.domain}`,
+        body: `You asked for the transfer code of ${d.domain}. With it you move the domain to another company:
+
+${d.code}
+
+Only give this code to the company you want to move the domain to. Did you not ask for it yourself? Reply to this email.`,
+      }),
     },
   },
 };

@@ -70,6 +70,22 @@ late payer resumes instead of churning.
 - Customer portal: `return_url` explicit on every session (the subscription
   page, same host rule), locale from the page the button was on.
 
+## The domain add-on (9 Nov 2026)
+
+Option B on `/app/domein` (docs/DOMAINS.md): €25 per year excl. btw, its own
+yearly subscription (price lookup key `vidalo_domain_eur_25_year`,
+`STRIPE_PRICE_DOMAIN`), started by `POST /api/domain/checkout` with metadata
+`plan: "domain"`. The same Checkout rules as the plans (terms box, B2B text,
+billing address, btw-nummer, 21% rate or Stripe Tax), plus the refund rule
+above the pay button: a registered domain cannot be returned. The webhook
+tells its events apart by that metadata or by the subscription id stored on
+the business, and never changes the business's status for them: paid →
+`domain_register` job; renewal paid → expiry a year on; renewal failed →
+auto-renew off at the registrar and one mail; subscription ended → the domain
+is not renewed and stays the holder's until it expires. A refused
+registration is refunded in full by hand (docs/DOMAINS.md, "When it goes
+wrong"). No new webhook events.
+
 ## Setting it up
 
 1. A Stripe account that is Vidalo's (not Sitty's `acct_1UA8rHEGTq7D30VV`,
@@ -85,7 +101,7 @@ late payer resumes instead of churning.
    The first run prints the key's account and stops. If it is Vidalo's, add
    `VIDALO_STRIPE_ACCOUNT=acct_...` and run again to see what is missing;
    add `--apply` to create it. It prints the env lines for the web app:
-   `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONITOR`, `STRIPE_TAX_RATE_ID`,
+   `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONITOR`, `STRIPE_PRICE_DOMAIN`, `STRIPE_TAX_RATE_ID`,
    `STRIPE_WEBHOOK_SECRET` (shown once, at creation).
 3. Dashboard, by hand: enable iDEAL and SEPA Direct Debit (Payment methods),
    the Customer portal (cancel at period end, invoice history, update

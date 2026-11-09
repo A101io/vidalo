@@ -78,6 +78,7 @@ function mapBusiness(row: Row): BusinessRecord {
     cancelAt: (r.cancelAt as string | null) ?? null,
     pauseUntil: (r.pauseUntil as string | null) ?? null,
     mailPrefs: normalizeMailPrefs(r.mailPrefs),
+    domainRegistration: (r.domainRegistration as BusinessRecord["domainRegistration"] | null) ?? null,
     createdAt: r.createdAt as string,
   };
 }
@@ -273,6 +274,7 @@ export class PgDb implements Db {
     if (input.cancelAt !== undefined) cols.cancelAt = toDate(input.cancelAt);
     if (input.pauseUntil !== undefined) cols.pauseUntil = toDate(input.pauseUntil);
     if (input.mailPrefs !== undefined) cols.mailPrefs = this.sql.json(normalizeMailPrefs(input.mailPrefs) as never);
+    if (input.domainRegistration !== undefined) cols.domainRegistration = input.domainRegistration === null ? null : this.sql.json(input.domainRegistration as never);
     const insertRow = { ...cols, slug, ...(input.id ? { id: input.id } : {}) } as Row;
     const updateCols = Object.keys(cols) as string[];
     const rows = updateCols.length

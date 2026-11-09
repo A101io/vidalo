@@ -19,6 +19,8 @@ export const PRICES = {
   monitorEurPerMonth: 49,
   extraLocationSetupEur: 99,
   extraLocationEurPerMonth: 39,
+  /** The domain add-on (core/billing/domain.ts, docs/DOMAINS.md), per year. */
+  domainEurPerYear: 25,
 } as const;
 
 export const copy = {
@@ -619,6 +621,13 @@ export const copy = {
         note: "Bij een plan van Vidalo. Het domein staat op jouw naam. Bestellen en betalen op de website zitten er niet in.",
         ask: "Vraag een website aan",
       },
+      /** The domain add-on, bought on /app/domein (docs/DOMAINS.md). */
+      domain: {
+        h3: "Geen eigen domein?",
+        sub: "Dan registreren wij er een op naam van je bedrijf (.nl, .com of .eu) en zetten we je feitenpagina erop. Je hoeft niets aan DNS te doen.",
+        price: "€25 per jaar excl. btw",
+        note: "Bij een plan van Vidalo, te kiezen in je account. Jij bent de houder en kunt het domein altijd meenemen. Een geregistreerd domein kan niet terug.",
+      },
       /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
       locations: {
         h3: "Meer vestigingen?",
@@ -651,7 +660,7 @@ export const copy = {
         { q: "Ik heb toch een website?", a: "AI leest die als één bron van vele. De boekwinkel die “permanent gesloten” werd genoemd had ook een website." },
         { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij zoeken de bronnen waar AI uit put en vragen om correctie, of laten zien wat je zelf moet aanpassen, zodat ze allemaal hetzelfde zeggen." },
         { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie veranderen meestal binnen weken nadat de bron is aangepast. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
-        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan regelen wij er een. Bij grote platforms kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
+        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan registreren wij er een op naam van je bedrijf, voor €25 per jaar exclusief btw. Bij grote websites zoals Google kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Met Vidalo Monthly elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout. Met alleen Vidalo Scan doen we één volledige controle en controleren we daarna de herstelde fouten opnieuw." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
@@ -743,7 +752,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 8 november 2026",
+    updated: "Versie van 9 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -971,6 +980,18 @@ export const copy = {
             "Komen we er samen niet uit, dan beslist de bevoegde rechter van de rechtbank Rotterdam.",
           ],
         },
+        {
+          h: "Een domein via Vidalo",
+          p: [
+            "Heb je een betaald Plan, dan kun je Vidalo een domeinnaam laten registreren (.nl, .com of .eu; .eu alleen voor een onderneming in de Europese Economische Ruimte) waarop we je Feitenpagina zetten. Dat kost €25 per jaar, exclusief 21% btw, en loopt als een apart abonnement per jaar dat elk jaar vanzelf verlengt, tot je zegt dat het niet hoeft. Het staat los van Vidalo Monthly: eindigt het een, dan loopt het ander door.",
+            "Het domein komt op naam van je onderneming: jij bent de houder. Vidalo registreert het via Openprovider, onze registrar, en is alleen technisch contact. De regels van de beheerder van de extensie gelden ook: voor .nl de algemene voorwaarden van SIDN voor houders, voor .eu de voorwaarden van EURid, voor .com de registratievoorwaarden van Openprovider en de rechten en plichten van houders die ICANN beschrijft (icann.org/resources/pages/benefits-2013-09-16-en). Je geeft ons de juiste gegevens van de houder en houdt ze juist. Bij .com en .eu kan de houder een mail krijgen om het e-mailadres te bevestigen; gebeurt dat niet, dan kan het domein worden stilgezet.",
+            "Een domein dat geregistreerd is, kun je niet terugsturen en krijg je niet terugbetaald: de registratie kost meteen geld bij de beheerder van de extensie. Dat zeggen we je voor je betaalt, en je bevestigt het. Lukt de registratie niet, dan betalen we je het hele bedrag terug.",
+            "We zetten op het domein alleen het subdomein feiten. voor je Feitenpagina. Op het domein zelf zetten we niets.",
+            "Een maand voor elke verlenging krijg je een herinnering met de prijs. Wil je niet verlengen, kies dan ‘Niet verlengen’ op de pagina ‘Je domein’ in je Account; het domein blijft van jou tot het einde van het betaalde jaar. Daarna verlengen we het niet meer en loopt het af.",
+            "Je kunt het domein altijd meenemen naar een andere partij. De verhuiscode vraag je op in je Account; we mailen hem meteen naar het e-mailadres van je Account, en uiterlijk binnen vijf dagen nadat je erom vroeg. Stopt Vidalo met de Dienst of met domeinen, dan blijft het domein van jou en sturen we je de verhuiscode.",
+            "Mislukt de betaling van een verlenging, dan krijg je bericht en verlengen we het domein niet zolang er niet betaald is. Is het op de einddatum niet betaald, dan loopt het domein af en kan een ander het registreren. Daarvoor zijn we niet aansprakelijk.",
+          ],
+        },
       ],
     },
     privacy: {
@@ -1050,6 +1071,17 @@ export const copy = {
           ],
         },
         {
+          h: "Een domein via Vidalo",
+          p: [
+            [
+              "Gegevens: de gegevens van de houder die je invult: bedrijfsnaam, naam van de contactpersoon, adres, telefoonnummer en e-mailadres, en je KvK-nummer als we dat kennen. Verder de domeinnaam en waar de registratie staat.",
+              "Wat we ermee doen: we geven ze aan Openprovider, die het domein op naam van je bedrijf registreert bij de beheerder van de extensie. Die regels vragen de echte gegevens van de houder. Wat de beheerder openbaar laat zien, bepaalt die zelf; bij een bedrijf als houder kunnen dat de bedrijfsnaam en het e-mailadres van de houder zijn, in de openbare Whois. Gebruik daarom bij voorkeur een algemeen adres, zoals info@.",
+              "Grondslag: de uitvoering van de overeenkomst met jou. Voor de naam van de contactpersoon, als dat niet jijzelf bent: ons gerechtvaardigd belang om het domein correct te registreren (artikel 6 lid 1 onder f AVG).",
+              "Hoe lang: zolang het domein via ons loopt, en daarna zoals bij een betaald plan. De beheerder van de extensie en Openprovider bewaren de gegevens volgens hun eigen regels.",
+            ],
+          ],
+        },
+        {
           h: "Betalen en facturen",
           p: [
             "Je betaalt via Stripe. Stripe verwerkt je betaalgegevens als zelfstandig verantwoordelijke, volgens zijn eigen privacybeleid; je kaart- of rekeningnummer zien wij niet.",
@@ -1120,6 +1152,7 @@ export const copy = {
               "Meta (Facebook, Instagram): het meten van onze advertenties, alleen met je toestemming; EU en Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
+              "Openprovider: het registreren en beheren van een domein dat je via ons neemt; Nederland. Voor ons account werkt Openprovider in onze opdracht; als registrar heeft het ook eigen plichten. Het geeft de gegevens van de houder door aan de beheerder van de extensie (SIDN voor .nl, EURid voor .eu), die ze als zelfstandig verantwoordelijke in zijn register bewaart. Voor .com krijgt de beheerder (Verisign, Verenigde Staten) de domeinnaam en technische gegevens.",
               "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
             ],
             "Verder geven we gegevens alleen aan anderen als je daar toestemming voor geeft, of als de wet ons dat verplicht.",
@@ -2102,6 +2135,9 @@ export const copy = {
     error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op support@vidalo.io.",
     productSetup: "Vidalo Scan (eenmalig)",
     productMonitor: "Vidalo Monthly (per maand)",
+    productDomain: (domain: string) => `Domein ${domain} (per jaar)`,
+    /** Above the pay button for the domain add-on: the refund rule once more, in Stripe's own screen. */
+    domainSubmit: (domain: string, terms: string, privacy: string) => `Je registreert ${domain} op naam van je bedrijf. Een geregistreerd domein kan niet terug; lukt de registratie niet, dan krijg je alles terug. Vidalo is een dienst voor bedrijven. Door te betalen ga je akkoord met de [algemene voorwaarden](${terms}) en het [privacybeleid](${privacy}) van Vidalo.`,
     /** Above the pay button on Stripe Checkout. Stripe renders [label](url) as a link. */
     consentSubmit: (terms: string, privacy: string) => `Vidalo is een dienst voor bedrijven, niet voor consumenten. Door te betalen bevestig je dat je namens een bedrijf koopt en ga je akkoord met de [algemene voorwaarden](${terms}) en het [privacybeleid](${privacy}) van Vidalo.`,
     /** Next to the checkbox the customer must tick. */
@@ -2124,6 +2160,7 @@ export const copy = {
       { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.io. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
       { q: "Hoe maak ik een account aan?", a: "Niet apart. De gratis controle werkt zonder account. Je account ontstaat bij je eerste aankoop, op het e-mailadres dat je bij het betalen invult. Daarna log je in via een link in je mail, zonder wachtwoord." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Vidalo Scan’ gekozen, dan voeg je ‘Vidalo Monthly’ later toe onder ‘Abonnement’ in je account." },
+      { q: "Kunnen jullie een domein voor me registreren?", a: "Ja, als je een plan van Vidalo hebt. In je account onder ‘Domein’ kies je een naam op .nl, .com of .eu. Het kost €25 per jaar exclusief btw en verlengt elk jaar vanzelf, tot je ‘Niet verlengen’ kiest. Het domein staat op naam van je bedrijf en je kunt het altijd meenemen met de verhuiscode. Een geregistreerd domein kan niet terug; lukt de registratie niet, dan krijg je alles terug." },
       { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
   },
@@ -2217,7 +2254,7 @@ export const copy = {
     steps: [
       { title: "Laat zien dat jij de eigenaar bent", body: "Log in met het account van je Google-bedrijfsprofiel, of vraag een code via het telefoonnummer van je bedrijf.", href: "/app/google", cta: "Eigenaar bevestigen" },
       { title: "Bevestig je gegevens", body: "Controleer adres, telefoon, openingstijden en wat je wel en niet doet.", href: "/app/gegevens", cta: "Gegevens bevestigen" },
-      { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein.", href: "/app/domein", cta: "Domein instellen" },
+      { title: "Kies je domein", body: "Eén DNS-regel op je eigen domein, of laat Vidalo er een registreren.", href: "/app/domein", cta: "Domein instellen" },
       { title: "Wacht op de eerste controle", body: "Daarna krijg je elke maand een rapport. Je hoeft niets te installeren.", href: "/app", cta: "Naar je overzicht" },
     ],
     /** Step 4 for Vidalo Scan alone: no monthly check (review CMP-01). */
@@ -2758,6 +2795,61 @@ export const copy = {
     verified: (host: string) => `${host} wijst naar Vidalo. Je feitenpagina is live.`,
     notYet: "We zien de DNS-regel nog niet. Meestal staat hij binnen een uur, soms duurt het een dag. We controleren elke 10 minuten opnieuw.",
     noDomain: "We kennen je website nog niet. Vul die eerst in bij je gegevens.",
+    /** Option B: Vidalo registers a domain, the paid add-on (core/registrar, core/billing/domain.ts, docs/DOMAINS.md). */
+    register: {
+      h2: "Laat Vidalo een domein registreren",
+      intro: "Heb je geen eigen domein, of wil je niets aan je DNS veranderen? Dan registreren wij een domein op naam van je bedrijf en zetten we je feitenpagina erop.",
+      unavailable: "Een domein registreren kan nu nog niet. Gebruik je eigen domein hierboven, of mail support@vidalo.io.",
+      notPaying: "Dit kan zodra je Vidalo gebruikt. Kies eerst een plan onder Abonnement.",
+      ownLive: "Je feitenpagina staat al op je eigen domein. Een tweede domein is niet nodig.",
+      nameLabel: "Domeinnaam",
+      nameHint: "Eindigt op .nl, .com of .eu.",
+      checkButton: "Controleer of hij vrij is",
+      invalid: "Dit is geen domeinnaam die we kunnen registreren. Gebruik letters, cijfers en streepjes, met .nl, .com of .eu erachter.",
+      available: (d: string) => `${d} is vrij.`,
+      taken: (d: string) => `${d} is niet vrij.`,
+      alternatives: "Deze zijn wel vrij:",
+      noAlternatives: "We vonden geen vrije variant. Probeer een andere naam.",
+      choose: "Kies deze",
+      price: (excl: string, incl: string) => `€${excl} per jaar exclusief btw (€${incl} inclusief 21% btw). Je betaalt per jaar vooruit. Elk jaar verlengen we vanzelf, tot je zegt dat het niet hoeft.`,
+      ownership: (d: string) => `${d} komt op naam van je bedrijf. Jij bent de houder, Vidalo regelt alleen de techniek. Je kunt het domein altijd meenemen naar een ander bedrijf met de verhuiscode.`,
+      refund: "Een geregistreerd domein kun je niet terugsturen: de registratie kost meteen geld bij de beheerder van de extensie. Lukt de registratie niet, dan krijg je alles terug.",
+      apex: (d: string) => `Je feitenpagina komt op feiten.${d}. Op ${d} zelf zetten we niets; dat kun je later gebruiken voor een website.`,
+      holderH: "Gegevens van de houder",
+      holderNote: "Deze gegevens gaan naar Openprovider, het bedrijf dat de domeinen voor ons registreert, en naar de beheerder van de extensie (SIDN voor .nl). Die vragen de echte gegevens van de houder.",
+      emailHint: "Kan openbaar te zien zijn in de Whois van het domein. Gebruik bij voorkeur een algemeen adres, zoals info@.",
+      fields: { firstName: "Voornaam contactpersoon", lastName: "Achternaam contactpersoon", company: "Bedrijfsnaam", street: "Straat", houseNumber: "Huisnummer", postcode: "Postcode", city: "Plaats", phone: "Telefoon", email: "E-mail" },
+      accept: "Ik ga akkoord met de voorwaarden voor domeinregistratie (artikel 19) en weet dat een geregistreerd domein niet terug kan.",
+      acceptLink: "Lees de voorwaarden",
+      pay: "Registreer en betaal",
+      errors: {
+        incomplete: "Vul alle velden in.",
+        accept: "Vink het vakje aan om verder te gaan.",
+        taken: "Dit domein is net niet meer vrij. Kies een ander.",
+        phone: "Dit telefoonnummer kunnen we niet lezen.",
+        refused: "Een domein kan nu niet voor dit bedrijf. Mail support@vidalo.io, dan kijken we mee.",
+        checkout: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail support@vidalo.io.",
+      },
+      cancelledCheckout: "Je betaling is niet afgerond. Er is niets afgeschreven.",
+      statusH: (d: string) => `Je domein ${d}`,
+      steps: { requested: "Aangevraagd", registered: "Geregistreerd", live: "Live" },
+      states: {
+        requested: "Betaald. We registreren je domein nu; dat duurt meestal een paar minuten.",
+        registered: (host: string) => `Geregistreerd. We zetten je feitenpagina op ${host}; meestal staat hij binnen een uur.`,
+        live: (host: string) => `Je feitenpagina staat op ${host}.`,
+        failed: "De registratie is niet gelukt. Je krijgt je geld terug en we nemen contact met je op.",
+        ended: (date: string) => `Je verlengt dit domein niet meer. Het blijft van jou tot ${date}.`,
+      },
+      renews: (date: string, excl: string) => `Wordt op ${date} verlengd voor €${excl} exclusief btw.`,
+      endsOn: (date: string) => `Wordt niet verlengd. Blijft van jou tot ${date}.`,
+      cancel: "Niet verlengen",
+      undo: "Toch verlengen",
+      authCode: "Mail me de verhuiscode",
+      authCodeSent: "We hebben de verhuiscode naar je gemaild.",
+      cancelDone: (date: string) => `Je domein wordt niet verlengd. Het blijft van jou tot ${date}.`,
+      undoDone: "Je domein wordt weer elk jaar verlengd.",
+      notAllowed: "Dat kan nu niet voor dit domein.",
+    },
     /** Facts page status: channel facts_page + table google_index (core/publisher/status.ts). */
     factsStatus: {
       h2: "Je feitenpagina",
@@ -3147,6 +3239,55 @@ export const copy = {
       intro: (date: string, name: string, ago: string) => `Op ${date} heb je de gegevens van ${name} bevestigd. Dat is ${ago} geleden. Adres, telefoon, openingstijden en wat je wel en niet doet veranderen soms zonder dat je eraan denkt.`,
       ask: 'Wil je ze even nalopen? Klopt alles nog, dan is het één klik op "Alles klopt nog" in je overzicht. Is er iets veranderd, pas het dan aan. Wij werken daarna je feitenpagina en de bronnen bij.',
       button: "Bekijk je gegevens",
+    },
+    /** The domain add-on (reporter/domain-mails.ts). Service mails: they always go. */
+    domain: {
+      registered: (d: { domain: string; host: string; date: string; url: string }) => ({
+        subject: `${d.domain} is geregistreerd`,
+        body: `${d.domain} staat op naam van je bedrijf. Je feitenpagina komt op ${d.host}; meestal staat hij binnen een uur. Je hoeft er niets voor te doen, behalve dit: krijg je een mail om het e-mailadres van de houder te bevestigen, klik dan op de link. Anders kan het domein na een paar weken worden stilgezet.
+
+Het domein loopt tot ${d.date} en wordt daarna elk jaar vanzelf verlengd. Een maand vooraf krijg je een herinnering.
+
+Je domein: ${d.url}`,
+      }),
+      failed: (d: { domain: string }) => ({
+        subject: `${d.domain} kon niet worden geregistreerd`,
+        body: `Het is niet gelukt om ${d.domain} voor je te registreren. Er staat niets op je naam en je krijgt het hele bedrag terug. We nemen binnen twee werkdagen contact met je op over een andere naam.`,
+      }),
+      renewal: (d: { domain: string; date: string; price: string; url: string }) => ({
+        subject: `${d.domain} wordt op ${d.date} verlengd`,
+        body: `Op ${d.date} verlengen we ${d.domain} met een jaar. Je betaalt dan €${d.price} exclusief btw, op dezelfde manier als vorig jaar.
+
+Wil je het domein niet houden, of meenemen naar een ander bedrijf? Kies dan voor ${d.date} "Niet verlengen" op ${d.url}. Daar vraag je ook de verhuiscode op.`,
+      }),
+      paymentFailed: (d: { domain: string; date: string; url: string }) => ({
+        subject: `De verlenging van ${d.domain} is niet betaald`,
+        body: `Het lukte niet om de verlenging van ${d.domain} af te schrijven. We proberen het de komende dagen nog een paar keer.
+
+Tot het betaald is verlengen we het domein niet. Is het op ${d.date} niet betaald, dan loopt het domein af en kan een ander het registreren.
+
+Je betaalgegevens aanpassen of het domein meenemen: ${d.url}`,
+      }),
+      cancelled: (d: { domain: string; date: string; url: string }) => ({
+        subject: `${d.domain} wordt niet verlengd`,
+        body: `Je hebt gekozen om ${d.domain} niet te verlengen. Het domein blijft van jou tot ${d.date}; tot dan blijft je feitenpagina erop staan. Daarna schrijven we niets meer af.
+
+Wil je het domein houden bij een ander bedrijf? Vraag voor ${d.date} de verhuiscode op via ${d.url}. Toch verlengen kan daar ook, tot ${d.date}.`,
+      }),
+      ended: (d: { domain: string; date: string; url: string }) => ({
+        subject: `${d.domain} wordt niet meer verlengd`,
+        body: `De verlenging van ${d.domain} is gestopt. Het domein blijft van jou tot ${d.date}. Daarna loopt het af en kan een ander het registreren.
+
+Wil je het houden? Vraag voor ${d.date} de verhuiscode op via ${d.url} en zet het domein over naar een ander bedrijf.`,
+      }),
+      authCode: (d: { domain: string; code: string }) => ({
+        subject: `De verhuiscode van ${d.domain}`,
+        body: `Je vroeg de verhuiscode van ${d.domain} op. Hiermee zet je het domein over naar een ander bedrijf:
+
+${d.code}
+
+Geef deze code alleen aan het bedrijf waar je het domein naartoe wilt verhuizen. Heb je hem niet zelf opgevraagd? Antwoord dan op deze mail.`,
+      }),
     },
   },
 } as const;

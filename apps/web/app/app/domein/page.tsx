@@ -1,6 +1,7 @@
 import { getI18n } from "@/lib/i18n";
 import { requireVerifiedOwner } from "@/lib/owner";
 import { factsHostFor, cnameTarget } from "@/lib/factsPage";
+import { RegisterDomain } from "./RegisterDomain";
 import { ready } from "@/lib/core";
 import { dateShort } from "@/lib/format";
 import { Stip, type Tone } from "@/components/Stip";
@@ -74,13 +75,15 @@ function SiteFix({ issue, S, factsUrl }: { issue: SiteIssue; S: SiteCopy; factsU
   }
 }
 
-export default async function DomainPage({ searchParams }: { searchParams: Promise<{ dns?: string }> }) {
+export default async function DomainPage({ searchParams }: { searchParams: Promise<{ dns?: string; naam?: string; fout?: string; domein?: string }> }) {
   const sp = await searchParams;
   const { business } = await requireVerifiedOwner("/app/domein");
-  const { copy } = await getI18n();
+  const { copy, lang, href } = await getI18n();
   const D = copy.domain;
   const host = business.domain ? factsHostFor(business) : null;
   const verified = Boolean(business.factsHostVerifiedAt) || sp.dns === "ok";
+  // A domain we registered for them replaces option A: its DNS is ours to set.
+  const ownRegistered = business.domainRegistration?.status === "paid" || business.domainRegistration?.status === "registered";
   // google_index and the internal event rows are read with the service db, after requireVerifiedOwner, for this business only.
   const db = await ready();
   const [channels, googleIndex, events] = await Promise.all([db.listChannels(business.id), db.getGoogleIndex(business.id), db.listEvents(business.id, 500)]);
@@ -98,6 +101,7 @@ export default async function DomainPage({ searchParams }: { searchParams: Promi
         <p className="mt-2 max-w-[60ch] text-[17px] text-ink-2">{D.intro}</p>
       </header>
 
+      {!ownRegistered && (
       <section className="card p-5 sm:p-6">
         <h2 className="h3">{D.optionA}</h2>
         {host ? (
@@ -137,6 +141,9 @@ export default async function DomainPage({ searchParams }: { searchParams: Promi
           <p className="mt-2 text-[15px] text-muted">{D.noDomain}</p>
         )}
       </section>
+      )}
+
+      <RegisterDomain business={business} sp={sp} R={D.register} lang={lang} href={href} primary={!host || verified} />
 
       <section className="card p-5 sm:p-6">
         <h2 className="h3">{FS.h2}</h2>

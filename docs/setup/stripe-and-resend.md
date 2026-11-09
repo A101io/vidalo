@@ -130,6 +130,7 @@ The first run checks only. It prints the key's account and stops if it is not `V
 |---|---|
 | `STRIPE_PRICE_SETUP` | "Vidalo Scan", €149 once, excl. btw (lookup `vidalo_setup_eur_149`) |
 | `STRIPE_PRICE_MONITOR` | "Vidalo Monthly", €49/month, excl. btw (lookup `vidalo_monitor_eur_49`) |
+| `STRIPE_PRICE_DOMAIN` | "Vidalo Domein", €25/year, excl. btw (lookup `vidalo_domain_eur_25_year`): the domain add-on, docs/DOMAINS.md |
 | `STRIPE_TAX_RATE_ID` | BTW 21% NL, exclusive |
 | `STRIPE_PORTAL_CONFIGURATION` | the portal above |
 | `STRIPE_WEBHOOK_SECRET` | only when `PUBLIC_BASE_URL` is set; shown once, at creation |

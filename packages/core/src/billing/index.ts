@@ -21,8 +21,10 @@
 import type { BusinessRecord } from "../db/types.js";
 import { getDb, setBusinessStatus } from "../shared/db.js";
 import { log } from "../shared/log.js";
+import { plusYear } from "./domain.js";
 
 export * from "./lifecycle.js";
+export * from "./domain.js";
 
 /** The parts of a Stripe event this module reads; no Stripe SDK needed in core. */
 export interface StripeEventLike {
@@ -41,6 +43,11 @@ export type BillingOutcome =
   | "churned"
   | "synced"
   | "invoice_failed_logged"
+  | "domain_paid"
+  | "domain_renewed"
+  | "domain_payment_failed"
+  | "domain_ended"
+  | "domain_synced"
   | "duplicate"
   | "no_business"
   | "ignored";
@@ -156,6 +163,8 @@ export async function handleStripeEvent(event: StripeEventLike): Promise<Billing
 async function apply(business: BusinessRecord, event: StripeEventLike): Promise<BillingOutcome> {
   const db = getDb();
   const o = event.data.object;
+  // The domain add-on has its own yearly subscription; its events never touch the business's status.
+  if (isDomainObject(business, o)) return applyDomain(business, event);
   switch (event.type) {
     case "checkout.session.completed": {
       if (PAID.has(String(o.payment_status))) {
@@ -208,6 +217,135 @@ async function apply(business: BusinessRecord, event: StripeEventLike): Promise<
     default:
       return "ignored";
   }
+}
+
+/**
+ * True when a Stripe object belongs to the domain add-on: a checkout or
+ * subscription with metadata plan "domain", or an invoice of that
+ * subscription (by its metadata, or by the subscription id stored on the business).
+ */
+function isDomainObject(business: BusinessRecord, o: Record<string, unknown>): boolean {
+  type Details = { metadata?: Record<string, string>; subscription?: unknown } | undefined;
+  const parent = o.parent as { subscription_details?: Details } | null | undefined;
+  const plan = meta(o).plan ?? (o.subscription_details as Details)?.metadata?.plan ?? parent?.subscription_details?.metadata?.plan;
+  if (plan === "domain") return true;
+  const sub = business.domainRegistration?.stripeSubscriptionId;
+  if (!sub) return false;
+  const objectSub = String(o.object) === "subscription" ? str(o.id) : (str(o.subscription) ?? str(parent?.subscription_details?.subscription));
+  return objectSub === sub;
+}
+
+/** True when a subscription or invoice belongs to a domain subscription other than the one on file. */
+function foreignSubscription(reg: NonNullable<BusinessRecord["domainRegistration"]>, o: Record<string, unknown>): boolean {
+  type Details = { metadata?: Record<string, string>; subscription?: unknown } | undefined;
+  const parent = o.parent as { subscription_details?: Details } | null | undefined;
+  const sub = String(o.object) === "subscription" ? str(o.id) : (str(o.subscription) ?? str(parent?.subscription_details?.subscription));
+  if (reg.stripeSubscriptionId) return Boolean(sub && sub !== reg.stripeSubscriptionId);
+  const domain = meta(o).domain ?? parent?.subscription_details?.metadata?.domain;
+  return Boolean(domain && domain !== reg.name);
+}
+
+async function patchDomain(business: BusinessRecord, patch: Partial<NonNullable<BusinessRecord["domainRegistration"]>>, extra: Partial<BusinessRecord> = {}) {
+  await getDb().upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ...extra, domainRegistration: { ...business.domainRegistration!, ...patch } });
+}
+
+async function domainPaid(business: BusinessRecord, session: Record<string, unknown>): Promise<BillingOutcome> {
+  const db = getDb();
+  const reg = business.domainRegistration;
+  // A paid session for a name that is not the one on file (a second tab, an old session): support sorts it out.
+  if (!reg || reg.name !== meta(session).domain || reg.status === "registered") {
+    await db.logEvent(business.id, "domain.paid_unmatched", { sessionId: session.id, domain: meta(session).domain ?? null, onFile: reg?.name ?? null, status: reg?.status ?? null });
+    await db.enqueueJob("operator_task", { reason: "domain_paid_unmatched", businessId: business.id, sessionId: session.id, domain: meta(session).domain ?? null });
+    return "ignored";
+  }
+  if (reg.status === "paid") {
+    // The same payment reported again is fine; a second paid session for this name is a second subscription nobody tracks.
+    if (str(session.subscription) === reg.stripeSubscriptionId || str(session.id) === reg.checkoutSessionId) return "domain_paid";
+    await db.logEvent(business.id, "domain.paid_unmatched", { sessionId: session.id, domain: reg.name, second: true });
+    await db.enqueueJob("operator_task", { reason: "domain_paid_unmatched", businessId: business.id, sessionId: session.id, domain: reg.name, subscriptionId: str(session.subscription) });
+    return "ignored";
+  }
+  await patchDomain(
+    business,
+    { status: "paid", paidAt: new Date().toISOString(), checkoutSessionId: str(session.id), stripeSubscriptionId: str(session.subscription) ?? reg.stripeSubscriptionId },
+    { stripeCustomerId: business.stripeCustomerId ?? str(session.customer) },
+  );
+  await db.enqueueJob("domain_register", { businessId: business.id });
+  const consent = (session.consent as { terms_of_service?: string } | null | undefined)?.terms_of_service ?? null;
+  await db.logEvent(business.id, "domain.paid", { name: reg.name, sessionId: session.id, termsConsent: consent });
+  return "domain_paid";
+}
+
+async function applyDomain(business: BusinessRecord, event: StripeEventLike): Promise<BillingOutcome> {
+  const db = getDb();
+  const o = event.data.object;
+  const reg = business.domainRegistration;
+  // Invoices and subscriptions of another domain subscription (a refused or second one support cancels) never touch this registration.
+  if (!event.type.startsWith("checkout.") && reg && foreignSubscription(reg, o)) {
+    await db.logEvent(business.id, "domain.foreign_subscription", { type: event.type, objectId: o.id });
+    return "ignored";
+  }
+  switch (event.type) {
+    case "checkout.session.completed":
+      if (PAID.has(String(o.payment_status))) return domainPaid(business, o);
+      await db.logEvent(business.id, "domain.payment_processing", { sessionId: o.id });
+      return "payment_processing";
+    case "checkout.session.async_payment_succeeded":
+      return domainPaid(business, o);
+    case "checkout.session.async_payment_failed":
+      await db.logEvent(business.id, "domain.payment_failed", { sessionId: o.id });
+      return "payment_failed";
+    case "invoice.paid": {
+      if (!reg || o.billing_reason !== "subscription_cycle") return "ignored";
+      // The registrar renews on its own (auto-renew on); the paid year moves the date on.
+      const expiresAt = reg.expiresAt ? plusYear(reg.expiresAt) : null;
+      await patchDomain(business, { expiresAt, autoRenew: true });
+      if (!reg.autoRenew) await db.enqueueJob("domain_autorenew", { businessId: business.id, on: true });
+      await db.logEvent(business.id, "domain.renewed", { name: reg.name, expiresAt, invoiceId: o.id });
+      return "domain_renewed";
+    }
+    case "invoice.payment_failed": {
+      if (!reg || reg.status !== "registered") return "ignored";
+      // Not paid, not renewed: auto-renew goes off at the registrar (the worker does it) and the owner hears once per invoice.
+      await db.logEvent(business.id, "domain.invoice_failed", { invoiceId: o.id, attempt: o.attempt_count ?? null });
+      if (reg.autoRenew) {
+        await patchDomain(business, { autoRenew: false });
+        await db.enqueueJob("domain_autorenew", { businessId: business.id, on: false });
+      }
+      if (Number(o.attempt_count ?? 1) <= 1) await db.enqueueJob("email", { template: "domain", kind: "domain_payment_failed", businessId: business.id });
+      return "domain_payment_failed";
+    }
+    case "customer.subscription.updated": {
+      if (!reg) return "ignored";
+      if (String(o.status) === "canceled") return domainEnded(business);
+      const ts = (v: unknown) => (typeof v === "number" ? new Date(v * 1000).toISOString() : null);
+      const items = o.items as { data?: { current_period_end?: number }[] } | undefined;
+      const cancelAt = o.cancel_at_period_end === true ? (ts(o.cancel_at) ?? ts(o.current_period_end) ?? ts(items?.data?.[0]?.current_period_end)) : ts(o.cancel_at);
+      if ((cancelAt ?? null) === (reg.cancelAt ? new Date(reg.cancelAt).toISOString() : null)) return "ignored";
+      await patchDomain(business, { cancelAt });
+      await db.logEvent(business.id, "domain.synced", { cancelAt, subscriptionId: o.id });
+      return "domain_synced";
+    }
+    case "customer.subscription.deleted":
+      return domainEnded(business);
+    default:
+      return "ignored";
+  }
+}
+
+/** The add-on ended: nothing renews any more; the domain stays the owner's until it expires. */
+async function domainEnded(business: BusinessRecord): Promise<BillingOutcome> {
+  const db = getDb();
+  const reg = business.domainRegistration;
+  if (!reg || reg.status === "ended") return "ignored";
+  const wasRegistered = reg.status === "registered";
+  await patchDomain(business, { status: wasRegistered ? "ended" : reg.status, autoRenew: false });
+  if (wasRegistered) {
+    await db.enqueueJob("domain_autorenew", { businessId: business.id, on: false });
+    await db.enqueueJob("email", { template: "domain", kind: "domain_ended", businessId: business.id });
+  }
+  await db.logEvent(business.id, "domain.ended", { name: reg.name, expiresAt: reg.expiresAt });
+  return "domain_ended";
 }
 
 /** The webhook events Vidalo listens to (scripts/stripe-setup.mjs registers exactly these). */

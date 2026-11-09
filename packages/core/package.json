@@ -20,7 +20,8 @@
     "./shared/gate": "./src/shared/gate.ts",
     "./billing": "./src/billing/index.ts",
     "./chat": "./src/chat/index.ts",
-    "./support": "./src/support/index.ts"
+    "./support": "./src/support/index.ts",
+    "./registrar": "./src/registrar/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

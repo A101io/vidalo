@@ -106,6 +106,7 @@ export class MemDb implements Db {
       cancelAt: null,
       pauseUntil: null,
       mailPrefs: {},
+      domainRegistration: null,
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };

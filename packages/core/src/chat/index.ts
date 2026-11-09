@@ -40,6 +40,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   lines.push(L.prijs.sub);
   lines.push(`- ${L.prijs.website.simple.name}: ${L.prijs.website.simple.price} ${L.prijs.website.simple.unit}; ${L.prijs.website.custom.name}: ${L.prijs.website.custom.price} ${L.prijs.website.custom.unit}. ${L.prijs.website.note}`);
   lines.push(`- ${L.prijs.locations.h3} ${L.prijs.locations.price}. ${L.prijs.locations.note}`);
+  lines.push(`- ${L.prijs.domain.h3} ${L.prijs.domain.sub} ${L.prijs.domain.price} ${nl ? "exclusief btw" : "excluding VAT"}. ${L.prijs.domain.note}`);
   lines.push(nl ? "Betalen en opzeggen:" : "Paying and cancelling:");
   for (const f of copy.pricing.faq) lines.push(`- ${f.q} ${f.a}`);
   lines.push(nl ? "Veelgestelde vragen:" : "Frequently asked questions:");

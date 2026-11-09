@@ -58,7 +58,8 @@ const JOURNEY: Record<Lang, { free: { name: string; place: string; owner: string
 const DAY = 24 * 60 * 60 * 1000;
 
 /** Every kind, as the code tags it (reporter `type`, job `kind`), and who should receive it. */
-const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
+/** "support": an internal note to support@vidalo.io (Dutch, plain), not a letter to an outside party. */
+const KINDS: Record<string, { label: string; to: "owner" | "third_party" | "support" }> = {
   baseline: { label: "Report after the free check", to: "owner" },
   followup_7: { label: "Follow-up, day 7 (commercial)", to: "owner" },
   followup_21: { label: "Follow-up, day 21 (commercial)", to: "owner" },
@@ -73,6 +74,14 @@ const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
   directory_correction: { label: "Correction to a directory", to: "third_party" },
   correction_request: { label: "Correction request to a source", to: "third_party" },
   correction_followup: { label: "Follow-up to that source", to: "third_party" },
+  domain_registered: { label: "Domain add-on: registered", to: "owner" },
+  domain_renewal: { label: "Domain add-on: renewal in 30 days", to: "owner" },
+  domain_payment_failed: { label: "Domain add-on: renewal not paid", to: "owner" },
+  domain_cancelled: { label: "Domain add-on: will not be renewed", to: "owner" },
+  domain_ended: { label: "Domain add-on: renewal stopped", to: "owner" },
+  domain_authcode: { label: "Domain add-on: transfer code", to: "owner" },
+  domain_failed: { label: "Domain add-on: registration refused", to: "owner" },
+  support_domain: { label: "To support: a domain registration needs a person", to: "support" },
 };
 
 async function drain(now?: () => Date): Promise<string[]> {
@@ -158,6 +167,36 @@ async function journeys(lang: Lang) {
     await drain();
   }
 
+  // The domain add-on (docs/DOMAINS.md), through the mock registrar and the real webhook handling.
+  {
+    const { handleStripeEvent, cancelDomain } = await import("@vidalo/core/billing");
+    const { mailDomainAuthCode } = await import("@vidalo/core/registrar");
+    const { domainReminders } = await import("@vidalo/worker/src/cron.ts");
+    const holder = { company: J.paid.name, firstName: "Jan", lastName: "de Vries", street: "Kerkstraat", houseNumber: "12", postcode: "2011 AB", city: J.paid.place, country: "NL", phone: "+31231234567", email: J.paid.owner, kvk: null };
+    const reg = (name: string) => ({ name, status: "paid" as const, holder, registrar: "mock" as const, acceptedAt: new Date().toISOString(), checkoutSessionId: "cs_lab", stripeSubscriptionId: "sub_lab_domain", holderHandle: null, registrarId: null, paidAt: new Date().toISOString(), registeredAt: null, expiresAt: null, autoRenew: true, cancelAt: null, lastError: null });
+    const cur = async () => (await db.getBusiness(b.id))!;
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, domainRegistration: reg(`lab${b.slug.replace(/-/g, "")}.nl`) });
+    await db.enqueueJob("domain_register", { businessId: b.id });
+    await drain();
+    // A month before the renewal: the cron's reminder, once.
+    const r1 = (await cur()).domainRegistration!;
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, domainRegistration: { ...r1, expiresAt: new Date(Date.now() + 20 * DAY).toISOString() } });
+    await domainReminders();
+    await domainReminders();
+    await mailDomainAuthCode(await cur());
+    const sub = { businessId: b.id, plan: "domain" };
+    await handleStripeEvent({ id: `evt_lab_fail_${lang}`, type: "invoice.payment_failed", data: { object: { id: "in_lab", object: "invoice", attempt_count: 1, parent: { subscription_details: { subscription: "sub_lab_domain", metadata: sub } } } } });
+    await drain();
+    const c = await cancelDomain(db, null, await cur());
+    if (c.ok) await reporter.sendDomainMail(await cur(), "domain_cancelled");
+    await handleStripeEvent({ id: `evt_lab_end_${lang}`, type: "customer.subscription.deleted", data: { object: { id: "sub_lab_domain", object: "subscription", metadata: sub } } });
+    await drain();
+    // A name the registrar refuses: the owner hears the money comes back, support gets a task.
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, domainRegistration: reg(`weiger${b.slug.replace(/-/g, "")}.nl`) });
+    await db.enqueueJob("domain_register", { businessId: b.id });
+    await drain();
+  }
+
   // Kinds this journey did not reach in mock mode: render their template from the real records.
   const reached = new Set<string>();
   for (const f of await readdir(mailDir)) {
@@ -235,6 +274,7 @@ for (const f of (await readdir(mailDir)).sort()) {
   if (!want) m.problems.push(`unknown kind "${m.kind}"`);
   else if (want.to === "owner" && !ownerOf[m.to]) m.problems.push(`owner mail went to ${m.to}`);
   else if (want.to === "third_party" && ownerOf[m.to]) m.problems.push("third-party mail went to the owner");
+  else if (want.to === "support" && m.to !== "support@vidalo.io") m.problems.push(`support note went to ${m.to}`);
   // Which journey it belongs to, and the language it must be in: the owner's; a letter to a third party is always Dutch.
   m.journey = ownerOf[m.to] ?? LANGS.find((l) => m.text.includes(JOURNEY[l].paid.name) || m.text.includes(JOURNEY[l].free.name));
   m.lang = want?.to === "owner" ? m.journey : "nl";

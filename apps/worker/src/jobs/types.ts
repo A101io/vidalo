@@ -66,6 +66,7 @@ export type EmailJob =
   | { template: "report"; businessId: string; scanRunId?: string }
   | { template: "followup"; businessId: string; day: 7 | 21 }
   | { template: "reconfirm"; businessId: string }
+  | { template: "domain"; kind: "domain_payment_failed" | "domain_ended" | "domain_renewal" | "domain_cancelled"; businessId: string }
   | { template: "directory_correction"; to: string; directory: string; listingUrl?: string | null; businessId: string; channelId?: string; diff: { field: string; current: string | null; expected: string | null }[]; reminder?: boolean; firstSentAt?: string };
 
 export interface ReportJob {
@@ -88,6 +89,19 @@ export interface IndexCheckJob {
   businessId: string;
 }
 
+/** Register the paid domain at the registrar and point feiten.{name} at Vidalo (core/registrar/flow.ts). Enqueued by the Stripe webhook. */
+export interface DomainRegisterJob {
+  businessId: string;
+  /** how many times it waited for the CNAME to answer (re-enqueued every 10 minutes, up to DOMAIN_LIVE_ROUNDS) */
+  round?: number;
+}
+
+/** Auto-renew on or off at the registrar. */
+export interface DomainAutoRenewJob {
+  businessId: string;
+  on: boolean;
+}
+
 export interface OperatorTaskJob {
   reason: string;
   businessId?: string | null;
@@ -108,9 +122,11 @@ export type JobPayloads = {
   operator_task: OperatorTaskJob;
   sitecheck: SiteCheckJob;
   index_check: IndexCheckJob;
+  domain_register: DomainRegisterJob;
+  domain_autorenew: DomainAutoRenewJob;
 };
 
 export type JobKind = keyof JobPayloads;
-export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task", "sitecheck", "index_check"];
+export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task", "sitecheck", "index_check", "domain_register", "domain_autorenew"];
 
 export type Handler<K extends JobKind> = (payload: JobPayloads[K], job: Job) => Promise<Record<string, unknown> | void>;
