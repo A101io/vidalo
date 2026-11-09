@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { errorMessage, log } from "./log";
 
 /**
  * Cloudflare Turnstile on the two forms that spend money or send mail: the
@@ -38,10 +39,19 @@ export async function verifyTurnstile(token: unknown, o: { secret: string; ip?: 
   if (o.ip) body.set("remoteip", o.ip);
   try {
     const res = await (o.fetchFn ?? fetch)(TURNSTILE_VERIFY_URL, { method: "POST", body, signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return false;
-    const data = (await res.json()) as { success?: unknown };
-    return data.success === true;
-  } catch {
+    if (!res.ok) {
+      log.warn("turnstile.siteverify_http", { status: res.status });
+      return false;
+    }
+    const data = (await res.json()) as { success?: unknown; "error-codes"?: unknown; hostname?: unknown };
+    if (data.success !== true) {
+      // Cloudflare's reason (invalid-input-secret, invalid-input-response, timeout-or-duplicate, ...): without it a "no" cannot be told apart from a broken setup (9 Nov 2026).
+      log.warn("turnstile.siteverify_refused", { codes: data["error-codes"] ?? null, hostname: data.hostname ?? null });
+      return false;
+    }
+    return true;
+  } catch (err) {
+    log.warn("turnstile.siteverify_failed", { error: errorMessage(err) });
     return false;
   }
 }
