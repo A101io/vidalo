@@ -133,7 +133,7 @@ Nothing below is created yet. Sandbox first, then production.
    `OPENPROVIDER_API_URL` stays unset in production (it defaults to `https://api.openprovider.eu/v1`; a sandbox value is refused by `secrets:push`).
 
 **Stripe**
-1. Sandbox: `pnpm stripe:setup --apply` (as in `docs/setup/stripe-and-resend.md` §7) now also creates "Vidalo Domein", €25/year, and prints `STRIPE_PRICE_DOMAIN=price_…`. Put it in `.env` and push it to `vidalo-web`:
+1. Sandbox: **done 9 Nov 2026** through the Stripe connector, in "Vidalo sandbox" (`acct_1UR4RAELCe3OOCe2`, test mode): product `prod_Vb97F0MhnsvhCK` "Vidalo Domein", price `price_1UZwotELCe3OOCe21cwMMrCI` (€25/year, excl. btw, lookup key `vidalo_domain_eur_25_year`), made with the same fields `pnpm stripe:setup --apply` uses, so that script now finds it instead of making a second one. Put `STRIPE_PRICE_DOMAIN=price_1UZwotELCe3OOCe21cwMMrCI` in `.env` and push it to the Worker that runs on the sandbox key:
    ```bash
    cd /Users/a101/Vidalo && pnpm secrets:push --apply --only STRIPE_PRICE_DOMAIN
    ```
