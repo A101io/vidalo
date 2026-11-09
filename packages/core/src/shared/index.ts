@@ -10,6 +10,7 @@ export * from "./own.js";
 export * from "./canonical.js";
 export * from "./origin.js";
 export * from "./waitlist.js";
+export * from "./free-check.js";
 export * from "./contact.js";
 export * from "./my-data.js";
 export * from "./turnstile.js";

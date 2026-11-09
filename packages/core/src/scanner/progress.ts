@@ -7,6 +7,7 @@
 import type { Db } from "../db/types.js";
 import type { Engine, ScanKind, ScanReport } from "../types.js";
 import { getDb } from "../shared/db.js";
+import { requesterFromEvents } from "../shared/free-check.js";
 import { runScan, type ScanProgress } from "./index.js";
 
 export interface ScanProgressStep {
@@ -107,6 +108,13 @@ export async function runScanWithProgress(
     state.status = "done";
     await flushing;
     await save(state);
+    // A free check asked for an address up front (shared/free-check.ts): the report goes there now.
+    // A business with an owner gets its mails through the owner's own paths, not here.
+    if (kind === "free") {
+      const asker = requesterFromEvents(await db.listEvents(state.businessId, 500));
+      const business = await db.getBusiness(state.businessId);
+      if (asker && !business?.ownerEmail) await db.enqueueJob("email", { template: "baseline", scanRunId: report.scanRunId, businessId: state.businessId, to: asker.email, lang: asker.lang });
+    }
     return report;
   } catch (err) {
     state.status = "failed";

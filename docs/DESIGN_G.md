@@ -42,7 +42,7 @@ Rules kept from the brief: one primary (blue) button per view; no gradients, no 
 ## Components
 
 - **Stip** (status dot): 10px inline, 22px in lists, 220px hero circle on result pages with number + label inside. Colours above. Grey = niet gevonden, always rendered as its own state, never as "no errors".
-- **ScanField**: 52px input + black button "Controleer gratis"; sub-line "Twee minuten. Geen account."
+- **ScanField**: 52px input + e-mail field (required since 9 Nov 2026: the report is mailed, nothing runs without it) + unticked news box + black button "Controleer gratis"; sub-line "Twee minuten. Het rapport komt in je mail."
 - **AnswerCard**: italic grey question, answer line with highlighted span (red tint for wrong, grey tint for not-found quote), caption "n van 3 keer".
 - **FindingRow / ReportRow**: `grid 32px 1fr 1fr 120px` — dot, question, what AI said, frequency. Grey row text: "Ik kan geen informatie vinden."
 - **SourceRow**: panel row, label left, status right (`klopt` green / `ontbreekt`/`niet geclaimd` red / neutral grey text).

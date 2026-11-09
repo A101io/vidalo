@@ -13,6 +13,7 @@ async function reportFor(page: Page, name: string) {
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Rotterdam");
+  await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
 }
