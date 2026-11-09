@@ -24,17 +24,19 @@ function readConsent(): Consent | null {
  */
 export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopyShape["consent"]; cookiesHref: string; categories: OptionalCategory[] }) {
   const [open, setOpen] = useState(false);
-  const [consent, setConsent] = useState<Consent | null>(null);
+  // The switches as they stand before "Bewaar mijn keuze": the stored choice, or everything off.
+  const [draft, setDraft] = useState<ConsentChoice>({ analytics: false, marketing: false });
   const asksChoice = categories.length > 0;
   const none: ConsentChoice = { analytics: false, marketing: false };
   const all: ConsentChoice = { analytics: categories.includes("analytics"), marketing: categories.includes("marketing") };
+  const draftFrom = (c: Consent | null): ConsentChoice => ({ analytics: Boolean(c?.analytics), marketing: Boolean(c?.marketing) });
 
   useEffect(() => {
     const current = readConsent();
-    setConsent(current);
+    setDraft(draftFrom(current));
     if (!current) setOpen(true);
     const reopen = () => {
-      setConsent(readConsent());
+      setDraft(draftFrom(readConsent()));
       setOpen(true);
     };
     window.addEventListener(OPEN_CONSENT_EVENT, reopen);
@@ -44,7 +46,7 @@ export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopySha
   function save(choice: ConsentChoice) {
     document.cookie = consentCookie(choice, location.protocol === "https:");
     const next = readConsent();
-    setConsent(next);
+    setDraft(draftFrom(next));
     setOpen(false);
     window.dispatchEvent(new CustomEvent("vidalo:consent", { detail: next }));
   }
@@ -71,10 +73,23 @@ export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopySha
           </li>
           {categories.map((cat) => (
             <li key={cat} className="flex items-center justify-between gap-4 py-2.5">
-              <span>
+              <span id={`consent-${cat}`}>
                 <span className="font-semibold">{copy.categories[cat].label}</span> <span className="text-muted">{copy.categories[cat].body}</span>
               </span>
-              <span className="text-muted">{consent?.[cat] ? copy.on : copy.off}</span>
+              {/* A real switch per category; "Bewaar mijn keuze" stores what stands here. */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={draft[cat]}
+                aria-labelledby={`consent-${cat}`}
+                onClick={() => setDraft((d) => ({ ...d, [cat]: !d[cat] }))}
+                className="flex shrink-0 items-center gap-2 text-[13px] text-muted"
+              >
+                <span className={`relative inline-block h-6 w-11 rounded-full border-[1.5px] transition-colors ${draft[cat] ? "border-ink bg-ink" : "border-line bg-white"}`}>
+                  <span className={`absolute top-[2px] h-[17px] w-[17px] rounded-full transition-transform ${draft[cat] ? "left-[2px] translate-x-5 bg-white" : "left-[2px] bg-ink"}`} />
+                </span>
+                <span className="w-7 text-left">{draft[cat] ? copy.on : copy.off}</span>
+              </button>
             </li>
           ))}
         </ul>
@@ -88,6 +103,9 @@ export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopySha
             </button>
             <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save(all)}>
               {copy.accept}
+            </button>
+            <button type="button" className="btn-outline h-[44px] px-5" onClick={() => save(draft)}>
+              {copy.save}
             </button>
           </>
         ) : (

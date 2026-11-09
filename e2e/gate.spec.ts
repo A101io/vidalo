@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { dismissNotice } from "./helpers";
 
 /**
  * The launch gate (go-live J4, core/shared/gate.ts), run with `pnpm e2e:gate`:
@@ -104,6 +105,8 @@ test("@gate the hidden preview page opens the site with the key, and only with t
   await page.goto("/");
   expect(await page.locator("a[href*='voorvertoning'], a[href*='/en/preview']").count()).toBe(0);
   await page.goto("/voorvertoning");
+  // The cookie notice (with its choice and three buttons since 9 Nov 2026) covers the form's button until a choice is made.
+  await dismissNotice(page);
   await expect(page.locator("meta[name='robots']")).toHaveAttribute("content", /noindex/);
   // A wrong key comes back to the form with the message, and changes nothing.
   await page.locator("#preview-key").fill("wrong-key");

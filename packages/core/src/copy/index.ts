@@ -1310,6 +1310,8 @@ export const copy = {
     ok: "Begrepen",
     refuse: "Alleen noodzakelijk",
     accept: "Alles accepteren",
+    /** Saves the switches as they stand (each optional category on or off). */
+    save: "Bewaar mijn keuze",
     settings: "Cookie-instellingen",
     close: "Sluiten",
     categories: {

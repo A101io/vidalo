@@ -38,6 +38,8 @@ const serverEnv: Record<string, string> = {
   PUBLIC_BASE_URL: baseURL,
   VIDALO_COMING_SOON: mode === "gate" ? "1" : "0",
   VIDALO_PREVIEW_KEY: mode === "gate" ? "e2e-preview-key" : "",
+  // A measurement id of the right shape, so the notice asks a choice (consent.spec.ts); the script only loads after consent, which no test gives.
+  GA4_MEASUREMENT_ID: "G-E2ETEST01",
 };
 if (mode === "stripe") {
   // Stripe from the environment (the root .env, loaded by the e2e:stripe script); everything else stays mock.

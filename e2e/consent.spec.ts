@@ -28,6 +28,24 @@ test("the footer links the cookie statement, and reopens the notice once there i
   }
 });
 
+test("a category can be switched on and off and the choice saved (9 Nov 2026: Julian could not toggle)", async ({ page, context }) => {
+  await page.goto("/");
+  const analytics = page.getByRole("switch", { name: /Statistieken/ });
+  await expect(analytics).toHaveAttribute("aria-checked", "false");
+  await analytics.click();
+  await expect(analytics).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Bewaar mijn keuze" }).click();
+  const consent = (await context.cookies()).find((c) => c.name === "vidalo_consent");
+  expect(decodeURIComponent(consent!.value)).toContain('"analytics":true');
+  // Reopened from the footer, the switch shows the stored choice and can be turned off again.
+  await page.getByRole("button", { name: "Cookie-instellingen" }).first().click();
+  await expect(page.getByRole("switch", { name: /Statistieken/ })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("switch", { name: /Statistieken/ }).click();
+  await page.getByRole("button", { name: "Bewaar mijn keuze" }).click();
+  const again = (await context.cookies()).find((c) => c.name === "vidalo_consent");
+  expect(decodeURIComponent(again!.value)).toContain('"analytics":false');
+});
+
 test("only necessary cookies before and after the choice", async ({ page, context }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /^(Begrepen|Alleen noodzakelijk)$/ }).first().click();
