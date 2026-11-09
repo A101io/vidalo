@@ -63,8 +63,21 @@ for (const plan of ["monitor", "setup"] as const) {
 test("an empty check goes back to the form", async ({ page }) => {
   await page.goto("/");
   await dismissNotice(page);
-  // Bypass the browser's required check: the server must refuse too.
+  // Bypass the browser's required check: the server must refuse too. The address is filled, so the empty name is what is refused.
   await page.evaluate(() => document.querySelectorAll("input[name='q']").forEach((i) => i.removeAttribute("required")));
+  await page.locator("form[action='/api/scan'] input[name='email']").first().fill("e2e@example.nl");
   await page.locator("form[action='/api/scan'] button[type='submit']").first().click();
   await expect(page).toHaveURL(/fout=leeg/);
+});
+
+test("a check without an address comes back to the field, nothing started", async ({ page }) => {
+  await page.goto("/");
+  await dismissNotice(page);
+  await page.evaluate(() => document.querySelectorAll("input[name='email']").forEach((i) => i.removeAttribute("required")));
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill("Bakkerij Zonder Adres");
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("button[type='submit']").click();
+  await expect(page).toHaveURL(/\/scan\/kies\?.*fout=mail/);
+  await expect(page.locator("input[name='email'][aria-invalid='true']")).toBeVisible();
 });
