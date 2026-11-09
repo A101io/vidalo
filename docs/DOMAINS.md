@@ -58,7 +58,8 @@ TransIP is the fallback: also REST, but RSA signing, retail renewals (€16.50 .
 - **Reminder 30 days before** each renewal, with the price and how to stop (cron step 10, `dueDomainReminder`, mail `domain_renewal`).
 - **Renewal not paid** (`invoice.payment_failed`): auto-renew goes **off** at the registrar (job `domain_autorenew`) and the owner gets one mail (`domain_payment_failed`). Stripe's Smart Retries keep trying; paying turns auto-renew back on. Unpaid by the expiry date: the domain runs out (for .nl, SIDN's quarantine lets the holder restore it through a registrar for a while).
 - **Not renewing** ("Niet verlengen" on `/app/domein`): cancel at period end at Stripe, auto-renew off, mail `domain_cancelled`. "Toch verlengen" undoes it until the end date. When Stripe ends the subscription (`customer.subscription.deleted`): status `ended`, mail `domain_ended`. The domain stays the holder's until it expires.
-- **Transfer out**: "Mail me de verhuiscode" mails the code to the owner's address on record; it is never shown on the page or logged.
+- **Transfer out**: "Mail me de verhuiscode" mails the code at once to the owner's address on record (SIDN: within five days at the latest); it is never shown on the page or logged. Deleting the account mails it first.
+- **.eu** is offered only to a business in the EU/EEA (Regulation (EU) 2019/517 art. 3; `tldAllowed`).
 - The business's own status never changes because of the add-on, and Vidalo Monthly ending leaves the domain running.
 - "Verwijder alles" on the account page waits until the add-on is stopped, like the subscription.
 
@@ -139,6 +140,13 @@ Nothing below is created yet. Sandbox first, then production.
 2. Live: the same with `--apply --live` when the live account is set up (go-live B2). The webhook needs no new events.
 
 ## 6. Not verified
+
+Review round 1 (9 Nov 2026, QA + security + compliance) left these open on purpose:
+- No rate limit on the availability check (one registrar call of up to six names per page view of a verified, paying owner) or on "Mail me de verhuiscode". Openprovider's account-wide rate limit is the ceiling; add a per-business limit if it is ever hit.
+- The Openprovider password sits on both Workers (the web app checks availability). A leak exposes every customer's transfer code; moving `check` behind the worker would keep it off `vidalo-web`.
+- Any name is accepted, a competitor's brand included; Openprovider's abuse policy and our terms (art. 6, fair use) are the remedy.
+- Openprovider's exact GDPR role and its registrant agreement URL (behind login) are for counsel at sign-up (go-live D9).
+
 
 - No call has been made to Openprovider, sandbox or live: the adapter follows the published OpenAPI spec (`developer.openprovider.com/data/swagger.spec.js`, read 9 Nov 2026), but field details (phone split, `.nl` holder rules, the DNS `replace` on an existing zone, `expiration_date` format) need one sandbox run.
 - Openprovider's .nl and .eu member prices (behind login).

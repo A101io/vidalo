@@ -10,7 +10,7 @@ import { langFromReferer } from "@/lib/request-lang";
 import { HOME_COUNTRY, isVerifiedOwner } from "@vidalo/core/shared";
 import { copyFor } from "@vidalo/core/copy";
 import { DOMAIN_PRICE_EUR_PER_YEAR, domainBuyRefusal } from "@vidalo/core/billing";
-import { getRegistrar, parseDomain, parseHolder, type DomainRegistration } from "@vidalo/core/registrar";
+import { getRegistrar, parseDomain, parseHolder, tldAllowed, type DomainRegistration } from "@vidalo/core/registrar";
 
 export const runtime = "nodejs";
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   const form = await req.formData();
   const domain = parseDomain(String(form.get("domain") ?? ""));
-  if (!domain) return back("fout=ongeldig");
+  if (!domain || !tldAllowed(domain.tld, business.country)) return back("fout=ongeldig");
   const q = `naam=${encodeURIComponent(domain.name)}`;
   if (form.get("accept") !== "ja") return back(`${q}&fout=accept`);
   const holder = parseHolder(Object.fromEntries(form.entries()), business.country, business.kvk);
@@ -75,6 +75,11 @@ export async function POST(req: Request) {
   const save = (r: DomainRegistration) => db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, domainRegistration: r });
 
   const stripe = await getStripe();
+  // No Stripe outside mock mode is a broken setup, not a free domain (review: fail closed).
+  if (!stripe && !env.mock) {
+    console.error("domain checkout refused: STRIPE_SECRET_KEY is not set");
+    return back(`${q}&fout=checkout`);
+  }
   if (!stripe) {
     await save({ ...reg, status: "paid", paidAt: now });
     await db.enqueueJob("domain_register", { businessId: business.id });

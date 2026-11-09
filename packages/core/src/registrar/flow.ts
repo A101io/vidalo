@@ -74,7 +74,12 @@ export async function runDomainRegistration(businessId: string, opts: { lastAtte
       cur = b.domainRegistration!;
     }
     if (!cur.registrarId) {
-      const done = await registrar.register(cur.name, cur.holderHandle!);
+      // A refusal right after an attempt whose answer got lost may be our own registration: adopt it, never report it as failed.
+      const done = await registrar.register(cur.name, cur.holderHandle!).catch(async (err) => {
+        const ours = err instanceof RegistrarRefused ? await registrar.find(cur.name) : null;
+        if (ours) return ours;
+        throw err;
+      });
       b = await save(b, { registrarId: done.id, expiresAt: done.expiresAt, registeredAt: new Date().toISOString(), autoRenew: true });
       await db.logEvent(b.id, "domain.registered", { name: cur.name, registrar: registrar.name, expiresAt: done.expiresAt });
     }

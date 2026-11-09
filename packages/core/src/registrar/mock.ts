@@ -31,6 +31,14 @@ export class MockRegistrar implements Registrar {
     return handle;
   }
 
+  /** set by tests: register() stores the domain and then throws, as when the answer gets lost */
+  loseNextAnswer = false;
+
+  async find(name: string): Promise<Registered | null> {
+    const d = this.domains.get(name);
+    return d ? { id: `mock-${name}`, expiresAt: d.expiresAt } : null;
+  }
+
   async register(name: string, holderHandle: string): Promise<Registered> {
     if (this.failNext > 0) {
       this.failNext--;
@@ -41,6 +49,10 @@ export class MockRegistrar implements Registrar {
     if ((await this.check([p.name]))[0]!.available === false) throw new RegistrarRefused(`${name} is taken`, "taken");
     const expiresAt = new Date(Date.now() + YEAR).toISOString();
     this.domains.set(p.name, { holder: holderHandle, autoRenew: true, cnames: new Map(), expiresAt });
+    if (this.loseNextAnswer) {
+      this.loseNextAnswer = false;
+      throw new Error("mock registrar: answer lost after registering");
+    }
     return { id: `mock-${p.name}`, expiresAt };
   }
 

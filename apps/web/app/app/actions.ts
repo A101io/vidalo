@@ -158,6 +158,8 @@ export async function deleteMyData(formData: FormData) {
   // The domain add-on bills on its own: it is stopped first ("Niet verlengen" on /app/domein), like the subscription.
   const reg = business.domainRegistration;
   if (reg && (reg.status === "paid" || (reg.status === "registered" && !reg.cancelAt))) redirect(href("/app/account?gegevens=abonnement#gegevens"));
+  // A domain that is still theirs keeps its way out: the transfer code goes to them before the record is gone.
+  if (reg && domainOptions(reg).canGetAuthCode) await mailDomainAuthCode(business).catch(() => false);
   const db = await ready();
   await db.deleteBusiness(business.id);
   // No business id and no address: only that a deletion happened.

@@ -17,7 +17,7 @@ import {
   type StripeEventLike,
   type SubscriptionApi,
 } from "../src/billing";
-import { MockRegistrar, holderDraft, parseDomain, parseHolder, runDomainRegistration, setDomainAutoRenew, setRegistrar, splitPhone, splitStreet, suggestDomains, type DomainRegistration, type Holder } from "../src/registrar";
+import { MockRegistrar, holderDraft, parseDomain, parseHolder, runDomainRegistration, setDomainAutoRenew, setRegistrar, splitPhone, splitStreet, suggestDomains, tldAllowed, type DomainRegistration, type Holder } from "../src/registrar";
 import { domainEmail, DOMAIN_MAIL_KINDS } from "../src/reporter";
 
 let db: MemDb;
@@ -56,6 +56,14 @@ describe("names", () => {
     expect(s).toContain("bakkerijcafedevrieshaarlem.nl");
     expect(s).toContain("bakkerijcafedevries.eu");
     expect(new Set(s).size).toBe(s.length);
+  });
+
+  it("offers .eu only to a business in the EU/EEA", () => {
+    expect(suggestDomains("Bakkerij", "Haarlem", 6, "NL")).toContain("bakkerij.eu");
+    expect(suggestDomains("Bakkerij", "London", 6, "GB")).not.toContain("bakkerij.eu");
+    expect(tldAllowed("eu", "NO")).toBe(true);
+    expect(tldAllowed("eu", "GB")).toBe(false);
+    expect(tldAllowed("com", "GB")).toBe(true);
   });
 
   it("accepts what an owner types and refuses what we do not sell", () => {
@@ -221,6 +229,23 @@ describe("webhook", () => {
     expect(await jobs("domain_register")).toHaveLength(1);
   });
 
+  it("a second paid session for the same name goes to support, not silently onto the first", async () => {
+    const b = await business({ domainRegistration: registration() });
+    expect(await handleStripeEvent(evt("checkout.session.completed", paidSession(b)))).toBe("domain_paid");
+    expect(await handleStripeEvent(evt("checkout.session.completed", paidSession(b, { id: "cs_dom2", subscription: "sub_dom2" })))).toBe("ignored");
+    expect((await jobs("operator_task")).map((j) => j.payload.reason)).toEqual(["domain_paid_unmatched"]);
+    expect((await db.getBusiness(b.id))!.domainRegistration?.stripeSubscriptionId).toBe("sub_dom");
+  });
+
+  it("another domain subscription ending or failing leaves the live registration alone", async () => {
+    const b = await business({ domainRegistration: registration({ status: "registered", stripeSubscriptionId: "sub_dom", registrarId: "1" }) });
+    expect(await handleStripeEvent(evt("customer.subscription.deleted", { id: "sub_old", object: "subscription", metadata: { businessId: b.id, plan: "domain", domain: "bakkerijdevries.nl" } }))).toBe("ignored");
+    expect(await handleStripeEvent(evt("invoice.payment_failed", { id: "in_x", object: "invoice", attempt_count: 1, parent: { subscription_details: { subscription: "sub_old", metadata: { businessId: b.id, plan: "domain" } } } }))).toBe("ignored");
+    expect((await db.getBusiness(b.id))!.domainRegistration).toMatchObject({ status: "registered", autoRenew: true });
+    expect(await jobs("domain_autorenew")).toHaveLength(0);
+    expect(await jobs("email")).toHaveLength(0);
+  });
+
   it("not renewing, set in Stripe, lands on the registration", async () => {
     const b = await business({ domainRegistration: registration({ status: "registered", stripeSubscriptionId: "sub_dom" }) });
     expect(await handleStripeEvent(evt("customer.subscription.updated", { id: "sub_dom", object: "subscription", status: "active", cancel_at_period_end: true, cancel_at: 1825833600, metadata: { businessId: b.id, plan: "domain" } }))).toBe("domain_synced");
@@ -281,6 +306,16 @@ describe("registration job", () => {
     expect(out.result === "registered" || out.result === "live").toBe(true);
     expect(registers).toBe(1);
     expect((await db.getBusiness(b.id))!.domainRegistration?.status).toBe("registered");
+    expect(await jobs("operator_task")).toHaveLength(0);
+  });
+
+  it("a registration whose answer got lost is adopted on the retry, never reported as refused", async () => {
+    const b = await business({ domainRegistration: registration({ status: "paid" }) });
+    registrar.loseNextAnswer = true;
+    await expect(runDomainRegistration(b.id)).rejects.toThrow(/answer lost/);
+    const out = await runDomainRegistration(b.id);
+    expect(out.result === "registered" || out.result === "live").toBe(true);
+    expect((await db.getBusiness(b.id))!.domainRegistration).toMatchObject({ status: "registered", registrarId: "mock-bakkerijdevries.nl" });
     expect(await jobs("operator_task")).toHaveLength(0);
   });
 

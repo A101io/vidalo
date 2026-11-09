@@ -235,6 +235,16 @@ function isDomainObject(business: BusinessRecord, o: Record<string, unknown>): b
   return objectSub === sub;
 }
 
+/** True when a subscription or invoice belongs to a domain subscription other than the one on file. */
+function foreignSubscription(reg: NonNullable<BusinessRecord["domainRegistration"]>, o: Record<string, unknown>): boolean {
+  type Details = { metadata?: Record<string, string>; subscription?: unknown } | undefined;
+  const parent = o.parent as { subscription_details?: Details } | null | undefined;
+  const sub = String(o.object) === "subscription" ? str(o.id) : (str(o.subscription) ?? str(parent?.subscription_details?.subscription));
+  if (reg.stripeSubscriptionId) return Boolean(sub && sub !== reg.stripeSubscriptionId);
+  const domain = meta(o).domain ?? parent?.subscription_details?.metadata?.domain;
+  return Boolean(domain && domain !== reg.name);
+}
+
 async function patchDomain(business: BusinessRecord, patch: Partial<NonNullable<BusinessRecord["domainRegistration"]>>, extra: Partial<BusinessRecord> = {}) {
   await getDb().upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ...extra, domainRegistration: { ...business.domainRegistration!, ...patch } });
 }
@@ -248,7 +258,13 @@ async function domainPaid(business: BusinessRecord, session: Record<string, unkn
     await db.enqueueJob("operator_task", { reason: "domain_paid_unmatched", businessId: business.id, sessionId: session.id, domain: meta(session).domain ?? null });
     return "ignored";
   }
-  if (reg.status === "paid") return "domain_paid";
+  if (reg.status === "paid") {
+    // The same payment reported again is fine; a second paid session for this name is a second subscription nobody tracks.
+    if (str(session.subscription) === reg.stripeSubscriptionId || str(session.id) === reg.checkoutSessionId) return "domain_paid";
+    await db.logEvent(business.id, "domain.paid_unmatched", { sessionId: session.id, domain: reg.name, second: true });
+    await db.enqueueJob("operator_task", { reason: "domain_paid_unmatched", businessId: business.id, sessionId: session.id, domain: reg.name, subscriptionId: str(session.subscription) });
+    return "ignored";
+  }
   await patchDomain(
     business,
     { status: "paid", paidAt: new Date().toISOString(), checkoutSessionId: str(session.id), stripeSubscriptionId: str(session.subscription) ?? reg.stripeSubscriptionId },
@@ -264,6 +280,11 @@ async function applyDomain(business: BusinessRecord, event: StripeEventLike): Pr
   const db = getDb();
   const o = event.data.object;
   const reg = business.domainRegistration;
+  // Invoices and subscriptions of another domain subscription (a refused or second one support cancels) never touch this registration.
+  if (!event.type.startsWith("checkout.") && reg && foreignSubscription(reg, o)) {
+    await db.logEvent(business.id, "domain.foreign_subscription", { type: event.type, objectId: o.id });
+    return "ignored";
+  }
   switch (event.type) {
     case "checkout.session.completed":
       if (PAID.has(String(o.payment_status))) return domainPaid(business, o);

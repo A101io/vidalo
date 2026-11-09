@@ -625,7 +625,7 @@ export const copy = {
       domain: {
         h3: "Geen eigen domein?",
         sub: "Dan registreren wij er een op naam van je bedrijf (.nl, .com of .eu) en zetten we je feitenpagina erop. Je hoeft niets aan DNS te doen.",
-        price: "€25 per jaar",
+        price: "€25 per jaar excl. btw",
         note: "Bij een plan van Vidalo, te kiezen in je account. Jij bent de houder en kunt het domein altijd meenemen. Een geregistreerd domein kan niet terug.",
       },
       /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
@@ -660,7 +660,7 @@ export const copy = {
         { q: "Ik heb toch een website?", a: "AI leest die als één bron van vele. De boekwinkel die “permanent gesloten” werd genoemd had ook een website." },
         { q: "Kunnen jullie ChatGPT laten zeggen wat ik wil?", a: "Nee, niemand kan dat. Wij zoeken de bronnen waar AI uit put en vragen om correctie, of laten zien wat je zelf moet aanpassen, zodat ze allemaal hetzelfde zeggen." },
         { q: "Werkt het altijd?", a: "Antwoorden mét zoekfunctie veranderen meestal binnen weken nadat de bron is aangepast. Antwoorden uit het geheugen van het model veranderen pas bij een nieuwe modelversie. Dat zeggen we eerlijk in je rapport." },
-        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan registreren wij er een op naam van je bedrijf, voor €25 per jaar. Bij grote platforms kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
+        { q: "Wat moet ik zelf doen?", a: "Vijf minuten: je gegevens bevestigen, één DNS-regel toevoegen en één keer laten zien dat jij de eigenaar bent: inloggen bij Google of een code via de telefoon van je bedrijf. Geen domein? Dan registreren wij er een op naam van je bedrijf, voor €25 per jaar exclusief btw. Bij grote websites zoals Google kan alleen de eigenaar iets wijzigen; daar laten we je precies zien wat je moet aanpassen." },
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Met Vidalo Monthly elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout. Met alleen Vidalo Scan doen we één volledige controle en controleren we daarna de herstelde fouten opnieuw." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
@@ -983,12 +983,12 @@ export const copy = {
         {
           h: "Een domein via Vidalo",
           p: [
-            "Heb je een betaald Plan, dan kun je Vidalo een domeinnaam laten registreren (.nl, .com of .eu) waarop we je Feitenpagina zetten. Dat kost €25 per jaar, exclusief 21% btw, en loopt als een apart abonnement per jaar dat elk jaar vanzelf verlengt, tot je zegt dat het niet hoeft. Het staat los van Vidalo Monthly: eindigt het een, dan loopt het ander door.",
-            "Het domein komt op naam van je onderneming: jij bent de houder. Vidalo registreert het via Openprovider, onze registrar, en is alleen technisch contact. De regels van de beheerder van de extensie gelden ook, voor .nl de algemene voorwaarden van SIDN voor houders. Je geeft ons de juiste gegevens van de houder en houdt ze juist.",
+            "Heb je een betaald Plan, dan kun je Vidalo een domeinnaam laten registreren (.nl, .com of .eu; .eu alleen voor een onderneming in de Europese Economische Ruimte) waarop we je Feitenpagina zetten. Dat kost €25 per jaar, exclusief 21% btw, en loopt als een apart abonnement per jaar dat elk jaar vanzelf verlengt, tot je zegt dat het niet hoeft. Het staat los van Vidalo Monthly: eindigt het een, dan loopt het ander door.",
+            "Het domein komt op naam van je onderneming: jij bent de houder. Vidalo registreert het via Openprovider, onze registrar, en is alleen technisch contact. De regels van de beheerder van de extensie gelden ook: voor .nl de algemene voorwaarden van SIDN voor houders, voor .eu de voorwaarden van EURid, voor .com de registratievoorwaarden van Openprovider en de rechten en plichten van houders die ICANN beschrijft (icann.org/resources/pages/benefits-2013-09-16-en). Je geeft ons de juiste gegevens van de houder en houdt ze juist. Bij .com en .eu kan de houder een mail krijgen om het e-mailadres te bevestigen; gebeurt dat niet, dan kan het domein worden stilgezet.",
             "Een domein dat geregistreerd is, kun je niet terugsturen en krijg je niet terugbetaald: de registratie kost meteen geld bij de beheerder van de extensie. Dat zeggen we je voor je betaalt, en je bevestigt het. Lukt de registratie niet, dan betalen we je het hele bedrag terug.",
             "We zetten op het domein alleen het subdomein feiten. voor je Feitenpagina. Op het domein zelf zetten we niets.",
             "Een maand voor elke verlenging krijg je een herinnering met de prijs. Wil je niet verlengen, kies dan ‘Niet verlengen’ op de pagina ‘Je domein’ in je Account; het domein blijft van jou tot het einde van het betaalde jaar. Daarna verlengen we het niet meer en loopt het af.",
-            "Je kunt het domein altijd meenemen naar een andere partij. De verhuiscode vraag je op in je Account; we mailen hem naar het e-mailadres van je Account, binnen vijf werkdagen nadat je erom vroeg.",
+            "Je kunt het domein altijd meenemen naar een andere partij. De verhuiscode vraag je op in je Account; we mailen hem meteen naar het e-mailadres van je Account, en uiterlijk binnen vijf dagen nadat je erom vroeg. Stopt Vidalo met de Dienst of met domeinen, dan blijft het domein van jou en sturen we je de verhuiscode.",
             "Mislukt de betaling van een verlenging, dan krijg je bericht en verlengen we het domein niet zolang er niet betaald is. Is het op de einddatum niet betaald, dan loopt het domein af en kan een ander het registreren. Daarvoor zijn we niet aansprakelijk.",
           ],
         },
@@ -1075,8 +1075,8 @@ export const copy = {
           p: [
             [
               "Gegevens: de gegevens van de houder die je invult: bedrijfsnaam, naam van de contactpersoon, adres, telefoonnummer en e-mailadres, en je KvK-nummer als we dat kennen. Verder de domeinnaam en waar de registratie staat.",
-              "Wat we ermee doen: we geven ze aan Openprovider, die het domein op naam van je bedrijf registreert bij de beheerder van de extensie. Die regels vragen de echte gegevens van de houder. Wat de beheerder openbaar laat zien over een houder, bepaalt die zelf;",
-              "Grondslag: de uitvoering van de overeenkomst met jou.",
+              "Wat we ermee doen: we geven ze aan Openprovider, die het domein op naam van je bedrijf registreert bij de beheerder van de extensie. Die regels vragen de echte gegevens van de houder. Wat de beheerder openbaar laat zien, bepaalt die zelf; bij een bedrijf als houder kunnen dat de bedrijfsnaam en het e-mailadres van de houder zijn, in de openbare Whois. Gebruik daarom bij voorkeur een algemeen adres, zoals info@.",
+              "Grondslag: de uitvoering van de overeenkomst met jou. Voor de naam van de contactpersoon, als dat niet jijzelf bent: ons gerechtvaardigd belang om het domein correct te registreren (artikel 6 lid 1 onder f AVG).",
               "Hoe lang: zolang het domein via ons loopt, en daarna zoals bij een betaald plan. De beheerder van de extensie en Openprovider bewaren de gegevens volgens hun eigen regels.",
             ],
           ],
@@ -1152,7 +1152,7 @@ export const copy = {
               "Meta (Facebook, Instagram): het meten van onze advertenties, alleen met je toestemming; EU en Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
-              "Openprovider: het registreren en beheren van een domein dat je via ons neemt; Nederland. Openprovider geeft de gegevens van de houder door aan de beheerder van de extensie (SIDN voor .nl, EURid voor .eu, Verisign voor .com), die ze in zijn register bewaart.",
+              "Openprovider: het registreren en beheren van een domein dat je via ons neemt; Nederland. Voor ons account werkt Openprovider in onze opdracht; als registrar heeft het ook eigen plichten. Het geeft de gegevens van de houder door aan de beheerder van de extensie (SIDN voor .nl, EURid voor .eu), die ze als zelfstandig verantwoordelijke in zijn register bewaart. Voor .com krijgt de beheerder (Verisign, Verenigde Staten) de domeinnaam en technische gegevens.",
               "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
             ],
             "Verder geven we gegevens alleen aan anderen als je daar toestemming voor geeft, of als de wet ons dat verplicht.",
@@ -2813,6 +2813,7 @@ export const copy = {
       apex: (d: string) => `Je feitenpagina komt op feiten.${d}. Op ${d} zelf zetten we niets; dat kun je later gebruiken voor een website.`,
       holderH: "Gegevens van de houder",
       holderNote: "Deze gegevens gaan naar Openprovider, het bedrijf dat de domeinen voor ons registreert, en naar de beheerder van de extensie (SIDN voor .nl). Die vragen de echte gegevens van de houder.",
+      emailHint: "Kan openbaar te zien zijn in de Whois van het domein. Gebruik bij voorkeur een algemeen adres, zoals info@.",
       fields: { firstName: "Voornaam contactpersoon", lastName: "Achternaam contactpersoon", company: "Bedrijfsnaam", street: "Straat", houseNumber: "Huisnummer", postcode: "Postcode", city: "Plaats", phone: "Telefoon", email: "E-mail" },
       accept: "Ik ga akkoord met de voorwaarden voor domeinregistratie (artikel 19) en weet dat een geregistreerd domein niet terug kan.",
       acceptLink: "Lees de voorwaarden",
@@ -3239,7 +3240,7 @@ export const copy = {
     domain: {
       registered: (d: { domain: string; host: string; date: string; url: string }) => ({
         subject: `${d.domain} is geregistreerd`,
-        body: `${d.domain} staat op naam van je bedrijf. Je feitenpagina komt op ${d.host}; meestal staat hij binnen een uur. Je hoeft er niets voor te doen.
+        body: `${d.domain} staat op naam van je bedrijf. Je feitenpagina komt op ${d.host}; meestal staat hij binnen een uur. Je hoeft er niets voor te doen, behalve dit: krijg je een mail om het e-mailadres van de houder te bevestigen, klik dan op de link. Anders kan het domein na een paar weken worden stilgezet.
 
 Het domein loopt tot ${d.date} en wordt daarna elk jaar vanzelf verlengd. Een maand vooraf krijg je een herinnering.
 

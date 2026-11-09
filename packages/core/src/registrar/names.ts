@@ -19,7 +19,7 @@ function label(s: string): string {
  * together on .nl, the name with hyphens, the name with the place, then the
  * first one on .eu and .com. Duplicates and invalid labels are dropped.
  */
-export function suggestDomains(name: string, place: string, max = 6): string[] {
+export function suggestDomains(name: string, place: string, max = 6, country = "NL"): string[] {
   const n = label(name);
   const p = label(place);
   const joined = n.replace(/-/g, "");
@@ -27,7 +27,7 @@ export function suggestDomains(name: string, place: string, max = 6): string[] {
   const out: string[] = [];
   for (const l of labels) if (l && n !== p) out.push(`${l}.nl`);
   if (joined) out.push(`${joined}.eu`, `${joined}.com`);
-  return [...new Set(out)].filter((d) => parseDomain(d) !== null).slice(0, max);
+  return [...new Set(out)].filter((d) => { const x = parseDomain(d); return x !== null && tldAllowed(x.tld, country); }).slice(0, max);
 }
 
 /**
@@ -50,6 +50,14 @@ export function parseDomain(input: string): { name: string; label: string; tld: 
   if (!(DOMAIN_TLDS as readonly string[]).includes(tld)) return null;
   if (l.length < 2 || l.length > 63 || l.startsWith("-") || l.endsWith("-") || l.slice(2, 4) === "--") return null;
   return { name: `${l}.${tld}`, label: l, tld: tld as DomainTld };
+}
+
+/** EU and EEA countries: only a holder established there may hold a .eu (Regulation (EU) 2019/517, art. 3). */
+const EEA = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO"]);
+
+/** Whether a business in `country` may hold a name on `tld`. */
+export function tldAllowed(tld: DomainTld, country: string): boolean {
+  return tld !== "eu" || EEA.has(country.toUpperCase());
 }
 
 /** The facts page host on a registered domain. */

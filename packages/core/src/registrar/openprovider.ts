@@ -52,6 +52,11 @@ export function splitPhone(e164: string, country = "NL"): { country_code: string
   return { country_code: `+${p.countryCallingCode}`, area_code: nat.slice(0, area), subscriber_number: nat.slice(area) };
 }
 
+/** expiration_date comes as "2027-11-09 12:00:00"; without it, a year from now. */
+function expiry(v: string | undefined): string {
+  return (v ? new Date(`${v.replace(" ", "T")}Z`) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)).toISOString();
+}
+
 export class OpenproviderRegistrar implements Registrar {
   readonly name = "openprovider" as const;
   constructor(private readonly cfg: OpenproviderConfig) {}
@@ -83,6 +88,12 @@ export class OpenproviderRegistrar implements Registrar {
     const p = parseDomain(name);
     if (!p) throw new RegistrarRefused(`${name} is not a name we register`, "invalid");
     return { name: p.label, extension: p.tld };
+  }
+
+  async find(name: string): Promise<Registered | null> {
+    const r = await this.raw<{ results?: { id: number; expiration_date?: string }[] }>("GET", `/domains?full_name=${encodeURIComponent(name)}&limit=1`);
+    const hit = r.results?.[0];
+    return hit ? { id: String(hit.id), expiresAt: expiry(hit.expiration_date) } : null;
   }
 
   private async idOf(name: string): Promise<number> {
@@ -129,9 +140,7 @@ export class OpenproviderRegistrar implements Registrar {
       ns_group: "dns-openprovider",
       autorenew: "on",
     });
-    // expiration_date comes as "2027-11-09 12:00:00"; without it, a year from now.
-    const exp = r.expiration_date ? new Date(`${r.expiration_date.replace(" ", "T")}Z`) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    return { id: String(r.id), expiresAt: exp.toISOString() };
+    return { id: String(r.id), expiresAt: expiry(r.expiration_date) };
   }
 
   async pointCname(name: string, host: string, target: string): Promise<void> {

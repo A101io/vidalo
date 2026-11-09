@@ -1,7 +1,7 @@
 import type { BusinessRecord } from "@vidalo/core/db";
 import type { CopyShape, Lang } from "@vidalo/core/copy";
 import { DOMAIN_PRICE_EUR_PER_YEAR, domainBuyRefusal, domainOptions, domainState, inclVat } from "@vidalo/core/billing";
-import { factsHostOn, getRegistrar, holderDraft, parseDomain, suggestDomains, HOLDER_FIELDS, type Availability } from "@vidalo/core/registrar";
+import { factsHostOn, getRegistrar, holderDraft, parseDomain, suggestDomains, tldAllowed, HOLDER_FIELDS, type Availability } from "@vidalo/core/registrar";
 import { longDate } from "@vidalo/core/reporter";
 import { ready } from "@/lib/core";
 import { Stip, type Tone } from "@/components/Stip";
@@ -104,8 +104,9 @@ export async function RegisterDomain({ business, sp, R, lang, href, primary }: {
     );
   }
 
-  const suggestions = suggestDomains(business.name, business.place);
-  const typed = sp.naam ? parseDomain(sp.naam) : null;
+  const suggestions = suggestDomains(business.name, business.place, 6, business.country);
+  const parsed = sp.naam ? parseDomain(sp.naam) : null;
+  const typed = parsed && tldAllowed(parsed.tld, business.country) ? parsed : null;
   const asked = typed?.name ?? suggestions[0] ?? null;
   let checked: Availability[] = [];
   let checkFailed = false;
@@ -190,6 +191,7 @@ export async function RegisterDomain({ business, sp, R, lang, href, primary }: {
               {HOLDER_FIELDS.map((k) => (
                 <label key={k} className={k === "company" || k === "email" ? "sm:col-span-2" : ""}>
                   <span className="field-label">{R.fields[k]}</span>
+                  {k === "email" && <span className="mb-1.5 block text-[13px] text-muted">{R.emailHint}</span>}
                   <input
                     name={k}
                     defaultValue={draft[k]}

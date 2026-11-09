@@ -607,7 +607,7 @@ export const en: CopyShape = {
       domain: {
         h3: "No domain of your own?",
         sub: "Then we register one in your business's name (.nl, .com or .eu) and put your facts page on it. You do not need to touch DNS.",
-        price: "€25 a year",
+        price: "€25 a year excl. VAT",
         note: "With a Vidalo plan, chosen in your account. You are the holder and can always take the domain with you. A registered domain cannot be returned.",
       },
       /** Extra locations (2 to 10) on top of a plan; by request, no checkout yet. */
@@ -642,7 +642,7 @@ export const en: CopyShape = {
         { q: "But I have a website?", a: "AI reads it as one source among many. The bookshop that was called “permanently closed” had a website too." },
         { q: "Can you make ChatGPT say what I want?", a: "No, nobody can. We find the sources AI draws on and ask for a correction, or show you what to change yourself, so they all say the same thing." },
         { q: "Does it always work?", a: "Answers that use search usually change within weeks of the source being corrected. Answers from the model's memory only change with a new model version. We say so honestly in your report." },
-        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we register one in your business's name, for €25 a year. On large platforms only the owner can change anything; there we show you exactly what to change." },
+        { q: "What do I have to do myself?", a: "Five minutes: confirm your details, add one DNS record and show once that you are the owner: log in to Google or get a code on your business phone. No domain? Then we register one in your business's name, for €25 a year excluding VAT. On large websites such as Google only the owner can change anything; there we show you exactly what to change." },
         { q: "Do I need to install anything?", a: "No." },
         { q: "How often do you check?", a: "With Vidalo Monthly every month, and again after every change to your details and after every fixed error. With Vidalo Scan alone we do one full check and then check the fixed errors again." },
         { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
@@ -958,12 +958,12 @@ export const en: CopyShape = {
         {
           h: "A domain through Vidalo",
           p: [
-            "With a paid Plan you can have Vidalo register a domain name (.nl, .com or .eu) on which we put your Facts page. It costs €25 a year, excluding 21% VAT, and runs as a separate yearly subscription that renews every year by itself, until you say there is no need. It is separate from Vidalo Monthly: if one ends, the other carries on.",
-            "The domain is registered in your business's name: you are the holder. Vidalo registers it through Openprovider, our registrar, and is only the technical contact. The rules of the registry of the extension apply too, for .nl SIDN's general terms and conditions for registrants. You give us the correct details of the holder and keep them correct.",
+            "With a paid Plan you can have Vidalo register a domain name (.nl, .com or .eu; .eu only for a business established in the European Economic Area) on which we put your Facts page. It costs €25 a year, excluding 21% VAT, and runs as a separate yearly subscription that renews every year by itself, until you say there is no need. It is separate from Vidalo Monthly: if one ends, the other carries on.",
+            "The domain is registered in your business's name: you are the holder. Vidalo registers it through Openprovider, our registrar, and is only the technical contact. The rules of the registry of the extension apply too: for .nl SIDN's general terms and conditions for registrants, for .eu EURid's terms, for .com Openprovider's registration terms and the registrant rights and responsibilities ICANN describes (icann.org/resources/pages/benefits-2013-09-16-en). You give us the correct details of the holder and keep them correct. For .com and .eu the holder may get an email to confirm the email address; if that does not happen, the domain may be suspended.",
             "A domain that has been registered cannot be returned and is not refunded: registering costs money at the registry of the extension right away. We tell you so before you pay, and you confirm it. If the registration does not succeed, we refund the full amount.",
             "On the domain we only set up the subdomain feiten. for your Facts page. We put nothing on the domain itself.",
             "A month before each renewal you get a reminder with the price. If you do not want to renew, choose ‘Do not renew’ on the ‘Your domain’ page in your Account; the domain stays yours until the end of the paid year. After that we no longer renew it and it runs out.",
-            "You can always take the domain to another party. You ask for the transfer code in your Account; we email it to your Account's email address, within five working days of your request.",
+            "You can always take the domain to another party. You ask for the transfer code in your Account; we email it to your Account's email address right away, and at the latest within five days of your request. If Vidalo stops the Service or stops offering domains, the domain stays yours and we send you the transfer code.",
             "If the payment of a renewal fails, you are told and we do not renew the domain until it is paid. If it is not paid by the end date, the domain runs out and someone else can register it. We are not liable for that.",
           ],
         },
@@ -1050,8 +1050,8 @@ export const en: CopyShape = {
           p: [
             [
               "Data: the holder's details you fill in: business name, the contact person's name, address, phone number and email address, and your KvK number if we know it. Also the domain name and where the registration stands.",
-              "What we do with it: we give it to Openprovider, which registers the domain in your business's name with the registry of the extension. Their rules require the real details of the holder. What the registry shows publicly about a holder is up to the registry.",
-              "Basis: the performance of the agreement with you.",
+              "What we do with it: we give it to Openprovider, which registers the domain in your business's name with the registry of the extension. Their rules require the real details of the holder. What the registry shows publicly is up to the registry; for a business as holder that may be the business name and the holder's email address, in the public Whois. So preferably use a general address, such as info@.",
+              "Basis: the performance of the agreement with you. For the contact person's name, if that is not you: our legitimate interest in registering the domain correctly (article 6(1)(f) GDPR).",
               "Retention: as long as the domain runs through us, and after that as for a paid plan. The registry and Openprovider keep the data under their own rules.",
             ],
           ],
@@ -1127,7 +1127,7 @@ export const en: CopyShape = {
               "Meta (Facebook, Instagram): measuring our advertisements, only with your consent; EU and United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
-              "Openprovider: registering and managing a domain you take through us; the Netherlands. Openprovider passes the holder's details on to the registry of the extension (SIDN for .nl, EURid for .eu, Verisign for .com), which keeps them in its register.",
+              "Openprovider: registering and managing a domain you take through us; the Netherlands. For our account Openprovider works on our instructions; as a registrar it also has obligations of its own. It passes the holder's details on to the registry of the extension (SIDN for .nl, EURid for .eu), which keeps them in its register as an independent controller. For .com the registry (Verisign, United States) receives the domain name and technical data.",
               "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",
             ],
             "Otherwise we give data to others only with your consent, or when the law requires us to.",
@@ -2755,6 +2755,7 @@ export const en: CopyShape = {
       apex: (d: string) => `Your facts page goes on feiten.${d}. We put nothing on ${d} itself; you can use that later for a website.`,
       holderH: "Details of the holder",
       holderNote: "These details go to Openprovider, the company that registers the domains for us, and to the registry of the extension (SIDN for .nl). They require the real details of the holder.",
+      emailHint: "May be publicly visible in the domain's Whois. Preferably use a general address, such as info@.",
       fields: { firstName: "Contact person's first name", lastName: "Contact person's last name", company: "Business name", street: "Street", houseNumber: "House number", postcode: "Postcode", city: "Town", phone: "Phone", email: "Email" },
       accept: "I agree to the terms for domain registration (article 19) and know that a registered domain cannot be returned.",
       acceptLink: "Read the terms",
@@ -3164,7 +3165,7 @@ export const en: CopyShape = {
     domain: {
       registered: (d: { domain: string; host: string; date: string; url: string }) => ({
         subject: `${d.domain} is registered`,
-        body: `${d.domain} is registered in your business's name. Your facts page goes on ${d.host}; it is usually there within an hour. You do not need to do anything.
+        body: `${d.domain} is registered in your business's name. Your facts page goes on ${d.host}; it is usually there within an hour. You do not need to do anything, except this: if you get an email asking you to confirm the holder's email address, click the link. Otherwise the domain may be suspended after a few weeks.
 
 The domain runs until ${d.date} and is renewed every year after that by itself. You get a reminder a month before.
 

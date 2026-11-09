@@ -69,6 +69,8 @@ export interface Registrar {
   check(names: string[]): Promise<Availability[]>;
   /** Creates (or finds) the holder contact and returns its handle. */
   ensureHolder(holder: Holder): Promise<string>;
+  /** The domain if it is already in our account (a registration whose answer got lost), else null. */
+  find(name: string): Promise<Registered | null>;
   /** Registers for one year with auto-renew on and the registrar's nameservers. */
   register(name: string, holderHandle: string): Promise<Registered>;
   /** DNS at the registrar: `host` CNAME → `target`. Idempotent. */
