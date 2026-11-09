@@ -9,12 +9,14 @@ import { kiesAllowed } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
-export default async function ChoosePage({ searchParams }: { searchParams: Promise<{ q?: string; place?: string; plaats?: string; k?: string }> }) {
-  const { q = "", place: placeParam, plaats, k } = await searchParams;
+export default async function ChoosePage({ searchParams }: { searchParams: Promise<{ q?: string; place?: string; plaats?: string; k?: string; fout?: string }> }) {
+  const { q = "", place: placeParam, plaats, k, fout } = await searchParams;
   const parsed = parseQuery(q);
   const place = placeParam || parsed.place;
+  // No usable e-mail address on the post: the field again, nothing looked up.
+  const emailInvalid = fout === "mail";
   // A lookup costs money: only after a passed check (the token from POST /api/scan), else the field to start again.
-  const allowed = Boolean(q) && kiesAllowed(q, placeParam ?? "", k);
+  const allowed = Boolean(q) && !emailInvalid && kiesAllowed(q, placeParam ?? "", k);
   const candidates = allowed ? await resolveBusiness(parsed.query, place) : [];
   const needsPlace = plaats === "1" || (candidates.length > 0 && candidates.every((c) => !c.place) && !place);
   const { copy, href } = await getI18n();
@@ -37,6 +39,7 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
                     </p>
                     <p className="text-[14px] text-muted">{[cand.address, cand.website?.replace(/^https?:\/\/(www\.)?/, ""), cand.kvk ? `KvK ${cand.kvk}` : null].filter(Boolean).join(" · ")}</p>
                   </div>
+                  {/* The address rides in the signed cookie /api/scan set; these forms carry none. */}
                   <form action="/api/scan" method="post" className="flex items-end gap-2">
                     <input type="hidden" name="q" value={q} />
                     <input type="hidden" name="pick" value={i} />
@@ -64,9 +67,9 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
           </>
         ) : (
           <>
-            <h1 className="h2">{allowed || !q ? c.none : c.again}</h1>
+            <h1 className="h2">{emailInvalid ? c.email : allowed || !q ? c.none : c.again}</h1>
             <div className="mt-8">
-              <ScanField defaultName={parsed.query} defaultPlace={place ?? ""} note={false} />
+              <ScanField defaultName={parsed.query} defaultPlace={place ?? ""} emailInvalid={emailInvalid} note={false} />
             </div>
           </>
         )}

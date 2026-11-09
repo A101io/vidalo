@@ -6,6 +6,7 @@ import type { Engine, Finding, Sample, ScanReport } from "../types.js";
 import { ENGINES } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb } from "../shared/db.js";
+import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
 import { log } from "../shared/log.js";
 import { hostOfUrl } from "../shared/facts-nl.js";
 import { findingWords } from "../shared/facts-en.js";
@@ -69,8 +70,8 @@ async function deliver(business: BusinessRecord, m: Mail, type: string, extra: R
   return res;
 }
 
-/** Event the report page's mail form logs, with the address and the page's language. */
-export const REPORT_EMAIL_EVENT = "report_email.requested";
+/** Event the free-check form (and the report page's mail form) logs, with the address and the page's language. */
+export { REPORT_EMAIL_EVENT };
 
 /**
  * The address (and language) that last asked for a report on a business that
@@ -78,8 +79,7 @@ export const REPORT_EMAIL_EVENT = "report_email.requested";
  * which only a payment or a confirmed sign-in sets.
  */
 export async function reportRequester(businessId: string): Promise<{ email: string; lang: Lang } | null> {
-  const ev = (await getDb().listEvents(businessId, 500)).find((e) => e.type === REPORT_EMAIL_EVENT && typeof e.payload.email === "string");
-  return ev ? { email: String(ev.payload.email), lang: ev.payload.lang === "en" ? "en" : "nl" } : null;
+  return requesterFromEvents(await getDb().listEvents(businessId, 500));
 }
 
 /** The owner's language; Dutch for a record without one. */

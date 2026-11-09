@@ -39,7 +39,11 @@ export const en: CopyShape = {
     placeLabel: "Town",
     placePlaceholder: "Town",
     button: "Check for free",
-    note: "Two minutes. No account.",
+    note: "Two minutes. The report lands in your inbox.",
+    emailLabel: "Email address",
+    emailPlaceholder: "name@business.com",
+    emailInvalid: "Enter a valid email address, such as name@business.com.",
+    marketing: "I would like to receive occasional news about Vidalo. Every email has an unsubscribe link.",
   },
 
   /** Landing page, in the order of docs/DESIGN_G.md. */
@@ -621,7 +625,7 @@ export const en: CopyShape = {
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
       h2: "What does AI say about your business?",
-      body: "Two minutes, free, no account. You see right away which answers are wrong and where they come from.",
+      body: "Two minutes, free. You see right away which answers are wrong and where they come from, and the report lands in your inbox.",
     },
     more: {
       lead: "Want to know more?",
@@ -721,7 +725,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 8 November 2026",
+    updated: "Version of 9 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -974,7 +978,7 @@ export const en: CopyShape = {
           p: [
             "When you request a free check, we look up the business and ask AI assistants questions about it.",
             [
-              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, if you want the report by email. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
+              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, where we send the report. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website and the sources AI assistants name.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
               "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, the periods under ‘A paid plan’ apply.",
@@ -1062,6 +1066,17 @@ export const en: CopyShape = {
           ],
         },
         {
+          h: "News about Vidalo",
+          p: [
+            "With the free check you can tick a box to receive occasional news about Vidalo. The box is off by default; without it we only send you the report and the two reminders above.",
+            [
+              "Data: your email address, the language of the page, the moment you ticked the box and the sentence you agreed to.",
+              "Basis: your consent (article 6(1)(a) GDPR and article 11.7 of the Dutch Telecommunications Act). You withdraw it with the unsubscribe link in every email or by emailing hello@vidalo.io; after that we send you no more news.",
+              "Retention: until you unsubscribe.",
+            ],
+          ],
+        },
+        {
           h: "The ‘Coming soon’ list",
           p: [
             "If you join the list on the ‘Coming soon’ page, we email you once when Vidalo opens. No newsletter and no advertising for anything else.",
@@ -1127,7 +1142,7 @@ export const en: CopyShape = {
             "You have the right to access your data, have it corrected or deleted, have its processing restricted, receive your data in a common file format, and withdraw a consent. Withdrawal works for the future.",
             "Much of this you can do yourself, under ‘Account’ in your account: under ‘Your data’ you download everything we keep about your business, and delete everything once your subscription has ended. There you also choose which emails you want to receive.",
             "For anything else, email support@vidalo.io. We respond within a month. Sometimes we first ask you to show that the request comes from you.",
-            "Providing data is not a legal requirement. Without an email address we cannot send you a report or give you an account, and without payment and business details we cannot deliver a plan.",
+            "Providing data is not a legal requirement. Without an email address we cannot start a check or send you a report, and without payment and business details we cannot deliver a plan.",
           ],
         },
         {
@@ -1167,6 +1182,7 @@ export const en: CopyShape = {
               ["sb-…-auth-token-code-verifier", "While signing in: links the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 400 days"],
               ["vidalo_google_state", "While connecting your Google account: protects that step against misuse.", "10 minutes"],
               ["vidalo_preview", "Only while the site is not yet open: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
+              ["vidalo_check", "During the free check: carries your email address from the form to the page where you pick your business, so it need not be in the link.", "15 minutes, or sooner once the check starts"],
             ],
           },
         },
@@ -1317,6 +1333,7 @@ export const en: CopyShape = {
       back: "Back",
       /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
       again: "Enter your business here once more to continue.",
+      email: "Enter your email address; that is where we send the report.",
     },
     empty: "Enter a business name or website.",
   },
@@ -2078,7 +2095,7 @@ export const en: CopyShape = {
     h1: "Set it right once. Then we keep it right.",
     lead: "You only pay once you have seen your report. First check for free, then you choose.",
     start: "Check for free",
-    startNote: "Two minutes. No account. After the check you choose a plan.",
+    startNote: "Two minutes. The report lands in your inbox. After the check you choose a plan.",
     faqTitle: "Paying and cancelling",
     faq: [
       { q: "How do I pay?", a: "With iDEAL, credit card or direct debit (SEPA). You pay through Stripe; we do not see your payment details." },
@@ -2087,7 +2104,7 @@ export const en: CopyShape = {
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
       { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
-      { q: "How do I create an account?", a: "You do not. The free check works without an account. Your account is created with your first purchase, on the email address you enter at payment. After that you log in through a link in your email, without a password." },
+      { q: "How do I create an account?", a: "You do not. Your account belongs to the email address you enter for the free check; that is where the report goes. If you then buy a plan, you log in with that same address through a link in your email, without a password, and see your business and your details there." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
       { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
     ],
@@ -2192,12 +2209,12 @@ export const en: CopyShape = {
     h1: "Log in",
     body: "Enter your email address. You will get a link that logs you in straight away.",
     noAccountH2: "No account yet?",
-    noAccount: "There is no separate sign-up. The free check works without an account. If you then buy Vidalo Scan or Vidalo Monthly, your account is created with that purchase, on the email address you enter at payment. After that you log in here with that address.",
+    noAccount: "There is no separate sign-up. Your account belongs to the email address you enter for the free check; that is where your report goes. If you then buy Vidalo Scan or Vidalo Monthly with that same address, you log in here and see your business and your details.",
     label: "Email address",
     button: "Send login link",
     sent: "We have sent you a login link. Check your inbox.",
     mockHint: "No Supabase keys set: you are logged straight into the demo environment.",
-    noBusiness: "We found no business for this email address. Start with a free check.",
+    noBusiness: "No paid plan belongs to this email address yet. Your free report is in your inbox; buy a plan with this address and your business appears here.",
     rateLimited: "You asked for a login link a moment ago. Check your inbox, or try again in a few minutes.",
     signedInH1: "You are logged in",
     noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Have you paid? Log in with the address you paid with, or email support@vidalo.io and we will link your business. Not checked yet? Start with a free check.`,

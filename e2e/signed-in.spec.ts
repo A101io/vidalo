@@ -20,7 +20,7 @@ async function freshBusinessId(page: Page, name: string): Promise<string> {
   // Through the API, not the landing form: on a cold dev server a hot reload can
   // empty the form between fill and submit, and the free check is not what
   // these tests are about (free-check.spec.ts covers it).
-  const res = await page.request.post("/api/scan", { form: { q: name, place: "Haarlem" }, maxRedirects: 0 });
+  const res = await page.request.post("/api/scan", { form: { q: name, place: "Haarlem", email: "e2e@example.nl" }, maxRedirects: 0 });
   const waiting = res.headers()["location"]!;
   expect(waiting).toMatch(/\/scan\/[^/?#]+$/);
   await page.goto(waiting);

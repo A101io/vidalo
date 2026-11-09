@@ -12,6 +12,8 @@ async function runFreeCheck(page: Page, name: string, lang: "nl" | "en" = "nl") 
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Haarlem");
+  // Nothing runs without an address: the report is mailed there (core/shared/free-check.ts).
+  await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
   // Waiting room, then the report (mock engines answer in seconds).
   await page.waitForURL(/\/(en\/)?(scan|r)\//);

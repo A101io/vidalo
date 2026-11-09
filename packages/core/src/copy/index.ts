@@ -54,7 +54,12 @@ export const copy = {
     placeLabel: "Plaats",
     placePlaceholder: "Plaats",
     button: "Controleer gratis",
-    note: "Twee minuten. Geen account.",
+    note: "Twee minuten. Het rapport komt in je mail.",
+    emailLabel: "E-mailadres",
+    emailPlaceholder: "naam@bedrijf.nl",
+    emailInvalid: "Vul een geldig e-mailadres in, zoals naam@bedrijf.nl.",
+    /** Off by default; a free check is no purchase, so news needs this consent (core/shared/free-check.ts). */
+    marketing: "Ik wil af en toe nieuws over Vidalo ontvangen. Afmelden kan in elke mail.",
   },
 
   /** Landing page, in the order of docs/DESIGN_G.md. Copy verbatim from docs/design-g/FullG.dc.html. */
@@ -636,7 +641,7 @@ export const copy = {
     /** The check band between sections, and the links to the explainer pages. */
     cta: {
       h2: "Wat zegt de AI over jouw bedrijf?",
-      body: "Twee minuten, gratis, zonder account. Je ziet meteen welke antwoorden niet kloppen en waar ze vandaan komen.",
+      body: "Twee minuten, gratis. Je ziet meteen welke antwoorden niet kloppen en waar ze vandaan komen, en het rapport komt in je mail."
     },
     more: {
       lead: "Meer weten?",
@@ -743,7 +748,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 8 november 2026",
+    updated: "Versie van 9 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -996,7 +1001,7 @@ export const copy = {
           p: [
             "Vraag je een gratis controle aan, dan zoeken we het bedrijf op en stellen we AI-assistenten vragen erover.",
             [
-              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, als je het rapport per e-mail wilt. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
+              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, waar we het rapport naartoe sturen. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf en de bronnen die AI-assistenten noemen.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
               "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan gelden de termijnen bij ‘Een betaald plan’.",
@@ -1084,6 +1089,17 @@ export const copy = {
           ],
         },
         {
+          h: "Nieuws over Vidalo",
+          p: [
+            "Bij de gratis controle kun je een vakje aanvinken om af en toe nieuws over Vidalo te ontvangen. Het vakje staat standaard uit; zonder vinkje sturen we je alleen het rapport en de twee herinneringen hierboven.",
+            [
+              "Gegevens: je e-mailadres, de taal van de pagina, het moment van aanvinken en de zin waarmee je toestemming gaf.",
+              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG en artikel 11.7 Telecommunicatiewet). Je trekt die in met de afmeldlink in elke mail of met een mail naar hello@vidalo.io; daarna sturen we je geen nieuws meer.",
+              "Hoe lang: tot je je afmeldt.",
+            ],
+          ],
+        },
+        {
           h: "De lijst ‘Binnenkort’",
           p: [
             "Zet je je op de lijst op de pagina ‘Binnenkort’, dan mailen we je één keer wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders.",
@@ -1149,7 +1165,7 @@ export const copy = {
             "Je hebt het recht om je gegevens in te zien, te laten verbeteren of te laten verwijderen, de verwerking te laten beperken, je gegevens in een gangbaar bestandsformaat te krijgen, en een toestemming in te trekken. Intrekken werkt voor de toekomst.",
             "Veel kun je zelf, onder ‘Account’ in je account: bij ‘Je gegevens’ download je alles wat we over je bedrijf bewaren, en verwijder je alles zodra je abonnement is afgelopen. Je kiest daar ook welke e-mails je wilt krijgen.",
             "Voor de rest mail je support@vidalo.io. We reageren binnen een maand. Soms vragen we je eerst te laten zien dat het verzoek van jou komt.",
-            "Gegevens geven is niet wettelijk verplicht. Zonder e-mailadres kunnen we je geen rapport sturen of account geven, en zonder betaal- en bedrijfsgegevens kunnen we een plan niet leveren.",
+            "Gegevens geven is niet wettelijk verplicht. Zonder e-mailadres kunnen we geen controle starten en je geen rapport sturen, en zonder betaal- en bedrijfsgegevens kunnen we een plan niet leveren.",
           ],
         },
         {
@@ -1189,6 +1205,7 @@ export const copy = {
               ["sb-…-auth-token-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 400 dagen"],
               ["vidalo_google_state", "Tijdens het koppelen van je Google-account: beschermt die stap tegen misbruik.", "10 minuten"],
               ["vidalo_preview", "Alleen zolang de site nog niet open is: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
+              ["vidalo_check", "Tijdens de gratis controle: neemt je e-mailadres mee van het formulier naar de pagina waar je je bedrijf kiest, zodat het niet in de link hoeft te staan.", "15 minuten, of eerder zodra de controle start"],
             ],
           },
         },
@@ -1344,6 +1361,8 @@ export const copy = {
       back: "Terug",
       /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
       again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
+      /** POST /api/scan without a usable e-mail address: the field again, nothing looked up. */
+      email: "Vul je e-mailadres in; daar sturen we het rapport naartoe.",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },
@@ -2113,7 +2132,7 @@ export const copy = {
     h1: "Eén keer goed zetten. Daarna houden we het goed.",
     lead: "Je betaalt pas als je je rapport hebt gezien. Eerst gratis controleren, dan kies je.",
     start: "Controleer gratis",
-    startNote: "Twee minuten. Geen account. Na de controle kies je een plan.",
+    startNote: "Twee minuten. Het rapport komt in je mail. Na de controle kies je een plan.",
     faqTitle: "Betalen en opzeggen",
     faq: [
       { q: "Hoe betaal ik?", a: "Met iDEAL, creditcard of automatische incasso (SEPA). Je betaalt via Stripe; wij zien je betaalgegevens niet." },
@@ -2122,7 +2141,7 @@ export const copy = {
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
       { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.io. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
-      { q: "Hoe maak ik een account aan?", a: "Niet apart. De gratis controle werkt zonder account. Je account ontstaat bij je eerste aankoop, op het e-mailadres dat je bij het betalen invult. Daarna log je in via een link in je mail, zonder wachtwoord." },
+      { q: "Hoe maak ik een account aan?", a: "Niet apart. Je account hoort bij het e-mailadres dat je bij de gratis controle invult; daar komt het rapport. Koop je daarna een plan, dan log je in met datzelfde adres via een link in je mail, zonder wachtwoord, en zie je daar je bedrijf en je gegevens." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Vidalo Scan’ gekozen, dan voeg je ‘Vidalo Monthly’ later toe onder ‘Abonnement’ in je account." },
       { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
     ],
@@ -2230,12 +2249,12 @@ export const copy = {
     body: "Vul je e-mailadres in. Je krijgt een link waarmee je direct bent ingelogd.",
     /** Under the form: there is no separate sign-up (core/shared/claim.ts). */
     noAccountH2: "Nog geen account?",
-    noAccount: "Een account maak je niet apart aan. De gratis controle werkt zonder account. Koop je daarna Vidalo Scan of Vidalo Monthly, dan ontstaat je account bij die aankoop, op het e-mailadres dat je bij het betalen invult. Daarna log je hier in met dat adres.",
+    noAccount: "Een account maak je niet apart aan. Het hoort bij het e-mailadres dat je bij de gratis controle invult; daar komt je rapport. Koop je daarna Vidalo Scan of Vidalo Monthly met datzelfde adres, dan log je hier in en zie je je bedrijf en je gegevens.",
     label: "E-mailadres",
     button: "Stuur inloglink",
     sent: "We hebben je een inloglink gestuurd. Kijk in je mailbox.",
     mockHint: "Geen Supabase-sleutels ingesteld: je wordt direct ingelogd in de voorbeeldomgeving.",
-    noBusiness: "We vonden geen bedrijf bij dit e-mailadres. Start met een gratis controle.",
+    noBusiness: "Bij dit e-mailadres hoort nog geen betaald plan. Je gratis rapport staat in je mail; koop je een plan met dit adres, dan zie je hier je bedrijf.",
     rateLimited: "Je hebt net al een inloglink gevraagd. Kijk in je mailbox, of probeer het over een paar minuten opnieuw.",
     signedInH1: "Je bent ingelogd",
     noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Heb je betaald? Log dan in met het adres waarmee je betaalde, of mail support@vidalo.io, dan koppelen we je bedrijf. Nog niet gecontroleerd? Start met een gratis controle.`,
