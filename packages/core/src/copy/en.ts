@@ -1282,6 +1282,7 @@ export const en: CopyShape = {
     ok: "Got it",
     refuse: "Necessary only",
     accept: "Accept all",
+    save: "Save my choice",
     settings: "Cookie settings",
     close: "Close",
     categories: {
