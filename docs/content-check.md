@@ -4,6 +4,17 @@ Checked on 14 October 2026 against primary or authoritative sources on the web a
 
 Key paths below are relative to `copy.` in `index.ts`; the EN mirror has the same key path in `en.ts`.
 
+## Update 5 Nov 2026 (branch `claude/copy-truth`)
+
+Rechecked against `main` after `docs/reality-check-2026-10-25.md`. Changed in NL and EN, with the reason in the code:
+
+- **Copilot** out of every customer string (landing engines row, sector check intro, scenes, before/after cards, sector examples, the "Waarom" description, own facts, assistant rule, support description). `scanner/engines/copilot.ts` is still a stub, so no scan asks it any more: `SCAN_DEFAULTS.free` is ChatGPT and Google AI (what the copy already said), the paid kinds use `ASKED_ENGINES` (all but Copilot). The demo report's third engine is Perplexity.
+- **The eight sector "eigen steekproef" figures** (aannemers, VvE, zorg, garages, kappers, advocaten, makelaars, kinderopvang) are deleted; the sector page shows the two sourced figures. The installateurs "eigen inventarisatie, 13 gidsen" (a reading of the directory list in `publisher/channels/directories.ts`) and the two Insites figures stay.
+- **Directories, Bing, Apple**: no automatic sync exists (`channels/bing.ts`, `apple.ts` and every directory end in an operator task; no directory has a `contactEmail`, so `fixer` sends no correction mail outside mock mode). "Dezelfde gegevens naar …", "zetten je in …", "dertien bedrijvengidsen" synchronisation, "Google-profiel direct via je login" and "dag 2: Google en gidsen gevuld" now say we ask for a correction or show what to change.
+- **Google profile**: the adapter waits for Google's Basic API Access (go-live A3); the welcome mail says we update it once Google gives access.
+- **"Wij herstellen de bron"** (hero caption, loket, step 4, pricing, FAQ, fix paths, mails) now says we find the source and ask for a correction, or show the owner what to change. Large platforms accept changes from the owner only.
+- **Own facts** (`shared/own.ts`): the five connected AI systems, no directory sync, websites by request (no longer listed under "doen we niet").
+
 ## Summary
 
 Of the roughly 60 checkable claims, the protocol facts in the "Straks" section (OKF, llms.txt, MCP, A2A, Agentic Commerce Protocol) are all correct, as are the Dutch legal references (21% btw, one-month AVG response, complaint at the Autoriteit Persoonsgegevens, EU-US Data Privacy Framework still in force), the VAT identity of A101 B.V., the fix-path intervals (7/14/30 days, 3 weeks for "not found"), the 90-day re-scan and the 7/21-day follow-ups.

@@ -24,9 +24,9 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<Response> {
-    // www.vidalo.io is the same site: one permanent redirect to vidalo.io,
-    // before anything touches the database.
-    const canonical = canonicalRedirect(request.url);
+    // www.vidalo.ai and the old vidalo.io are the same site: one permanent
+    // redirect to vidalo.ai for GET/HEAD, before anything touches the database.
+    const canonical = canonicalRedirect(request.url, request.method);
     if (canonical) return Response.redirect(canonical, 301);
     // Postgres unless plain mock mode; VIDALO_DB=pg is mock engines on a real database (as in core).
     const postgres = env.VIDALO_MOCK !== "1" || env.VIDALO_DB === "pg";

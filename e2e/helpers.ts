@@ -67,8 +67,12 @@ export function collectErrors(page: Page): string[] {
 
 /** Dismisses the cookie notice if it is showing. */
 export async function dismissNotice(page: Page) {
-  const ok = page.getByRole("button", { name: /^(Begrepen|Got it|Alleen noodzakelijk|Only necessary)$/ });
-  if (await ok.first().isVisible().catch(() => false)) await ok.first().click();
+  // The notice mounts after hydration (CookieConsent reads the cookie in an effect), so give it a moment;
+  // with a category to choose it is tall enough to cover the hero's button.
+  const ok = page.getByRole("button", { name: /^(Begrepen|Got it|Alleen noodzakelijk|Necessary only)$/ }).first();
+  if (await ok.waitFor({ state: "visible", timeout: 3000 }).then(() => true, () => false)) await ok.click();
+  // On a cold dev server the first visit still compiles; a Fast Refresh reload after this point would empty the fields a test fills next.
+  await page.waitForLoadState("networkidle");
 }
 
 export async function expectNoErrors(errors: string[]) {

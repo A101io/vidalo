@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getI18n } from "@/lib/i18n";
+import { CookieSettingsButton } from "@/components/CookieConsent";
+import { consentCategories } from "@/lib/trackers";
 
 /** The footer behind the launch gate: the legal line, contact and the three legal pages, nothing that leads into the closed site. */
 export async function ComingSoonFooter() {
@@ -21,6 +23,7 @@ export async function ComingSoonFooter() {
           <Link href={href("/cookies")} className="nav-link">
             {copy.legal.cookies.title}
           </Link>
+          {consentCategories().length > 0 && <CookieSettingsButton label={copy.consent.settings} />}
         </span>
       </div>
     </footer>

@@ -20,6 +20,7 @@ const { prepareBusiness, runScan } = await import("@vidalo/core/scanner");
 const { setBusinessStatus } = await import("@vidalo/core/shared");
 const { handlerFor, validatePayload, JOB_KINDS } = await import("@vidalo/worker/src/jobs/index.ts");
 const { copy } = await import("@vidalo/core/copy");
+const { REPORT_EMAIL_EVENT } = await import("@vidalo/core/reporter");
 const { pollFactsHost, handleFactsRequest } = await import("@vidalo/core/publisher");
 
 const out = process.env.VIDALO_OUT_DIR!;
@@ -33,9 +34,9 @@ assert.equal(business.sector, "winkels", "sector inferred from the mock Google c
 const free = await runScan({ businessId: business.id, kind: "free", db });
 console.log(`free scan ${free.scanRunId}: ${free.wrongAnswers}/${free.totalAnswers} wrong, stip ${free.stip} (${free.engineStips.map((e) => `${e.engine}=${e.stip}`).join(", ")})`);
 assert.ok(free.totalAnswers > 0 && free.wrongAnswers > 0, "free scan produced findings");
-assert.equal((await db.listSamples(free.scanRunId)).length, 6 * (3 + 1 + 3), "free scan stays at 6 prompts, 3 samples on ChatGPT and Copilot and 1 on Google AI");
+assert.equal((await db.listSamples(free.scanRunId)).length, 6 * (3 + 1), "free scan stays at 6 prompts, 3 samples on ChatGPT and 1 on Google AI");
 // Only answers to fact questions count; the recommendation answers are reported under "Wie AI wel noemt".
-assert.equal(free.totalAnswers, 3 * (3 + 1 + 3), "free scan counts its 3 fact questions: 3 samples on ChatGPT and Copilot, 1 on Google AI");
+assert.equal(free.totalAnswers, 3 * (3 + 1), "free scan counts its 3 fact questions: 3 samples on ChatGPT, 1 on Google AI");
 assert.ok(free.findings.every((f) => f.evidenceKind !== "recommendation"), "not being recommended is never a finding");
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(free.stip), "free scan carries a stip colour");
 assert.equal(free.findingsBySeverity.afhaker.length + free.findingsBySeverity.misleider.length + free.findingsBySeverity.verwarring.length, free.findings.length, "findings grouped by severity");
@@ -44,6 +45,18 @@ assert.ok(freePrompts.some((p) => p.kind === "recommendation"), "stored prompts 
 
 // 2. Result page e-mail capture + checkout (what /api/report-email, /api/checkout and the Stripe webhook do).
 step("email capture + checkout");
+// The report page's mail form logs the asker and queues the baseline mail to that address;
+// the address never becomes the owner (review R-03). The mail goes out before the checkout.
+const asker = "vraagt@example.nl";
+await db.logEvent(business.id, REPORT_EMAIL_EVENT, { scanRunId: free.scanRunId, email: asker, lang: "nl" });
+const askerJob = await db.enqueueJob("email", { template: "baseline", scanRunId: free.scanRunId, businessId: business.id, to: asker, lang: "nl" });
+await handlerFor("email")!(askerJob.payload, askerJob);
+await db.completeJob(askerJob.id);
+assert.equal((await db.getBusiness(business.id))?.ownerEmail ?? null, null, "the asker's address is not the owner");
+const askerEml = (await readdir(path.join(out, "mail"))).map((m) => path.join(out, "mail", m));
+const askerBodies = await Promise.all(askerEml.map((f) => readFile(f, "utf8")));
+assert.ok(askerBodies.some((x) => /^To: vraagt@example\.nl/m.test(x)), "the baseline mail goes to the asker");
+// What the Stripe webhook does: the payer's address becomes the owner's.
 await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerEmail: "eigenaar@bakkerijdevries.nl", plan: "monitor" });
 // What /api/google/callback does once the owner's Business Profile matches the place id.
 await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "google_business_profile" });
@@ -129,8 +142,8 @@ console.log(`latest scan ${full.kind}: stip ${full.stip}, ${full.findings.length
 assert.ok(["rood", "oranje", "groen", "grijs"].includes(full.stip), "full scan carries a stip colour");
 assert.ok((full.recommendations ?? []).some((r) => r.named < r.answers), "the report still shows the questions where the business was not named");
 assert.ok((full.recommendations ?? []).some((r) => r.named > 0), "the report counts the answers where the business was named");
-assert.ok(full.engineStips.filter((e) => e.counts).length === 4, "chatgpt, google_ai, copilot and gemini count for the stip; perplexity and claude do not");
-assert.ok(full.engines.some((e) => e.engine === "claude" && !e.skipped && e.correct + e.wrong + e.notFound > 0), "claude is asked as the sixth engine in a full scan");
+assert.ok(full.engineStips.filter((e) => e.counts).length === 3, "chatgpt, google_ai and gemini count for the stip; perplexity and claude do not; copilot is not asked");
+assert.ok(full.engines.some((e) => e.engine === "claude" && !e.skipped && e.correct + e.wrong + e.notFound > 0), "claude is asked in a full scan");
 let fixes = 0;
 for (const f of findings) fixes += (await db.listFixes(f.id)).length;
 assert.ok(fixes > 0, "fixes opened for findings");

@@ -123,6 +123,7 @@ export class MemDb implements Db {
     return [...this.businesses.values()].filter(
       (b) =>
         (b.status === "trial" || b.status === "active") &&
+        b.plan === "monitor" &&
         !(b.pauseUntil && new Date(b.pauseUntil) > new Date()) &&
         b.anniversaryDay != null &&
         (b.anniversaryDay === dayOfMonth || (dayOfMonth === lastDay && b.anniversaryDay > lastDay)),
@@ -237,6 +238,11 @@ export class MemDb implements Db {
     if (patch.finishedAt !== undefined) row.finishedAt = patch.finishedAt;
     if (patch.costCents !== undefined) row.costCents = patch.costCents;
     return { ...row };
+  }
+
+  async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
+    const runs = [...this.scanRuns.values()].filter((r) => r.businessId === businessId && r.kind === kind).map((r) => r.startedAt).sort();
+    return runs.at(-1) ?? null;
   }
 
   async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
@@ -422,6 +428,10 @@ export class MemDb implements Db {
 
   async countEventsSince(type: string, since: Date): Promise<number> {
     return this.events.filter((e) => e.type === type && new Date(e.at).getTime() >= since.getTime()).length;
+  }
+
+  async paidScanCentsSince(since: Date): Promise<number> {
+    return [...this.scanRuns.values()].filter((r) => r.kind !== "free" && new Date(r.startedAt).getTime() >= since.getTime()).reduce((n, r) => n + (r.costCents ?? 0), 0);
   }
 
   // --- coming-soon list ---

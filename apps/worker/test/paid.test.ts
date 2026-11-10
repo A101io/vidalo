@@ -60,6 +60,36 @@ describe("paid-only jobs", () => {
   });
 });
 
+describe("Controleer nu (on-demand scan)", () => {
+  it("is skipped unless the business pays for the monthly plan; a free or monthly scan is not touched", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const verified = new Date().toISOString();
+    const scanOnly = await db.upsertBusiness({ name: "Eenmalig", place: "Haarlem", status: "trial", plan: "setup", ownerVerifiedAt: verified });
+    const unpaid = await db.upsertBusiness({ name: "Niet betaald", place: "Haarlem", status: "scanned", plan: "none", ownerVerifiedAt: verified });
+    const monthly = await db.upsertBusiness({ name: "Maandelijks", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: verified });
+    expect(await paidOnlyBlock("scan", { businessId: scanOnly.id, kind: "ondemand" })).toBe("ondemand_not_monthly");
+    expect(await paidOnlyBlock("scan", { businessId: unpaid.id, kind: "ondemand" })).toBe("not_paying:scanned");
+    // Control: the monthly customer may, and other scan kinds never pass this guard.
+    expect(await paidOnlyBlock("scan", { businessId: monthly.id, kind: "ondemand" })).toBeNull();
+    expect(await paidOnlyBlock("scan", { businessId: unpaid.id, kind: "free" })).toBeNull();
+  });
+
+  it("runs one on-demand scan per 7 days, counted from the scans that ran (a double click queues two jobs)", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const b = await db.upsertBusiness({ name: "Maandelijks", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: new Date().toISOString() });
+    expect(await paidOnlyBlock("scan", { businessId: b.id, kind: "ondemand" })).toBeNull();
+    await db.createScanRun({ businessId: b.id, kind: "ondemand", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    expect(await paidOnlyBlock("scan", { businessId: b.id, kind: "ondemand" })).toBe("ondemand_too_soon");
+    // Control: rechecks and monthly scans are not on-demand checks and do not count.
+    const other = await db.upsertBusiness({ name: "Ander", place: "Haarlem", status: "active", plan: "monitor", ownerVerifiedAt: new Date().toISOString() });
+    await db.createScanRun({ businessId: other.id, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 1, status: "done" });
+    await db.createScanRun({ businessId: other.id, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 1, status: "done" });
+    expect(await paidOnlyBlock("scan", { businessId: other.id, kind: "ondemand" })).toBeNull();
+  });
+});
+
 describe("an owner's pause", () => {
   it("skips paid jobs until the pause ends, then lets them run", async () => {
     const db = new MemDb();

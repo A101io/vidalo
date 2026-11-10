@@ -10,6 +10,7 @@ import { buildLog } from "@/lib/owner-log";
 import { dateLong, dateShort, dayMonth, hostOf } from "@/lib/format";
 import { questionFor, wrongText, correctText } from "@/lib/questions";
 import { pendingDiffOf } from "@vidalo/core/publisher";
+import { planRail } from "@vidalo/core/shared";
 import { checkNow, markFixed } from "./actions";
 
 const statusTone: Record<FindingStatus, StipColour> = { open: "rood", fixing: "oranje", recheck: "oranje", resolved: "groen", unfixable: "grijs" };
@@ -83,6 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .map((x) => dayMonth(x)),
     ),
   ].slice(0, 3);
+  const rail = planRail(business);
   const sources = data.channels.filter((c) => c.type !== "directory" || c.status !== "synced").slice(0, 8);
 
   return (
@@ -102,6 +104,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <QuietLink href={href("/app/voortgang")}>{d.compare}</QuietLink>
         </p>
         {sp.controle === "ingepland" && <p className="m-0 rounded-xl bg-panel px-4 py-3 text-[15px]">{d.checkQueued}</p>}
+        {sp.controle && Object.hasOwn(d.checkRefused, sp.controle) && <p className="m-0 rounded-xl bg-panel px-4 py-3 text-[15px]">{d.checkRefused[sp.controle as keyof typeof d.checkRefused]}</p>}
       </header>
 
       <div className="grid gap-x-[72px] gap-y-12 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -259,18 +262,29 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         {/* Rail */}
         <aside className="flex min-w-0 flex-col gap-10">
-          <div className="card flex flex-col gap-3.5 p-6">
-            <RailLabel>{d.nextCheck}</RailLabel>
-            <div className="text-[34px] font-extrabold leading-none" style={{ letterSpacing: "-1.5px" }}>
-              {data.nextCheckAt ? dateShort(data.nextCheckAt) : "—"}
+          {rail === "monthly" ? (
+            <div className="card flex flex-col gap-3.5 p-6" data-rail="monthly">
+              <RailLabel>{d.nextCheck}</RailLabel>
+              <div className="text-[34px] font-extrabold leading-none" style={{ letterSpacing: "-1.5px" }}>
+                {data.nextCheckAt ? dateShort(data.nextCheckAt) : "—"}
+              </div>
+              {business.anniversaryDay && <p className="m-0 text-[14px] text-muted">{d.nextCheckNote(business.anniversaryDay, rechecks.join(", "))}</p>}
+              <form action={checkNow} className="m-0 flex">
+                <button type="submit" className="btn-primary h-[52px] w-full">
+                  {d.checkNow}
+                </button>
+              </form>
             </div>
-            {business.anniversaryDay && <p className="m-0 text-[14px] text-muted">{d.nextCheckNote(business.anniversaryDay, rechecks.join(", "))}</p>}
-            <form action={checkNow} className="m-0 flex">
-              <button type="submit" className="btn-primary h-[52px] w-full">
-                {d.checkNow}
-              </button>
-            </form>
-          </div>
+          ) : (
+            // No running Vidalo Monthly: no monthly date and no "Controleer nu" (review CMP-01).
+            <div className="card flex flex-col gap-3.5 p-6" data-rail={rail}>
+              <RailLabel>{rail === "paused" ? d.nextCheck : d.scanOnly.label}</RailLabel>
+              <p className="m-0 text-[14px] text-muted">{rail === "paused" ? (business.pauseUntil && new Date(business.pauseUntil) > new Date() ? copy.billing.manage.pausedNote(dateLong(business.pauseUntil)) : copy.billing.pausedNote) : rail === "scan" ? d.scanOnly.body : d.scanOnly.bodyNone}</p>
+              <Link href={href("/app/abonnement")} className="btn-sm w-full">
+                {rail === "paused" ? d.scanOnly.pausedCta : d.scanOnly.cta}
+              </Link>
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
             <RailLabel>{d.expand}</RailLabel>

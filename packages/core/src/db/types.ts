@@ -179,6 +179,8 @@ export interface Db {
   getScanRun(id: string): Promise<ScanRun | null>;
   /** Scan runs for a business, newest first. */
   listScanRuns(businessId: string, limit?: number): Promise<ScanRun[]>;
+  /** When the business's latest scan run of this kind started; null if it never had one. */
+  lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null>;
   insertSamples(samples: SampleInput[]): Promise<Sample[]>;
   listSamples(scanRunId: string): Promise<Sample[]>;
   insertClaims(claims: ClaimInput[]): Promise<Claim[]>;
@@ -206,6 +208,8 @@ export interface Db {
   listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
+  /** Engine cost of every scan run started at or after `since`, free checks excluded (the daily ceiling, review R-11). */
+  paidScanCentsSince(since: Date): Promise<number>;
 
   // --- coming-soon list ---
   /**

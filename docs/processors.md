@@ -12,10 +12,12 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | SerpAPI | Processor: Google AI answers | Business facts only | US | SCCs | open |
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
-| Resend | Processor: email | Owner email, report links | US | DPF / SCCs | open |
+| Resend | Processor: email | Owner or report-requester email, report links | US | DPF / SCCs | open |
 | Twilio | Processor: rings, texts or WhatsApps the ownership code (Verify; WhatsApp goes through Meta as sub-processor) | The business phone number Google lists, the code, call/SMS/WhatsApp logs | US | DPF / SCCs | open: Twilio DPA (Console → Legal) |
 | Cloudflare | Processor: hosting of web and worker (Workers, queue), facts pages, DNS, Turnstile | Visitor IPs and request data; everything the database holds, in transit; browser signals (Turnstile, on the free check and sign-in) | Global edge (US company) | DPF / SCCs | open |
 | Google Workspace | Processor: the vidalo.io mailbox (hello@, support@) | Whatever people mail us | EU/US | DPF / SCCs | open: part of the Workspace terms |
+| Google Analytics 4 | Processor (Google Ads data sharing off): visitor statistics, only after "Statistieken" consent | Visitor IP (not stored by GA4), browser, pages, `_ga` id | EU/US | DPF | accepted 6 Nov 2026 (GA account A101) |
+| Meta (pixel) | Joint controller with Vidalo for collection and transmission; Meta independent controller afterwards. Only after "Advertenties" consent | Visitor IP, browser, pages, `_fbp` id, Facebook/Instagram login link | EU/US | DPF | Meta Business Tools Terms accepted 6 Nov 2026 on creating dataset Vidalo (1478191657494181) in portfolio A101 |
 | WhatsApp (Meta) | Contact channel on /contact | Messages people send us there | EU/US | WhatsApp's own terms | n/a: only if the visitor chooses WhatsApp |
 | Sources with an error (sites, directories) | Recipients of correction requests | The business's confirmed facts | NL/EU | n/a | n/a |
 

@@ -11,7 +11,7 @@ import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
-import { canDeleteMyData } from "@vidalo/core/shared";
+import { canDeleteMyData, ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
 
 /** The language row on the account page: save it, then show the account in that language. */
 export async function setLanguage(formData: FormData) {
@@ -93,20 +93,16 @@ export async function declineChannelDiff(formData: FormData) {
 export async function checkNow() {
   const { business } = await requireVerifiedOwner();
   const db = await ready();
+  const { href } = await getI18n();
+  // The last check that ran, or one asked for and not started yet; the worker checks the runs again.
+  const ran = await db.lastScanRunStartedAt(business.id, "ondemand");
+  const asked = (await db.listEvents(business.id, 50)).find((e) => e.type === ONDEMAND_EVENT)?.at ?? null;
+  const refused = ondemandRefusal(business, [ran, asked].filter(Boolean).sort().at(-1) ?? null);
+  if (refused) redirect(href(`/app?controle=${refused}`));
   await db.enqueueJob("scan", { businessId: business.id, kind: "ondemand", then: ["fixes"] });
-  await db.logEvent(business.id, "scan.ondemand_requested", {});
+  await db.logEvent(business.id, ONDEMAND_EVENT, {});
   revalidatePath("/app");
-  redirect((await getI18n()).href("/app?controle=ingepland"));
-}
-
-/** Option B on the domain page: let Vidalo register a domain. */
-export async function registerDomain() {
-  const { business } = await requireVerifiedOwner("/app/domein");
-  const db = await ready();
-  await db.enqueueJob("operator_task", { reason: "domain_register", businessId: business.id, suggestion: `${business.slug}.nl` });
-  await db.logEvent(business.id, "domain.register_requested", {});
-  revalidatePath("/app/domein");
-  redirect((await getI18n()).href("/app/domein?registreren=ingepland"));
+  redirect(href("/app?controle=ingepland"));
 }
 
 /**

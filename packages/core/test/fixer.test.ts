@@ -221,6 +221,12 @@ describe("openFixForFinding", () => {
   });
 });
 
+/** The recheck got an answer for every question (what is in it is the test's own report). */
+async function answerAll(db: MemDb, businessId: string, scanRunId: string) {
+  const prompts = await db.listPrompts(businessId, { activeOnly: true });
+  await db.insertSamples(prompts.map((p) => ({ scanRunId, promptId: p.id, engine: "chatgpt" as const, answerText: "Een antwoord.", citations: [], costCents: 1 })));
+}
+
 describe("runRecheck", () => {
   let db: MemDb;
   beforeEach(() => {
@@ -228,6 +234,30 @@ describe("runRecheck", () => {
     setDb(db);
     process.env.VIDALO_MOCK = "1";
     process.env.VIDALO_OUT_DIR = "out/test";
+  });
+
+  it("does not resolve when the AI system gave no answer; it asks again tomorrow (control: an answer resolves)", async () => {
+    const { finding, prompts } = await seed(db, "third_party");
+    const firstSeen = finding.firstSeenAt;
+    const opened = await openFixForFinding(finding, { now: () => new Date(firstSeen) });
+    db.jobs.clear();
+    let answer = "";
+    const runScan = vi.fn(async (opts: { businessId: string }) => {
+      const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
+      // A failed call stores no sample; an empty answer counts as none too.
+      if (answer) await db.insertSamples([{ scanRunId: run.id, promptId: prompts[0]!.id, engine: "chatgpt", answerText: answer, citations: [], costCents: 1 }]);
+      return report(db, opts.businessId, [], run.id);
+    });
+
+    const day30 = addDays(firstSeen, 30);
+    const out = await runRecheck(opened.fix.id, { runScan, now: () => day30 });
+    expect(out).toMatchObject({ result: "skipped", step: "no_answers", nextRecheckAt: addDays(day30, 1).toISOString() });
+    expect((await db.getFinding(finding.id))!.status).not.toBe("resolved");
+    expect([...db.jobs.values()].some((j) => j.kind === "email")).toBe(false);
+    expect((await db.getFix(opened.fix.id))!.recheckAt).toBe(addDays(day30, 1).toISOString());
+
+    answer = "Op zondag is Bakkerij Jansen gesloten.";
+    expect((await runRecheck(opened.fix.id, { runScan, now: () => addDays(firstSeen, 31) })).result).toBe("resolved");
   });
 
   it("selects the prompts that probe the finding", async () => {
@@ -271,6 +301,7 @@ describe("runRecheck", () => {
     db.jobs.clear();
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
+      await answerAll(db, opts.businessId, run.id);
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
     const day15 = addDays(firstSeen, 15);
@@ -291,6 +322,7 @@ describe("runRecheck", () => {
     db.jobs.clear();
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
+      await answerAll(db, opts.businessId, run.id);
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
     // The window counts from the finding's first sighting (docs/CRITERIA.md), not from the fix: 45 days for "none".
@@ -308,6 +340,7 @@ describe("runRecheck", () => {
     db.jobs.clear();
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
+      await answerAll(db, opts.businessId, run.id);
       return report(db, opts.businessId, [{ ...finding, status: "fixing" }], run.id);
     });
     const firstSeen = (await db.getFinding(finding.id))!.firstSeenAt;
@@ -336,6 +369,7 @@ describe("runRecheck", () => {
     const opened = await openFixForFinding(finding);
     const runScan = vi.fn(async (opts: { businessId: string }) => {
       const run = await db.createScanRun({ businessId: opts.businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 10, status: "done" });
+      await answerAll(db, opts.businessId, run.id);
       return report(db, opts.businessId, [{ ...finding, id: "other", verdict: "wrong", wrongValue: "10:00-14:00", status: "open" }], run.id);
     });
     const out = await runRecheck(opened.fix.id, { runScan });

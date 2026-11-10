@@ -14,6 +14,8 @@ export interface ScanJob {
   promptIds?: string[];
   /** what to do when the scan is done (defaults by kind: baseline → fixes+baseline mail, monthly → fixes+report) */
   then?: ("fixes" | "report" | "baseline_summary")[];
+  /** set when the daily AI ceiling moved this baseline or monthly check once; it then runs (jobs/spend.ts) */
+  deferredOnce?: boolean;
 }
 
 export interface SetupJob {
@@ -60,7 +62,7 @@ export type EmailJob =
   | { template: "resolution"; findingId: string; businessId?: string }
   | { template: "unfixable"; findingId: string; note: string; businessId?: string }
   | { template: "welcome"; businessId: string }
-  | { template: "baseline"; scanRunId: string; businessId?: string }
+  | { template: "baseline"; scanRunId: string; businessId?: string; /** the address that asked on the report page */ to?: string; lang?: "nl" | "en" }
   | { template: "report"; businessId: string; scanRunId?: string }
   | { template: "followup"; businessId: string; day: 7 | 21 }
   | { template: "reconfirm"; businessId: string }

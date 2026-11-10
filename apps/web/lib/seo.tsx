@@ -10,7 +10,7 @@ import { localizeHref, type Lang } from "./lang-paths";
  * description, canonical, hreflang, Open Graph) and to AI assistants
  * (JSON-LD and /llms.txt). Only what the page itself shows goes in here.
  */
-export const SITE = (process.env.PUBLIC_BASE_URL ?? "https://vidalo.io").replace(/\/$/, "");
+export const SITE = (process.env.PUBLIC_BASE_URL ?? "https://vidalo.ai").replace(/\/$/, "");
 const abs = (path: string) => SITE + (path === "/" ? "" : path);
 
 /** Title, description, canonical, both languages and the share card for one route. */

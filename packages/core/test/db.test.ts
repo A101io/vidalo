@@ -58,7 +58,7 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(b.slug).toBe("bakkerij-de-vries-haarlem");
     expect(await db.getBusiness(b.slug)).toMatchObject({ id: b.id, domain: "bakkerijdevries.nl" });
     // Upsert by slug merges partial updates.
-    const b2 = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "trial", anniversaryDay: 12 });
+    const b2 = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "trial", plan: "monitor", anniversaryDay: 12 });
     expect(b2.id).toBe(b.id);
     expect(b2.domain).toBe("bakkerijdevries.nl");
     expect(b2.status).toBe("trial");
@@ -158,13 +158,20 @@ describe.each(backends)("%s", (_name, makeDb) => {
   it("cancel and pause dates round-trip; a paused business skips the monthly check", async () => {
     const day = new Date().getDate();
     const end = "2026-11-12T10:00:00.000Z";
-    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", anniversaryDay: day, cancelAt: end });
+    const b = await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", status: "active", plan: "monitor", anniversaryDay: day, cancelAt: end });
     expect((await db.getBusiness(b.id))?.cancelAt).toBe(end);
     await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: null, pauseUntil: new Date(Date.now() + 86_400_000).toISOString() });
     expect((await db.getBusiness(b.id))?.cancelAt).toBeNull();
     expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(0);
     await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, pauseUntil: null });
     expect(await db.businessesDueForMonthlyScan(day)).toHaveLength(1);
+  });
+
+  it("a one-off Scan customer is never due for the monthly check; a monthly one is", async () => {
+    const day = new Date().getDate();
+    await db.upsertBusiness({ name: "Eenmalig", place: "Haarlem", status: "trial", plan: "setup", anniversaryDay: day });
+    await db.upsertBusiness({ name: "Maandelijks", place: "Haarlem", status: "active", plan: "monitor", anniversaryDay: day });
+    expect((await db.businessesDueForMonthlyScan(day)).map((b) => b.name)).toEqual(["Maandelijks"]);
   });
 
   it("stores a real answer's fractional cost (cost_cents is an integer column)", async () => {

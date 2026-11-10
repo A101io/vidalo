@@ -13,6 +13,7 @@ import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
 import { getScanReport, latestScanReport } from "@/lib/core";
 import { ready } from "@/lib/db";
+import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
 import { buildReportView, type BuildViewOptions } from "@/lib/report";
 import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, demoGreySources, demoGreyReport, demoReport } from "@/lib/demo";
@@ -63,6 +64,8 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const grey = v.state === "grijs";
   const business = demo ? null : await (await ready()).getBusiness(report.business.id);
   const ownerEmail = business?.ownerEmail ?? null;
+  // The form reads "sent" once the mails have an address: the owner's, or an earlier asker's (review QA-08).
+  const mailsHaveAddress = Boolean(ownerEmail) || (business ? Boolean(await reportRequester(business.id)) : false);
 
   return (
     <>
@@ -206,9 +209,9 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             {v.plan.note && <p className="text-[13px] text-muted">{v.plan.note}</p>}
           </div>
           <div data-motion="stagger" className="flex flex-col gap-3 lg:col-span-5 print:hidden">
-            {(sp.betaling === "geannuleerd" || sp.betaling === "fout" || sp.betaling === "buitenland") && (
+            {(sp.betaling === "geannuleerd" || sp.betaling === "fout" || sp.betaling === "buitenland" || sp.betaling === "betaald") && (
               <p className="rounded-xl border-[1.5px] border-line bg-white px-4 py-3 text-[14px] text-ink-2" aria-live="polite">
-                {sp.betaling === "fout" ? copy.checkout.error : sp.betaling === "buitenland" ? copy.checkout.abroad : copy.checkout.cancelled}
+                {sp.betaling === "fout" ? copy.checkout.error : sp.betaling === "buitenland" ? copy.checkout.abroad : sp.betaling === "betaald" ? copy.checkout.alreadyPaid : copy.checkout.cancelled}
               </p>
             )}
             <form action="/api/checkout" method="post">
@@ -238,7 +241,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
         {/* Email + self */}
         <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2 print:hidden">
-          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || Boolean(ownerEmail)} invalid={sp.mail === "fout"} />
+          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} />
           <div className="flex flex-col gap-2.5">
             <h3 className="text-[16px] font-bold">{v.self.h3}</h3>
             <details id="zelf">

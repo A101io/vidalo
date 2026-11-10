@@ -17,13 +17,16 @@
   // that), so it is written down: it stays on, as the address a deploy can
   // always be checked on even when DNS is wrong.
   "workers_dev": true,
-  // vidalo.io is the site (registered 14 Oct 2026; .nl and .com are held by
-  // others). www is bound to the same Worker and answers with a 301 to
-  // vidalo.io (worker.ts, core/shared/canonical.ts, which lists the same
-  // host). Custom Domains create their own DNS records and certificates; the
+  // vidalo.ai is the site since 6 Nov 2026 (vidalo.io before; .nl and .com
+  // are held by others). www.vidalo.ai, vidalo.io and www.vidalo.io are bound
+  // to the same Worker and answer GET/HEAD with a 301 to vidalo.ai (worker.ts,
+  // core/shared/canonical.ts, which lists the same hosts); vidalo.io stays
+  // bound so its links, mail links and the Stripe webhook keep working. Custom Domains create their own DNS records and certificates; the
   // zone must be active in A101's Cloudflare account first, or the deploy
   // fails naming the zone.
   "routes": [
+    { "pattern": "vidalo.ai", "custom_domain": true },
+    { "pattern": "www.vidalo.ai", "custom_domain": true },
     { "pattern": "vidalo.io", "custom_domain": true },
     { "pattern": "www.vidalo.io", "custom_domain": true }
   ],
@@ -31,7 +34,11 @@
   // /binnenkort, which collects the coming-soon list. The full site opens only
   // with VIDALO_PREVIEW_KEY (a secret, `wrangler secret put`) via /api/preview;
   // the public "have a look" button was removed 18 Oct 2026.
-  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.io", "VIDALO_COMING_SOON": "1" },
+  // GA4_MEASUREMENT_ID: GA account A101 → property Vidalo → stream vidalo.ai.
+  // META_PIXEL_ID: Meta business portfolio A101 → dataset "Vidalo"
+  // (automatic advanced matching, automatic events and AI page details off).
+  // Both in lib/trackers.ts; production only, so previews do not count as visits.
+  "vars": { "VIDALO_MOCK": "0", "PUBLIC_BASE_URL": "https://vidalo.ai", "VIDALO_COMING_SOON": "1", "GA4_MEASUREMENT_ID": "G-YVTPVR4EQJ", "META_PIXEL_ID": "1478191657494181" },
   // Hyperdrive pools the Supabase connections (one handle per request,
   // worker.ts). `vidalo-db`, created in the dashboard 16 Oct 2026: Supabase
   // session pooler aws-0-eu-west-1.pooler.supabase.com:5432, user
@@ -45,14 +52,14 @@
       "name": "vidalo-web-preview",
       "workers_dev": true,
       // routes are inherited by an environment: without this the preview
-      // would try to claim vidalo.io.
+      // would try to claim vidalo.ai.
       "routes": [],
       "vars": { "VIDALO_MOCK": "1", "PUBLIC_BASE_URL": "https://vidalo-web-preview.julian-devriend.workers.dev", "VIDALO_COMING_SOON": "0" },
       "hyperdrive": [],
       "queues": { "producers": [] }
     },
     // Staging: the production build and settings on a workers.dev address,
-    // never vidalo.io, with its OWN database and queue so a test never
+    // never vidalo.ai, with its OWN database and queue so a test never
     // touches customers. Deployed with deploy.yml target `staging`.
     // Until the staging database exists `hyperdrive` stays empty, and the
     // Worker answers 503 instead of falling back to mock data (worker.ts).

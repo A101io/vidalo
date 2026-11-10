@@ -84,7 +84,7 @@ export async function findListing(business: Pick<Business, "name" | "place" | "s
     return { directory, url: `https://www.${directory.domain}/${business.slug}`, found: true, mode: "mock" };
   }
   try {
-    const res = await fetch(url, { headers: { "user-agent": "VidaloBot/1.0 (+https://vidalo.io)", accept: "text/html" }, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(url, { headers: { "user-agent": "VidaloBot/1.0 (+https://vidalo.ai)", accept: "text/html" }, signal: AbortSignal.timeout(10000) });
     if (!res.ok) return { directory, url: null, found: false, mode: "live" };
     const html = await res.text();
     const words = slugWords(business.name);

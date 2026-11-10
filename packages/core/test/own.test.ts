@@ -70,7 +70,7 @@ describe("Vidalo as its own first customer", () => {
     expect(page.jsonLd["@type"]).toBe("LocalBusiness");
     expect(page.jsonLd.name).toBe("Vidalo");
     expect(page.llmsTxt).toContain("# Vidalo (Rotterdam)");
-    expect(page.llmsTxt).toContain("- Niet: Websites bouwen");
+    expect(page.llmsTxt).toContain("- Niet: Advertenties plaatsen");
   });
 
   it("charges itself what it charges customers", () => {

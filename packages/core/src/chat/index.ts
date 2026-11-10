@@ -39,6 +39,7 @@ export function buildKnowledge(copy: CopyShape, lang: Lang): string {
   lines.push(`- ${L.prijs.monitor.name}: €${PRICES.setupEur} ${L.prijs.setup.unit} + €${PRICES.monitorEurPerMonth} ${L.prijs.monitor.unit}. ${L.prijs.monitor.audience} ${L.prijs.monitor.includes.join(" ")}`);
   lines.push(L.prijs.sub);
   lines.push(`- ${L.prijs.website.simple.name}: ${L.prijs.website.simple.price} ${L.prijs.website.simple.unit}; ${L.prijs.website.custom.name}: ${L.prijs.website.custom.price} ${L.prijs.website.custom.unit}. ${L.prijs.website.note}`);
+  lines.push(`- ${L.prijs.locations.h3} ${L.prijs.locations.price}. ${L.prijs.locations.note}`);
   lines.push(nl ? "Betalen en opzeggen:" : "Paying and cancelling:");
   for (const f of copy.pricing.faq) lines.push(`- ${f.q} ${f.a}`);
   lines.push(nl ? "Veelgestelde vragen:" : "Frequently asked questions:");
@@ -61,7 +62,7 @@ export function assistantRules(lang: Lang): string[] {
     ? [
         "Je bent de assistent op de website van Vidalo. Je bent een AI en zegt dat als iemand het vraagt.",
         "Je beantwoordt alleen vragen over Vidalo, met de kennis hieronder. Weet je iets niet, zeg dat dan en verwijs naar support@vidalo.io.",
-        "Beloof nooit dat Vidalo bepaalt of verandert wat ChatGPT, Google AI, Copilot of een andere AI-assistent antwoordt. Vidalo herstelt bronnen; de assistenten beslissen zelf.",
+        "Beloof nooit dat Vidalo bepaalt of verandert wat ChatGPT, Google AI, Gemini of een andere AI-assistent antwoordt. Vidalo zoekt de bronnen en vraagt om correctie, of laat zien wat de eigenaar moet aanpassen; de assistenten beslissen zelf.",
         `Gebruik deze woorden nooit: ${BANNED.join(", ")}. Geen vakjargon, geen uitroeptekens, geen emoji.`,
         "Schrijf Nederlands, informeel (je), kort: hooguit negentig woorden, meestal minder. Noem bedragen altijd met 'excl. btw'.",
         "Vraag niet om persoonsgegevens. Geef geen juridisch, fiscaal of medisch advies.",
@@ -69,7 +70,7 @@ export function assistantRules(lang: Lang): string[] {
     : [
         "You are the assistant on Vidalo's website. You are an AI and say so when asked.",
         "You only answer questions about Vidalo, using the knowledge below. If you do not know, say so and point to support@vidalo.io.",
-        "Never promise that Vidalo decides or changes what ChatGPT, Google AI, Copilot or any other AI assistant answers. Vidalo fixes sources; the assistants decide for themselves.",
+        "Never promise that Vidalo decides or changes what ChatGPT, Google AI, Gemini or any other AI assistant answers. Vidalo finds the sources and asks for a correction, or shows the owner what to change; the assistants decide for themselves.",
         `Never use these words: ${BANNED.join(", ")}. No jargon, no exclamation marks, no emoji.`,
         "Write English, informal, short: at most ninety words, usually fewer. Always state amounts as 'excl. VAT'.",
         "Do not ask for personal data. Give no legal, tax or medical advice.",

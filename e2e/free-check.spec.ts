@@ -12,6 +12,8 @@ async function runFreeCheck(page: Page, name: string, lang: "nl" | "en" = "nl") 
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Haarlem");
+  // Nothing runs without an address: the report is mailed there (core/shared/free-check.ts).
+  await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
   // Waiting room, then the report (mock engines answer in seconds).
   await page.waitForURL(/\/(en\/)?(scan|r)\//);
@@ -49,6 +51,11 @@ for (const plan of ["monitor", "setup"] as const) {
     await page.waitForURL(/\/welkom\?/);
     await expect(page.locator("main")).toBeVisible();
     await expect(page.locator("h1")).toBeVisible();
+    // Only Vidalo Monthly promises a report every month (review CMP-01).
+    const monthly = page.getByText("Daarna krijg je elke maand een rapport.");
+    const scanOnly = page.getByText("Elke maand controleren hoort bij Vidalo Monthly.");
+    await expect(plan === "monitor" ? monthly : scanOnly).toBeVisible();
+    await expect(plan === "monitor" ? scanOnly : monthly).toHaveCount(0);
     await expectNoErrors(errors);
   });
 }
@@ -56,8 +63,21 @@ for (const plan of ["monitor", "setup"] as const) {
 test("an empty check goes back to the form", async ({ page }) => {
   await page.goto("/");
   await dismissNotice(page);
-  // Bypass the browser's required check: the server must refuse too.
+  // Bypass the browser's required check: the server must refuse too. The address is filled, so the empty name is what is refused.
   await page.evaluate(() => document.querySelectorAll("input[name='q']").forEach((i) => i.removeAttribute("required")));
+  await page.locator("form[action='/api/scan'] input[name='email']").first().fill("e2e@example.nl");
   await page.locator("form[action='/api/scan'] button[type='submit']").first().click();
   await expect(page).toHaveURL(/fout=leeg/);
+});
+
+test("a check without an address comes back to the field, nothing started", async ({ page }) => {
+  await page.goto("/");
+  await dismissNotice(page);
+  await page.evaluate(() => document.querySelectorAll("input[name='email']").forEach((i) => i.removeAttribute("required")));
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill("Bakkerij Zonder Adres");
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("button[type='submit']").click();
+  await expect(page).toHaveURL(/\/scan\/kies\?.*fout=mail/);
+  await expect(page.locator("input[name='email'][aria-invalid='true']")).toBeVisible();
 });

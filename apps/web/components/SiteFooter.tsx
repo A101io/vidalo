@@ -4,10 +4,7 @@ import { getI18n } from "@/lib/i18n";
 import { LangSwitch } from "@/components/LangSwitch";
 import { Logo } from "@/components/Logo";
 import { CookieSettingsButton } from "@/components/CookieConsent";
-import { OPTIONAL_CATEGORIES } from "@/lib/consent";
-
-/** The "Cookie-instellingen" button only exists once there is a choice to change; until then the statement link is enough. */
-const hasCookieChoice = OPTIONAL_CATEGORIES.length > 0;
+import { consentCategories } from "@/lib/trackers";
 
 /**
  * Footer. `variant="full"`: four columns + legal line (landing, result).
@@ -16,6 +13,8 @@ const hasCookieChoice = OPTIONAL_CATEGORIES.length > 0;
 export async function SiteFooter({ variant = "full", note, tagline }: { variant?: "full" | "short"; note?: string; tagline?: string }) {
   const { copy, href } = await getI18n();
   const f = copy.landing.footer;
+  /** The "Cookie-instellingen" button only exists once there is a choice to change; until then the statement link is enough. */
+  const hasCookieChoice = consentCategories().length > 0;
   if (variant === "short") {
     return (
       <footer className="border-t-[1.5px] border-line ground-cream">

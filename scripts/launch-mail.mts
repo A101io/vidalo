@@ -34,7 +34,7 @@ if (!process.env.DATABASE_URL) {
 const { createDb } = await import("@vidalo/core/db");
 const { sendMail, planLaunchMail, launchSendGate, LAUNCH_DELETE_SQL } = await import("@vidalo/core/reporter");
 
-const site = process.env.PUBLIC_BASE_URL ?? "https://vidalo.io";
+const site = process.env.PUBLIC_BASE_URL ?? "https://vidalo.ai";
 const from = "Vidalo <hello@vidalo.io>";
 const dir = path.resolve("out/launch-mail");
 await mkdir(dir, { recursive: true });
