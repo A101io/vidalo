@@ -61,12 +61,12 @@ export async function getBusinessByFactsHost(host: string): Promise<BusinessReco
   if (anyDb.businesses instanceof Map) {
     for (const b of anyDb.businesses.values()) if (b.factsHost?.toLowerCase() === h) return { ...b };
   }
-  // Fallback host "{slug}.feiten.{suffix}" → derive slug.
+  // Fallback host "{slug}-feiten.{suffix}" → derive slug.
   const suffix = (process.env.FACTS_HOST_SUFFIX || "vidalo.io").toLowerCase();
-  const tail = `.feiten.${suffix}`;
+  const tail = `-feiten.${suffix}`;
   if (h.endsWith(tail)) {
     const slug = h.slice(0, -tail.length);
-    const b = await db.getBusiness(slug);
+    const b = slug && !slug.includes(".") ? await db.getBusiness(slug) : null;
     if (b) return b;
   }
   return null;

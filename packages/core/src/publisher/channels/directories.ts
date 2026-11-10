@@ -7,6 +7,7 @@
  */
 import type { Business, Channel, Facts } from "../../types.js";
 import { log } from "../../shared/log.js";
+import { defaultFactsHost } from "../render.js";
 import { diffFacts, type ChannelAdapter, type ChannelDiffEntry, type SyncResult } from "./types.js";
 
 export type DirectoryMode = "api" | "form" | "email";
@@ -145,7 +146,7 @@ export function setFormAgent(agent: FormAgent): void {
 }
 
 export function factsPageUrlFor(business: Pick<Business, "slug"> & { factsHost?: string | null }): string {
-  const host = business.factsHost ?? `${business.slug}.feiten.${process.env.FACTS_HOST_SUFFIX || "vidalo.io"}`;
+  const host = business.factsHost ?? defaultFactsHost(business);
   return `https://${host}/`;
 }
 

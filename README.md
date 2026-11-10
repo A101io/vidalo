@@ -50,7 +50,7 @@ Mock mode uses deterministic fake engine answers (≈35 % contain an injected wr
 | Billing | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONITOR` | iDEAL, card, SEPA; btw-id collection |
 | Auth | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | magic links; RLS reads in the dashboard |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM` | all templates in `packages/core/src/reporter/templates.ts` |
-| Facts pages on customer domains | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `FACTS_CNAME_TARGET` | Cloudflare for SaaS custom hostnames; fallback `{slug}.feiten.vidalo.io` |
+| Facts pages on customer domains | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `FACTS_CNAME_TARGET` | Cloudflare for SaaS custom hostnames; fallback `{slug}-feiten.vidalo.io`; routes in `apps/worker/wrangler.jsonc` |
 | Google Business Profile sync | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | owner connects once in `/app/google` |
 | IndexNow | `INDEXNOW_KEY` | pings Bing/Yandex on publish |
 

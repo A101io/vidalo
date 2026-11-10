@@ -73,7 +73,7 @@ What the site promises a customer exists for Vidalo itself, from one record: `pa
 | W3 | Phone number, payment methods, name clashes ("niet te verwarren met"), erkenningen | blocked: Julian (the four open items in `own.test.ts`) |
 | W4 | Vidalo in the directories, Google Business Profile, Bing, Apple (the `sync` job, same as a customer) | blocked: the first production deploy and a Google Business Profile for Vidalo (gives the place id) |
 | W5 | Monthly scan of Vidalo itself: "Wat zegt AI over Vidalo?" | written: `OPENAI_API_KEY` is on `vidalo-worker` and production is deployed (26 Oct); a monthly scan of Vidalo has not been observed yet |
-| W6 | `feiten.vidalo.io` as the own facts host, DNS at Cloudflare | open: the zone is active (16 Oct); needs the runtime Cloudflare token and the D5 decision |
+| W6 | `feiten.vidalo.io` as the own facts host, DNS at Cloudflare | written 5 Nov 2026: Vidalo's own business (slug `vidalo`, domain `vidalo.io`) gets `feiten.vidalo.io` without a CNAME check (`isOwnFactsHost`), served by the same route as the fallback origin. **Julian:** H1 and H3 under D6. Not built: `ensureOwnBusiness` runs only in the Node entry (`apps/worker/src/index.ts`), not in `src/cloudflare.ts`, so production has no Vidalo business row to serve there yet |
 
 ## Legal
 | # | Item | Status |
@@ -90,8 +90,16 @@ Written as if the three domains exist (Julian, 13 Oct 2026: "ga er even van uit"
 | D2 | `vidalo-web` binds `vidalo.io` and `www.vidalo.io` as Custom Domains (`apps/web/wrangler.jsonc`); `www` answers 301 to the same path on `vidalo.io` (`apps/web/worker.ts`, `packages/core/src/shared/canonical.ts`) | written; the earlier six-host version was proven in workerd with a Host header; re-proven by the unit test after the rename |
 | D3 | Deploy check: production verifies `https://vidalo.io`, then `--redirects` for `www.vidalo.io` (`scripts/verify-deploy.mjs`) | written |
 | D4 | Cloudflare token gains **Zone · Workers Routes · Edit** on the zone `vidalo.io` (docs/secrets-and-keys.md) | ✓verified 23 Oct 2026: the production deploy bound `vidalo.io` and `www.vidalo.io` as Custom Domains |
-| D5 | Fallback facts hosts `{slug}.feiten.vidalo.io` are two levels deep: Universal SSL covers only `*.vidalo.io`, so they need Advanced Certificate Manager (about $10/month) or a one-level scheme such as `{slug}-feiten.vidalo.io` | decision: Julian |
-| D6 | `feiten.vidalo.io` as the CNAME target for customers' own domains (Cloudflare for SaaS, fallback origin on `vidalo-worker`) | open |
+| D5 | Fallback facts hosts for a business without a website: **`{slug}-feiten.vidalo.io`** (decided 5 Nov 2026; one level deep, so Universal SSL `*.vidalo.io` covers it, no Advanced Certificate Manager). `defaultFactsHost` (render.ts), `fallbackSlug`/`isFallbackHost`/`isOwnFactsHost` (host.ts, tests in `facts-host.test.ts`); route `*-feiten.vidalo.io/*` on `vidalo-worker` (`apps/worker/wrangler.jsonc`, production only). A host under `vidalo.io` can never be claimed through `/api/domain/verify` or a DNS poll, and a host another business verified stays theirs | written 5 Nov 2026 (PR `claude/facts-hosting`); **Julian:** wildcard DNS record (hand-off H2 below), then a production deploy |
+| D6 | `feiten.vidalo.io` as the CNAME target for customers' own domains: Cloudflare for SaaS, fallback origin `feiten.vidalo.io` served by `vidalo-worker` (route `feiten.vidalo.io/*` in `wrangler.jsonc`); each custom hostname gets its own route `feiten.{domain}/*` from `ensureCustomHostname`. No `*/*` catch-all: Cloudflare says a route takes precedence over a Custom Domain on the same hostname, so it would take `vidalo.io` and `www.vidalo.io` from `vidalo-web` | written 5 Nov 2026; **Julian:** H1–H4 below, then a production deploy |
+
+**Facts hosts hand-off (D5, D6, W6), all in account `37c9615a0d7d9629154eca03d7de59a6`, zone `vidalo.io` (`5d39e2dacc81b8603d5dc69a163b6bca`):**
+
+- **H1, DNS record for the fallback origin.** https://dash.cloudflare.com/37c9615a0d7d9629154eca03d7de59a6/vidalo.io/dns/records → Add record. Type `AAAA`, Name `feiten`, IPv6 address `100::`, Proxy status **Proxied** (orange), TTL Auto → Save.
+- **H2, wildcard DNS record for `{slug}-feiten.vidalo.io`.** Same page → Add record. Type `AAAA`, Name `*`, IPv6 address `100::`, Proxy status **Proxied**, TTL Auto → Save. Records that exist by name (`vidalo.io`, `www`, mail records) keep winning over the wildcard; any other unknown name now gets a Cloudflare error page instead of NXDOMAIN.
+- **H3, Cloudflare for SaaS and the fallback origin.** https://dash.cloudflare.com/37c9615a0d7d9629154eca03d7de59a6/vidalo.io/ssl-tls/custom-hostnames → Enable Cloudflare for SaaS (a number of custom hostnames is included; read the price the page shows before enabling, this is a spend decision). Then Fallback Origin → field *Add fallback origin* → `feiten.vidalo.io` → Add Fallback Origin; wait until it says Active. Leave the *Custom Origin Server* empty.
+- **H4, runtime token gains Workers Routes.** See `docs/secrets-and-keys.md`, "The runtime token": add `Zone` · `Workers Routes` · `Edit` to the token stored as `CLOUDFLARE_API_TOKEN` on `vidalo-worker`.
+- **Prove it after the next production deploy:** `curl -s https://feiten.vidalo.io/healthz` answers `ok`; `curl -sI https://vidalo.io/` still comes from `vidalo-web` (the coming-soon page); a business without a domain is served at `https://{slug}-feiten.vidalo.io/`.
 
 Since 23 Oct 2026 the product is on `vidalo.io`, behind the coming-soon gate (J4). Setting the gate to 0 is now the one-way door below.
 

@@ -37,8 +37,8 @@ describe("classifyHost", () => {
     expect(classifyHost("https://haarlemsdagblad.nl/artikel", ctx)).toBe("third_party");
   });
 
-  it("falls back to the {slug}.feiten.* convention when no facts host is known", () => {
-    expect(classifyHost("https://bakkerij-de-vries-haarlem.feiten.vidalo.io/", { ...ctx, factsHost: "bakkerij-de-vries-haarlem.feiten.vidalo.io" })).toBe("owned_facts_page");
+  it("falls back to the {slug}-feiten.* fallback host when no facts host is known", () => {
+    expect(classifyHost("https://bakkerij-de-vries-haarlem-feiten.vidalo.io/", { ...ctx, factsHost: "bakkerij-de-vries-haarlem-feiten.vidalo.io" })).toBe("owned_facts_page");
   });
 });
 
