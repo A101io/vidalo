@@ -54,7 +54,7 @@ export const copy = {
     placeLabel: "Plaats",
     placePlaceholder: "Plaats",
     button: "Controleer gratis",
-    note: "Twee minuten. Het rapport komt in je mail.",
+    note: "Je bevestigt eerst je e-mailadres, daarna duurt het twee minuten. Het rapport komt in je mail.",
     emailLabel: "E-mailadres",
     emailPlaceholder: "naam@bedrijf.nl",
     emailInvalid: "Vul een geldig e-mailadres in, zoals naam@bedrijf.nl.",
@@ -749,7 +749,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 11 november 2026",
+    updated: "Versie van 12 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -1004,6 +1004,7 @@ export const copy = {
             "Vraag je een gratis controle aan, dan zoeken we het bedrijf op, kijken we eerst wat het aanbiedt en voor wie, en stellen we daarna AI-assistenten vragen erover.",
             [
               "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; een korte beschrijving van wat het bedrijf aanbiedt en voor wie; de antwoorden van AI-assistenten en de bronnen die ze noemen, met de namen van andere bedrijven die ze noemen; je e-mailadres, waar we het rapport naartoe sturen. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
+              "Bevestigen: de controle start pas als je op de link klikt die we naar je e-mailadres sturen. Zo houden we kwaadaardige bots buiten de deur en kan niemand een controle starten op naam van een ander. Bevestig je niet binnen 24 uur, dan start er niets; je aanvraag met je e-mailadres bewaren we dan hooguit 12 maanden, om misbruik te kunnen terugzien.",
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf (ook een website die je zelf opgeeft) en de bronnen die AI-assistenten noemen.",
               "Wat we ermee doen: om te zien wat het bedrijf aanbiedt en voor wie, sturen we OpenAI de gegevens van Google en de tekst van de homepage van het bedrijf, waaruit we eerst e-mailadressen en telefoonnummers weghalen; daarvan maakt OpenAI een korte beschrijving. Die beschrijving bewaren we bij het bedrijf en in het rapport staat ze als hoe wij het bedrijf lezen. In het rapport staat ook welke andere bedrijven AI-assistenten noemden en hoe vaak.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
@@ -1341,6 +1342,9 @@ export const copy = {
   scanBusy: {
     title: "Even geen gratis controles",
     body: "We doen elke dag een beperkt aantal gratis controles en die zijn voor vandaag op. Probeer het morgen opnieuw.",
+    /** Too many confirmation mails today, for this address or from this connection (shared/scan-confirm.ts). */
+    mailTitle: "Kijk eerst in je mail",
+    mailBody: "We hebben vandaag al een paar bevestigingsmails gestuurd. Klik op de link in een van die mails, of probeer het morgen opnieuw.",
     back: "Terug naar de voorpagina",
   },
 
@@ -1396,6 +1400,18 @@ export const copy = {
       websitePlaceholder: "www.jouwbedrijf.nl",
       websiteHint: "Vidalo leest je website om te begrijpen wat je doet. Leeg laten mag: dan stellen we een paar algemene vragen.",
       websiteError: "Dit is geen website die we kunnen lezen. Vul een adres in zoals www.jouwbedrijf.nl, of laat het leeg.",
+    },
+    /** The e-mail confirmation before a free check starts (core/shared/scan-confirm.ts). */
+    confirm: {
+      sentTitle: "Kijk in je mail",
+      sentBody: "We hebben je een mail gestuurd met een link. Klik erop, dan starten we de controle. De link werkt 24 uur.",
+      why: "We vragen deze bevestiging om kwaadaardige bots buiten de deur te houden. Zo kan niemand op grote schaal controles starten, of een controle op naam van een ander.",
+      spam: "Niets ontvangen? Kijk ook in je map met ongewenste mail, of vul je bedrijf opnieuw in.",
+      title: (name: string) => `Start de controle van ${name}`,
+      body: "Met deze klik bevestig je je e-mailadres. Daarna starten we de controle; het rapport komt ook in je mail.",
+      button: "Start de controle",
+      invalid: "Deze link klopt niet of is verlopen. Vul je bedrijf opnieuw in, dan sturen we een nieuwe.",
+      back: "Naar de voorpagina",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },
@@ -2257,7 +2273,7 @@ export const copy = {
     h1: "Eén keer goed zetten. Daarna houden we het goed.",
     lead: "Je betaalt pas als je je rapport hebt gezien. Eerst gratis controleren, dan kies je.",
     start: "Controleer gratis",
-    startNote: "Twee minuten. Het rapport komt in je mail. Na de controle kies je een plan.",
+    startNote: "Je bevestigt eerst je e-mailadres, daarna duurt het twee minuten. Het rapport komt in je mail. Na de controle kies je een plan.",
     faqTitle: "Betalen en opzeggen",
     faq: [
       { q: "Hoe betaal ik?", a: "Met iDEAL, creditcard of automatische incasso (SEPA). Je betaalt via Stripe; wij zien je betaalgegevens niet." },
@@ -3109,6 +3125,16 @@ export const copy = {
   mails: {
     hi: "Hoi,",
     regards: "Groet,\nVidalo",
+    /** The link that starts a free check (core/shared/scan-confirm.ts); goes to an address nobody has proven yet. */
+    scanConfirm: {
+      subject: (name: string) => `Bevestig je gratis controle van ${name}`,
+      preheader: "Eén klik, dan starten we de controle.",
+      headline: (name: string) => `Start de controle van ${name}`,
+      intro: (name: string) => `Je vroeg op vidalo.ai om een gratis controle van ${name}. Klik op de knop om je e-mailadres te bevestigen; daarna starten we de controle en sturen we het rapport naar dit adres.`,
+      cta: "Bevestig en start de controle",
+      why: "We vragen deze bevestiging om kwaadaardige bots buiten de deur te houden: zo kan niemand controles starten op naam van een ander. De link werkt 24 uur en één keer.",
+      notYou: "Heb je dit niet gevraagd? Dan hoef je niets te doen. We starten niets en sturen je hierover niets meer.",
+    },
     and: "en",
     stip: (colour: string) => `Stip: ${colour}.`,
     unsubscribe: { lead: "Geen mails meer hierover?", link: "Afmelden" },

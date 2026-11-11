@@ -298,6 +298,14 @@ export interface Db {
   /** Insert or merge: fields left out keep their value; pass null to clear one. */
   upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
 
+  /**
+   * Runs `fn` while holding a lock named `key`, across every Worker and process on this
+   * database (PgDb: pg_advisory_xact_lock in a transaction; MemDb: a queue per key).
+   * For count-then-insert limits and single-use links that must hold under parallel
+   * requests. `fn` uses the ordinary handle; keep it short.
+   */
+  withLock<T>(key: string, fn: () => Promise<T>): Promise<T>;
+
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;
 }

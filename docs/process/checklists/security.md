@@ -57,3 +57,4 @@ exploit path, not opinions about structure.
 ## Learned (Vidalo, 11 Nov 2026)
 - Every regex run on AI answer text, or on values extracted from it, gets a length cap before matching and a timing test on a long hostile input; no `\s*` or `.*` next to a repeated group under the `m` flag.
 - A public page reachable by a guessable key (slug, name + town) shows nothing beyond what that key's owner chose to publish; private data only behind an unguessable id or the owner's session.
+- A single-use link or token that starts something costly is **claimed atomically before** the costly step (conditional update / unique insert / advisory lock), never marked "used" afterwards; and a cap counted from the event table (count, then insert) is not a cap under parallel requests. Test with N parallel presses: exactly one start (002 SEC-01: 60 presses of one confirmation link gave 60 free checks).

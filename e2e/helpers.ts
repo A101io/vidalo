@@ -76,6 +76,17 @@ export async function dismissNotice(page: Page) {
   await page.waitForLoadState("networkidle");
 }
 
+/**
+ * After a free-check post: the check starts only from the link in the confirmation mail
+ * (core/shared/scan-confirm.ts). With mock engines /scan/mail shows that link; follow it and press start.
+ */
+export async function confirmCheck(page: Page) {
+  await page.waitForURL(/\/(en\/)?scan\/mail\?/);
+  await page.getByTestId("confirm-link").click();
+  await page.waitForURL(/\/(en\/)?scan\/bevestigen\?t=/);
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+}
+
 export async function expectNoErrors(errors: string[]) {
   expect(errors, errors.join("\n")).toEqual([]);
 }

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { collectErrors, dismissNotice, expectNoErrors } from "./helpers";
+import { collectErrors, confirmCheck, dismissNotice, expectNoErrors } from "./helpers";
 
 /**
  * The customer path in mock mode: free check from the landing page, the
@@ -15,6 +15,8 @@ async function runFreeCheck(page: Page, name: string, lang: "nl" | "en" = "nl") 
   // Nothing runs without an address: the report is mailed there (core/shared/free-check.ts).
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
+  // Nothing runs before the address is confirmed: follow the mail's link.
+  await confirmCheck(page);
   // Waiting room, then the report (mock engines answer in seconds).
   await page.waitForURL(/\/(en\/)?(scan|r)\//);
   await page.waitForURL(/\/(en\/)?r\/[^/?#]+/, { timeout: 60_000 });
@@ -59,6 +61,38 @@ for (const plan of ["monitor", "setup"] as const) {
     await expectNoErrors(errors);
   });
 }
+
+test("nothing starts before the mail link is pressed, and the link works once", async ({ page }) => {
+  await page.goto("/");
+  await dismissNotice(page);
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill(`Slager E2E ${Date.now()}`);
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='email']").fill("e2e@example.nl");
+  await form.locator("button[type='submit']").click();
+  await page.waitForURL(/\/scan\/mail\?/);
+  await expect(page.getByText(/kwaadaardige bots/)).toBeVisible();
+  // Opening the link starts nothing; only the button does.
+  await page.getByTestId("confirm-link").click();
+  await page.waitForURL(/\/scan\/bevestigen\?t=/);
+  const link = page.url();
+  await expect(page.locator("h1")).toContainText("Start de controle van");
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+  await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
+  const report = page.url();
+  // A second press goes where the first went; it starts nothing new.
+  await page.goto(link);
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+  await page.waitForURL(/\/(scan|r)\//);
+  await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
+  expect(page.url()).toBe(report);
+});
+
+test("a made-up link starts nothing", async ({ page }) => {
+  await page.goto(`/scan/bevestigen?t=${encodeURIComponent(`nope.${"a".repeat(32)}`)}`);
+  await expect(page.locator("main form[action='/api/scan/bevestigen']")).toHaveCount(0);
+  await expect(page.getByText(/Deze link klopt niet/)).toBeVisible();
+});
 
 test("an empty check goes back to the form", async ({ page }) => {
   await page.goto("/");
