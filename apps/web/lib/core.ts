@@ -7,7 +7,7 @@ import { randomBytes } from "node:crypto";
 import { db as moduleDb, MemDb, type Db } from "@vidalo/core/db";
 import { resolveBusiness as coreResolveBusiness, draftProvisionalFacts, prepareBusiness as corePrepareBusiness, buildReport, buildSnapshot, SCAN_DEFAULTS, runScanWithProgress, persistScanState, readScanState, businessIdFromToken, type BusinessCandidate, type ScanProgressStep, type ScanJobState } from "@vidalo/core/scanner";
 import { renderFactsPage } from "@vidalo/core/publisher";
-import { getDb as scopedDb, setBusinessStatus, setDb } from "@vidalo/core/shared";
+import { getDb as scopedDb, setBusinessStatus, setDb, REPORT_EMAIL_EVENT, runsRequested } from "@vidalo/core/shared";
 import { ENGINE_LABEL, type BusinessStatus, type Engine, type ScanKind, type ScanReport } from "@vidalo/core/types";
 import type { CopyShape } from "@vidalo/core/copy";
 import { PROGRESS_SCAN_KINDS, type ScanSnapshot } from "@vidalo/core/progress";
@@ -153,6 +153,30 @@ export async function getScanReport(scanRunId: string): Promise<ScanReport | nul
   } catch {
     return null;
   }
+}
+
+/** A free report stays reachable this long, as the footer and the privacy text say. */
+export const FREE_REPORT_DAYS = 30;
+
+/**
+ * The free checks a signed-in address asked for (core shared/free-check runsRequested): runs
+ * linked to a report request with this address, which the sign-in link proved. Never another
+ * requester's run. Finished free checks younger than FREE_REPORT_DAYS; paid reports live in /app.
+ */
+export async function reportsRequestedBy(email: string): Promise<{ runId: string; name: string; place: string; checkedAt: string }[]> {
+  const d = await ready();
+  const events = await d.listEventsByEmail(REPORT_EMAIL_EVENT, email, 50);
+  const runs = new Map<string, Awaited<ReturnType<Db["listScanRuns"]>>>();
+  const names = new Map<string, { name: string; place: string }>();
+  for (const id of new Set(events.map((e) => e.businessId).filter((x): x is string => !!x))) {
+    const business = await d.getBusiness(id);
+    if (!business) continue;
+    names.set(id, { name: business.name, place: business.place });
+    runs.set(id, await d.listScanRuns(id, 50));
+  }
+  return runsRequested(events.filter((e) => e.businessId && names.has(e.businessId)), (id) => runs.get(id) ?? [], { now: Date.now(), maxAgeDays: FREE_REPORT_DAYS })
+    .slice(0, 10)
+    .map((r) => ({ runId: r.runId, checkedAt: r.checkedAt, ...names.get(r.businessId)! }));
 }
 
 /** Latest finished scan report of a business (used when /r/ is opened with a business slug or id). */

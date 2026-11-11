@@ -206,6 +206,8 @@ export interface Db {
   // --- events ---
   logEvent(businessId: string | null, type: string, payload?: Record<string, unknown>): Promise<EventRow>;
   listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
+  /** Events of this type on a business whose payload.email is this address (case-insensitive), latest first. */
+  listEventsByEmail(type: string, email: string, limit?: number): Promise<EventRow[]>;
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
   /** Engine cost of every scan run started at or after `since`, free checks excluded (the daily ceiling, review R-11). */

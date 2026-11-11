@@ -577,6 +577,11 @@ export class PgDb implements Db {
     return rows.map(mapEvent);
   }
 
+  async listEventsByEmail(type: string, email: string, limit = 50): Promise<EventRow[]> {
+    const rows = await this.sql`select * from event where type = ${type} and business_id is not null and lower(payload->>'email') = ${email.trim().toLowerCase()} order by at desc limit ${limit}`;
+    return rows.map(mapEvent);
+  }
+
   async countEventsSince(type: string, since: Date): Promise<number> {
     const [row] = await this.sql`select count(*)::int as n from event where type = ${type} and at >= ${since}`;
     return Number(row?.n ?? 0);

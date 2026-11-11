@@ -82,3 +82,33 @@ export function readCheckCookie(secret: string, value: unknown, now = Date.now()
     return null;
   }
 }
+
+/** A request without a run id (made before 11 Nov 2026) matches the run that started this soon after it. */
+export const REQUEST_TO_RUN_MS = 60 * 60 * 1000;
+
+/**
+ * Which free runs a requester asked for: the run id on their request when it carries one,
+ * else the run that started within REQUEST_TO_RUN_MS after it. Never another requester's
+ * later run of the same business (compliance and security review, 11 Nov 2026).
+ */
+export function runsRequested(
+  requests: { businessId: string | null; at: string; payload: Record<string, unknown> }[],
+  runsOf: (businessId: string) => { id: string; kind: string; status: string; startedAt?: string | null; finishedAt?: string | null }[],
+  opts: { now: number; maxAgeDays: number },
+): { businessId: string; runId: string; checkedAt: string }[] {
+  const since = opts.now - opts.maxAgeDays * 86_400_000;
+  const out = new Map<string, { businessId: string; runId: string; checkedAt: string }>();
+  for (const e of requests) {
+    if (!e.businessId) continue;
+    const asked = new Date(e.at).getTime();
+    const linked = typeof e.payload.scanRunId === "string" ? e.payload.scanRunId : null;
+    for (const run of runsOf(e.businessId)) {
+      const at = run.finishedAt ?? run.startedAt;
+      if (run.status !== "done" || run.kind !== "free" || !at || new Date(at).getTime() < since) continue;
+      const started = new Date(run.startedAt ?? at).getTime();
+      const mine = linked ? run.id === linked : started >= asked && started - asked <= REQUEST_TO_RUN_MS;
+      if (mine) out.set(run.id, { businessId: e.businessId, runId: run.id, checkedAt: at });
+    }
+  }
+  return [...out.values()].sort((a, b) => b.checkedAt.localeCompare(a.checkedAt));
+}

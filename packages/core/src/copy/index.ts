@@ -2291,6 +2291,10 @@ export const copy = {
     noBusiness: "Bij dit e-mailadres hoort nog geen betaald plan. Je gratis rapport staat in je mail; koop je een plan met dit adres, dan zie je hier je bedrijf.",
     rateLimited: "Je hebt net al een inloglink gevraagd. Kijk in je mailbox, of probeer het over een paar minuten opnieuw.",
     signedInH1: "Je bent ingelogd",
+    /** free checks this address asked for (lib/core reportsRequestedBy) */
+    myChecksH2: "Je controles",
+    myChecksNote: "De gratis controles die je met dit e-mailadres hebt aangevraagd. Een rapport is 30 dagen te zien.",
+    viewReport: "Bekijk rapport",
     noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Heb je betaald? Log dan in met het adres waarmee je betaalde, of mail support@vidalo.io, dan koppelen we je bedrijf. Nog niet gecontroleerd? Start met een gratis controle.`,
     startCheck: "Start een gratis controle",
     otherEmail: "Ander e-mailadres? Log uit",

@@ -236,6 +236,16 @@ describe.each(backends)("%s", (_name, makeDb) => {
     expect(await db.countEventsSince("scan.requested", hourAgo)).toBe(2);
     expect(await db.countEventsSince("scan.requested", new Date(Date.now() + 60_000))).toBe(0);
     expect(await db.countEventsSince("nothing", hourAgo)).toBe(0);
+
+    // The report requests of an address (the signed-in page lists their checks, 11 Nov 2026).
+    const other = await db.upsertBusiness({ slug: "andere-zaak-utrecht", name: "Andere Zaak", place: "Utrecht" });
+    await db.logEvent(b.id, "report_email.requested", { email: "Eigenaar@Voorbeeld.nl", lang: "nl", scanRunId: "run-1" });
+    await db.logEvent(other.id, "report_email.requested", { email: "iemand@anders.nl", lang: "nl" });
+    await db.logEvent(null, "report_email.requested", { email: "eigenaar@voorbeeld.nl", lang: "nl" });
+    const mine = await db.listEventsByEmail("report_email.requested", "eigenaar@voorbeeld.nl");
+    expect(mine.map((m) => [m.businessId, m.payload.scanRunId])).toEqual([[b.id, "run-1"]]);
+    expect(await db.listEventsByEmail("report_email.requested", "niemand@voorbeeld.nl")).toEqual([]);
+    expect(await db.listEventsByEmail("scan.requested", "eigenaar@voorbeeld.nl")).toEqual([]);
   });
 
   it("google index state: insert, merge, clear", async () => {
