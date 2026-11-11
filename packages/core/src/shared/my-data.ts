@@ -33,6 +33,8 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
   return {
     exportedAt: now.toISOString(),
     business,
+    // What the understanding step decided and what the owner corrected (art. 15 and 20); each scan's own profile is on its run.
+    profiles: { auto: business.profileAuto ?? null, owner: business.profileOwner ?? null },
     facts: await db.listFacts(businessId),
     prompts: await db.listPrompts(businessId),
     scans,

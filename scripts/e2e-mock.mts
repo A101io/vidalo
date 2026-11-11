@@ -169,5 +169,79 @@ assert.ok(unknownScan.findings.some((f) => f.verdict === "not_found"), "at least
 assert.ok(unknownScan.wrongAnswers + unknownScan.notFoundAnswers <= unknownScan.totalAnswers, "not found is never counted as wrong");
 assert.ok(unknownScan.findings.filter((f) => f.verdict === "not_found").every((f) => f.sourceType === "none" && f.sourceUrl === null), "not_found findings carry no source");
 
+// 7. An online business (feature 001): understood as online, asked six questions without a town, hours, address
+// or phone, a competition block that adds up, a ledger row per template, and a mail to the asker without a town.
+// The name and the competitors are made up: mock output reaches public preview URLs (compliance C-30).
+step("online business: Vloedlijn Music, Utrecht");
+const { competitionCountsOf, uncheckedAnswersOf } = await import("@vidalo/core/types");
+const ONLINE_NAME = "Vloedlijn Music";
+const ONLINE_PLACE = "Utrecht";
+// Without a Google listing the business is read from the website its visitor gave on /scan/kies (ADR-0007); with none, the neutral set.
+const unread = await prepareBusiness({ name: ONLINE_NAME, place: "Rotterdam", db });
+const unreadScan = await runScan({ businessId: unread.business.id, kind: "free", db });
+const unreadReport = await buildReport(unreadScan.scanRunId, db);
+assert.equal(unreadReport.profile?.source, "fallback", "no listing and no website: the business is not read");
+assert.equal((await db.getBusiness(unread.business.id))!.profileAuto, null, "nothing is stored for a business that was not read");
+const unreadAsked = new Set((await db.listSamples(unreadScan.scanRunId)).map((x) => x.promptId));
+assert.deepEqual((await db.listPrompts(unread.business.id)).filter((p) => unreadAsked.has(p.id)).map((p) => p.textNl).sort(), [`Bestaat ${ONLINE_NAME} nog?`, `Wat doet ${ONLINE_NAME}?`, `Wat is de website van ${ONLINE_NAME}?`].sort(), "the neutral set of three");
+assert.equal(unreadReport.findings.length, 0, "the neutral set is not judged");
+const online = await prepareBusiness({ name: ONLINE_NAME, place: ONLINE_PLACE, website: "https://www.vloedlijn-music.example", db });
+const onlineScan = await runScan({ businessId: online.business.id, kind: "free", db });
+const onlineReport = await buildReport(onlineScan.scanRunId, db);
+console.log(`online scan ${onlineScan.scanRunId}: mode ${onlineReport.profile?.mode}, ${onlineReport.totalAnswers} answers, stip ${onlineReport.stip}`);
+assert.equal(onlineReport.profile?.mode, "online", "the report carries the online profile");
+assert.equal(onlineReport.profile?.source, "auto", "the mock reading is automatic");
+const onlineRow = (await db.getBusiness(online.business.id))!;
+assert.equal(onlineRow.profileAuto?.mode, "online", "the automatic profile is stored on the business");
+assert.deepEqual(onlineRow.profileAuto!.competitors, [], "competitors come from who AI names, not from the understanding step (ADR-0007)");
+assert.ok(!onlineRow.profileAuto!.basis.includes("ai_lookup"), "no AI lookup in the basis");
+
+const askedIds = new Set((await db.listSamples(onlineScan.scanRunId)).map((x) => x.promptId));
+const asked = (await db.listPrompts(online.business.id)).filter((p) => askedIds.has(p.id));
+assert.equal(asked.length, 6, "six free questions");
+const LOCAL_QUESTION = /utrecht|openingstijd|\bopen\b|zondag|pinnen|pin\b|adres|telefoon|vestiging|in de buurt/i;
+for (const p of asked) assert.ok(!LOCAL_QUESTION.test(p.textNl), `no local wording in "${p.textNl}"`);
+assert.ok(asked.some((p) => p.templateKey === "online.rec.quality") && asked.some((p) => p.templateKey === "online.alt.self"), "category and alternative questions are asked");
+
+// The competition counts add up: per question and over all of them, and against the stored samples.
+const comp = competitionCountsOf(onlineReport);
+assert.ok(comp && comp.answers > 0 && comp.questions >= 2, "the report has competition counts");
+const compRows = (onlineReport.recommendations ?? []).filter((r) => r.family === "rec_category" || r.family === "alternative");
+assert.equal(compRows.reduce((n, r) => n + r.answers, 0), comp.answers, "answers add up over the questions");
+assert.equal(compRows.reduce((n, r) => n + r.named, 0), comp.named, "named adds up over the questions");
+for (const r of compRows) {
+  assert.ok(r.named <= r.answers, "never named more often than answered");
+  assert.ok(r.others.every((o) => o.answers <= r.answers), "no other business is named in more answers than were given");
+  assert.equal(r.answers, (await db.listSamples(onlineScan.scanRunId)).filter((x) => x.promptId === r.promptId).length, "the count is the number of stored samples");
+}
+assert.ok(compRows.some((r) => r.family === "alternative") && compRows.some((r) => r.family === "rec_category"), "both families are counted");
+
+// The question library has its rows for this category, and no business in them (compliance C-14).
+const ledger = await db.questionLibrary({ mode: "online" });
+assert.ok(ledger.length >= 6, "the library ledger has rows for the online templates");
+assert.ok(ledger.every((l) => l.category === onlineRow.profileAuto!.category || l.category === "onbekend"), "rows are filed under the category, or under onbekend for the business that was not read");
+assert.ok(ledger.filter((l) => l.category === onlineRow.profileAuto!.category).length >= 6, "the read business has its rows under its category");
+assert.ok(!JSON.stringify(ledger).includes(ONLINE_NAME) && !JSON.stringify(ledger).toLowerCase().includes(ONLINE_PLACE.toLowerCase()), "the ledger holds no business name and no town");
+
+// The free-check mail goes to the asker, in the report's counts, without a town or a listing.
+const onlineAsker = "vraagt-online@example.nl";
+await db.logEvent(online.business.id, REPORT_EMAIL_EVENT, { scanRunId: onlineScan.scanRunId, email: onlineAsker, lang: "nl" });
+const onlineJob = await db.enqueueJob("email", { template: "baseline", scanRunId: onlineScan.scanRunId, businessId: online.business.id, to: onlineAsker, lang: "nl" });
+await handlerFor("email")!(onlineJob.payload, onlineJob);
+await db.completeJob(onlineJob.id);
+assert.equal((await db.getBusiness(online.business.id))?.ownerEmail ?? null, null, "the asker's address is not the owner");
+const onlineMails = await Promise.all((await readdir(path.join(out, "mail"))).map((f) => readFile(path.join(out, "mail", f), "utf8")));
+const onlineMail = onlineMails.find((x) => /^To: vraagt-online@example\.nl/m.test(x));
+assert.ok(onlineMail, "the free-check mail goes to the asker");
+const onlineText = onlineMail!.split("Content-Type: text/html")[0]!;
+assert.ok(onlineText.includes("Gecontroleerd als: "), "the mail words the profile as a reading");
+assert.ok(onlineText.includes(`Genoemd in ${comp.named} van ${comp.answers} antwoorden`), "the mail shows the report's competition counts");
+assert.ok(onlineText.includes(`${onlineReport.totalAnswers - uncheckedAnswersOf(onlineReport)} antwoorden gecontroleerd`), "the mail checks as many answers as the report");
+assert.ok(!onlineText.includes(ONLINE_PLACE), "the mail names no town");
+assert.ok(!/openingstijd|vestiging|\bBing\b|\bApple\b|Google(?! AI)|\bgids/i.test(onlineText), "the mail names no hours, listing or directory work");
+assert.ok(!/Voorbeeld /.test(onlineText), "the mail names no other business");
+assert.ok(!/Sonable|Mood Media|Soundtrack Your Brand|Spotify/i.test(`${onlineText}${JSON.stringify(onlineReport)}`), "no real brand in the mock output");
+assert.ok(!/%|score|ranking|\bplek\b|positie/i.test(onlineText), "no score, percentage or position");
+
 await db.close();
 console.log("\nOK e2e-mock");

@@ -30,7 +30,7 @@ Twaalf feitcategorieën, gerangschikt op ernst. De eerste vijf zijn *afhakers*: 
 | 8 | **Adres en locatie** | Waar zit X? Is er parkeergelegenheid? | Ander adres, oud adres, andere plaats | 1 van N | Misleider | Verhuizingen blijven jaren in gidsen staan. Bij 16% klopt de website-URL niet (Insites). |
 | 9 | **Prijzen en tarieven** | Wat kost een APK bij X? Wat is het uurtarief? | Afwijking groter dan 10% van opgave, of verouderde prijs | ≥ 30% | Misleider | De klant komt met een verkeerde verwachting of kiest een ander op een prijs die niet bestaat. |
 | 10 | **Afspraken en voorwaarden** | Alleen op afspraak? Pinnen? Offerte gratis? Voorrijkosten? | AI stelt een voorwaarde die niet geldt, of mist er een | ≥ 30% | Misleider | Kleine feiten met grote irritatie: "alleen contant" terwijl je pint, "op afspraak" terwijl je inloop hebt. |
-| 11 | **Identiteit en naamgenoot** | Is X hetzelfde als X in Z? | AI koppelt nieuws, sluiting, adres of telefoon van een ander bedrijf aan jou: een naamgenoot elders, of (sinds 11 nov 2026) een antwoord dat jouw naam niet noemt en onder de kop van een ander bedrijf staat, zoals Sonova's adres op de vraag naar Sonable. Klant en rapport zeggen "een ander bedrijf", niet "met dezelfde naam" | 1 van N | Verwarring | Een bakkerij in Ontario kreeg een sluitingsdatum van een naamgenoot in Illinois. Herstelbaar met een feitenpagina die de verwarring expliciet uitsluit. |
+| 11 | **Identiteit en naamgenoot** | Is X hetzelfde als X in Z? | AI koppelt nieuws, sluiting, adres of telefoon van een ander bedrijf aan jou: een naamgenoot elders, of (sinds 11 nov 2026) een antwoord dat jouw naam niet noemt en onder de kop van een ander bedrijf staat, zoals Sonova's adres op de vraag naar Sonable, of (sinds 11 nov 2026) een antwoord dat je beschrijft als een ander soort bedrijf dan je profiel (zie "Soorten bedrijven"). Klant en rapport zeggen "een ander bedrijf", niet "met dezelfde naam"; bij een ander soort bedrijf "beschreven als een ander soort bedrijf" | 1 van N | Verwarring | Een bakkerij in Ontario kreeg een sluitingsdatum van een naamgenoot in Illinois. Herstelbaar met een feitenpagina die de verwarring expliciet uitsluit. |
 | 12 | **Erkenningen en kwalificaties** | Is X erkend installateur? Heeft X een BIG-registratie? Is X aangesloten bij Techniek Nederland? | AI ontkent een erkenning die je hebt, of kent er een toe die je niet hebt | ≥ 30% | Verwarring | Voor vakwerk en zorg is dit vaak de doorslag in de aanbeveling ("erkende installateurs in Haarlem"). Staat zelden ergens machineleesbaar. |
 
 Drempels: bij de afhakers 1, 2, 8 en 11 is één afwijkend antwoord al een bevinding, omdat één klant die dat antwoord krijgt al verloren is. Bij de overige criteria geldt 30% omdat AI-antwoorden ruis bevatten; onder 10% noemen we het "instabiel" en rapporteren we het zonder herstelactie.
@@ -72,7 +72,7 @@ Klanten stellen AI twee soorten vragen, en de scan doet ze allebei.
 
 **Vragen over jou** ("Is De Vries zondag open?"). Hier controleren we of het antwoord klopt met je opgave. Dit zijn de twaalf criteria hierboven.
 
-**Vragen om een aanbeveling** ("Wat is de beste Chinees in Rotterdam?", "Lekkage, wie kan vandaag nog komen in Utrecht?", "Wie installeert warmtepompen in Breda?"). Dit is de vraag die een klant echt stelt, en hier valt de beslissing. Hier controleren we niet of je op nummer één staat, dat is marketing. We controleren één ding: word je genoemd. Per sector stellen we bij elke volledige controle zes aanbevelingsvragen, één per bedoeling van de klant:
+**Vragen om een aanbeveling** (sinds 11 nov 2026 ook zonder plaats, per soort aanbieder: "Welke aanbieder van achtergrondmuziek is goed voor hotels?", zie "Soorten bedrijven"; "Wat is de beste Chinees in Rotterdam?", "Lekkage, wie kan vandaag nog komen in Utrecht?", "Wie installeert warmtepompen in Breda?"). Dit is de vraag die een klant echt stelt, en hier valt de beslissing. Hier controleren we niet of je op nummer één staat, dat is marketing. We controleren één ding: word je genoemd. Per sector stellen we bij elke volledige controle zes aanbevelingsvragen, één per bedoeling van de klant:
 
 | Bedoeling | Voorbeeld | Gekoppeld aan | Criterium |
 |---|---|---|---|
@@ -90,6 +90,32 @@ Klanten stellen AI twee soorten vragen, en de scan doet ze allebei.
 Dit onderscheid houdt de scan eerlijk. We beloven niet dat je genoemd wordt; we beloven dat je niet buiten de boot valt door een fout die wij kunnen herstellen, en dat je ziet waarom een ander wel genoemd wordt. Per sector krijgen de aanbevelingsvragen de vorm die klanten echt gebruiken: "loodgieter met spoed in Zwolle", "VvE-beheerder voor 12 appartementen in Utrecht", "fysio zonder verwijzing in Amersfoort".
 
 **Vragenbank.** Naast de vaste zes heeft elke sector een bank van 20 tot 30 aanbevelingsvragen: andere bewoordingen (AI noemt op "beste Chinees" andere namen dan op "waar eet ik lekker Chinees"), de andere plaatsen in je werkgebied, je andere diensten en het seizoen ("terras in de zon" in de zomer, "verwarming doet het niet" in de winter). Bij elke volledige controle draaien er zes mee, elke maand andere, seizoensvragen alleen in hun seizoen. Zo is na een paar maanden alles gevraagd terwijl de kosten per controle gelijk blijven. Een vraag uit de bank waarbij je in minder dan de helft van de antwoorden genoemd wordt, schuift door naar de vaste set (hoogstens twee per controle).
+
+## Soorten bedrijven (11 nov 2026)
+
+Vóór er een vraag gekozen wordt, bepaalt Vidalo wat voor bedrijf het is. De stap leest het Google-record (soort, adres, website), de eigen website en stelt één AI-zoekopdracht ("Wat is X in Y?"). Uitkomst: een profiel met de soort (`door`: klanten komen langs, `visit`: het bedrijf gaat naar de klant, `online`: werkt online of door heel het land), in een korte zin wat het aanbiedt, voor wie, en het woord waarmee een koper zoekt. De bezoeker krijgt geen extra veld; het profiel staat op de wachtpagina en in het rapport ("Gecontroleerd als: …"), en een betalende eigenaar kan het corrigeren op `/app/gegevens`. Is de stap onzeker, dan vallen we terug op de vragen van vandaag voor een bedrijf met een Google-record, en op de online set voor een bedrijf zonder.
+
+Een vraag wordt alleen gesteld als hij bij het profiel past:
+
+| Soort vraag | Winkel of zaak (`door`) | Bij de klant (`visit`) | Online |
+|---|---|---|---|
+| Bestaat X nog | ja | ja | ja |
+| Openingstijden, zondag | ja | alleen als de tijden bekend zijn | nee |
+| Adres | ja | nee | nee |
+| Pinnen ter plekke | ja | nee | nee |
+| Telefoonnummer | ja | ja | alleen als een nummer bekend is |
+| Wat doet X, de website | nee | nee | ja |
+| Aanbeveling in een plaats ("beste kapper in Haarlem") | ja | ja | nee |
+| Aanbeveling per soort aanbieder, zonder plaats ("welke … is goed voor …") | nee | nee | ja |
+| Alternatieven ("alternatief voor X") | nee | nee | ja |
+
+De gratis check voor een online bedrijf stelt zes vragen: bestaan, wat doet X, de website, twee aanbevelingsvragen per soort aanbieder en één over alternatieven. Geen enkele bevat een plaats. De volledige check blijft binnen de bovengrens van 38 vragen.
+
+**Antwoorden beschreven als een ander soort bedrijf.** Op "wat doet X" beoordelen we het antwoord tegen het profiel: beschreven als hetzelfde soort bedrijf, als een ander soort bedrijf, of niet gevonden. Een ander soort is een bevinding bij criterium 11.
+
+**Vragenbibliotheek.** Elke gestelde vraag komt als sjabloon in een bibliotheek per soort aanbieder, met hoe vaak hij gesteld is en hoe vaak de AI-systemen er een bruikbaar antwoord op gaven. Een nieuwe check gebruikt de bewezen sjablonen (minstens 20 keer gesteld, minstens 60% bruikbaar) en anders de ingebouwde. Een sjabloon onder 30% bruikbaar na 50 keer vragen wordt voor die soort niet meer gesteld. Door een model geschreven vrije tekst wordt nooit een vraag: de invulwaarden zijn beperkt in lengte en tekens.
+
+**Wat we tonen bij een online bedrijf.** Per vraag: in hoeveel antwoorden de AI je noemt en wie de AI wel noemt, als aantallen ("genoemd in 3 van 10 antwoorden"). Geen plek, geen percentage, geen score, geen tabel "jij versus de buren". We beloven niet dat je genoemd wordt. De stip blijft over feiten: vragen over het bedrijf bepalen de kleur, genoemd of niet genoemd niet.
 
 ## Sectoren: wat klanten vragen en wat er misgaat
 
@@ -222,10 +248,10 @@ De twaalf criteria gelden overal, maar per vak verschilt welke vraag de klant st
 ## Wat de scan bewust niet beoordeelt
 
 - **Reviews en sentiment.** "De AI zegt dat je service matig is." Dat is een mening uit reviews, geen feit dat je kunt corrigeren zonder de reviews zelf te veranderen. Reputatiebeheer is een ander vak, met een andere ethiek.
-- **Ranking en share of voice.** Op welke plek je staat in een lijstje, of hoe vaak je genoemd wordt tegenover concurrenten. Dat wisselt per vraag en per dag (minder dan 1% reproduceerbaar), en het suggereert controle die niemand heeft.
+- **Ranking en share of voice.** Op welke plek je staat in een lijstje, of een percentage of score voor hoe vaak je genoemd wordt tegenover concurrenten. Dat wisselt per vraag en per dag (minder dan 1% reproduceerbaar), en het suggereert controle die niemand heeft. *Aangepast 11 nov 2026:* per vraag tonen we wél als aantal in hoeveel antwoorden je genoemd wordt en wie de AI noemt ("3 van 10"); een positie, percentage of score nooit, en we beloven niet dat het verandert.
 - **Of de AI jou aanbeveelt.** We beoordelen alleen of je *ten onrechte ontbreekt* door een feit dat fout is of mist. Dat is herstelbaar; een voorkeur van een AI is dat niet.
 - **Trainingsgeheugen als zodanig.** Als een AI zonder te zoeken een fout antwoord geeft, melden we dat als bevinding met bron "geheugen van het model", maar we beloven geen herstel. Dat verandert pas bij een nieuwe modelversie.
-- **Vergelijkingen met concurrenten.** Geen tabel "jij versus de buren". Het leidt af van wat te herstellen valt en nodigt uit tot het soort claims dat we niet kunnen waarmaken.
+- **Vergelijkingen met concurrenten.** Geen tabel "jij versus de buren". Het leidt af van wat te herstellen valt en nodigt uit tot het soort claims dat we niet kunnen waarmaken. De namen die de AI zelf noemt tonen we per vraag, met het citaat, als aantallen (sinds 11 nov 2026); we zetten ze niet naast jou in een vergelijking.
 
 ## Wat dit betekent voor de bouw
 

@@ -36,6 +36,8 @@ export interface BusinessCandidate {
   googleTypes?: string[];
   /** KvK SBI code of the main activity. */
   sbi?: string | null;
+  /** Google's pureServiceAreaBusiness: the business goes to the customer and shows no address. */
+  serviceAreaOnly?: boolean | null;
 }
 
 /**
@@ -69,6 +71,7 @@ interface GPlace {
   businessStatus?: "OPERATIONAL" | "CLOSED_TEMPORARILY" | "CLOSED_PERMANENTLY";
   primaryType?: string;
   types?: string[];
+  pureServiceAreaBusiness?: boolean;
   addressComponents?: { longText?: string; shortText?: string; types?: string[] }[];
   regularOpeningHours?: { periods?: { open?: { day?: number; hour?: number; minute?: number }; close?: { day?: number; hour?: number; minute?: number } }[] };
 }
@@ -134,7 +137,7 @@ async function googlePlaces(query: string, place?: string): Promise<BusinessCand
       "content-type": "application/json",
       "x-goog-api-key": key,
       "x-goog-fieldmask":
-        "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber,places.businessStatus,places.regularOpeningHours,places.primaryType,places.types,places.addressComponents",
+        "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber,places.businessStatus,places.regularOpeningHours,places.primaryType,places.types,places.addressComponents,places.pureServiceAreaBusiness",
     },
     body: JSON.stringify({ textQuery: place ? `${query} ${place}` : query, languageCode: "nl", regionCode: "NL", maxResultCount: 3 }),
   });
@@ -164,6 +167,7 @@ async function googlePlaces(query: string, place?: string): Promise<BusinessCand
       country,
       googleCategory: p.primaryType ?? p.types?.[0] ?? null,
       googleTypes: [...new Set([p.primaryType, ...(p.types ?? [])].filter((t): t is string => Boolean(t)))],
+      serviceAreaOnly: p.pureServiceAreaBusiness ?? null,
     };
   });
 }
@@ -250,8 +254,30 @@ export function mockProfile(name: string): Profile {
   return PROFILES.find((p) => p.match.test(name))!;
 }
 
+/** Mock names that read as an online business: they come back without a listing, an address, a phone, hours or a website (feature 001; ADR-0007: the website comes from the visitor on /scan/kies). */
+export const MOCK_ONLINE_RE = /sonable|muziek|music|software|saas|webshop|app\b/i;
+
 export function mockCandidate(query: string, place?: string): BusinessCandidate {
   const plc = place ?? "Haarlem";
+  if (MOCK_ONLINE_RE.test(query)) {
+    return {
+      name: query,
+      address: null,
+      postcode: null,
+      place: plc,
+      placeId: null,
+      kvk: null,
+      website: null,
+      phone: null,
+      openStatus: "open",
+      hours: [],
+      source: "mock",
+      country: HOME_COUNTRY,
+      googleCategory: null,
+      googleTypes: [],
+      serviceAreaOnly: null,
+    };
+  }
   const rng = seededRandom(`${query}|${plc}`);
   const street = STREETS[Math.floor(rng() * STREETS.length)]!;
   const number = 1 + Math.floor(rng() * 120);
@@ -306,7 +332,7 @@ export async function resolveBusiness(query: string, place?: string): Promise<Bu
     }
   }
   const merged = [...google, ...kvk.filter((k) => !google.some((g) => g.kvk === k.kvk))];
-  if (!merged.length) return [mockCandidate(query, place)].map((c) => ({ ...c, placeId: null, kvk: null, website: null, phone: null, address: null, postcode: null, hours: [], googleCategory: null }));
+  if (!merged.length) return [mockCandidate(query, place)].map((c) => ({ ...c, placeId: null, kvk: null, website: null, phone: null, address: null, postcode: null, hours: [], googleCategory: null, googleTypes: [], serviceAreaOnly: null }));
   return merged.slice(0, 3);
 }
 
@@ -422,5 +448,6 @@ export async function draftProvisionalFacts(candidate: BusinessCandidate, opts: 
     credentials: isMock() ? (profile.credentials ?? []) : [],
     sector: sectorForCandidate(candidate),
     googleTypes: candidate.googleTypes ?? (candidate.googleCategory ? [candidate.googleCategory] : []),
+    serviceAreaOnly: candidate.serviceAreaOnly ?? null,
   };
 }

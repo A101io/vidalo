@@ -9,7 +9,7 @@ const perPrompt = (engines: readonly string[], n: number) => engines.reduce((sum
 import { createMockEngine } from "../src/scanner/engines";
 import { prepareBusiness } from "../src/scanner/onboard";
 import { resolveBusiness, draftProvisionalFacts } from "../src/scanner/resolve";
-import { sampleFacts } from "./scanner-fixtures";
+import { sampleFacts, storeDoorPrompts } from "./scanner-fixtures";
 
 describe("mock engine", () => {
   it("is deterministic and injects wrong values for a share of prompts", async () => {
@@ -31,8 +31,9 @@ describe("runScan (mock pipeline)", () => {
     const prepared = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
     // 20 base prompts + the "winkels" sector pack (inferred from the name): its core and its bank.
     expect(prepared.business.sector).toBe("winkels");
-    const core = prepared.prompts.filter((p) => p.pool !== "bank");
-    const bank = prepared.prompts.filter((p) => p.pool === "bank");
+    const stored = await storeDoorPrompts(db, prepared.business);
+    const core = stored.filter((p) => p.pool !== "bank");
+    const bank = stored.filter((p) => p.pool === "bank");
     expect(core.length).toBeGreaterThanOrEqual(26);
     expect(core.length).toBeLessThanOrEqual(32);
     expect(core.filter((p) => p.kind === "recommendation").length).toBe(6);
@@ -94,7 +95,7 @@ describe("runScan (mock pipeline)", () => {
   it("asks five samples first and only the cells with a wrong, not-found or namesake answer get all ten", async () => {
     const db = withMockDb();
     const prepared = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
-    const prompts = (await db.listPrompts(prepared.business.id, { activeOnly: true })).filter((p) => p.pool !== "bank");
+    const prompts = (await storeDoorPrompts(db, prepared.business)).filter((p) => p.pool !== "bank");
 
     // Every answer right: every cell stops at five.
     const clean = await runScan({ businessId: prepared.business.id, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 10, clients: [createMockEngine("chatgpt", { wrongPairRate: 0, otherEntityRate: 0 })], db });

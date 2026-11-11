@@ -5,12 +5,14 @@
  * (`transform: postgres.camel`), Dates are converted to ISO strings here.
  */
 import postgres, { type Sql } from "postgres";
-import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
+  LibraryRow,
+  QuestionUseInput,
   BusinessUpsert,
   ChannelUpsert,
   ClaimInput,
@@ -78,6 +80,8 @@ function mapBusiness(row: Row): BusinessRecord {
     cancelAt: (r.cancelAt as string | null) ?? null,
     pauseUntil: (r.pauseUntil as string | null) ?? null,
     mailPrefs: normalizeMailPrefs(r.mailPrefs),
+    profileAuto: (r.profileAuto as BusinessProfile | null) ?? null,
+    profileOwner: (r.profileOwner as BusinessProfile | null) ?? null,
     createdAt: r.createdAt as string,
   };
 }
@@ -94,6 +98,7 @@ const mapPrompt = (r: Row): Prompt => ({
   intent: (r.intent as Prompt["intent"]) ?? null,
   pool: ((r.pool as string | null) ?? "core") as Prompt["pool"],
   season: (r.season as Prompt["season"]) ?? null,
+  templateKey: (r.templateKey as string | null) ?? null,
 });
 
 const mapScanRun = (row: Row): ScanRun => {
@@ -108,6 +113,7 @@ const mapScanRun = (row: Row): ScanRun => {
     finishedAt: (r.finishedAt as string | null) ?? null,
     costCents: r.costCents as number,
     status: r.status as ScanRun["status"],
+    profile: (r.profile as BusinessProfile | null) ?? null,
   };
 };
 
@@ -281,6 +287,52 @@ export class PgDb implements Db {
     return mapBusiness(rows[0]!);
   }
 
+  // --- business profile and question library (migration 0015, ADR-0001, ADR-0004) ---
+  // Each profile writer touches its own column only; upsertBusiness touches neither.
+  async setAutoProfile(businessId: string, profile: BusinessProfile): Promise<void> {
+    const rows = await this.sql`update business set profile_auto = ${this.sql.json(profile as never)} where id = ${businessId} returning id`;
+    if (!rows.length) throw new Error(`business ${businessId} not found`);
+  }
+
+  async setOwnerProfile(businessId: string, profile: BusinessProfile): Promise<void> {
+    const rows = await this.sql`update business set profile_owner = ${this.sql.json(profile as never)} where id = ${businessId} returning id`;
+    if (!rows.length) throw new Error(`business ${businessId} not found`);
+  }
+
+  async recordQuestionUse(rows: QuestionUseInput[]): Promise<void> {
+    if (!rows.length) return;
+    // The business's opaque reference (business.question_ref) is added here, so no caller can pass or leak one.
+    const runIds = [...new Set(rows.map((r) => r.scanRunId))];
+    const refs = await this.sql`select sr.id, b.question_ref from scan_run sr join business b on b.id = sr.business_id where sr.id in ${this.sql(runIds)}`;
+    const refOf = new Map(refs.map((r) => [r.id as string, r.questionRef as string]));
+    const values = rows.map((r) => {
+      const businessRef = refOf.get(r.scanRunId);
+      if (!businessRef) throw new Error(`scan_run ${r.scanRunId} not found`);
+      return { scanRunId: r.scanRunId, businessRef, category: r.category, mode: r.mode, templateKey: r.templateKey, templateNl: r.templateNl, family: r.family, intent: r.intent, asked: r.asked, usable: r.usable };
+    });
+    await this.sql`insert into question_use ${this.sql(values)} on conflict (scan_run_id, template_key) do nothing`;
+  }
+
+  async questionLibrary(filter: { category?: string; mode?: ProfileMode } = {}): Promise<LibraryRow[]> {
+    const rows = await this.sql`
+      select category, mode, template_key, template_nl, family, intent, asked, usable, businesses
+      from question_library
+      where (${filter.category ?? null}::text is null or category = ${filter.category ?? null})
+        and (${filter.mode ?? null}::text is null or mode = ${filter.mode ?? null})
+      order by category, mode, template_key`;
+    return rows.map((r) => ({
+      category: r.category as string,
+      mode: r.mode as ProfileMode,
+      templateKey: r.templateKey as string,
+      templateNl: r.templateNl as string,
+      family: r.family as LibraryRow["family"],
+      intent: (r.intent as string | null) ?? null,
+      asked: r.asked as number,
+      usable: r.usable as number,
+      businesses: r.businesses as number,
+    }));
+  }
+
   async businessesDueForMonthlyScan(dayOfMonth: number): Promise<BusinessRecord[]> {
     // On the last day of a short month also pick up anniversaries 29-31.
     // Only the monthly plan: a one-off Scan customer paid for one check (review R-01).
@@ -346,7 +398,7 @@ export class PgDb implements Db {
     const provisional = opts.provisional ?? data.provisional ?? true;
     const verifiedAt = opts.verifiedAt ?? data.verifiedAt ?? null;
     // Strip the row-level fields from the jsonb payload; they live in columns.
-    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, ...payload } = data as Facts;
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, profile: _pr, ...payload } = data as Facts;
     const rows = await this.sql`
       insert into facts (business_id, version, provisional, verified_at, data)
       values (${businessId},
@@ -366,7 +418,7 @@ export class PgDb implements Db {
 
   async insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]> {
     if (!prompts.length) return [];
-    const rows = prompts.map((p) => ({ businessId, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null }));
+    const rows = prompts.map((p) => ({ businessId, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null }));
     const out = await this.sql`insert into prompt ${this.sql(rows)} returning *`;
     return out.map(mapPrompt);
   }
@@ -378,8 +430,9 @@ export class PgDb implements Db {
   // --- scan runs ---
   async createScanRun(input: ScanRunCreate): Promise<ScanRun> {
     const rows = await this.sql`
-      insert into scan_run (business_id, kind, engines, samples_per_prompt, status, started_at)
-      values (${input.businessId}, ${input.kind}, ${this.sql.array(input.engines)}::engine[], ${input.samplesPerPrompt}, ${input.status ?? "queued"}, now())
+      insert into scan_run (business_id, kind, engines, samples_per_prompt, status, started_at, profile)
+      values (${input.businessId}, ${input.kind}, ${this.sql.array(input.engines)}::engine[], ${input.samplesPerPrompt}, ${input.status ?? "queued"}, now(),
+              ${input.profile ? this.sql.json(input.profile as never) : null})
       returning *`;
     return mapScanRun(rows[0]!);
   }

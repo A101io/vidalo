@@ -17,6 +17,10 @@ export * from "./turnstile.js";
 export * from "./scan-limit.js";
 export * from "./ondemand.js";
 export * from "./plan.js";
+export * from "./typed-business.js";
+export * from "./typed-website.js";
 // Also exported on its own as "@vidalo/core/shared/gate": the edge middleware must not pull db.js in.
 export * from "./gate.js";
 export * from "./country.js";
+export * from "./profile-correction.js";
+export * from "./checked-as.js";

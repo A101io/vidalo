@@ -1,0 +1,103 @@
+/* ---------------------------------------------------------------------
+ * The waiting page (feature 001, FE-01, ADR-0006). CSS only: rows enter
+ * when React mounts them, packets travel along the lanes while the scan is
+ * live. No script touches this markup and no data-motion attribute is used.
+ * Under prefers-reduced-motion nothing moves; the end of each story shows.
+ * --------------------------------------------------------------------- */
+.wv-visual {
+  display: flex; align-items: center; gap: clamp(12px, 4vw, 28px);
+  min-height: 132px; padding: 20px clamp(14px, 4vw, 24px);
+  border: 1.5px solid var(--line); border-radius: 20px; background: var(--panel-2);
+  overflow: hidden;
+}
+.wv-core { position: relative; flex: none; width: 56px; height: 56px; display: grid; place-items: center; }
+.wv-core-dot {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--blue); color: #fff;
+  display: grid; place-items: center; font-weight: 800; font-size: 20px; letter-spacing: -0.02em;
+}
+.wv-core-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--blue); opacity: 0; }
+.wv-live .wv-core-ring { animation: wv-ring 2.4s ease-out infinite; }
+.wv-live .wv-core-ring + .wv-core-ring { animation-delay: 1.2s; }
+@keyframes wv-ring { 0% { transform: scale(0.8); opacity: 0.55; } 100% { transform: scale(1.45); opacity: 0; } }
+
+/* Reading and choosing: bars that are scanned, then become the chosen questions. */
+.wv-bars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.wv-bar { position: relative; height: 8px; width: var(--w, 80%); border-radius: 4px; background: var(--line); overflow: hidden; }
+.wv-bar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(37 99 235 / 0.35), transparent); transform: translateX(-100%); }
+.wv-live .wv-bar::after { animation: wv-sweep 1.8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 0.25s); }
+@keyframes wv-sweep { to { transform: translateX(100%); } }
+.wv-bar--q { background: var(--blue); opacity: 0.85; transform-origin: left center; animation: wv-grow 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+.wv-bar--q::after { display: none; }
+@keyframes wv-grow { from { transform: scaleX(0); opacity: 0; } }
+
+/* Asking: one lane per AI system of this scan. A question travels out, an answer comes back. */
+.wv-lanes { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.wv-lane { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.wv-track { position: relative; flex: 1; min-width: 0; height: 22px; container-type: inline-size; }
+.wv-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px dashed var(--line); }
+.wv-eng { flex: none; font-size: 13px; font-weight: 700; color: var(--muted); max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wv-q, .wv-a { position: absolute; top: 6px; left: 0; width: 10px; height: 10px; opacity: 0; }
+.wv-q { border-radius: 3px; background: var(--blue); }
+.wv-a { border-radius: 50%; background: var(--ink); }
+.wv-live .wv-q { animation: wv-out 2.8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.9s); }
+.wv-live .wv-a { animation: wv-back 2.8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.9s); }
+@keyframes wv-out {
+  0% { transform: translateX(0); opacity: 0; }
+  8% { opacity: 1; }
+  45% { transform: translateX(calc(100cqw - 10px)); opacity: 1; }
+  52%, 100% { transform: translateX(calc(100cqw - 10px)); opacity: 0; }
+}
+@keyframes wv-back {
+  0%, 50% { transform: translateX(calc(100cqw - 10px)); opacity: 0; }
+  56% { opacity: 1; }
+  92% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+/* Comparing: no new questions, the answers come in. A lane that has all its answers rests. */
+.wv-stage[data-stage="compare"] .wv-q, .wv-stage[data-stage="done"] .wv-q, .wv-lane--rest .wv-q { display: none; }
+.wv-stage[data-stage="done"] .wv-a, .wv-lane--rest .wv-a { display: none; }
+
+/* Steps */
+.wv-steps { list-style: none; margin: 20px 0 0; padding: 0; }
+.wv-step { display: flex; gap: 14px; padding: 16px 18px; }
+.wv-step + .wv-step { border-top: 1.5px solid var(--line); }
+.wv-dot { flex: none; margin-top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.wv-step[data-state="done"] > .wv-dot { background: var(--green); }
+.wv-step[data-state="active"] > .wv-dot { background: var(--amber); }
+.wv-step[data-state="stopped"] > .wv-dot { background: var(--red); }
+.wv-live .wv-step[data-state="active"] > .wv-dot { animation: wv-pulse 1.6s ease-out infinite; }
+@keyframes wv-pulse { 0% { box-shadow: 0 0 0 0 rgb(245 158 11 / 0.55); } 100% { box-shadow: 0 0 0 9px rgb(245 158 11 / 0); } }
+.wv-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.wv-label { font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; }
+.wv-step[data-state="done"] .wv-label { color: var(--ink); }
+.wv-step[data-state="active"] .wv-label, .wv-step[data-state="stopped"] .wv-label { color: var(--ink); font-weight: 700; }
+.wv-step[data-state="waiting"] .wv-label { color: var(--muted); }
+.wv-state { flex: none; font-size: 13px; color: var(--muted); }
+.wv-body { flex: 1; min-width: 0; }
+.wv-detail { margin-top: 8px; font-size: 15px; color: var(--ink-2); overflow-wrap: anywhere; }
+
+.wv-rise { animation: wv-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes wv-rise { from { opacity: 0; transform: translateY(10px); } }
+
+.wv-qs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: q; }
+.wv-qs li { position: relative; padding-left: 26px; font-size: 15px; line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; counter-increment: q; }
+.wv-qs li::before { content: counter(q); position: absolute; left: 0; top: 1px; width: 18px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.wv-qs .wv-more { color: var(--muted); }
+.wv-qs .wv-more::before { content: none; }
+
+.wv-engs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.wv-engs li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.wv-engs .wv-dot { margin-top: 0; width: 10px; height: 10px; }
+.wv-engs .wv-n { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wv-engs li[data-state="active"] .wv-dot { background: var(--amber); }
+.wv-engs li[data-state="done"] .wv-dot { background: var(--green); }
+.wv-live .wv-engs li[data-state="active"] .wv-dot { animation: wv-pulse 1.6s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wv-visual *, .wv-visual *::before, .wv-visual *::after, .wv-step *, .wv-step, .wv-rise, .wv-bar--q { animation: none !important; transition: none !important; }
+  /* Resting picture: a question on its way out, an answer on its way back. */
+  .wv-live .wv-q { opacity: 1; transform: translateX(32cqw); }
+  .wv-live .wv-a { opacity: 1; transform: translateX(62cqw); }
+  .wv-live .wv-core-ring { opacity: 0.35; transform: scale(1.2); }
+  .wv-live .wv-bar::after { transform: translateX(-30%); }
+}

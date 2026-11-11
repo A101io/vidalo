@@ -13,7 +13,13 @@ const INTENT_LABEL: Record<string, string> = {
   betrouwbaar: "of je genoemd wordt als iemand een betrouwbaar bedrijf zoekt",
   betaalbaar: "of je genoemd wordt als iemand een betaalbaar bedrijf zoekt",
   dichtbij: "of je genoemd wordt als iemand iets in de buurt zoekt",
+  // Online businesses (feature 001): the audience question and the alternative question.
+  geschikt: "of je genoemd wordt als iemand een aanbieder zoekt die past bij zijn situatie",
+  alternatief: "of je genoemd wordt als iemand een alternatief zoekt",
 };
+
+/** What "correct" means for a recommendation finding: a local business is open and works in the town; an online one only has to exist. */
+const ONLINE_INTENT = new Set(["geschikt", "alternatief"]);
 
 export function factLabelNl(factKey: FactKey, subject: string | null): string {
   switch (factKey) {
@@ -136,7 +142,7 @@ export function findingWordsNl(f: Pick<Finding, "factKey" | "subject" | "wrongVa
     what,
     field: factFieldNl(f.factKey, f.subject),
     wrong: notFound ? NOT_FOUND_LABEL : recommendation ? ABSENT_LABEL : valueNl(f.factKey, f.wrongValue),
-    correct: recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? "je bent open en werkt in deze plaats" : valueNl(f.factKey, f.correctValue),
+    correct: recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? (ONLINE_INTENT.has(f.subject) ? "je bent actief" : "je bent open en werkt in deze plaats") : valueNl(f.factKey, f.correctValue),
     frequency: `${f.frequency} van de ${f.sampleCount} keer`,
     notFound,
     notFoundLine: notFound ? `vond niets over ${what}` : "",

@@ -16,7 +16,7 @@
  *  - identity (subject = other business): "no" = a different business (the owner's position)
  *  - recommendation answers: PRESENT_VALUE | ABSENT_VALUE (is the business named)
  */
-import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Facts, type Hours } from "../types";
+import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, isNeutralProfile, type FactKey, type Facts, type Hours } from "../types";
 
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import { HOME_COUNTRY } from "../shared/country";
@@ -147,11 +147,21 @@ export function normalizePrice(raw: string | number): string | null {
 /** Words that count as "pin / card payment" in paymentMethods or policies. */
 const PIN_WORDS = ["pin", "pinnen", "pinpas", "debitcard", "debit", "maestro", "kaart", "card", "contactloos", "ideal"];
 
+/** Does the profile hold an offer that rests on something other than the AI lookup? */
+function kindIsGrounded(facts: Facts): boolean {
+  const p = facts.profile;
+  if (!p || !p.grounded || !p.offer) return false;
+  return !(p.basis.length > 0 && p.basis.every((b) => b === "ai_lookup"));
+}
+
+
 /**
  * The owner-asserted value for a (factKey, subject) in the normalised value
  * space, or null when the facts do not say anything about it (skip compare).
  */
 export function factValue(facts: Facts, factKey: FactKey, subject: string | null): string | null {
+  // The neutral set (ADR-0007): we could not read the business, so what AI says is shown, never judged.
+  if (isNeutralProfile(facts.profile) && (factKey === "existence" || factKey === "identity" || factKey === "website")) return null;
   switch (factKey) {
     case "existence":
       return facts.openStatus;
@@ -219,6 +229,9 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
       return facts.credentials?.some((c) => normalizeLabel(c) === s) ? "yes" : null;
     }
     case "identity":
+      // "wat doet X": only a grounded offer (Google, the business's own site, the owner) is a reference.
+      // An offer that came from the AI lookup alone would grade the AI against itself (ADR-0005).
+      if (subject === "kind") return kindIsGrounded(facts) ? "same" : null;
       // The owner's position is always: that is a different business.
       return facts.notConfusedWith.length || subject ? "no" : null;
   }
@@ -275,7 +288,7 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
     case "credential":
       return value === "yes" ? "ja" : value === "no" ? "nee" : value;
     case "identity":
-      return value === "no" ? "een ander bedrijf" : value === "yes" ? "hetzelfde bedrijf" : value;
+      return value === "no" ? "een ander bedrijf" : value === "yes" ? "hetzelfde bedrijf" : value === "other" ? "een ander soort bedrijf" : value === "same" ? "dit soort bedrijf" : value;
     case "price":
       return `€ ${value.replace(".", ",")}`;
     default:
@@ -287,6 +300,9 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
 export function describeFact(factKey: FactKey, subject: string | null): string {
   switch (factKey) {
     case "existence":
+      // The two online recommendation questions (feature 001) are about being named, not about being open.
+      if (subject === "geschikt") return "een aanbieder die past bij een doelgroep";
+      if (subject === "alternatief") return "een alternatief";
       return "open of gesloten";
     case "hours":
       return subject != null ? `openingstijden ${DAY_NAMES_NL[Number(subject)]}` : "openingstijden";
@@ -311,7 +327,7 @@ export function describeFact(factKey: FactKey, subject: string | null): string {
     case "credential":
       return subject ? `erkenning: ${subject}` : "erkenningen";
     case "identity":
-      return subject ? `naamgenoot: ${subject}` : "naamgenoot";
+      return subject === "kind" ? "wat het bedrijf doet" : subject ? `naamgenoot: ${subject}` : "naamgenoot";
   }
 }
 

@@ -17,6 +17,10 @@ import { scanLang, type ScanLang } from "../shared/country";
 
 export * from "./sectors";
 export * from "./rotation";
+export * from "./slots";
+export * from "./online";
+export * from "./online.en";
+export * from "./profile";
 
 export type PromptTemplate = Omit<Prompt, "id" | "businessId">;
 

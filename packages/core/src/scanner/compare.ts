@@ -22,7 +22,7 @@
  * fact counts and the colour leave it out. Position is never counted.
  */
 import type { Claim, CriteriumId, Engine, FactKey, Facts, PromptKind, SourceType, Verdict } from "../types";
-import { ABSENT_VALUE, NOT_FOUND_LABEL, PRESENT_VALUE } from "../types";
+import { ABSENT_VALUE, NOT_FOUND_LABEL, PRESENT_VALUE, isNeutralProfile } from "../types";
 import { criterium as criteriumDef, criteriumFor, criteriumNotFound as isCriteriumNotFound, judge, CRITERIUM_NOT_FOUND_RATIO, RATIO_MIN, INSTABLE_BELOW } from "../criteria";
 import { isNotFoundClaim, isRecommendationPrompt, parseProbe, type PromptLike } from "./extract";
 import { describeValue, factValue, valuesMatch } from "./normalize";
@@ -154,8 +154,10 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
   // Per (criterium, engine): how many samples, how many of them not found.
   const perCriterium = new Map<string, CriteriumNotFoundCandidate>();
 
+  // The neutral set (ADR-0007): we do not know what the business is, so no answer is judged, not even as "not found" or "another business".
+  const neutral = isNeutralProfile(facts.profile);
   for (const s of samples) {
-    if (s.claims.some(isNotFoundClaim)) notFoundSamples.add(s.sampleId);
+    if (!neutral && s.claims.some(isNotFoundClaim)) notFoundSamples.add(s.sampleId);
     const kind: PromptKind = isRecommendationPrompt(s.prompt) ? "recommendation" : "about";
     const probes = s.prompt.probes.length ? s.prompt.probes : [s.prompt.category];
     const criteriaSeen = new Set<CriteriumId>();
@@ -208,7 +210,7 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
         else if (s.claim.value === ABSENT_VALUE && !recommendationVerdicts.has(s.sampleId)) recommendationVerdicts.set(s.sampleId, "not_named");
         continue;
       }
-      if (g.expected == null && !s.claim.otherEntity) {
+      if (g.expected == null && (neutral || !s.claim.otherEntity)) {
         // A value with nothing to compare it to: unknown, kept so the report can show what was said.
         if (s.claim.value) g.unknown.set(s.claim.value, (g.unknown.get(s.claim.value) ?? 0) + 1);
         continue;

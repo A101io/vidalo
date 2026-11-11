@@ -9,6 +9,7 @@
     "test": "pnpm -r test",
     "worker": "pnpm --filter @vidalo/worker start",
     "scan": "pnpm --filter @vidalo/core scan",
+    "library": "pnpm --filter @vidalo/core library",
     "e2e:mock": "VIDALO_MOCK=1 tsx scripts/e2e-mock.mts",
     "mail:lab": "VIDALO_MOCK=1 tsx scripts/mail-lab.mts",
     "mail:send": "tsx scripts/mail-send.mts",

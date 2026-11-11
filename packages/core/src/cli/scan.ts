@@ -12,13 +12,15 @@
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { ENGINE_LABEL, ENGINES, type Engine, type Finding, type ScanKind, type ScanReport, type Severity } from "../types";
+import { pathToFileURL } from "node:url";
+import { ENGINE_LABEL, ENGINES, isOnlineProfile, type Engine, type Finding, type ScanKind, type ScanReport, type Severity } from "../types";
 import { db } from "../db";
 import { copy } from "../copy";
 import { criterium, criteriumFor } from "../criteria";
 import { prepareBusiness } from "../scanner/onboard";
 import { runScan } from "../scanner";
 import { describeFact, describeValue } from "../scanner/normalize";
+import { checkedAsParts } from "../shared/checked-as";
 
 interface Args {
   name?: string;
@@ -116,12 +118,14 @@ function criteriumLabel(f: Pick<Finding, "factKey" | "subject" | "criterium" | "
 }
 
 /** One line per finding, Dutch, with the criterium in front. */
-function findingLine(f: Finding, business: ScanReport["business"]): string {
+function findingLine(f: Finding, business: ScanReport["business"], online = false): string {
+  // An online business has no town in its questions (feature 001), so no line says it is "in" one.
+  const where = online ? "" : ` in ${business.place}`;
   const what = describeFact(f.factKey, f.subject);
   const crit = criteriumLabel(f);
   const freq = `${f.frequency} van ${f.sampleCount} keer`;
   if (f.verdict === "not_found") {
-    return `- [${crit}] ${ENGINE_LABEL[f.engine]} vindt niets over ${what} van ${business.name} in ${business.place} (${freq}). Niet gevonden: we maken je vindbaar.`;
+    return `- [${crit}] ${ENGINE_LABEL[f.engine]} vindt niets over ${what} van ${business.name}${where} (${freq}). Niet gevonden: we maken je vindbaar.`;
   }
   if (f.evidenceKind === "recommendation") {
     const right = describeValue(f.factKey, f.correctValue, f.subject);
@@ -130,7 +134,7 @@ function findingLine(f: Finding, business: ScanReport["business"]): string {
   }
   if (f.sourceType === "other_entity") {
     const src = f.sourceUrl ? ` Bron: ${f.sourceUrl}.` : "";
-    return `- [${crit}] ${ENGINE_LABEL[f.engine]} haalt ${business.name} in ${business.place} door elkaar met een ander bedrijf met dezelfde naam bij ${what} (${freq}).${src}`;
+    return `- [${crit}] ${ENGINE_LABEL[f.engine]} haalt ${business.name}${where} door elkaar met een ander bedrijf met dezelfde naam bij ${what} (${freq}).${src}`;
   }
   const wrong = describeValue(f.factKey, f.wrongValue, f.subject);
   const right = describeValue(f.factKey, f.correctValue, f.subject);
@@ -143,11 +147,12 @@ function findingLine(f: Finding, business: ScanReport["business"]): string {
  * Readable Dutch summary of a scan: the colour of the dot, the engines, the
  * findings grouped by severity. Never a score.
  */
-export function summarizeNl(report: ScanReport): string {
+export function summarizeNl(report: ScanReport, questions?: string[], opts: { profileLines?: boolean } = {}): string {
   const lines: string[] = [];
   const { business, totalAnswers, wrongAnswers, notFoundAnswers = 0, visibility = "found" } = report;
   const stip = report.stip ?? "grijs";
-  lines.push(`${business.name} (${business.place})`);
+  const online = isOnlineProfile(report.profile);
+  lines.push(online ? business.name : `${business.name} (${business.place})`);
   const headline = [`${STIP_DOT[stip]} ${copy.stip[stip]}: ${copy.stipMeaning[stip]}.`, `${wrongAnswers} van ${totalAnswers} antwoorden ${wrongAnswers === 1 ? "klopt" : "kloppen"} niet.`];
   if (notFoundAnswers) headline.push(`${notFoundAnswers} ${notFoundAnswers === 1 ? "antwoord" : "antwoorden"}: niet gevonden.`);
   if (visibility !== "found") headline.push(VISIBILITY_LABEL[visibility]);
@@ -163,6 +168,10 @@ export function summarizeNl(report: ScanReport): string {
     })
     .join(" · ");
   lines.push(perEngine);
+  // How Vidalo read the business (the report page's wording), and for an online business the questions as asked.
+  const checkedAs = opts.profileLines === false ? null : checkedAsParts(report.profile, copy.result.checkedAs);
+  if (checkedAs) lines.push("", checkedAs.line, checkedAs.how);
+  if (online && questions?.length) lines.push("", "Gestelde vragen:", ...questions.map((q) => `- ${q}`));
   const groups = report.findingsBySeverity ?? { afhaker: report.findings, misleider: [], verwarring: [] };
   const order: Severity[] = ["afhaker", "misleider", "verwarring"];
   if (report.findings.length) {
@@ -171,7 +180,7 @@ export function summarizeNl(report: ScanReport): string {
       if (!list.length) continue;
       lines.push("");
       lines.push(`${copy.severity[sev]} (${list.length}): ${copy.severityExplain[sev]}`);
-      for (const f of list) lines.push(findingLine(f, business));
+      for (const f of list) lines.push(findingLine(f, business, online));
     }
   } else {
     lines.push("");
@@ -216,21 +225,30 @@ export function summarizeNl(report: ScanReport): string {
 }
 
 /** Markdown version of the summary for out/scans/{slug}.md. */
-export function markdownNl(report: ScanReport): string {
+export function markdownNl(report: ScanReport, questions?: string[]): string {
   const when = new Date(report.checkedAt).toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam" });
-  const [, headline, perEngine, ...rest] = summarizeNl(report).split("\n");
-  const lines = [`# ${report.business.name} – ${report.business.place}`, "", `Gecontroleerd op ${when}.`, "", `**${headline}**`, "", perEngine ?? "", ""];
+  const [, headline, perEngine, ...rest] = summarizeNl(report, questions, { profileLines: false }).split("\n");
+  const online = isOnlineProfile(report.profile);
+  const checkedAs = checkedAsParts(report.profile, copy.result.checkedAs);
+  const lines = [online ? `# ${report.business.name}` : `# ${report.business.name} – ${report.business.place}`, "", `Gecontroleerd op ${when}.`, "", `**${headline}**`, "", perEngine ?? "", ""];
+  if (checkedAs) lines.push(checkedAs.line, "", `_${checkedAs.how}_`, "");
   for (const l of rest) lines.push(l.startsWith("- ") || !l ? l : `**${l}**`);
   lines.push("", `_${copy.recommendation.note}_`);
   return lines.join("\n").replace(/\n{3,}/g, "\n\n") + "\n";
 }
 
-async function scanOne(name: string, place: string, args: Args): Promise<ScanReport> {
+/** The questions a scan really asked, in the order they are stored (Dutch, as the AI systems got them). */
+async function askedQuestions(scanRunId: string, businessId: string): Promise<string[]> {
+  const asked = new Set((await db.listSamples(scanRunId)).map((x) => x.promptId));
+  return (await db.listPrompts(businessId)).filter((p) => asked.has(p.id)).map((p) => p.textNl);
+}
+
+async function scanOne(name: string, place: string, args: Args): Promise<{ report: ScanReport; questions: string[] }> {
   const prepared = await prepareBusiness({ name, place, db });
   if (args.verbose) {
-    console.log(`[${prepared.business.slug}] ${prepared.created ? "nieuw" : "bestaand"} bedrijf, feiten v${prepared.factsVersion}, ${prepared.prompts.length} vragen`);
+    console.log(`[${prepared.business.slug}] ${prepared.created ? "nieuw" : "bestaand"} bedrijf, feiten v${prepared.factsVersion}`);
   }
-  return runScan({
+  const report = await runScan({
     businessId: prepared.business.id,
     kind: args.kind,
     engines: args.engines,
@@ -243,6 +261,7 @@ async function scanOne(name: string, place: string, args: Args): Promise<ScanRep
         }
       : undefined,
   });
+  return { report, questions: await askedQuestions(report.scanRunId, prepared.business.id) };
 }
 
 async function readList(file: string): Promise<{ name: string; place: string }[]> {
@@ -268,11 +287,11 @@ async function main(): Promise<void> {
     const totals = { businesses: 0, answers: 0, wrong: 0, findings: 0, costCents: 0 };
     for (const row of rows) {
       try {
-        const report = await scanOne(row.name, row.place, args);
+        const { report, questions } = await scanOne(row.name, row.place, args);
         const base = path.join(args.out, report.business.slug);
         await writeFile(`${base}.json`, JSON.stringify(report, null, 2));
-        await writeFile(`${base}.md`, markdownNl(report));
-        console.log(summarizeNl(report));
+        await writeFile(`${base}.md`, markdownNl(report, questions));
+        console.log(summarizeNl(report, questions));
         const cost = await answerCostCents(report.scanRunId);
         totals.costCents += cost;
         console.log(`→ ${base}.json, ${base}.md · ${formatCost(cost)} (totaal ${formatCost(totals.costCents)})\n`);
@@ -286,8 +305,8 @@ async function main(): Promise<void> {
     }
     console.log(`Totaal: ${totals.businesses} bedrijven, ${totals.wrong} van ${totals.answers} antwoorden kloppen niet, ${totals.findings} bevindingen, ${formatCost(totals.costCents)}.`);
   } else if (args.name && args.place) {
-    const report = await scanOne(args.name, args.place, args);
-    console.log(summarizeNl(report));
+    const { report, questions } = await scanOne(args.name, args.place, args);
+    console.log(summarizeNl(report, questions));
     console.log(formatCost(await answerCostCents(report.scanRunId)));
     if (args.json) {
       await mkdir(path.dirname(args.json), { recursive: true });
@@ -301,7 +320,10 @@ async function main(): Promise<void> {
   await db.close();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only when run as the script: tests import summarizeNl and markdownNl without starting a scan.
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

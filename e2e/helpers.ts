@@ -28,6 +28,7 @@ export const PUBLIC_ROUTES = [
   "/feiten",
   "/r/voorbeeld",
   "/r/voorbeeld-grijs",
+  "/r/voorbeeld-online",
   ...SECTORS.map((s) => `/vak/${s}`),
 ];
 
