@@ -375,3 +375,15 @@ Then (both) the findings, "Wie AI noemt bij jouw soort bedrijf / Who AI names fo
 - Cost of the step: the classification only, about 0.1 cent per business (was ~2.6 cent with the search).
 - Tests: `understand.test.ts` (recorded sonable.io page → online, background music; no listing/no site and site-not-naming → neutral set; no lookup call), `typed-website.test.ts`, `e2e/scan-website.spec.ts` (8, production mock build). Gate config: the mobile project only runs `@gate @mobile` tests in gate mode. Results: typecheck, 1250 core tests, e2e:mock, mail:lab, Playwright mock 103/103 and gate 8/8.
 - Not verified: a real run against OpenAI and live websites (next step); the privacy sentence about the search is still in `copy.legal` (next step).
+
+### ADR 0007 real runs (11 Nov 2026, OpenAI, no database, the lookup stubbed to throw)
+
+| Business | Website | Result |
+|---|---|---|
+| Sonable | sonable.io | online, aanbieder van achtergrondmuziek, for hotels/restaurants/winkels, high, 0.06¢ |
+| Vidalo | vidalo.ai | online, softwaredienstverlener, controle en correctie van AI-assistent antwoorden, medium, 0.03¢ (audience "bedrijven met AI-assistenten" is loose) |
+| Sitty | sitty.io | online, platform voor werkplekken, high, 0.04¢ |
+| Sonable | none | fallback `not_grounded`, nothing stored, 0¢ |
+| Vidalo | example.com (does not name it) | fallback `not_grounded`, 0¢ |
+
+Not run: a local business with a real Google listing (needs the Places key path end to end).
