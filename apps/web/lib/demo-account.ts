@@ -4,11 +4,14 @@
  *  - scan-eigenaar@example.nl: Vidalo Scan (plan setup, trial): "Verwijder alles" deletes at once.
  *  - maand-eigenaar@example.nl: a running Vidalo Monthly with a verified custom facts host and a
  *    Google connection: "Verwijder alles" cancels at the period end and deletes on that date.
+ *  - eind-eigenaar@example.nl: a Vidalo Monthly that has ended (the end state, A-06).
  */
 import type { Db } from "@vidalo/core/db";
 
 export const SCAN_OWNER_EMAIL = "scan-eigenaar@example.nl";
 export const MONTHLY_OWNER_EMAIL = "maand-eigenaar@example.nl";
+/** A-06: a Monthly that has ended (churned), for the end state on /app/abonnement. */
+export const ENDED_OWNER_EMAIL = "eind-eigenaar@example.nl";
 
 export async function seedAccountLifecycle(db: Db): Promise<void> {
   if (await db.getBusinessByOwner({ email: SCAN_OWNER_EMAIL })) return;
@@ -40,4 +43,7 @@ export async function seedAccountLifecycle(db: Db): Promise<void> {
   });
   await db.upsertChannel({ businessId: monthly.id, type: "gbp", name: "Google Bedrijfsprofiel", externalId: "locations/mock-maand", url: null, status: "synced", meta: { refreshToken: "mock-refresh-maand", accessToken: "mock-access-maand" } });
   await db.logEvent(monthly.id, "checkout.mock", { plan: "monitor" });
+  const ended = await db.upsertBusiness({ name: "Bloemist Eind", place: "Gouda", plan: "monitor", status: "active", ownerEmail: ENDED_OWNER_EMAIL, ownerUserId: "5ca9a000-0000-4000-8000-000000000003" });
+  await db.upsertBusiness({ id: ended.id, slug: ended.slug, name: ended.name, place: ended.place, status: "churned" });
+  await db.logEvent(ended.id, "business.status", { status: "churned", from: "active" });
 }

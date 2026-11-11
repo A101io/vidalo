@@ -797,6 +797,10 @@ export class MemDb implements Db {
     if (later || !at) b.deletionRemindedAt = null;
   }
 
+  async hasUnrunJob(kind: JobKind, businessId: string): Promise<boolean> {
+    return [...this.jobs.values()].some((j) => !j.doneAt && j.kind === kind && j.payload.businessId === businessId);
+  }
+
   async purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean> {
     const b = this.businesses.get(id);
     if (!b || !purgeAllowed(b, guard, now)) return false;

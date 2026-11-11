@@ -59,6 +59,13 @@ export const accountSecurityNl = {
       bezig: "We verwijderen je gegevens. Je krijgt een mail zodra het klaar is.",
     } as Record<string, string>,
   },
+  /** /app/abonnement after the subscription ended (AC-6, B2). */
+  endState: {
+    h: "Je abonnement is afgelopen",
+    stopped: "We controleren niet meer wat AI over je bedrijf zegt, we herstellen geen fouten meer en we werken je gegevens bij gidsen niet meer bij. Je feitenpagina stuurt bezoekers door naar je eigen website.",
+    until: (date: string, reminder: boolean) => `Je rapporten blijven tot ${date} te zien in je account. Op ${date} verwijderen we je gegevens.${reminder ? " 14 dagen vooraf krijg je een herinnering per e-mail." : ""}`,
+    google: "De koppeling met Google is verbroken; de toegang hebben we bij Google ingetrokken.",
+  },
   /** /inloggen?opnieuw=1: deleting everything and changing the address need a sign-in from the last 15 minutes. */
   reSignIn: "Voor deze stap log je eerst opnieuw in. We sturen je een nieuwe inloglink; daarmee kom je terug waar je was.",
   /** /inloggen?fout=verlopen, and when this browser's sign-in ended. */

@@ -359,3 +359,58 @@ worker's Stripe and Supabase Admin calls ran only as mocks; the real ones need t
 The Cloudflare removal is shown by the purge's recorded call in unit tests; in the browser run
 the mock's `cloudflare.custom_hostname.delete.skip` line is not captured (Playwright drops the dev
 server's stdout).
+
+### A-06 — Retention runs by itself; churn removes Google at once; the end state (2026-11-12)
+
+**What.** `core/shared/db.ts` `setBusinessStatus`: becoming `churned` queues `google_disconnect
+{ businessId, reason: "churn" }` (the job re-reads the business, SEC-49). `apps/worker/src/cron.ts`
+`retention(now)`, added to `cronTick` after `ownerSubscription`: (1) reminders for retention dates
+within 14 days, claimed once, as an `email` job `{ template: "deletion_reminder", businessId }`;
+(2) a `purge` job `{ businessId, guard: "due" }` per due business, at most one unrun per business;
+(3) `google_disconnect` for churned businesses still holding a Business Profile channel
+(backstop) and, for a Vidalo Scan, `scan_done` `SCAN_GOOGLE_DAYS` (60) after its first finished
+`baseline`/`monthly` run when no finding is being fixed (`fixing`/`recheck`) and no channel holds a
+`pendingDiff`; (3a) `setScanRetention` to `last_active_at` + `SCAN_RETENTION_MONTHS` (24) whenever
+the date differs (a sign-in moves it and re-arms the reminder); (4) `pruneAuthThrottle(now − 24 h)`;
+(5) `countOverdueDeletions` in every tick's result and once per Amsterdam day as
+`retention.overdue { count }` (an event with business null marks the day). Returns `{ reminded,
+purgeQueued, googleQueued, overdue, dryRun }`; `lifecycleTransitions` unchanged. New Db method
+`hasUnrunJob(kind, businessId)` (MemDb, PgDb) for the "one purge per business" rule, which the
+architecture names but gives no method for. `email` template `deletion_reminder` (`jobs/misc.ts`,
+re-reads the business, skips one that no longer has a retention date) → `sendDeletionReminder`
+(`reporter/account-mails.ts`; wording `copy.mails.deletionReminder`, NL/EN, a Scan and an ended
+Monthly variant, informational only, how to keep the data, support@ for an earlier deletion).
+`/app/abonnement` churned end state (`copy.accountSecurity.endState`): what stopped, the facts
+page redirect, reports readable until the date, the date, the reminder line only for a retention
+date, Google removed. `scripts/stripe-lifecycle-run.mts`: cancel → undo → cancel → undo → pause →
+resume through `core/billing/lifecycle.ts` against the Stripe sandbox, one JSON line per step with
+the app's and Stripe's state and the newest `customer.subscription.updated` event id; refuses a
+non-test key and the Sitty and Sonable accounts (checked: a live-shaped key is refused before any
+call). The ticket's "cancel → undo → cancel → pause → resume" needs an undo before the pause
+(`canPause` refuses a cancelled subscription), so the script has one more step.
+`docs/CANCEL-PAUSE.md`: section "After the end, and deleting". Mock seed: `eind-eigenaar@example.nl`
+(an ended Monthly).
+
+**Tests.** `apps/worker/test/retention.test.ts` (6), MemDb, fake clock counted from A's churn: day 0
+→ `google_disconnect` queued, after it runs A has no gbp channel while B, C, D keep theirs; day 90
+→ the free check; day 105 none, 106 exactly one reminder, 107 still one, the mail logged; day 119 no
+purge, 120 one `purge` job with `{ businessId, guard: "due" }`, a second tick adds none; with
+`VIDALO_PURGE` unset the job leaves A, armed it deletes A; B (cancel ahead), C (owner-paused), D
+(cancel undone) never get a reminder or a purge and `overdue` is 0 on every tick; an owner deletion
+on B's cancel date is purged on that date after the churn webhook, without a reminder and with the
+flag unset (F-010); Vidalo Scan E: date = last activity + 24 months, a sign-in at month 20 moves it
+and re-arms the reminder, purged on the date when armed; E2's Google token stays while a held
+change and while an open fix exist, goes on day 61 after both are gone, one job not two;
+`pruneAuthThrottle` keeps rows younger than 24 h; `retention.*` lines carry no address or token and
+every job payload is exactly `{ businessId, guard }`, `{ businessId, reason }` or
+`{ businessId, template }` (SEC-53). `e2e/account.spec.ts` (mock): the end state reads as above.
+
+**Shown to fail without the change.** With `setBusinessStatus` as at A-05 (no churn → Google), the
+first retention test is red at day 0. Restored, green.
+
+**Runs.** `pnpm -r typecheck` green; `pnpm -r test` green (core 1364 + 16 skipped, worker 37);
+`pnpm e2e:mock` OK; `e2e/account.spec.ts` 8/8.
+
+**Not done here.** The sandbox run itself (D2: Julian's Mac with sandbox keys; recorded by the
+delivery-lead in `05-verification.md`). COMP-16 (who reads `retention.overdue` daily) is the
+delivery-lead's. F-022's cron step on `auth.sessions` stays open as accepted.

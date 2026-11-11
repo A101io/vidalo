@@ -936,6 +936,11 @@ export class PgDb implements Db {
       where id = ${businessId} and plan = 'setup' and status = 'trial'`;
   }
 
+  async hasUnrunJob(kind: JobKind, businessId: string): Promise<boolean> {
+    const rows = await this.sql`select 1 from job where done_at is null and kind = ${kind} and payload->>'businessId' = ${businessId} limit 1`;
+    return rows.length > 0;
+  }
+
   async purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean> {
     if (!UUID.test(id)) return false;
     return this.sql.begin(async (tx) => {

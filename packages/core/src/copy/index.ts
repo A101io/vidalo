@@ -3152,6 +3152,15 @@ Wat blijft: je facturen, 7 jaar bij Stripe, omdat de wet dat vraagt. Wat al bij 
 
 Je hoeft niets meer te doen.`,
     }),
+    /** Feature 002 (A-06): 14 days before a retention deletion. Service mail: informational only, no offer. */
+    deletionReminder: (name: string, date: string, url: string, scan: boolean) => ({
+      subject: `Op ${date} verwijderen we de gegevens van ${name}`,
+      body: `${scan ? `Je hebt een tijd niet ingelogd bij Vidalo voor ${name}.` : `Het abonnement voor ${name} is afgelopen.`} Zoals in onze privacyverklaring staat, verwijderen we op ${date} de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan.
+
+Wil je iets bewaren? Tot ${date} kun je je rapporten en je gegevens downloaden onder 'Account': ${url}
+
+${scan ? "Wil je dat we je gegevens bewaren? Log dan voor die datum in; dan schuift de datum op." : "Wil je weer verder met Vidalo? Log in en kies een plan; dan blijven je gegevens bewaard."} Wil je dat we eerder verwijderen, mail dan support@vidalo.io.`,
+    }),
     /** Feature 002 (A-05, F-013): "Verwijder alles" during a running Vidalo Monthly. Sent at once. Service mail. */
     deletionScheduled: (name: string, date: string, url: string) => ({
       subject: `Je abonnement voor ${name} stopt op ${date}, dan verwijderen we alles`,

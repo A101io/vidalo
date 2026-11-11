@@ -57,6 +57,12 @@ export const accountSecurityEn: CopyShape["accountSecurity"] = {
       bezig: "We are deleting your data. You get a mail as soon as it is done.",
     } as Record<string, string>,
   },
+  endState: {
+    h: "Your subscription has ended",
+    stopped: "We no longer check what AI says about your business, we no longer fix errors and we no longer update your details at directories. Your facts page sends visitors to your own website.",
+    until: (date: string, reminder: boolean) => `Your reports stay visible in your account until ${date}. On ${date} we delete your data.${reminder ? " You get a reminder by e-mail 14 days before." : ""}`,
+    google: "The connection with Google is ended; we revoked the access at Google.",
+  },
   reSignIn: "For this step, sign in again first. We send you a new sign-in link; it brings you back to where you were.",
   expired: "You are signed out: you had not signed in for a while, or you signed out everywhere on another device. Sign in again below.",
   signedOutEverywhere: "You are signed out on all your devices.",

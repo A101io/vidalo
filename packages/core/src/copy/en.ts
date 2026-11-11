@@ -3058,6 +3058,14 @@ What stays: your invoices, for 7 years at Stripe, because the law requires it. W
 
 There is nothing more you need to do.`,
     }),
+    deletionReminder: (name: string, date: string, url: string, scan: boolean) => ({
+      subject: `On ${date} we delete the data of ${name}`,
+      body: `${scan ? `You have not signed in to Vidalo for ${name} for a while.` : `The subscription for ${name} has ended.`} As our privacy statement says, on ${date} we delete your business's data, the reports, your facts page and its address.
+
+Want to keep something? Until ${date} you can download your reports and your data under 'Account': ${url}
+
+${scan ? "Want us to keep your data? Sign in before that date; the date then moves on." : "Want to continue with Vidalo? Sign in and choose a plan; your data is then kept."} Want us to delete earlier, write to support@vidalo.io.`,
+    }),
     deletionScheduled: (name: string, date: string, url: string) => ({
       subject: `Your subscription for ${name} ends on ${date}, then we delete everything`,
       body: `You asked us to delete everything of ${name}. Your Vidalo Monthly subscription was still running, so we cancelled it as of ${date}. Until that day everything continues. The amount for the current month is not refunded.

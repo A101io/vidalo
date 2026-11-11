@@ -60,7 +60,17 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           {processing ? B.processing : B.pausedNote}
         </p>
       )}
-      {business.deleteReason === "owner" && business.deleteAt && (
+      {business.status === "churned" && (
+        <section className="card space-y-2 p-5 text-[15px] sm:p-6" data-end-state aria-labelledby="end-state-h">
+          <h2 id="end-state-h" className="font-semibold">
+            {copy.accountSecurity.endState.h}
+          </h2>
+          <p className="text-ink-2">{copy.accountSecurity.endState.stopped}</p>
+          {business.deleteAt && <p className="text-ink-2">{copy.accountSecurity.endState.until(longDate(business.deleteAt, lang), business.deleteReason === "retention")}</p>}
+          <p className="text-ink-2">{copy.accountSecurity.endState.google}</p>
+        </section>
+      )}
+      {business.deleteReason === "owner" && business.deleteAt && business.status !== "churned" && (
         <form action={callOffDeletion} className="card space-y-2 p-5 text-[15px]" data-deletion-scheduled>
           <input type="hidden" name="business" value={business.id} />
           <p className="font-semibold">{copy.accountSecurity.deletion.scheduled(longDate(business.deleteAt, lang))}</p>

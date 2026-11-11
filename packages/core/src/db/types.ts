@@ -370,6 +370,8 @@ export interface Db {
   listScanRetention(limit: number): Promise<BusinessRecord[]>;
   /** A Scan business's retention date (reason retention), or null; a later date re-arms the reminder. */
   setScanRetention(businessId: string, at: string | null): Promise<void>;
+  /** True when a job of this kind for this business has not run yet (the cron queues one purge per business). */
+  hasUnrunJob(kind: JobKind, businessId: string): Promise<boolean>;
   /** Deletes the business and its unrun jobs in one transaction, only when the guard's rule holds. False = refused or gone. */
   purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean>;
 

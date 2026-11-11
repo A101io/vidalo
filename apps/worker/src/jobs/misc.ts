@@ -14,6 +14,7 @@ import {
   sendOwnerText,
   factsPageUrl,
   textToHtml,
+  sendDeletionReminder,
 } from "@vidalo/core/reporter";
 import { getDb, runScan } from "../compat.js";
 import { log } from "../log.js";
@@ -92,6 +93,12 @@ export const email: Handler<"email"> = async (p) => {
       return { mode: (await sendFollowUp(p.businessId, p.day))?.mode ?? null };
     case "reconfirm":
       return { mode: (await sendFactsReconfirm(p.businessId))?.mode ?? null };
+    case "deletion_reminder": {
+      // Re-read: a business that resubscribed or signed in since has no retention date any more.
+      const b = await getDb().getBusiness(p.businessId);
+      if (!b || b.deleteReason !== "retention") return { skipped: "no_retention_date" };
+      return { sent: await sendDeletionReminder(b) };
+    }
     case "directory_correction": {
       const db = getDb();
       const business = await db.getBusiness(p.businessId);

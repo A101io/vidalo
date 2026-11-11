@@ -45,3 +45,17 @@ export async function sendDeletionScheduledMail(b: BusinessRecord, at: string, t
   await getDb().logEvent(b.id, "mail.deletion_scheduled", { until: at, mode: r.mode, id: r.id });
   return true;
 }
+
+export function deletionReminderEmail(lang: Lang, businessName: string, at: string, scan: boolean): Mail {
+  const t = copyFor(lang).mails.deletionReminder(businessName, longDate(at, lang), accountUrl(lang), scan);
+  return wrap(lang, t.subject, t.body);
+}
+
+/** 14 days before a retention deletion (A-06). A service mail: sent whatever the mail preferences say. */
+export async function sendDeletionReminder(b: BusinessRecord): Promise<boolean> {
+  if (!b.ownerEmail || !b.deleteAt) return false;
+  const m = deletionReminderEmail(b.language, b.name, b.deleteAt, b.plan === "setup" && b.status === "trial");
+  const r = await sendMail({ to: b.ownerEmail, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind: "deletion_reminder" } });
+  await getDb().logEvent(b.id, "mail.deletion_reminder", { until: b.deleteAt, mode: r.mode, id: r.id });
+  return true;
+}

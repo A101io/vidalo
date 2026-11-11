@@ -161,3 +161,14 @@ test("A-05: the Vidalo Scan owner deletes at once and has no business afterwards
   await signInAs(page, SCAN, "/app");
   await expect(page).toHaveURL(/\/inloggen\?fout=geen/);
 });
+
+test("A-06: after the end, /app/abonnement says what stopped, until when, and that Google is gone", async ({ page }) => {
+  await signInAs(page, "eind-eigenaar@example.nl", "/app/abonnement");
+  await page.goto("/app/abonnement");
+  const end = page.locator("[data-end-state]");
+  await expect(end).toContainText("Je abonnement is afgelopen");
+  await expect(end).toContainText("Je feitenpagina stuurt bezoekers door naar je eigen website.");
+  await expect(end).toContainText(/Je rapporten blijven tot \d+ \w+ \d{4} te zien/);
+  await expect(end).toContainText("14 dagen vooraf krijg je een herinnering");
+  await expect(end).toContainText("De koppeling met Google is verbroken");
+});
