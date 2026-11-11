@@ -53,7 +53,7 @@ export const en: CopyShape = {
       sub: "For about half of businesses at least one answer is wrong, or the AI does not know them.",
       exampleLabel: "example",
       caption: "Fictional example: what a check of 100 businesses with ChatGPT and Google AI looks like",
-      legend: { rood: "at least one error", grijs: "not found", groen: "everything is right" },
+      legend: { rood: "at least one error", grijs: "not found or not checkable", groen: "everything is right" },
       /** 100 dots, row by row (r = red, g = green, x = grey). */
       grid: "rggrrxrggrxrrggrxrggrxrrggrxrggrxrrggrxrrggrxrggrxgrrgrxrggrrxgrgrxrgrgrxgrrgrxgrrgrxgrgrxgrgrxrggrx",
       /** The animated hero: one answer, built from four sources, put right at the source. */
@@ -199,7 +199,7 @@ export const en: CopyShape = {
       legend: [
         { stip: "rood", name: "Red", body: "at least one deal-breaker wrong" },
         { stip: "oranje", name: "Orange", body: "only misleaders or confusion" },
-        { stip: "grijs", name: "Grey", body: "AI does not know you" },
+        { stip: "grijs", name: "Grey", body: "AI does not know you, or we could not check it" },
         { stip: "groen", name: "Green", body: "everything is right" },
       ],
     },
@@ -1349,33 +1349,48 @@ export const en: CopyShape = {
       wrongLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "answered wrongly"],
       okLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "answered correctly"],
       answeredLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "answered"],
+      uncheckedLabel: (m: number) => [`of ${m} ${m === 1 ? "question" : "questions"}`, "answered, not checkable"],
       /** "Bakkerij De Vries, Haarlem: your dot is red." */
       h1: (name: string, place: string, stip: "rood" | "oranje" | "groen") =>
         `${name}, ${place}: your dot is ${stip === "rood" ? "red" : stip === "oranje" ? "orange" : "green"}.`,
       h1Grey: (name: string, place: string) => `${name}, ${place}: AI does not know you.`,
-      /** The intro paragraph: engines, questions, samples, wrong, not found. */
-      intro: (engines: string, questions: number, perQuestion: number, wrongQuestions: number, notFoundQuestions: number) => {
-        const asked = `${engines} answered ${questions} ${questions === 1 ? "question" : "questions"}, each ${perQuestion} ${perQuestion === 1 ? "time" : "times"}.`;
-        if (wrongQuestions === 0 && notFoundQuestions === 0) return `${asked} Every answer was right.`;
+      h1Unchecked: (name: string, place: string) => `${name}, ${place}: we could not check the answers.`,
+      times: (per: { name: string; n: number }[]) => {
+        const t = (n: number) => (n === 1 ? "once" : `${n} times`);
+        if (new Set(per.map((p) => p.n)).size <= 1) return `each ${t(per[0]?.n ?? 0)}`;
+        const parts = per.map((p) => `${p.name} ${t(p.n)}`);
+        return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+      },
+      intro: (engines: string, questions: number, times: string, wrongQuestions: number, notFoundQuestions: number, unchecked = 0) => {
+        const asked = `${engines} answered ${questions} ${questions === 1 ? "question" : "questions"}, ${times}.`;
+        const tailUnchecked = unchecked > 0 ? ` For ${unchecked} ${unchecked === 1 ? "question" : "questions"} we could not check the answer, because we do not know those details of your business yet.` : "";
+        if (wrongQuestions === 0 && notFoundQuestions === 0) return unchecked > 0 ? `${asked} Every answer we could check was right.${tailUnchecked}` : `${asked} Every answer was right.`;
         const parts: string[] = [];
         if (wrongQuestions > 0) parts.push(`for ${wrongQuestions} ${wrongQuestions === 1 ? "question" : "questions"} the answer was wrong`);
         if (notFoundQuestions > 0) parts.push(`for ${notFoundQuestions} ${notFoundQuestions === 1 ? "question" : "questions"} the AI found nothing`);
         const tail = wrongQuestions > 0 ? ", and every error comes from a source you can have fixed." : ".";
         const sentence = parts.join(", ");
-        return `${asked} ${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}${tail}`;
+        return `${asked} ${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}${tail}${tailUnchecked}`;
       },
-      introGrey: (engines: string, questions: number, perQuestion: number, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
-        const asked = `${engines} got ${questions} ${questions === 1 ? "question" : "questions"}, each ${perQuestion} ${perQuestion === 1 ? "time" : "times"}. In ${notFoundAnswers} of the ${totalAnswers} answers the AI found nothing about your business.`;
+      introUnchecked: (engines: string, questions: number, times: string, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
+        const asked = `${engines} got ${questions} ${questions === 1 ? "question" : "questions"}, ${times}.`;
+        const nf = notFoundAnswers > 0 ? ` In ${notFoundAnswers} of the ${totalAnswers} answers the AI found nothing about your business.` : "";
+        const other = otherEntity > 0 ? ` ${otherEntity === 1 ? "Once" : `${otherEntity} times`} the answer was about another business.` : "";
+        return `${asked}${nf}${other} ${nf || other ? "For the other answers" : "For these answers"} we do not know what the right answer is: we do not know your business's details yet. With Vidalo Scan you record your details; then we check those answers too.`;
+      },
+      introGrey: (engines: string, questions: number, times: string, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
+        const asked = `${engines} got ${questions} ${questions === 1 ? "question" : "questions"}, ${times}. In ${notFoundAnswers} of the ${totalAnswers} answers the AI found nothing about your business.`;
         const other = otherEntity > 0 ? ` ${otherEntity === 1 ? "Once" : `${otherEntity} times`} it named another business.` : "";
         return `${asked}${other} You do not exist in the answer, and so not for the customer who asks.`;
       },
       /** Per-engine counts: "2 right · 4 wrong · 1 nothing". */
-      engineCounts: (correct: number, wrong: number, notFound: number, other: number) => {
+      engineCounts: (correct: number, wrong: number, notFound: number, other: number, unchecked = 0) => {
         const parts: string[] = [];
         if (correct > 0) parts.push(`${correct} right`);
         if (wrong > 0) parts.push(`${wrong} wrong`);
         if (notFound > 0) parts.push(`${notFound} nothing`);
         if (other > 0) parts.push(`${other} other business`);
+        if (unchecked > 0) parts.push(`${unchecked} not checkable`);
         return parts.length ? parts.join(" · ") : "no answer";
       },
       engineSkipped: "skipped",
@@ -1385,7 +1400,7 @@ export const en: CopyShape = {
       frequency: (n: number, of: number) => `${n} of ${of} ${of === 1 ? "time" : "times"}`,
       notFoundQuote: "“I cannot find any information.”",
       namesOthers: "names other businesses.",
-      otherEntity: "same name",
+      otherEntity: "other business",
       notNamed: "does not name you.",
     },
     table: {
@@ -1397,8 +1412,10 @@ export const en: CopyShape = {
       none: "—",
       noSource: "no source mentions it",
       memory: "the model's memory",
-      otherEntity: "same name",
+      otherEntity: "other business",
       showAll: (n: number) => `See all ${n} answers`,
+      unchecked: "not checkable",
+      noAnswer: "no usable answer",
       allTitle: "All answers",
       instableTitle: "Wrong now and then",
       recommendationTitle: "Recommendation questions",
@@ -1433,6 +1450,7 @@ export const en: CopyShape = {
     plan: {
       h2: "How your dot turns green",
       h2Green: "How your dot stays green",
+      h2Unchecked: "How we record your details",
       h2Grey: "How you get found",
       /** Red/orange: three steps from the findings. */
       stepSources: (sources: string) => `${sources}: we ask for a correction or show you what to change, with proof.`,
@@ -1469,7 +1487,7 @@ export const en: CopyShape = {
       h3: "Put it right yourself?",
       body: "The table above says, per source, what needs to change.",
       h3Grey: "Do it yourself?",
-      bodyGrey: "Claim your Google profile, put your address and services on your website, and sign up with the directories above.",
+      bodyGrey: "Claim your Google profile, put your address and services on your website, and sign up with the Dutch directories.",
       link: "See the steps",
       stepsTitle: "What needs to change per source",
       stepsGrey: [
@@ -1892,7 +1910,7 @@ export const en: CopyShape = {
     directory_api: "business directory",
     directory_form: "business directory",
     third_party: "a third party's website",
-    other_entity: "business with the same name",
+    other_entity: "another business",
     none: "the model's memory",
   },
 
@@ -1960,6 +1978,7 @@ export const en: CopyShape = {
     groen: "Green",
     grijs: "Grey",
   },
+  stipUnchecked: { meaning: "We could not check every answer", line: "We do not know your business's details yet, so we do not know what the right answer is." },
   stipMeaning: {
     rood: "AI sends customers away",
     oranje: "AI misleads",
@@ -2001,6 +2020,7 @@ export const en: CopyShape = {
     },
     value: {
       notFound: "not found",
+      unknown: "not known yet",
       absent: "not named",
       present: "named",
       open: "open",
@@ -2271,10 +2291,11 @@ export const en: CopyShape = {
     factsPage: "View facts page",
 
     checkTitle: (date: string) => `Check of ${date}`,
-    checkIntro: (questions: number, engines: number, perQuestion: number, wrongQuestions: number, notFoundQuestions: number) =>
-      `We asked ${questions} ${questions === 1 ? "question" : "questions"} of ${engines} AI ${engines === 1 ? "system" : "systems"}, ${perQuestion} times each. ` +
-      (wrongQuestions === 0 ? "Every answer was right" : `On ${wrongQuestions} ${wrongQuestions === 1 ? "question" : "questions"} at least one system gave a wrong answer`) +
-      (notFoundQuestions > 0 ? `; on ${notFoundQuestions} ${notFoundQuestions === 1 ? "question" : "questions"} a system found nothing.` : "."),
+    checkIntro: (questions: number, engines: number, times: string, wrongQuestions: number, notFoundQuestions: number, unchecked = 0) =>
+      `We asked ${questions} ${questions === 1 ? "question" : "questions"} of ${engines} AI ${engines === 1 ? "system" : "systems"}, ${times}. ` +
+      (unchecked >= questions && questions > 0 ? "None of the answers could be checked" : wrongQuestions === 0 ? (unchecked > 0 ? "Every answer we could check was right" : "Every answer was right") : `On ${wrongQuestions} ${wrongQuestions === 1 ? "question" : "questions"} at least one system gave a wrong answer`) +
+      (notFoundQuestions > 0 ? `; on ${notFoundQuestions} ${notFoundQuestions === 1 ? "question" : "questions"} a system found nothing.` : ".") +
+      (unchecked > 0 ? ` For ${unchecked} ${unchecked === 1 ? "question" : "questions"} we do not know your details yet; add them under Details.` : ""),
     sinceLine: (date: string, found: number, resolved: number, open: number) => `Since ${date}: ${found} new, ${resolved} fixed, ${open} still open.`,
     firstFull: "This was the first full check.",
     fullReport: "Full report",
@@ -2303,14 +2324,16 @@ export const en: CopyShape = {
     atUsLine: (label: string, date: string | null) => (date ? `${label} Again on ${date}.` : label),
     details: "Details",
     perEngine: "Per AI system",
-    engineLine: (total: number, wrong: number, notFound: number) => {
+    engineLine: (total: number, wrong: number, notFound: number, unchecked = 0) => {
       const parts: string[] = [];
       if (wrong > 0) parts.push(`${wrong} of ${total} wrong`);
       if (notFound > 0) parts.push(`${notFound} nothing`);
-      return parts.length ? parts.join(", ") : total > 0 ? `${total} of ${total} right` : "not asked";
+      if (unchecked > 0) parts.push(`${unchecked} not checkable`);
+      const checked = total - unchecked;
+      return parts.length ? parts.join(", ") : checked > 0 ? `${checked} of ${checked} right` : "not asked";
     },
     answers: "Answers",
-    engineLegend: "Red: an answer sends customers away. Amber: wrong details. Green: all right. Grey: the system finds nothing about you. The trend per system is in Progress.",
+    engineLegend: "Red: an answer sends customers away. Amber: wrong details. Green: all right. Grey: the system finds nothing about you, or we could not check the answer. The trend per system is in Progress.",
     open: "Still open",
     source: (source: string) => `Source: ${source}.`,
     weLine: (label: string, date: string | null) => `We: ${label.charAt(0).toLowerCase()}${label.slice(1)}${date ? ` Again ${date}.` : ""}`,
@@ -2535,7 +2558,7 @@ export const en: CopyShape = {
     enginesAsked: (n: number) => `${n} AI ${n === 1 ? "system" : "systems"}`,
     scanKind: { free: "Free check", baseline: "First full check", monthly: "Monthly check", recheck: "Recheck", ondemand: "Extra check" },
     notAsked: "not asked",
-    legend: "One dot per check: green is right, orange misleads, red sends customers away, grey does not know you. The number under it counts the answers that were wrong or found nothing.",
+    legend: "One dot per check: green is right, orange misleads, red sends customers away, grey does not know you or could not be checked. The number under it counts the answers that were wrong or found nothing.",
     misses: (n: number) => (n === 0 ? "All right" : `${n} ${n === 1 ? "answer was" : "answers were"} wrong or found nothing`),
     repairs: { found: "Newly found", resolved: "Fixed", open: "Still open", inProgress: "Being fixed" },
     method: "Per question and AI system, the answer that came back most often counts, so a short and a full check can be compared. Rechecks only ask the questions we are fixing and are left out here. Every check is read against your current details.",
@@ -2602,6 +2625,7 @@ export const en: CopyShape = {
     factsHistory: "All versions",
     setDomain: "Set up domain",
     reportLine: (ok: number, total: number) => `${ok} of ${total} answers are right`,
+    reportLineChecked: (ok: number, checked: number) => `${ok} of the ${checked} checked answers are right`,
     reportDate: (date: string) => `Checked on ${date}`,
     openFindings: (n: number) => `${n} ${n === 1 ? "error" : "errors"} open`,
     resolvedFindings: (n: number) => `${n} fixed`,
@@ -2892,12 +2916,12 @@ export const en: CopyShape = {
     overview: (url: string) => `Your overview: ${url}`,
     source: {
       none: "the model's memory",
-      otherEntity: (host: string | null) => (host ? `another business with the same name (${host})` : "another business with the same name"),
+      otherEntity: (host: string | null) => (host ? `another business (${host})` : "another business"),
       ownedWebsite: (host: string | null) => (host ? `your own website (${host})` : "your own website"),
       factsPage: "your facts page",
       unknown: "unknown source",
     },
-    sourceShort: { none: "the model's memory", factsPage: "your facts page", website: "your website", otherEntity: "same name", unknown: "unknown source" },
+    sourceShort: { none: "the model's memory", factsPage: "your facts page", website: "your website", otherEntity: "other business", unknown: "unknown source" },
     finding: {
       question: (q: string) => `Question: ${q}`,
       recommendationAbout: (what: string) => `Recommendation question about: ${what}`,
@@ -2907,13 +2931,14 @@ export const en: CopyShape = {
       from: (source: string) => `Where it comes from: ${source}`,
       whatWeDo: (next: string) => `What we do: ${next}`,
       notFound: (correct: string) => `Not found. Your detail is: ${correct}`,
-      otherEntity: (engine: string, freq: string) => `${engine} answered about another business with the same name (${freq})`,
+      otherEntity: (engine: string, freq: string) => `${engine} answered about another business (${freq})`,
       said: (engine: string, wrong: string, freq: string) => `${engine} said: ${wrong} (${freq})`,
       wrongYours: (correct: string) => `Wrong. Your detail is: ${correct}`,
       wrongIs: (correct: string) => `Wrong. It is: ${correct}`,
     },
     status: {
       allRight: (n: number) => `${n} of ${n} answers are right`,
+      allRightChecked: (n: number) => `${n} checked ${n === 1 ? "answer is" : "answers are"} right`,
       found: (n: number) => `${n} ${n === 1 ? "error" : "errors"} found`,
       resolved: (n: number) => `${n} fixed`,
       inProgress: (n: number) => `${n} in progress`,
@@ -2969,6 +2994,7 @@ export const en: CopyShape = {
       subject: {
         unknown: (name: string) => `First check of ${name}: AI finds (almost) nothing about you`,
         clean: (name: string, total: number) => `First check of ${name}: all ${total} answers are right`,
+        unchecked: (name: string) => `First check of ${name}: not everything could be checked`,
         notFound: (name: string, count: string) => `First check of ${name}: ${count}`,
         wrong: (name: string, n: number) => `First check of ${name}: ${n} ${n === 1 ? "answer is" : "answers are"} wrong`,
       },
@@ -2977,8 +3003,10 @@ export const en: CopyShape = {
         unknown: (name: string) => `AI finds (almost) nothing about ${name}`,
         partial: (name: string) => `AI does not find part of ${name}`,
         clean: (total: number, name: string) => `All ${total} answers about ${name} are right`,
+        unchecked: (name: string) => `Not every answer about ${name} could be checked`,
       },
       preheader: { wrong: (where: string) => `The most important errors are in this email, the rest ${where}.`, clean: "We check again every month.", cleanScan: "All answers are right. A check every month comes with Vidalo Monthly." },
+      preheaderUnchecked: "With Vidalo Scan you record your details; then we check those answers too.",
       intro: (date: string, total: number, name: string, engines: string) => `On ${date} we put ${total} questions about ${name} to ${engines}.`,
       stats: { checked: "answers checked", wrong: (n: number) => (n === 1 ? "was wrong" : "were wrong"), empty: "were empty" },
       cardsTitle: (n: number) => (n === 1 ? "The error" : "The most important errors"),

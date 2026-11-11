@@ -122,10 +122,11 @@ export function engineName(engine: Engine): string {
  * Not-found answers are reported next to the wrong ones, never as wrong:
  * "2 fouten gevonden, 3 vragen: AI vindt niets over je".
  */
-export function statusLine(stats: { totalAnswers: number; wrongAnswers: number; resolved: number; inProgress: number; unfixable?: number; notFound?: number }, lang: Lang = "nl"): string {
+export function statusLine(stats: { totalAnswers: number; wrongAnswers: number; resolved: number; inProgress: number; unfixable?: number; notFound?: number; uncheckedAnswers?: number }, lang: Lang = "nl"): string {
   const M = copyFor(lang).mails;
   const notFound = stats.notFound ?? 0;
-  if (stats.wrongAnswers === 0 && stats.resolved === 0 && notFound === 0) return M.status.allRight(stats.totalAnswers);
+  const unchecked = stats.uncheckedAnswers ?? 0;
+  if (stats.wrongAnswers === 0 && stats.resolved === 0 && notFound === 0) return unchecked > 0 ? M.status.allRightChecked(Math.max(0, stats.totalAnswers - unchecked)) : M.status.allRight(stats.totalAnswers);
   const parts: string[] = [];
   const found = stats.wrongAnswers + stats.resolved;
   if (found || !notFound) parts.push(M.status.found(found));
@@ -370,6 +371,11 @@ export interface BaselineData {
   instable?: InstableFinding[];
   /** recommendation questions: who AI named instead of the business */
   recommendations?: RecommendationSummary[];
+  /** answers with a value we could not check, and the questions they belong to (no fact; 11 Nov 2026) */
+  uncheckedAnswers?: number;
+  uncheckedQuestions?: number;
+  /** grey because an AI system answered but nothing could be judged (types.ts isUncheckedGrey) */
+  uncheckedGrey?: boolean;
   lang?: Lang;
 }
 
@@ -382,11 +388,16 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
   const notFoundFindings = d.findings.filter((f) => f.verdict === "not_found").length;
   const visibility = d.visibility ?? "found";
   const name = d.business.name;
+  // Answers we could not check never count as right (Sonable, 11 Nov 2026).
+  const unchecked = (d.uncheckedAnswers ?? 0) > 0;
+  const checkedAnswers = Math.max(0, d.totalAnswers - (d.uncheckedAnswers ?? 0));
   const subject =
     visibility === "unknown"
       ? B.subject.unknown(name)
       : d.wrongAnswers === 0 && !(d.notFoundAnswers ?? 0)
-        ? B.subject.clean(name, d.totalAnswers)
+        ? unchecked
+          ? B.subject.unchecked(name)
+          : B.subject.clean(name, d.totalAnswers)
         : d.wrongAnswers === 0
           ? B.subject.notFound(name, M.notFoundCount(notFoundFindings || d.notFoundAnswers || 0))
           : B.subject.wrong(name, d.wrongAnswers);
@@ -405,21 +416,24 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
         ? B.headline.unknown(name)
         : nf
           ? B.headline.partial(name)
-          : B.headline.clean(d.totalAnswers, name);
+          : unchecked
+            ? B.headline.unchecked(name)
+            : B.headline.clean(d.totalAnswers, name);
+  const stipText = !d.stip ? undefined : d.stip === "grijs" && d.uncheckedGrey ? `${C.stipUnchecked.meaning}. ${C.stipUnchecked.line}` : `${C.stipMeaning[d.stip]}. ${C.stipLine[d.stip]}`;
   return renderMail({
     lang,
     subject,
-    preheader: d.wrongAnswers > 0 ? B.preheader.wrong(full.where) : d.business.plan === "monitor" ? B.preheader.clean : B.preheader.cleanScan,
+    preheader: d.wrongAnswers > 0 ? B.preheader.wrong(full.where) : unchecked ? B.preheaderUnchecked : d.business.plan === "monitor" ? B.preheader.clean : B.preheader.cleanScan,
     headline,
     stip: d.stip,
-    stipText: d.stip ? `${C.stipMeaning[d.stip]}. ${C.stipLine[d.stip]}` : undefined,
+    stipText,
     blocks: [
       { kind: "p", text: B.intro(formatMailDate(d.checkedAt, lang), d.totalAnswers, name, engines) },
       ...(per.length ? [{ kind: "note" as const, text: M.perAi(per.join(", ")) }] : []),
       {
         kind: "stats",
         items: [
-          { value: String(d.totalAnswers), label: B.stats.checked },
+          { value: String(checkedAnswers), label: B.stats.checked },
           { value: String(d.wrongAnswers), label: B.stats.wrong(d.wrongAnswers) },
           ...(d.notFoundAnswers ? [{ value: String(d.notFoundAnswers), label: B.stats.empty }] : []),
         ],
@@ -509,6 +523,9 @@ export interface OpenFindingLine {
 
 export interface MonthlyReportData {
   business: Pick<Business, "name" | "place">;
+  /** answers we could not check (no fact, or no usable claim): the status line counts only the checked ones */
+  uncheckedAnswers?: number;
+  uncheckedGrey?: boolean;
   month: string; // "oktober 2026"
   checkedAt: string;
   totalAnswers: number;
@@ -551,7 +568,7 @@ export function monthlyReportEmail(d: MonthlyReportData): Mail {
     preheader: R.preheader(line),
     headline: `${d.month[0]!.toUpperCase()}${d.month.slice(1)}: ${line}`,
     stip: d.stip,
-    stipText: d.stip ? `${C.stipMeaning[d.stip]}. ${C.stipLine[d.stip]}` : undefined,
+    stipText: !d.stip ? undefined : d.stip === "grijs" && d.uncheckedGrey ? `${C.stipUnchecked.meaning}. ${C.stipUnchecked.line}` : `${C.stipMeaning[d.stip]}. ${C.stipLine[d.stip]}`,
     blocks: [
       { kind: "p", text: R.intro(formatMailDate(d.checkedAt, lang), d.totalAnswers, d.business.name, d.engines.map(engineName).join(", ")) },
       {

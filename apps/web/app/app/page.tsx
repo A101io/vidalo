@@ -65,14 +65,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ...e,
       label: ENGINE_LABEL[e.engine],
       stip: report?.engineStips.find((s) => s.engine === e.engine)?.stip ?? ("grijs" as StipColour),
-      total: e.correct + e.wrong + e.notFound,
+      total: e.correct + e.wrong + e.notFound + (e.unchecked ?? 0),
     }))
     .sort((a, b) => usage(b.engine) - usage(a.engine));
   const wrongQuestions = report ? questionsAmong(report.findings.filter((f) => f.verdict === "wrong")) : 0;
   const notFoundQuestions = report ? questionsAmong(report.findings.filter((f) => f.verdict === "not_found")) : 0;
   const activeEngines = engines.filter((e) => !e.skipped).length;
   const perQuestion = lastRun?.samplesPerPrompt ?? 3;
-  const questions = report && activeEngines ? Math.round(report.totalAnswers / (activeEngines * perQuestion)) : 0;
+  // Since 11 Nov 2026 the report says which questions were asked; older ones fall back to the average.
+  const askedKeys = new Set((report?.asked ?? []).filter((a) => a.kind === "about").map((a) => `${a.factKey}:${a.subject ?? ""}`));
+  const questions = askedKeys.size ? askedKeys.size : report && activeEngines ? Math.round(report.totalAnswers / (activeEngines * perQuestion)) : 0;
+  const askedAbout = (report?.asked ?? []).filter((a) => a.kind === "about");
+  const checkedAsked = new Set(askedAbout.filter((a) => a.checked).map((a) => `${a.factKey}:${a.subject ?? ""}`));
+  const uncheckedQuestions = [...askedKeys].filter((k) => !checkedAsked.has(k)).length;
+  // Per engine the most common number of answers per question (5, or 10 where an answer was wrong).
+  const times = copy.result.hero.times(
+    engines
+      .filter((e) => !e.skipped)
+      .map((e) => {
+        const cells = askedAbout.filter((a) => a.engine === e.engine);
+        const freq = new Map<number, number>();
+        for (const c of cells) freq.set(c.samples, (freq.get(c.samples) ?? 0) + 1);
+        const n = cells.length ? [...freq.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]![0] : perQuestion;
+        return { name: e.label, n };
+      }),
+  );
 
   const log = buildLog(data.events, copy, href, gbp?.channel ?? null);
   const rechecks = [
@@ -94,7 +111,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <h1 className="h1-sm">{lastRun ? d.checkTitle(dateLong(lastRun.finishedAt ?? lastRun.startedAt ?? new Date())) : d.h1}</h1>
         {report && lastRun ? (
           <p className="m-0 text-[19px] leading-[1.5] text-ink-2">
-            {d.checkIntro(questions, activeEngines, perQuestion, wrongQuestions, notFoundQuestions)} {since ? d.sinceLine(dayMonth(previousRun!.finishedAt ?? previousRun!.startedAt ?? ""), since.found, since.resolved, since.open) : d.firstFull}
+            {d.checkIntro(questions, activeEngines, times, wrongQuestions, notFoundQuestions, uncheckedQuestions)} {since ? d.sinceLine(dayMonth(previousRun!.finishedAt ?? previousRun!.startedAt ?? ""), since.found, since.resolved, since.open) : d.firstFull}
           </p>
         ) : (
           <p className="m-0 text-[19px] text-ink-2">{d.noScan}</p>
@@ -185,7 +202,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   <div key={e.engine} className="flex flex-col gap-2.5">
                     <Stip tone={e.stip} size={22} className="!h-12 !w-12 sm:!h-14 sm:!w-14" />
                     <span className="text-[15px] font-bold">{e.label}</span>
-                    <span className="text-[14px] text-muted">{e.skipped ? copy.result.hero.engineSkipped : d.engineLine(e.total, e.wrong, e.notFound)}</span>
+                    <span className="text-[14px] text-muted">{e.skipped ? copy.result.hero.engineSkipped : d.engineLine(e.total, e.wrong, e.notFound, e.unchecked ?? 0)}</span>
                     {lastRun && <QuietLink href={href(`/r/${lastRun.id}`)}>{d.answers}</QuietLink>}
                   </div>
                 ))}

@@ -159,6 +159,8 @@ export interface EngineStipInput {
   instableShare: number;
   /** no usable samples at all */
   skipped?: boolean;
+  /** answers came, but none could be judged right or wrong: no facts to compare with (Sonable, 11 Nov 2026) */
+  nothingChecked?: boolean;
 }
 
 export const STIP_ORDER: Stip[] = ["groen", "grijs", "oranje", "rood"];
@@ -184,6 +186,8 @@ export function visibilityFromShare(notFoundShare: number): Visibility {
  */
 export function engineStip(input: EngineStipInput): Stip {
   if (input.skipped) return "grijs";
+  // Nothing to judge is never green: green says every answer was right.
+  if (input.nothingChecked && input.findingSeverities.length === 0) return "grijs";
   const visibility = visibilityFromShare(input.notFoundShare);
   if (visibility === "unknown") return "grijs";
   if (input.findingSeverities.includes("afhaker")) return "rood";

@@ -3,7 +3,7 @@
  * (business.language) and proof-card data.
  */
 import type { Engine, Finding, Sample, ScanReport } from "../types.js";
-import { ENGINES } from "../types.js";
+import { ENGINES, isUncheckedGrey, uncheckedAnswersOf } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb } from "../shared/db.js";
 import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
@@ -99,12 +99,16 @@ function sourceLabel(f: Finding, lang: Lang): string {
 /** Not-found answer count, visibility, colour and instable answers for a scan run, rebuilt from stored samples and claims. */
 async function notFoundStats(
   scanRunId: string | null | undefined,
-): Promise<Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable" | "recommendations"> | null> {
+): Promise<(Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable" | "recommendations"> & { uncheckedAnswers: number; uncheckedQuestions: number; uncheckedGrey: boolean }) | null> {
   if (!scanRunId) return null;
   try {
     const { buildReport } = await import("../scanner/index.js");
     const r = await buildReport(scanRunId);
-    return { notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable, recommendations: r.recommendations };
+    const about = (r.asked ?? []).filter((a) => a.kind === "about");
+    const checkedKeys = new Set(about.filter((a) => a.checked).map((a) => `${a.factKey}:${a.subject ?? ""}`));
+    const uncheckedKeys = new Set(about.filter((a) => !a.checked).map((a) => `${a.factKey}:${a.subject ?? ""}`).filter((k) => !checkedKeys.has(k)));
+    const uncheckedAnswers = uncheckedAnswersOf(r);
+    return { notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable, recommendations: r.recommendations, uncheckedAnswers, uncheckedQuestions: uncheckedAnswers > 0 ? Math.max(1, uncheckedKeys.size) : 0, uncheckedGrey: isUncheckedGrey(r) };
   } catch (err) {
     log.warn("reporter.not_found_stats_failed", { scanRunId, error: String((err as Error)?.message ?? err) });
     return null;
@@ -214,6 +218,9 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
     engineStips: nf?.engineStips,
     instable: nf?.instable,
     recommendations: nf?.recommendations,
+    uncheckedAnswers: nf?.uncheckedAnswers,
+    uncheckedQuestions: nf?.uncheckedQuestions,
+    uncheckedGrey: nf?.uncheckedGrey,
     findings,
     engines: run.engines,
     // A paying owner's button goes to the account; before that, to the report page, with the offer.
@@ -296,6 +303,8 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
     month: opts.monthLabel ?? monthLabel(new Date(), lang),
     checkedAt: run?.finishedAt ?? run?.startedAt ?? new Date().toISOString(),
     totalAnswers,
+    uncheckedAnswers: nf?.uncheckedAnswers,
+    uncheckedGrey: nf?.uncheckedGrey,
     wrongAnswers: openFindings.filter((f) => !isNotFound(f)).length + unfixable.filter((f) => !isNotFound(f)).length,
     notFound: openFindings.filter(isNotFound).length + unfixable.filter(isNotFound).length,
     notFoundAnswers: nf?.notFoundAnswers,
@@ -342,6 +351,8 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
   }
   const prompts = await db.listPrompts(business.id, { activeOnly: true });
   const totalAnswers = Math.max(findings.length, (prompts.length || 6) * 3);
+  // The report button opens the latest finished check by its run id: a slug link asks the owner to sign in (11 Nov 2026).
+  const lastRun = (await db.listScanRuns(business.id, 20)).find((r) => r.status === "done");
   const example = [...findings].sort((a, b) => b.frequency / b.sampleCount - a.frequency / a.sampleCount)[0] ?? null;
   const m = followUpEmail(
     {
@@ -350,7 +361,7 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
       wrongAnswers: findings.length,
       totalAnswers,
       example,
-      links: { dashboardUrl: dashboardUrl(business), resultUrl: resultUrl(business), unsubscribeUrl: unsubscribeUrl(business) },
+      links: { dashboardUrl: dashboardUrl(business), resultUrl: resultUrl({ ...business, scanRunId: lastRun?.id }), unsubscribeUrl: unsubscribeUrl(business) },
       priceSetupEur: PRICE_SETUP,
       priceMonitorEur: PRICE_MONITOR,
     },

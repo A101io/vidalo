@@ -48,6 +48,8 @@ export function normalizePhone(raw: string | null | undefined, country: string =
   if (digits.startsWith("31")) digits = digits.slice(2);
   // National trunk prefix: "023-..." or the "(0)" in "+31 (0)23 ...".
   if (digits.startsWith("0")) digits = digits.slice(1);
+  // Service numbers (0800, 0900, 0906, 0909) are 4 to 7 digits after the prefix: "0900-1511" (Conceptable, 11 Nov 2026).
+  if (/^(?:800|90[069])\d{4,7}$/.test(digits)) return `+31${digits}`;
   // Dutch national significant number is 9 digits (landline + mobile).
   if (digits.length !== 9) return null;
   return `+31${digits}`;
@@ -86,6 +88,28 @@ export function normalizeTime(raw: string): string | null {
 export function normalizeHours(h: Hours): string {
   if (h.closed || !h.open || !h.close) return "closed";
   return `${normalizeTime(h.open) ?? h.open}-${normalizeTime(h.close) ?? h.close}`;
+}
+
+/** Dutch name particles stay lowercase inside a street or town name ("Laan van Meerdervoort"). */
+const PARTICLES = new Set(["van", "der", "den", "de", "het", "aan", "op", "in", "bij", "te", "ten", "ter", "'t", "en"]);
+
+/**
+ * A normalised Dutch address back in the way people write it: "factorij 80 3071av rotterdam"
+ * -> "Factorij 80, 3071 AV Rotterdam". The report showed the lowercase form (Sonable, 11 Nov 2026).
+ * Anything that is not a Dutch street + postcode stays as it is.
+ */
+export function displayAddress(value: string): string {
+  const v = value.trim();
+  if (v.length > 200) return v;
+  const m = v.match(/^([^\d]{1,120}?\d{1,5}[ ]?[a-z]?)[ ]+(\d{4})[ ]?([a-z]{2})(?:[ ]+([^\d]{1,80}))?$/i);
+  if (!m) return v;
+  const cap = (s: string) =>
+    s
+      .split(" ")
+      .map((w, i) => (i > 0 && PARTICLES.has(w.toLowerCase()) ? w.toLowerCase() : w.replace(/^(\p{L})/u, (c) => c.toUpperCase())))
+      .join(" ");
+  const [, street, digits, letters, town] = m;
+  return `${cap(street!)}, ${digits} ${letters!.toUpperCase()}${town ? ` ${cap(town)}` : ""}`;
 }
 
 export function normalizeAddress(raw: string | null | undefined): string | null {
@@ -140,7 +164,8 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
     case "phone":
       return normalizePhone(facts.phone, facts.country);
     case "address":
-      return normalizeAddress([facts.address, facts.postcode, facts.place].filter(Boolean).join(" "));
+      // A town alone is no address: without street and number every address in that town would match (Sonable, 11 Nov 2026).
+      return facts.address ? normalizeAddress([facts.address, facts.postcode, facts.place].filter(Boolean).join(" ")) : null;
     case "website":
       return normalizeWebsite(facts.website);
     case "service": {

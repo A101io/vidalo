@@ -3,6 +3,7 @@
  * Used by the correction emails, the reports and the proof cards.
  */
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Finding } from "../types.js";
+import { displayAddress } from "../scanner/normalize.js";
 
 const DAYS = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
 
@@ -89,6 +90,7 @@ export function factFieldNl(factKey: FactKey, subject: string | null): string {
 /** Normalised value → Dutch wording. "closed" → "gesloten", "yes" → "ja", "09:00-17:00" → "09:00 tot 17:00". */
 export function valueNl(factKey: FactKey, value: string): string {
   const v = value.trim();
+  if (!v) return "nog niet bekend";
   if (v === NOT_FOUND_LABEL || v === NOT_FOUND_VALUE) return NOT_FOUND_LABEL;
   if (v === ABSENT_LABEL || v === ABSENT_VALUE) return ABSENT_LABEL;
   if (v === PRESENT_VALUE) return "genoemd";
@@ -108,6 +110,7 @@ export function valueNl(factKey: FactKey, value: string): string {
   const hours = /^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(v);
   if (hours) return `${hours[1]} tot ${hours[2]}`;
   if (factKey === "price" && /^\d+(\.\d+)?$/.test(v)) return `€ ${Number(v).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}`;
+  if (factKey === "address") return displayAddress(v);
   return v;
 }
 

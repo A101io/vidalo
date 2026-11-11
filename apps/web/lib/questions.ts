@@ -1,6 +1,6 @@
 import type { FactKey, Finding } from "@vidalo/core/types";
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE } from "@vidalo/core/types";
-import { formatPhone } from "@vidalo/core/scanner";
+import { displayAddress, formatPhone } from "@vidalo/core/scanner";
 import type { CopyShape } from "@vidalo/core/copy";
 
 function dayName(subject: string | null, copy: CopyShape): string | null {
@@ -75,6 +75,7 @@ export function recommendationQuestionFor(factKey: FactKey, subject: string | nu
  */
 export function humanValue(factKey: FactKey, value: string, subject: string | null, copy: CopyShape): string {
   const V = copy.report.value;
+  if (!value.trim()) return V.unknown; // a finding without a fact (not found, another business)
   if (value === NOT_FOUND_LABEL || value === NOT_FOUND_VALUE) return V.notFound;
   if (value === ABSENT_VALUE || value === ABSENT_LABEL) return V.absent;
   if (value === PRESENT_VALUE) return V.present;
@@ -89,6 +90,8 @@ export function humanValue(factKey: FactKey, value: string, subject: string | nu
     }
     case "phone":
       return value.startsWith("+") ? formatPhone(value) : value;
+    case "address":
+      return displayAddress(value);
     case "service":
     case "policy":
     case "payment":

@@ -86,9 +86,9 @@ export const FIX_PATHS: Record<SourceType, FixPath> = {
     escalation: "operator",
     unfixableAfterDays: 90,
     labelNl: "We maken op je feitenpagina en in je profielen duidelijker welk bedrijf jij bent.",
-    unfixableNoteNl: "De AI verwart je nog met een ander bedrijf met dezelfde naam.",
+    unfixableNoteNl: "De AI verwart je nog met een ander bedrijf.",
     labelEn: "We make it clearer on your facts page and in your profiles which business you are.",
-    unfixableNoteEn: "AI still mixes you up with another business with the same name.",
+    unfixableNoteEn: "AI still mixes you up with another business.",
   },
   none: {
     sourceType: "none",

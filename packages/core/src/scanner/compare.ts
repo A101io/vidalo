@@ -82,11 +82,25 @@ export interface CompareResult {
   unstable: FindingCandidate[];
   instable: FindingCandidate[];
   correct: { prompt: string; engine: Engine; value: string; raw: string; sampleId: string; factKey: FactKey; subject: string | null }[];
+  /** Every (question key, engine) that was asked, how often, and whether there was a fact to check it against. */
+  asked: AskedCell[];
   verdicts: Map<string, SampleVerdict>;
   /** (factKey|subject|engine[|rec]) keys that were actually checked in this run. */
   checkedKeys: Set<string>;
   /** Criteria an engine could not say anything about (>= 50% of its samples for that criterium not found). */
   criteriaNotFound: CriteriumNotFoundCandidate[];
+}
+
+export interface AskedCell {
+  factKey: FactKey;
+  subject: string | null;
+  engine: Engine;
+  kind: PromptKind;
+  samples: number;
+  /** false: no owner fact for this question, so a value could not be judged right or wrong */
+  checked: boolean;
+  /** On an unchecked question: the values the answers gave, and how often (so the report can show them). */
+  unknown: { value: string; n: number }[];
 }
 
 export const groupKey = (factKey: FactKey, subject: string | null, engine: Engine, kind: PromptKind = "about") =>
@@ -122,9 +136,11 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
     engine: Engine;
     kind: PromptKind;
     criterium: CriteriumId;
-    /** the owner fact in the normalised value space */
-    expected: string;
+    /** the owner fact in the normalised value space; null when the business has none for this question */
+    expected: string | null;
     samples: { sampleId: string; claim: Claim | null; citations: string[] }[];
+    /** values given on a question without a fact */
+    unknown: Map<string, number>;
   }
   const groups = new Map<string, Group>();
   const verdicts = new Map<string, SampleVerdict>();
@@ -146,13 +162,13 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
     for (const probe of probes) {
       const { factKey, subject } = parseProbe(probe);
       const expected = factValue(facts, factKey, subject);
-      if (expected == null) continue; // nothing to check this probe against
-      if (kind === "recommendation" && !recommendationApplies(factKey, expected)) continue;
+      // Without a fact a value cannot be judged, but "not found" and "another business" still can (Sonable, 11 Nov 2026).
+      if (kind === "recommendation" && (expected == null || !recommendationApplies(factKey, expected))) continue;
       const crit = s.prompt.criterium && criteriumDef(s.prompt.criterium) ? s.prompt.criterium : criteriumFor(factKey, subject, facts);
       const key = groupKey(factKey, subject, s.engine, kind);
       let g = groups.get(key);
       if (!g) {
-        g = { factKey, subject, engine: s.engine, kind, criterium: crit, expected, samples: [] };
+        g = { factKey, subject, engine: s.engine, kind, criterium: crit, expected, samples: [], unknown: new Map() };
         groups.set(key, g);
       }
       const claim = s.claims.find((c) => c.factKey === factKey && (c.subject ?? null) === subject) ?? null;
@@ -174,7 +190,8 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
 
   for (const g of groups.values()) {
     // Recommendation groups are not checked facts: an open finding from an older scan is neither confirmed nor resolved by them.
-    if (g.kind !== "recommendation") checkedKeys.add(groupKey(g.factKey, g.subject, g.engine, g.kind));
+    // Neither are groups without a fact: they cannot show an answer is right now.
+    if (g.kind !== "recommendation" && g.expected != null) checkedKeys.add(groupKey(g.factKey, g.subject, g.engine, g.kind));
     const wrong: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
     const other: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
     const notFound: { sampleId: string; value: string; citations: string[]; quote: string }[] = [];
@@ -191,13 +208,18 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
         else if (s.claim.value === ABSENT_VALUE && !recommendationVerdicts.has(s.sampleId)) recommendationVerdicts.set(s.sampleId, "not_named");
         continue;
       }
+      if (g.expected == null && !s.claim.otherEntity) {
+        // A value with nothing to compare it to: unknown, kept so the report can show what was said.
+        if (s.claim.value) g.unknown.set(s.claim.value, (g.unknown.get(s.claim.value) ?? 0) + 1);
+        continue;
+      }
       judgedSamples.add(s.sampleId);
       if (s.claim.otherEntity) {
         other.push({ sampleId: s.sampleId, value: s.claim.value, citations: s.citations, quote: s.claim.rawQuote });
         otherEntitySamples.add(s.sampleId);
         continue;
       }
-      if (valuesMatch(g.factKey, s.claim.value, g.expected)) {
+      if (g.expected != null && valuesMatch(g.factKey, s.claim.value, g.expected)) {
         if (!wrongSamples.has(s.sampleId)) {
           const promptText = samples.find((x) => x.sampleId === s.sampleId)?.prompt.textNl ?? "";
           correct.push({ prompt: promptText, engine: g.engine, value: describeValue(g.factKey, s.claim.value, g.subject), raw: s.claim.value, sampleId: s.sampleId, factKey: g.factKey, subject: g.subject });
@@ -221,7 +243,7 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
         engine: g.engine,
         verdict: opts.verdict ?? "wrong",
         wrongValue,
-        correctValue: g.expected,
+        correctValue: g.expected ?? "",
         frequency: list.length,
         sampleCount,
         wrongSampleIds: carriers.map((w) => w.sampleId),
@@ -263,5 +285,7 @@ export function compare(samples: ComparableSample[], facts: Facts): CompareResul
 
   const criteriaNotFound = [...perCriterium.values()].filter((r) => isCriteriumNotFound(r.frequency, r.sampleCount)).sort((a, b) => a.criterium - b.criterium || a.engine.localeCompare(b.engine));
 
-  return { findings, unstable: instable, instable, correct: cleanCorrect, verdicts, checkedKeys, criteriaNotFound };
+  const asked: AskedCell[] = [...groups.values()].map((g) => ({ factKey: g.factKey, subject: g.subject, engine: g.engine, kind: g.kind, samples: g.samples.length, checked: g.expected != null, unknown: [...g.unknown.entries()].map(([value, n]) => ({ value, n })) }));
+
+  return { findings, unstable: instable, instable, correct: cleanCorrect, verdicts, checkedKeys, criteriaNotFound, asked };
 }
