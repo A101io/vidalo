@@ -10,6 +10,14 @@ describe("turnstile mode", () => {
 
   it("is off without keys only where nothing real happens", () => {
     expect(turnstileMode({ production: false, mock: false })).toBe("off");
+  });
+
+  it("refuses Cloudflare's always-pass test keys on a real production server", () => {
+    expect(turnstileMode({ secret: TURNSTILE_TEST_KEYS.secretPass, siteKey: TURNSTILE_TEST_KEYS.sitePass, production: true, mock: false })).toBe("misconfigured");
+    expect(turnstileMode({ secret: "real", siteKey: TURNSTILE_TEST_KEYS.sitePass, production: true, mock: false })).toBe("misconfigured");
+    // Locally and in mock mode the test keys are what they are for.
+    expect(turnstileMode({ secret: TURNSTILE_TEST_KEYS.secretPass, siteKey: TURNSTILE_TEST_KEYS.sitePass, production: false, mock: false })).toBe("on");
+    expect(turnstileMode({ secret: TURNSTILE_TEST_KEYS.secretPass, siteKey: TURNSTILE_TEST_KEYS.sitePass, production: true, mock: true })).toBe("on");
     expect(turnstileMode({ production: true, mock: true })).toBe("off");
   });
 
