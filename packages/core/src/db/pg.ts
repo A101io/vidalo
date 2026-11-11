@@ -29,6 +29,10 @@ import type {
   ScanRunCreate,
   ScanRunUpdate,
   WaitlistInput,
+  BrowserFamily,
+  OsFamily,
+  SignInEnd,
+  SignInRow,
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
@@ -237,6 +241,22 @@ function mapGoogleIndex(row: Row): GoogleIndexState {
     updatedAt: String(r.updatedAt),
   };
 }
+
+const mapSignIn = (row: Row): SignInRow => {
+  const r = iso(row);
+  return {
+    sessionId: r.sessionId as string,
+    userId: r.userId as string,
+    signedInAt: r.signedInAt as string,
+    lastSeenAt: r.lastSeenAt as string,
+    endedAt: (r.endedAt as string | null) ?? null,
+    endedReason: (r.endedReason as SignInEnd | null) ?? null,
+    browser: r.browser as BrowserFamily,
+    os: r.os as OsFamily,
+  };
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class PgDb implements Db {
   readonly kind = "pg" as const;
@@ -779,6 +799,50 @@ export class PgDb implements Db {
       on conflict (business_id) do update set ${this.sql(update)}
       returning *`;
     return mapGoogleIndex(rows[0]!);
+  }
+
+  // --- sign-ins (feature 002, migration 0018) ---
+  async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
+    await this.sql.begin(async (tx) => {
+      await tx`insert into auth_session (session_id, user_id, signed_in_at, last_seen_at, browser, os)
+        values (${row.sessionId}, ${row.userId}, ${row.at}, ${row.at}, ${row.browser}, ${row.os})
+        on conflict (session_id) do nothing`;
+      await tx`delete from auth_session where user_id = ${row.userId} and ended_at is not null and session_id not in (
+        select session_id from auth_session where user_id = ${row.userId} order by signed_in_at desc limit 10)`;
+    });
+  }
+
+  async getSignIn(sessionId: string): Promise<SignInRow | null> {
+    if (!UUID.test(sessionId)) return null;
+    const rows = await this.sql`select * from auth_session where session_id = ${sessionId}`;
+    return rows[0] ? mapSignIn(rows[0]) : null;
+  }
+
+  async touchSignIn(sessionId: string, at: Date): Promise<void> {
+    if (!UUID.test(sessionId)) return;
+    await this.sql`update auth_session set last_seen_at = ${at}
+      where session_id = ${sessionId} and ended_at is null and last_seen_at < ${new Date(at.getTime() - 3_600_000)}`;
+  }
+
+  async endSignIns(userId: string, reason: SignInEnd, opts: { sessionId?: string } = {}): Promise<number> {
+    if (!UUID.test(userId) || (opts.sessionId !== undefined && !UUID.test(opts.sessionId))) return 0;
+    const rows = opts.sessionId
+      ? await this.sql`update auth_session set ended_at = greatest(now(), signed_in_at), ended_reason = ${reason}
+          where user_id = ${userId} and session_id = ${opts.sessionId} and ended_at is null returning session_id`
+      : await this.sql`update auth_session set ended_at = greatest(now(), signed_in_at), ended_reason = ${reason}
+          where user_id = ${userId} and ended_at is null returning session_id`;
+    return rows.length;
+  }
+
+  async listSignIns(userId: string, limit: number): Promise<SignInRow[]> {
+    if (!UUID.test(userId)) return [];
+    const rows = await this.sql`select * from auth_session where user_id = ${userId} order by signed_in_at desc limit ${limit}`;
+    return rows.map(mapSignIn);
+  }
+
+  async deleteSignIns(userId: string): Promise<void> {
+    if (!UUID.test(userId)) return;
+    await this.sql`delete from auth_session where user_id = ${userId}`;
   }
 
   async close(): Promise<void> {

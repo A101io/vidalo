@@ -50,6 +50,12 @@ export async function middleware(req: NextRequest) {
     url.pathname = route;
     res = NextResponse.rewrite(url, { request: { headers } });
   }
+  if (route === "/auth/confirm") {
+    // The sign-in link's page (ADR-0003): the token in its URL never leaves in a Referer, and the page is never stored or indexed.
+    res.headers.set("referrer-policy", "no-referrer");
+    res.headers.set("cache-control", "no-store");
+    res.headers.set("x-robots-tag", "noindex");
+  }
   if (refreshed) {
     for (const c of refreshed.cookies) res.cookies.set(c.name, c.value, forceAuthOptions(c.options));
     for (const [k, v] of Object.entries(refreshed.headers)) res.headers.set(k, v);

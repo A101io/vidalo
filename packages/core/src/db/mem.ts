@@ -27,6 +27,10 @@ import type {
   WaitlistInput,
   LibraryRow,
   QuestionUseInput,
+  BrowserFamily,
+  OsFamily,
+  SignInEnd,
+  SignInRow,
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
@@ -52,6 +56,8 @@ export class MemDb implements Db {
   /** The ledger. businessRef is the opaque per-business reference (PgDb: business.question_ref); scanRunId goes null with its business. */
   questionUse: Array<Omit<QuestionUseInput, "scanRunId"> & { scanRunId: string | null; businessRef: string }> = [];
   private questionRefs = new Map<string, string>();
+  /** auth_session (migration 0018), by session id. */
+  signIns = new Map<string, SignInRow>();
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -73,6 +79,7 @@ export class MemDb implements Db {
     this.waitlist.clear();
     this.questionUse = [];
     this.questionRefs.clear();
+    this.signIns.clear();
   }
 
   // --- business ---
@@ -612,6 +619,56 @@ export class MemDb implements Db {
     const row: GoogleIndexState = { ...(existing ?? empty), ...defined, updatedAt: new Date().toISOString() };
     this.googleIndex.set(row.businessId, row);
     return structuredClone(row);
+  }
+
+  // --- sign-ins (feature 002, migration 0018) ---
+  async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
+    if (!this.signIns.has(row.sessionId)) {
+      const at = row.at.toISOString();
+      this.signIns.set(row.sessionId, { sessionId: row.sessionId, userId: row.userId, signedInAt: at, lastSeenAt: at, endedAt: null, endedReason: null, browser: row.browser, os: row.os });
+    }
+    const keep = new Set(
+      [...this.signIns.values()]
+        .filter((r) => r.userId === row.userId)
+        .sort((a, b) => b.signedInAt.localeCompare(a.signedInAt))
+        .slice(0, 10)
+        .map((r) => r.sessionId),
+    );
+    for (const r of [...this.signIns.values()]) if (r.userId === row.userId && r.endedAt && !keep.has(r.sessionId)) this.signIns.delete(r.sessionId);
+  }
+
+  async getSignIn(sessionId: string): Promise<SignInRow | null> {
+    const r = this.signIns.get(sessionId);
+    return r ? { ...r } : null;
+  }
+
+  async touchSignIn(sessionId: string, at: Date): Promise<void> {
+    const r = this.signIns.get(sessionId);
+    if (r && !r.endedAt && Date.parse(r.lastSeenAt) < at.getTime() - 3_600_000) r.lastSeenAt = at.toISOString();
+  }
+
+  async endSignIns(userId: string, reason: SignInEnd, opts: { sessionId?: string } = {}): Promise<number> {
+    let n = 0;
+    const now = nowIso();
+    for (const r of this.signIns.values()) {
+      if (r.userId !== userId || r.endedAt || (opts.sessionId && r.sessionId !== opts.sessionId)) continue;
+      r.endedAt = now < r.signedInAt ? r.signedInAt : now;
+      r.endedReason = reason;
+      n++;
+    }
+    return n;
+  }
+
+  async listSignIns(userId: string, limit: number): Promise<SignInRow[]> {
+    return [...this.signIns.values()]
+      .filter((r) => r.userId === userId)
+      .sort((a, b) => b.signedInAt.localeCompare(a.signedInAt))
+      .slice(0, limit)
+      .map((r) => ({ ...r }));
+  }
+
+  async deleteSignIns(userId: string): Promise<void> {
+    for (const r of [...this.signIns.values()]) if (r.userId === userId) this.signIns.delete(r.sessionId);
   }
 
   async close(): Promise<void> {}

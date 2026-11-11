@@ -7,11 +7,12 @@ import { ready } from "@/lib/db";
 import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
 import { getI18n } from "@/lib/i18n";
-import { requireOwner } from "@/lib/owner";
+import { businessFromForm, requireOwner, requireOwnerOf } from "@/lib/owner";
 import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
-import { MOCK_SESSION_COOKIE } from "@/lib/session";
+import { getSession, MOCK_SESSION_COOKIE } from "@/lib/session";
+import { authCookieOptions } from "@/lib/auth-cookies";
 import { createServerSupabase } from "@/lib/supabase";
-import { MAIL_PREF_KEYS, setMailPrefs, type MailPrefs } from "@vidalo/core/shared";
+import { log, MAIL_PREF_KEYS, setMailPrefs, type MailPrefs } from "@vidalo/core/shared";
 
 /**
  * "E-mailadres wijzigen". With Supabase the change waits for the link in the
@@ -43,7 +44,7 @@ export async function changeEmail(formData: FormData) {
 
   await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerEmail: email });
   await db.logEvent(business.id, "account.email_changed", { via: "mock" });
-  (await cookies()).set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: session.userId, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
+  (await cookies()).set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: session.userId, email, sid: session.sessionId }), authCookieOptions());
   revalidatePath("/app/account");
   redirect(back("gewijzigd"));
 }
@@ -61,7 +62,7 @@ export async function saveMailPrefs(formData: FormData) {
 
 /** The language row on the account page: save it, then show the account in that language. */
 export async function setLanguage(formData: FormData) {
-  const { business } = await requireOwner("/app/account");
+  const { business } = await requireOwnerOf(businessFromForm(formData), "/app/account");
   const to = String(formData.get("language") ?? "") as Lang;
   if (!LANGS.includes(to)) redirect((await getI18n()).href("/app/account"));
   if (business.language !== to) {
@@ -71,4 +72,23 @@ export async function setLanguage(formData: FormData) {
   }
   revalidatePath("/app/account");
   redirect(localizeHref("/app/account?taal=opgeslagen", to));
+}
+
+/**
+ * "Overal uitloggen" (feature 002, AC-3e): ends every sign-in of this login, here and on every
+ * other device. Supabase revokes every refresh token (scope global); each other browser fails
+ * its auth_session check on its next page, even while its access token is still valid.
+ * About the login, not a business, so it takes no business field.
+ */
+export async function signOutEverywhere() {
+  const { href } = await getI18n();
+  const session = await getSession();
+  if (session) {
+    const supabase = await createServerSupabase();
+    if (supabase) await supabase.auth.signOut({ scope: "global" });
+    const ended = await (await ready()).endSignIns(session.userId, "signed_out_everywhere");
+    log.info("auth.signed_out_everywhere", { ended });
+  }
+  (await cookies()).delete(MOCK_SESSION_COOKIE);
+  redirect(href("/inloggen?uitgelogd=overal"));
 }

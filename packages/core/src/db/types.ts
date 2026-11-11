@@ -181,6 +181,21 @@ export interface ScanRunUpdate {
   error?: string | null;
 }
 
+/** Feature 002 (migration 0018): one sign-in of one browser, keyed by Supabase's session_id claim. No IP, no user-agent string. */
+export type BrowserFamily = "chrome" | "safari" | "firefox" | "edge" | "other";
+export type OsFamily = "macos" | "windows" | "ios" | "android" | "linux" | "other";
+export type SignInEnd = "signed_out" | "signed_out_everywhere" | "idle" | "max_age" | "replaced" | "deleted";
+export interface SignInRow {
+  sessionId: string;
+  userId: string;
+  signedInAt: string;
+  lastSeenAt: string;
+  endedAt: string | null;
+  endedReason: SignInEnd | null;
+  browser: BrowserFamily;
+  os: OsFamily;
+}
+
 export interface Db {
   readonly kind: "pg" | "mem";
 
@@ -297,6 +312,22 @@ export interface Db {
   getGoogleIndex(businessId: string): Promise<GoogleIndexState | null>;
   /** Insert or merge: fields left out keep their value; pass null to clear one. */
   upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
+
+  // --- sign-ins (feature 002, migration 0018) ---
+  /**
+   * Records a sign-in. Insert by sessionId; a second call for the same id changes nothing (it never
+   * clears ended_at or moves signed_in_at). Then deletes the user's ended rows beyond the 10 newest
+   * (an open sign-in is never deleted).
+   */
+  recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void>;
+  getSignIn(sessionId: string): Promise<SignInRow | null>;
+  /** Moves last_seen_at to `at`, only when it is more than an hour older and the sign-in is open. */
+  touchSignIn(sessionId: string, at: Date): Promise<void>;
+  /** Ends one open sign-in (opts.sessionId) or every open sign-in of the user. Returns how many. */
+  endSignIns(userId: string, reason: SignInEnd, opts?: { sessionId?: string }): Promise<number>;
+  /** Newest first. */
+  listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
+  deleteSignIns(userId: string): Promise<void>;
 
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;

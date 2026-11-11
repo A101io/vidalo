@@ -10,7 +10,9 @@ import { ready } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { getI18n } from "@/lib/i18n";
 import { passesTurnstile } from "@/lib/turnstile";
-import { claimPaidBusiness, clientIp } from "@vidalo/core/shared";
+import { claimPaidBusiness, clientIp, uaFamily } from "@vidalo/core/shared";
+import { authCookieOptions } from "@/lib/auth-cookies";
+import { createHash, randomUUID } from "node:crypto";
 import { checkoutLoader } from "@/lib/stripe";
 
 export async function sendMagicLink(form: FormData) {
@@ -53,7 +55,11 @@ export async function sendMagicLink(form: FormData) {
   if (!env.allowMockAuth) redirect(href(`/inloggen?fout=1&${q}`));
   const store = await cookies();
   const owned = await db.getBusinessByOwner({ email });
-  store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId: owned?.ownerUserId ?? `mock-${email}`, email }), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
+  // A sign-in like any other: its own session id and an auth_session row (feature 002, A-02).
+  const userId = owned?.ownerUserId ?? mockUserId(email);
+  const sid = randomUUID();
+  await db.recordSignIn({ sessionId: sid, userId, ...uaFamily((await headers()).get("user-agent")), at: new Date() });
+  store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId, email, sid }), authCookieOptions());
   redirect(href(after));
 }
 
@@ -79,4 +85,10 @@ export async function claimBusiness(form: FormData): Promise<void> {
     redirect(href(`/inloggen?fout=${fout}&next=${encodeURIComponent(next)}`));
   }
   redirect(href(next));
+}
+
+/** Mock auth only: a stable user id for an address, shaped as a uuid so the same rows work on Postgres. */
+function mockUserId(email: string): string {
+  const h = createHash("sha256").update(`vidalo-mock:${email}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
