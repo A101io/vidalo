@@ -32,6 +32,12 @@ const PROFILE_KEYS: Record<string, (c: C, lang: "nl" | "en") => string[]> = {
     return [o.stepFacts(null), o.stepFacts("x.nl"), ...o.stepsGreen, o.stepsGrey.facts, o.stepsGrey.publish(null), o.stepsGrey.recheck(6), o.exclVat, o.exclVatGrey];
   },
   "report.identity kind lines (FE-02)": (c) => [c.report.question.identityKind("X"), c.report.value.otherKind, c.report.value.sameKind],
+  "mails.online (BE-08)": (c) => {
+    const k = c.mails.online;
+    const w = k.welcome;
+    return [k.notCounted, k.reading, k.howWeFix.title, ...k.howWeFix.items.flatMap((i) => [i.when, i.what]), w.subject("X"), w.preheader, w.intro("X"), w.facts.title, w.facts.line, w.rest.title, w.rest.line];
+  },
+  "recommendation.question.intent geschikt, alternatief (BE-08)": (c) => [c.recommendation.question.intent.geschikt!("x"), c.recommendation.question.intent.alternatief!("x")],
   "landing.vragen.items[no shop] (FE-04)": (c, lang) => {
     const item = c.landing.vragen.items.find((i) => i.q === (lang === "nl" ? FAQ_NL : FAQ_EN));
     return item ? [item.q, item.a] : [];
@@ -44,6 +50,15 @@ const PROFILE_KEYS: Record<string, (c: C, lang: "nl" | "en") => string[]> = {
     c.scan.profileSentence({ offer: "background music", audience: null, category: null }, "Sonable") ?? "",
     c.scan.profileSentence({ offer: null, audience: null, category: "bakkerij" }, "De Vries") ?? "",
   ],
+  "facts.profile (FE-03)": (c) => {
+    const k = c.facts.profile;
+    const d = "11 november 2026";
+    return [
+      k.title, k.intro, k.modeLegend, ...Object.values(k.modes).flatMap((m) => [m.label, m.hint]), k.offer, k.offerHint, k.audience, k.audienceHint, k.category, k.categoryHint,
+      k.sourceAuto(d), k.sourceOwner(d), k.sourceFallback(d), k.sourceNone, k.submit, k.saved, k.errorTitle,
+      ...Object.values(k.errors.required), ...Object.values(k.errors.refused), k.errors.tooLong(120),
+    ];
+  },
 };
 
 describe("copy of feature 001: jargon and promises", () => {

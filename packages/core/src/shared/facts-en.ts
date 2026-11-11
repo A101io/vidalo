@@ -15,7 +15,13 @@ const INTENT_LABEL: Record<string, string> = {
   betrouwbaar: "whether you are named when someone looks for a reliable business",
   betaalbaar: "whether you are named when someone looks for an affordable business",
   dichtbij: "whether you are named when someone looks for something nearby",
+  // Online businesses (feature 001): the audience question and the alternative question.
+  geschikt: "whether you are named when someone looks for a provider that suits their situation",
+  alternatief: "whether you are named when someone looks for an alternative",
 };
+
+/** The online subjects: "correct" is that the business is active, not that it is open in a town (mirror of facts-nl.ts). */
+const ONLINE_INTENT = new Set(["geschikt", "alternatief"]);
 
 export function factLabelEn(factKey: FactKey, subject: string | null): string {
   switch (factKey) {
@@ -122,7 +128,7 @@ export function findingWordsEn(f: Parameters<typeof findingWordsNl>[0]): Finding
     what,
     field: factFieldEn(f.factKey, f.subject),
     wrong: nl.notFound ? "not found" : nl.recommendation ? "not named" : valueEn(f.factKey, f.wrongValue),
-    correct: nl.recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? "you are open and work in this town" : valueEn(f.factKey, f.correctValue),
+    correct: nl.recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? (ONLINE_INTENT.has(f.subject) ? "you are active" : "you are open and work in this town") : valueEn(f.factKey, f.correctValue),
     frequency: `${f.frequency} of ${f.sampleCount} times`,
     notFound: nl.notFound,
     notFoundLine: nl.notFound ? `found nothing about ${what}` : "",

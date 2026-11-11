@@ -328,6 +328,22 @@ export function isUncheckedGrey(report: Pick<ScanReport, "engines" | "stip" | "v
   return report.stip === "grijs" && report.visibility !== "unknown" && report.engines.some((e) => !e.skipped && e.correct + e.wrong + e.notFound === 0 && (e.unchecked ?? 0) > 0);
 }
 
+/** True when the scan was asked as an online business (profile mode "online"): no town, hours, address or listing in its questions or mails. */
+export function isOnlineProfile(profile?: { mode: ProfileMode } | null): boolean {
+  return profile?.mode === "online";
+}
+
+/**
+ * The competition block as counts: how often the business was named over the category and
+ * alternative questions, out of how many answers, and how many questions. The report page and the
+ * free-check mail both read it here, so they cannot disagree. Null when no such question was asked.
+ */
+export function competitionCountsOf(report: Pick<ScanReport, "recommendations">): { named: number; answers: number; questions: number } | null {
+  const rows = (report.recommendations ?? []).filter((r) => r.family === "rec_category" || r.family === "alternative");
+  if (!rows.length) return null;
+  return { named: rows.reduce((n, r) => n + r.named, 0), answers: rows.reduce((n, r) => n + r.answers, 0), questions: rows.length };
+}
+
 export type FindingStatus = "open" | "fixing" | "recheck" | "resolved" | "unfixable";
 
 export interface Finding {

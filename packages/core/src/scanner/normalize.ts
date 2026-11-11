@@ -298,6 +298,9 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
 export function describeFact(factKey: FactKey, subject: string | null): string {
   switch (factKey) {
     case "existence":
+      // The two online recommendation questions (feature 001) are about being named, not about being open.
+      if (subject === "geschikt") return "een aanbieder die past bij een doelgroep";
+      if (subject === "alternatief") return "een alternatief";
       return "open of gesloten";
     case "hours":
       return subject != null ? `openingstijden ${DAY_NAMES_NL[Number(subject)]}` : "openingstijden";

@@ -14,6 +14,8 @@ Two journeys run in mock mode, each twice: for a Dutch owner and for an owner wh
 - **Free check only**: the report mail, then the day-7 and day-21 follow-ups.
 - **Paying, verified owner**: welcome, the own-website check (against a fake site that blocks every robot), directory corrections and their reminder a month later, fixes, rechecks one, two and four weeks later (owner reminders), the monthly report, the resolved and unfixable notices, and a year later the "Klopt dit nog?" mail (queued by the cron step, twice, to show it goes out once).
 
+The lab also includes an online business (feature 001, made-up names, one Dutch and one English owner, plus one whose name carries markup): its report mail, follow-ups, welcome and monthly report. They are checked for no town, no opening hours, no Google, Bing, Apple or directory wording, no name of another business, no score, the "Gecontroleerd als" line and the competition counts in the report mail, and an escaped name in the HTML (the page's last section).
+
 The correction request to a source and its follow-up are not reached in mock mode, because the mock answers cite no third-party site with a contact address. They are rendered from their templates with the journey's real finding, and the page marks them "template only".
 
 The page shows one card per kind and language: recipient, sender, subject, the HTML and the plain text side by side, and every link. Each mail is checked:

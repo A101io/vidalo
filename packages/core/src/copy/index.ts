@@ -749,7 +749,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 9 november 2026",
+    updated: "Versie van 11 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -994,16 +994,18 @@ export const copy = {
           h: "Over wie het gaat",
           p: [
             "Vidalo is er voor bedrijven. Meestal verwerken we gegevens over een bedrijf, zoals naam, adres en openingstijden. Dat zijn persoonsgegevens als ze over een persoon gaan, bijvoorbeeld bij een eenmanszaak met de naam van de eigenaar.",
+            "Ook andere bedrijven komen voor: de bedrijven die AI-assistenten noemen naast het bedrijf dat we controleren. Daar kunnen eenmanszaken bij zijn.",
             "Daarnaast verwerken we gegevens over de mensen die met ons te maken hebben: wie een controle aanvraagt, wie een account heeft of klant is, wie ons mailt of belt, wie zich op de lijst ‘Binnenkort’ zet en wie onze website bezoekt.",
           ],
         },
         {
           h: "De gratis controle",
           p: [
-            "Vraag je een gratis controle aan, dan zoeken we het bedrijf op en stellen we AI-assistenten vragen erover.",
+            "Vraag je een gratis controle aan, dan zoeken we het bedrijf op, kijken we eerst wat het aanbiedt en voor wie, en stellen we daarna AI-assistenten vragen erover.",
             [
-              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; de antwoorden van AI-assistenten en de bronnen die ze noemen; je e-mailadres, waar we het rapport naartoe sturen. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
-              "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf en de bronnen die AI-assistenten noemen.",
+              "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; een korte beschrijving van wat het bedrijf aanbiedt en voor wie; de antwoorden van AI-assistenten en de bronnen die ze noemen, met de namen van andere bedrijven die ze noemen; je e-mailadres, waar we het rapport naartoe sturen. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
+              "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf, één zoekvraag via OpenAI en de bronnen die AI-assistenten noemen.",
+              "Wat we ermee doen: om te zien wat het bedrijf aanbiedt en voor wie, sturen we OpenAI de naam en plaats voor één zoekvraag (‘Wat is [naam] in [plaats]?’). Daarna sturen we OpenAI het antwoord, de gegevens van Google en de tekst van de homepage van het bedrijf, waaruit we eerst e-mailadressen en telefoonnummers weghalen; daarvan maakt OpenAI een korte beschrijving. Die beschrijving bewaren we bij het bedrijf en in het rapport staat ze als hoe wij het bedrijf lezen. In het rapport staat ook welke andere bedrijven AI-assistenten noemden en hoe vaak.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
               "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan gelden de termijnen bij ‘Een betaald plan’.",
             ],
@@ -1048,9 +1050,11 @@ export const copy = {
           h: "Een betaald plan",
           p: [
             [
-              "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel.",
+              "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel, en de beschrijving van wat je bedrijf aanbiedt en voor wie, met je eigen aanpassing daarvan.",
               "Wat we ermee doen: we publiceren je bevestigde gegevens op je feitenpagina, die voor iedereen te zien is. We sturen ze naar bronnen met een fout om herstel te vragen, en naar je Google-bedrijfsprofiel als je dat koppelt. AI-assistenten krijgen alleen bedrijfsgegevens, nooit je e-mailadres.",
-              "Grondslag: de uitvoering van de overeenkomst met jou.",
+              "Klopt onze beschrijving van je bedrijf niet, dan pas je die aan bij je gegevens in je account, zodra je hebt aangetoond dat je het bedrijf beheert. De controles in je plan gebruiken dan jouw versie; een automatische controle overschrijft die niet.",
+              "Namen van andere bedrijven die AI-assistenten noemen, kunnen we in een controle in je plan ook gebruiken in een vraag aan AI-assistenten, zoals ‘Wat is een goed alternatief voor [naam]?’.",
+              "Grondslag: de uitvoering van de overeenkomst met jou. Voor de namen van andere bedrijven: ons gerechtvaardigd belang, en dat van jou, om te zien wie AI noemt als iemand een alternatief zoekt (artikel 6 lid 1 onder f AVG).",
               "Hoe lang: zolang je klant bent. Na het einde van je abonnement bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle en verwijderen we binnen 30 dagen daarna je gegevens. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar. Wat bij een andere partij is hersteld, blijft daar staan.",
             ],
           ],
@@ -1130,7 +1134,7 @@ export const copy = {
               "Stripe: betalen en facturen; EU en Verenigde Staten.",
               "Resend: het versturen van onze e-mails; Verenigde Staten.",
               "Google: onze mailbox (Google Workspace), bedrijfsgegevens uit Google Maps, Gemini, inloggen met Google en je bedrijfsprofiel; EU en Verenigde Staten.",
-              "OpenAI: ChatGPT voor de controles, en de assistent op onze website; Verenigde Staten.",
+              "OpenAI: ChatGPT voor de controles, uitzoeken wat een bedrijf aanbiedt, en de assistent op onze website; Verenigde Staten.",
               "Anthropic: Claude voor de controles; Verenigde Staten.",
               "Twilio: het bellen of sms'en van de code waarmee je aantoont dat je het bedrijf beheert; Verenigde Staten.",
               "Google Analytics: bezoekersstatistieken, alleen met je toestemming; EU en Verenigde Staten.",
@@ -2177,6 +2181,9 @@ export const copy = {
         betrouwbaar: (place: string) => `Wie is betrouwbaar in ${place}?`,
         betaalbaar: (place: string) => `Wie is betaalbaar in ${place}?`,
         dichtbij: (place: string) => `Wie zit bij mij in de buurt in ${place}?`,
+        // Online (feature 001): no town in the question; `place` is not used.
+        geschikt: (_place: string) => "Welke aanbieder past bij mijn situatie?",
+        alternatief: (_place: string) => "Wat is een goed alternatief?",
       } as Record<string, (place: string) => string>,
     },
   },
@@ -2847,6 +2854,35 @@ export const copy = {
     days: ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"],
     submit: "Gegevens bevestigen",
     saved: "Gegevens bevestigd. We publiceren je feitenpagina en werken de bronnen bij.",
+    /** "Zo lezen wij je bedrijf" on /app/gegevens (feature 001, FE-03): how the checks see the business, and the owner's correction. */
+    profile: {
+      title: "Zo lezen wij je bedrijf",
+      intro: "Voordat we vragen stellen aan AI, bepalen we wat je doet en voor wie. Klopt dat niet, pas het hier aan. De volgende controle gebruikt jouw versie.",
+      modeLegend: "Waar vinden klanten je",
+      modes: {
+        door: { label: "Klanten komen bij mij langs", hint: "We vragen naar je openingstijden, je adres en of je open bent." },
+        visit: { label: "Ik kom bij de klant", hint: "We vragen naar je werkgebied en wat je doet; geen openingstijden." },
+        online: { label: "Ik werk online of door heel Nederland", hint: "We vragen naar wat je doet, je website en wie AI noemt voor jouw soort aanbod; geen openingstijden of adres." },
+      },
+      offer: "Wat bied je aan",
+      offerHint: "bijvoorbeeld ‘achtergrondmuziek voor hotels’",
+      audience: "Voor wie",
+      audienceHint: "bijvoorbeeld ‘hotels en horeca’",
+      category: "Hoe zoekt een klant naar jou",
+      categoryHint: "een zelfstandig naamwoord, bijvoorbeeld ‘aanbieder van achtergrondmuziek’",
+      sourceAuto: (date: string) => `Automatisch bepaald op ${date}, uit Google, je website en een zoekopdracht.`,
+      sourceOwner: (date: string) => `Door jou aangepast op ${date}. Een volgende automatische lezing overschrijft dit niet.`,
+      sourceFallback: (date: string) => `Op ${date} kregen we je bedrijf niet scherp. We gebruiken een algemene lezing tot jij hem aanpast.`,
+      sourceNone: "We hebben je bedrijf nog niet gelezen. Dat gebeurt bij de volgende controle; je kunt het ook nu invullen.",
+      submit: "Opslaan",
+      saved: "Opgeslagen. De volgende controle gebruikt dit.",
+      errorTitle: "Niet opgeslagen",
+      errors: {
+        required: { mode: "Kies een van de drie.", offer: "Vul in wat je aanbiedt.", audience: "Vul in voor wie.", category: "Vul in hoe een klant naar je zoekt." },
+        refused: { mode: "Kies een van de drie.", other: "Dit kunnen we niet gebruiken. Schrijf het als een korte omschrijving in gewone woorden." },
+        tooLong: (max: number) => `Te lang. Maximaal ${max} tekens.`,
+      },
+    },
   },
 
   /** /app/gegevens/versies: every facts version, what changed, which checks ran on it (core/facts-history.ts). */
@@ -3117,6 +3153,31 @@ export const copy = {
         { when: "Week 1 tot 4", what: "We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt." },
         { when: "Elke maand", what: "Een nieuwe controle van alle vragen, met een kort rapport." },
       ],
+    },
+    /**
+     * Mails for an online business (feature 001): the same mails without a town, opening hours, Google, Bing,
+     * Apple or directories. The competition counts and "Gecontroleerd als" reuse copy.result (one wording on every surface).
+     */
+    online: {
+      /** Under "Gecontroleerd als" in a mail, for an automatic reading (the report page names the sources; a mail only says what kind of statement it is). */
+      reading: "Dit is onze lezing van je bedrijf, geen feit over je bedrijf.",
+      notCounted: "Dat tellen we niet als fout, maar het betekent wel dat een klant die het vraagt, geen antwoord krijgt. We maken je feitenpagina en controleren na 3 weken of je genoemd wordt.",
+      howWeFix: {
+        title: "Zo herstellen wij het",
+        items: [
+          { when: "Dag 1", what: "We leggen je gegevens vast en zetten je feitenpagina live." },
+          { when: "Week 1", what: "We vragen de bronnen met een fout om correctie, en laten zien wat je zelf moet aanpassen." },
+          { when: "Week 1 tot 4", what: "We controleren elke bron opnieuw. Je ziet per antwoord of het weer klopt." },
+          { when: "Elke maand", what: "Een nieuwe controle van alle vragen, met een kort rapport." },
+        ],
+      },
+      welcome: {
+        subject: (name: string) => `Welkom bij Vidalo: 3 stappen voor ${name}`,
+        preheader: "Drie stappen, samen ongeveer 5 minuten. Daarna doen wij de rest.",
+        intro: (name: string) => `Bedankt voor je bestelling. Vanaf nu controleren we wat AI over ${name} zegt en pakken we fouten aan bij de bron. Om te starten vragen we 3 dingen van je. Samen ongeveer 5 minuten.`,
+        facts: { title: "1. Bevestig je gegevens", line: "Wat je doet, voor wie, je website en wat je wel en niet doet. We hebben ze alvast ingevuld, jij kijkt ze na." },
+        rest: { title: "3. Wij doen de rest", line: "Zodra je DNS-regel staat, is je feitenpagina live. Daarna vragen we de bronnen met een fout om correctie, en controleren we of het klopt." },
+      },
     },
     offer: (setup: number, monitor: number) => `Liever dat wij het herstellen? Instellen kost ${setup} euro eenmalig, bewaking ${monitor} euro per maand, maandelijks opzegbaar. Prijzen excl. btw.`,
     full: {

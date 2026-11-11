@@ -8,7 +8,7 @@
  * zien), one number per claim, no exclamation marks, no countdowns, no jargon
  * (no GEO/AEO/LLM/prompt/credits/garantie). Every mail is pure data in → text out.
  */
-import type { Business, Engine, EngineStip, Finding, InstableFinding, RecommendationSummary, Severity, Stip, Visibility } from "../types.js";
+import type { Business, Engine, EngineStip, Finding, InstableFinding, ProfileSummary, RecommendationSummary, Severity, Stip, Visibility } from "../types.js";
 import { ENGINE_LABEL } from "../types.js";
 import { copy, copyFor, type Lang } from "../copy/index.js";
 import { criteriumFor, severityOf } from "../criteria.js";
@@ -16,6 +16,7 @@ import { findingWordsNl, hostOfUrl } from "../shared/facts-nl.js";
 import { findingWords } from "../shared/facts-en.js";
 import { FIX_PATHS, NOT_FOUND_PATH, RECOMMENDATION_PATH, fixPathForFinding, type FixPath } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
+import { checkedAsParts } from "../shared/checked-as.js";
 import { BRAND, renderMail } from "./layout.js";
 
 export interface Mail {
@@ -251,7 +252,7 @@ export function instableText(instable: InstableFinding[] | undefined): string {
 }
 
 /** Paragraph for the baseline / monthly mails when answers came back empty; empty string otherwise. */
-export function notFoundParagraph(d: { business: Pick<Business, "name">; notFoundAnswers?: number; visibility?: Visibility; notFoundFindings?: number; lang?: Lang }): string {
+export function notFoundParagraph(d: { business: Pick<Business, "name">; notFoundAnswers?: number; visibility?: Visibility; notFoundFindings?: number; lang?: Lang; /** an online business: no Google, Bing, Apple or directories in the sentence */ online?: boolean }): string {
   const M = copyFor(d.lang ?? "nl").mails;
   const n = d.notFoundAnswers ?? 0;
   const v = d.visibility ?? "found";
@@ -260,7 +261,7 @@ export function notFoundParagraph(d: { business: Pick<Business, "name">; notFoun
   if (d.notFoundFindings) parts.push(`${M.notFoundCount(d.notFoundFindings)}.`);
   if (n) parts.push(M.emptyAnswers(n));
   if (v !== "found") parts.push(M.visibility[v](d.business.name));
-  if (v !== "found") parts.push(M.notCounted);
+  if (v !== "found") parts.push(d.online ? M.online.notCounted : M.notCounted);
   return parts.join(" ");
 }
 
@@ -296,8 +297,8 @@ function namedCard(recs: RecommendationSummary[] | undefined, lang: Lang): { tit
 }
 
 /** What happens once Vidalo works on it (copy.mails.howWeFix), as a steps block. */
-const howWeFix = (lang: Lang) => {
-  const H = copyFor(lang).mails.howWeFix;
+const howWeFix = (lang: Lang, online = false) => {
+  const H = online ? copyFor(lang).mails.online.howWeFix : copyFor(lang).mails.howWeFix;
   return { kind: "steps" as const, title: H.title, items: H.items.map((i) => ({ ...i })) };
 };
 
@@ -314,29 +315,35 @@ export interface WelcomeData {
   lang?: Lang;
   /** The plan bought; only Vidalo Monthly ("monitor") promises a check every month (review CMP-01). */
   plan?: Business["plan"];
+  /** an online business (profile mode): no address, hours or Google step, three steps instead of four */
+  online?: boolean;
 }
 
 export function welcomeEmail(d: WelcomeData): Mail {
   const lang = d.lang ?? "nl";
   const W = copyFor(lang).mails.welcome;
+  const O = copyFor(lang).mails.online.welcome;
   const dns = d.cname
     ? { title: W.dns.title, lines: [W.dns.lead, `${d.cname.host}  →  ${d.cname.target}`, W.dns.check] }
     : { title: W.noDomain.title, lines: [W.noDomain.line(d.links.factsPageUrl ?? W.noDomain.ourAddress)] };
   return renderMail({
     lang,
-    subject: W.subject(d.business.name),
-    preheader: W.preheader,
+    subject: d.online ? O.subject(d.business.name) : W.subject(d.business.name),
+    preheader: d.online ? O.preheader : W.preheader,
     headline: W.headline(d.business.name),
     blocks: [
-      { kind: "p", text: W.intro(d.business.name) },
+      { kind: "p", text: d.online ? O.intro(d.business.name) : W.intro(d.business.name) },
       {
         kind: "cards",
-        items: [
-          { title: W.facts.title, lines: [W.facts.line] },
-          dns,
-          { title: W.google.title, lines: [W.google.line, d.links.googleConnectUrl] },
-          { title: W.rest.title, lines: [W.rest.line] },
-        ],
+        // An online business has no Business Profile to log in to: three steps, no address or opening hours.
+        items: d.online
+          ? [{ title: O.facts.title, lines: [O.facts.line] }, dns, { title: O.rest.title, lines: [O.rest.line] }]
+          : [
+              { title: W.facts.title, lines: [W.facts.line] },
+              dns,
+              { title: W.google.title, lines: [W.google.line, d.links.googleConnectUrl] },
+              { title: W.rest.title, lines: [W.rest.line] },
+            ],
       },
       { kind: "cta", label: W.cta, url: d.links.confirmFactsUrl, note: W.ctaNote(d.links.dashboardUrl) },
       { kind: "steps", title: W.after.title, items: W.after.items.map((i, n) => (n === W.after.items.length - 1 && d.plan !== "monitor" ? { ...W.after.scanItem } : { ...i })) },
@@ -376,6 +383,13 @@ export interface BaselineData {
   uncheckedQuestions?: number;
   /** grey because an AI system answered but nothing could be judged (types.ts isUncheckedGrey) */
   uncheckedGrey?: boolean;
+  /**
+   * An online business (report.profile.mode): no town, hours, Google/Bing/Apple or directories in the mail, the
+   * profile as "Gecontroleerd als", and the competition block as counts only (types.ts competitionCountsOf).
+   */
+  online?: boolean;
+  profile?: ProfileSummary | null;
+  competition?: { named: number; answers: number; questions: number } | null;
   lang?: Lang;
 }
 
@@ -401,12 +415,16 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
         : d.wrongAnswers === 0
           ? B.subject.notFound(name, M.notFoundCount(notFoundFindings || d.notFoundAnswers || 0))
           : B.subject.wrong(name, d.wrongAnswers);
-  const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility, notFoundFindings, lang });
+  const online = d.online === true;
+  const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility, notFoundFindings, lang, online });
   // Paying: the full picture is the account. Before that: the report page, which needs no account.
   const full = d.paying ? { ...M.full.paying, url: d.links.dashboardUrl } : { ...M.full.free, url: d.links.resultUrl ?? d.links.dashboardUrl };
   const cards = exampleCards(d.findings, 3, lang);
   const more = d.findings.length - cards.length;
-  const named = namedCard(d.recommendations, lang);
+  // A local business sees who AI named instead (names). An online business sees counts only: no name of another business is mailed.
+  const named = online ? null : namedCard(d.recommendations, lang);
+  const K = C.result.competition;
+  const checkedAs = online ? checkedAsParts(d.profile, C.result.checkedAs) : null;
   const per = (d.engineStips ?? []).map((e) => `${engineName(e.engine)}: ${C.stip[e.stip].toLowerCase()}`);
   const recheck = d.findings.map((f) => fixPathForFinding(f).recheckDays).filter((n) => n > 0);
   const headline =
@@ -429,6 +447,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
     stipText,
     blocks: [
       { kind: "p", text: B.intro(formatMailDate(d.checkedAt, lang), d.totalAnswers, name, engines) },
+      ...(checkedAs ? [{ kind: "note" as const, text: `${checkedAs.line}\n${d.profile?.source === "auto" ? M.online.reading : checkedAs.how}` }] : []),
       ...(per.length ? [{ kind: "note" as const, text: M.perAi(per.join(", ")) }] : []),
       {
         kind: "stats",
@@ -442,6 +461,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
       ...(cards.length ? [{ kind: "cards" as const, title: B.cardsTitle(cards.length), items: cards }] : []),
       ...(more > 0 ? [{ kind: "p" as const, text: B.more(more, full.where) }] : []),
       ...(named ? [{ kind: "cards" as const, title: C.result.named.h2, items: [named] }] : []),
+      ...(online && d.competition ? [{ kind: "cards" as const, title: K.h2, items: [{ title: K.summary(d.competition.named, d.competition.answers), lines: [] }] }, { kind: "note" as const, text: K.note }] : []),
       { kind: "cta", label: full.label, url: full.url, note: d.paying ? undefined : d.offer ? M.offer(d.offer.setupEur, d.offer.monitorEur) : undefined },
       d.paying
         ? {
@@ -455,7 +475,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
               d.business.plan === "monitor" ? { when: M.around(plus(d.checkedAt, 30, lang)), what: M.nextMonthly } : { ...M.nextScan },
             ],
           }
-        : howWeFix(lang),
+        : howWeFix(lang, online),
     ],
   });
 }
@@ -547,6 +567,8 @@ export interface MonthlyReportData {
   instable?: InstableFinding[];
   /** recommendation questions: who AI named instead of the business */
   recommendations?: RecommendationSummary[];
+  /** an online business: the not-found sentence names no Google, Bing, Apple or directories */
+  online?: boolean;
   lang?: Lang;
 }
 
@@ -557,7 +579,7 @@ export function monthlyReportEmail(d: MonthlyReportData): Mail {
   const R = M.monthly;
   const line = statusLine(d, lang);
   const subject = d.stip ? R.subjectStip(d.business.name, d.month, C.stip[d.stip].toLowerCase(), line) : R.subject(d.business.name, d.month, line);
-  const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility: d.visibility, notFoundFindings: d.notFound, lang });
+  const nf = notFoundParagraph({ business: d.business, notFoundAnswers: d.notFoundAnswers, visibility: d.visibility, notFoundFindings: d.notFound, lang, online: d.online });
   const proofs = d.proofCards.slice(0, 3).map((p) => ({ title: R.proofTitle(engineName(p.engine), p.what), lines: [R.was(p.before), R.now(p.after), R.proofSource(p.source, M.days(p.days))], tone: "groen" as Stip }));
   const open = exampleCards(d.openFindings.map((o) => o.finding), 3, lang);
   const moreOpen = d.openFindings.length - open.length;
@@ -608,6 +630,7 @@ export interface FollowUpData {
   links: Links & { resultUrl: string; unsubscribeUrl: string };
   priceSetupEur: number;
   priceMonitorEur: number;
+  online?: boolean;
   lang?: Lang;
 }
 
@@ -631,7 +654,7 @@ export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
         ...(example.length ? [{ kind: "cards" as const, title: F.example, items: example }] : []),
         { kind: "p", text: F.selfFix },
         cta,
-        howWeFix(lang),
+        howWeFix(lang, d.online === true),
       ],
       unsubscribeUrl: d.links.unsubscribeUrl,
     });

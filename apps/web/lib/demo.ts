@@ -268,6 +268,9 @@ export async function seedDemo(db: Db): Promise<void> {
       },
       { provisional: false, verifiedAt: new Date().toISOString() },
     );
+    // What the understanding step read for the demo bakery (the scans above stored an empty door profile): shown on /app/gegevens.
+    const read = (await db.getBusiness(DEMO_SLUG))?.profileAuto;
+    if (read) await db.setAutoProfile(business.id, { ...read, offer: "brood, gebak en taarten op bestelling", audience: "buurtbewoners in Haarlem", category: "bakkerij", basis: ["google", "website"], grounded: true });
     // The fix round the worker runs after a check: one fix per open finding, with its evidence, the owner mail,
     // the republished facts page and a sync of every channel. The Google sync then holds its change for the owner.
     const latest = [...runDates.entries()].sort((a, b) => a[1].localeCompare(b[1])).pop()?.[0];

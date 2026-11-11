@@ -726,7 +726,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 9 November 2026",
+    updated: "Version of 11 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -971,16 +971,18 @@ export const en: CopyShape = {
           h: "Who this is about",
           p: [
             "Vidalo is for businesses. Mostly we process details about a business, such as name, address and opening hours. Those are personal data when they relate to a person, for example a sole trader trading under the owner's name.",
+            "Other businesses appear too: the businesses that AI assistants name next to the business we check. Some of them may be sole traders.",
             "We also process details about the people who deal with us: who requests a check, who has an account or is a customer, who emails or calls us, who joins the ‘Coming soon’ list and who visits our website.",
           ],
         },
         {
           h: "The free check",
           p: [
-            "When you request a free check, we look up the business and ask AI assistants questions about it.",
+            "When you request a free check, we look up the business, first work out what it offers and for whom, and then ask AI assistants questions about it.",
             [
-              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; the answers of AI assistants and the sources they name; your email address, where we send the report. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
-              "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website and the sources AI assistants name.",
+              "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; a short description of what the business offers and for whom; the answers of AI assistants and the sources they name, with the names of other businesses they name; your email address, where we send the report. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
+              "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website, one search through OpenAI and the sources AI assistants name.",
+              "What we do with it: to see what the business offers and for whom, we send OpenAI the name and place for one search (‘What is [name] in [place]?’). We then send OpenAI the answer, the details from Google and the text of the business's homepage, from which we first remove email addresses and phone numbers; OpenAI turns that into a short description. We keep that description with the business, and the report shows it as how we read the business. The report also shows which other businesses AI assistants named and how often.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
               "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, the periods under ‘A paid plan’ apply.",
             ],
@@ -1025,9 +1027,11 @@ export const en: CopyShape = {
           h: "A paid plan",
           p: [
             [
-              "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix.",
+              "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix, and the description of what your business offers and for whom, with your own correction of it.",
               "What we do with it: we publish your confirmed details on your facts page, which anyone can see. We send them to sources containing an error to ask for a fix, and to your Google Business Profile if you connect it. AI assistants receive business details only, never your email address.",
-              "Basis: the performance of the agreement with you.",
+              "If our description of your business is wrong, you correct it under your details in your account, once you have shown that you manage the business. The checks in your plan then use your version; an automatic check does not overwrite it.",
+              "Names of other businesses that AI assistants name may also be used, in a check in your plan, in a question to AI assistants, such as ‘What is a good alternative to [name]?’.",
+              "Basis: the performance of the agreement with you. For the names of other businesses: our legitimate interest, and yours, in seeing whom AI names when someone looks for an alternative (article 6(1)(f) GDPR).",
               "Retention: as long as you are a customer. After your subscription ends we keep your data for another 90 days. We then do one more free check and delete your data within 30 days after that. Only what the law requires for our accounts we keep for 7 years. What has been fixed at another party stays there.",
             ],
           ],
@@ -1107,7 +1111,7 @@ export const en: CopyShape = {
               "Stripe: payments and invoices; EU and United States.",
               "Resend: sending our emails; United States.",
               "Google: our mailbox (Google Workspace), business details from Google Maps, Gemini, signing in with Google and your business profile; EU and United States.",
-              "OpenAI: ChatGPT for the checks, and the assistant on our website; United States.",
+              "OpenAI: ChatGPT for the checks, working out what a business offers, and the assistant on our website; United States.",
               "Anthropic: Claude for the checks; United States.",
               "Twilio: calling or texting the code with which you show that you manage the business; United States.",
               "Google Analytics: visitor statistics, only with your consent; EU and United States.",
@@ -2127,6 +2131,8 @@ export const en: CopyShape = {
         betrouwbaar: (place: string) => `Who is reliable in ${place}?`,
         betaalbaar: (place: string) => `Who is affordable in ${place}?`,
         dichtbij: (place: string) => `Who is near me in ${place}?`,
+        geschikt: (_place: string) => "Which provider suits my situation?",
+        alternatief: (_place: string) => "What is a good alternative?",
       } as Record<string, (place: string) => string>,
     },
   },
@@ -2774,6 +2780,35 @@ export const en: CopyShape = {
     days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     submit: "Confirm details",
     saved: "Details confirmed. We are publishing your facts page and updating the sources.",
+    /** "How we read your business" on /app/gegevens (feature 001, FE-03). */
+    profile: {
+      title: "How we read your business",
+      intro: "Before we ask AI anything, we work out what you do and who it is for. If that is wrong, change it here. The next check uses your version.",
+      modeLegend: "How customers find you",
+      modes: {
+        door: { label: "Customers come to me", hint: "We ask about your opening hours, your address and whether you are open." },
+        visit: { label: "I go to the customer", hint: "We ask about your service area and what you do; no opening hours." },
+        online: { label: "I work online or across the whole country", hint: "We ask about what you do, your website and who AI names for your kind of offer; no opening hours or address." },
+      },
+      offer: "What you offer",
+      offerHint: "for example ‘background music for hotels’",
+      audience: "Who it is for",
+      audienceHint: "for example ‘hotels and restaurants’",
+      category: "How a customer searches for you",
+      categoryHint: "a noun, for example ‘background music provider’",
+      sourceAuto: (date: string) => `Worked out automatically on ${date}, from Google, your website and a search.`,
+      sourceOwner: (date: string) => `Changed by you on ${date}. A later automatic reading does not overwrite it.`,
+      sourceFallback: (date: string) => `On ${date} we could not read your business clearly. We use a general reading until you change it.`,
+      sourceNone: "We have not read your business yet. That happens at the next check; you can also fill it in now.",
+      submit: "Save",
+      saved: "Saved. The next check uses this.",
+      errorTitle: "Not saved",
+      errors: {
+        required: { mode: "Choose one of the three.", offer: "Say what you offer.", audience: "Say who it is for.", category: "Say how a customer searches for you." },
+        refused: { mode: "Choose one of the three.", other: "We cannot use this. Write it as a short description in plain words." },
+        tooLong: (max: number) => `Too long. At most ${max} characters.`,
+      },
+    },
   },
 
   factsHistory: {
@@ -3030,6 +3065,31 @@ export const en: CopyShape = {
         { when: "Weeks 1 to 4", what: "We check every source again. You see per answer whether it is right again." },
         { when: "Every month", what: "A new check of all questions, with a short report." },
       ],
+    },
+    /**
+     * Mails for an online business (feature 001): the same mails without a town, opening hours, Google, Bing,
+     * Apple or directories. The competition counts and "Checked as" reuse copy.result (one wording on every surface).
+     */
+    online: {
+      /** Under "Checked as" in a mail, for an automatic reading (the report page names the sources; a mail only says what kind of statement it is). */
+      reading: "This is our reading of your business, not a fact about your business.",
+      notCounted: "We do not count that as an error, but it does mean a customer who asks gets no answer. We build your facts page and check after 3 weeks whether you are named.",
+      howWeFix: {
+        title: "How we fix it",
+        items: [
+          { when: "Day 1", what: "We record your details and put your facts page live." },
+          { when: "Week 1", what: "We ask the sources with an error for a correction, and show what to change yourself." },
+          { when: "Weeks 1 to 4", what: "We check every source again. You see per answer whether it is right again." },
+          { when: "Every month", what: "A new check of all questions, with a short report." },
+        ],
+      },
+      welcome: {
+        subject: (name: string) => `Welcome to Vidalo: 3 steps for ${name}`,
+        preheader: "Three steps, about 5 minutes in all. Then we do the rest.",
+        intro: (name: string) => `Thank you for your order. From now on we check what AI says about ${name} and take errors to their source. To start, we need 3 things from you, about 5 minutes in all.`,
+        facts: { title: "1. Confirm your details", line: "What you do, for whom, your website and what you do and do not do. We have filled them in already; you check them." },
+        rest: { title: "3. We do the rest", line: "Once your DNS record is in place, your facts page is live. Then we ask the sources with an error for a correction, and check that it is right." },
+      },
     },
     offer: (setup: number, monitor: number) => `Rather have us fix it? Setup costs €${setup} once, monitoring €${monitor} a month, cancel any month. Prices excl. VAT.`,
     full: {

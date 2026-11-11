@@ -8,7 +8,7 @@ import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
 import { requireVerifiedOwner } from "@/lib/owner";
 import { lastConfirmed } from "@vidalo/core/facts-history";
-import { isCountryCode } from "@vidalo/core/shared";
+import { isCountryCode, correctProfile } from "@vidalo/core/shared";
 
 const str = (form: FormData, k: string): string | null => {
   const v = String(form.get(k) ?? "").trim();
@@ -111,4 +111,20 @@ export async function reconfirmFacts() {
   await db.logEvent(business.id, "facts.confirmed", { version: facts.version, reconfirmed: confirmed.version });
   revalidatePath("/app", "layout");
   redirect((await getI18n()).href("/app/gegevens/versies?bevestigd=1"));
+}
+
+/**
+ * "Zo lezen wij je bedrijf": the owner's correction of mode, offer, audience and category (FE-03).
+ * The business is the session's; no business id is read from the form. An error comes back as
+ * `?profielfout=<field>:<reason>`, which the page maps to its own copy (never echoed).
+ */
+export async function saveProfile(form: FormData) {
+  const { business } = await requireVerifiedOwner("/app/gegevens");
+  const db = await ready();
+  const text = (k: string) => String(form.get(k) ?? "");
+  const result = await correctProfile(db, business, { mode: text("profileMode"), offer: text("profileOffer"), audience: text("profileAudience"), category: text("profileCategory") });
+  const { href } = await getI18n();
+  if (!result.ok) redirect(href(`/app/gegevens?profielfout=${result.field}:${result.reason}#profiel`));
+  revalidatePath("/app/gegevens");
+  redirect(href("/app/gegevens?profiel=1#profiel"));
 }

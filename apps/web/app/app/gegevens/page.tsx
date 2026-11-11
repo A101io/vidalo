@@ -3,10 +3,12 @@ import { requireVerifiedOwner } from "@/lib/owner";
 import { loadDashboard } from "@/lib/reads";
 import { dateShort } from "@/lib/format";
 import { FactsForm } from "./FactsForm";
+import { ProfileGroup } from "./ProfileGroup";
+import { effectiveProfile } from "@vidalo/core/scanner";
 import { countryOptions } from "@vidalo/core/shared";
 import { businessNoun } from "@vidalo/core/prompts";
 
-export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string; betwist?: string }> }) {
+export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string; betwist?: string; profiel?: string; profielfout?: string }> }) {
   const sp = await searchParams;
   const { business } = await requireVerifiedOwner("/app/gegevens");
   const { facts, findings } = await loadDashboard(business.id);
@@ -50,6 +52,7 @@ export default async function FactsPage({ searchParams }: { searchParams: Promis
         {sp.fout === "1" && <p className="mt-3 text-[14px] text-rood">{copy.errors.generic}</p>}
         {disputed && <p className="mt-3 rounded-xl bg-panel px-4 py-3 text-[15px]">{F.disputedNotice(copy.factKey[disputed.factKey])}</p>}
       </header>
+      <ProfileGroup profile={effectiveProfile(business)} lang={lang} saved={sp.profiel === "1"} error={sp.profielfout} />
       <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} kindDefault={businessNoun({ ...initial, kind: null }, business.sector)} />
     </div>
   );

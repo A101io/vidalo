@@ -11,7 +11,8 @@ import { findingSeverity } from "@vidalo/core/scanner";
 import type { ReportRowData } from "@/components/ReportRow";
 import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
-import { isUncheckedGrey } from "@vidalo/core/types";
+import { competitionCountsOf, isUncheckedGrey } from "@vidalo/core/types";
+import { checkedAsParts } from "@vidalo/core/shared";
 import { hostOf } from "./format";
 
 export type ReportState = "rood" | "groen" | "grijs";
@@ -235,24 +236,20 @@ function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy:
 
 /** "Gecontroleerd als: aanbieder van achtergrondmuziek voor hotels en horeca, online": Vidalo's reading, and how to correct it. */
 function checkedAsFor(report: ScanReport, copy: CopyShape): { checkedAs: string | null; checkedAsNote: string | null } {
-  const p = report.profile;
-  if (!p) return { checkedAs: null, checkedAsNote: null };
-  const C = copy.result.checkedAs;
-  // A fallback reading shows the mode words only: we did not read the business, we assumed its kind (compliance B4).
-  const described = p.source === "fallback" ? null : (p.category ?? p.offer);
-  const what = described ? [described, p.audience && p.category ? C.forAudience(p.audience) : null].filter(Boolean).join(" ") + `, ${C.mode[p.mode]}` : C.modeOnly[p.mode];
-  return { checkedAs: C.line(what), checkedAsNote: C.how[p.source] };
+  // The same function the CLI and the mails use (core shared/checked-as.ts).
+  const parts = checkedAsParts(report.profile, copy.result.checkedAs);
+  return { checkedAs: parts?.line ?? null, checkedAsNote: parts?.how ?? null };
 }
 
 /** One entry per category and alternative question: how often the business was named, who else, and what AI wrote about it. Counts only. */
 function competitionFor(report: ScanReport, copy: CopyShape): CompetitionView | null {
   const K = copy.result.competition;
   const rows = (report.recommendations ?? []).filter((r) => r.family === "rec_category" || r.family === "alternative");
-  if (!rows.length) return null;
-  const named = rows.reduce((n, r) => n + r.named, 0);
-  const answers = rows.reduce((n, r) => n + r.answers, 0);
+  const counts = competitionCountsOf(report);
+  if (!counts) return null;
   return {
-    summary: K.summary(named, answers),
+    // The counts the free-check mail shows come from the same function (core types.ts).
+    summary: K.summary(counts.named, counts.answers),
     questions: rows.map((r) => ({
       question: r.prompt,
       you: K.you(r.named, r.answers),

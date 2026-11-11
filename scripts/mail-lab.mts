@@ -5,14 +5,21 @@
  *
  *   pnpm mail:lab              → out/mail-lab/index.html (+ the .eml files)
  *
- * Two journeys: a business that only did the free check (report mail, the
- * day-7 and day-21 follow-ups), and one that pays (welcome, own-website
+ * Three journeys: a business that only did the free check (report mail, the
+ * day-7 and day-21 follow-ups), an online business (feature 001: the same
+ * mails, and its welcome and monthly report, without a town, hours, Google,
+ * Bing, Apple or directories, with the profile as "Gecontroleerd als" and the
+ * competition as counts), and one that pays (welcome, own-website
  * check, directory corrections, fixes, rechecks weeks later, monthly report,
  * resolved and unfixable notices, the yearly re-confirmation). Both run
  * twice: for a Dutch owner and for an owner who chose English
  * (business.language). A mail kind that no journey reaches in mock mode is
  * rendered from its template with the journey's real records and marked
  * "template only".
+ *
+ * Checks per online mail: no town, no local wording, no name of another
+ * business, no score; the profile line and the competition counts in the
+ * report mail; a hostile business name comes out escaped (security S-34).
  *
  * Checks per mail: the right recipient (owner vs third party), the right
  * language (the owner's; letters to third parties always Dutch), no leftover
@@ -45,7 +52,7 @@ const { handlerFor } = await import("@vidalo/worker/src/jobs/index.ts");
 const { runSiteCheck, syncAllChannels } = await import("@vidalo/core/publisher");
 const { runRecheck, correctionRequestEmail, correctionFollowUpEmail, ownerWebsiteReminderEmail, fixPathForFinding } = await import("@vidalo/core/fixer");
 const reporter = await import("@vidalo/core/reporter");
-const { sendMail, sendFollowUp, sendMonthlyReport, sendResolutionNotice, sendUnfixableNotice, dashboardUrl, factsPageUrl, textToHtml } = reporter;
+const { sendMail, sendFollowUp, sendWelcome, sendMonthlyReport, sendResolutionNotice, sendUnfixableNotice, dashboardUrl, factsPageUrl, textToHtml } = reporter;
 const { fromUrl } = await import("../apps/web/lib/lang-paths.ts");
 
 type Lang = "nl" | "en";
@@ -55,6 +62,12 @@ const JOURNEY: Record<Lang, { free: { name: string; place: string; owner: string
   nl: { free: { name: "Kapsalon Jansen", place: "Leiden", owner: "info@kapsalonjansen.nl" }, paid: { name: "Bakkerij De Vries", place: "Haarlem", owner: "eigenaar@bakkerijdevries.nl", domain: "bakkerijdevries.nl" } },
   en: { free: { name: "Kapsalon Smit", place: "Delft", owner: "info@kapsalonsmit.nl" }, paid: { name: "Bakkerij Bakker", place: "Utrecht", owner: "eigenaar@bakkerijbakker.nl", domain: "bakkerijbakker.nl" } },
 };
+/** Online businesses with made-up names (mock output is public: compliance C-30), one per language, plus one with markup in its name. */
+const ONLINE: Record<Lang, { name: string; place: string; owner: string }> = {
+  nl: { name: "Vloedlijn Music", place: "Utrecht", owner: "info@vloedlijn.example" },
+  en: { name: "Zeilmaker Music", place: "Delft", owner: "info@zeilmaker.example" },
+};
+const HOSTILE = { name: `Tonic & "Co" <b>Music</b>`, place: "Breda", owner: "info@tonic.example", lang: "nl" as Lang };
 const DAY = 24 * 60 * 60 * 1000;
 
 /** Every kind, as the code tags it (reporter `type`, job `kind`), and who should receive it. */
@@ -105,6 +118,26 @@ async function journeys(lang: Lang) {
   await setBusinessStatus(free.business.id, "scanned", { via: "mail-lab" });
   await sendFollowUp(free.business.id, 7);
   await sendFollowUp(free.business.id, 21);
+
+  // Journey 1b: an online business. The free-check mail and the follow-ups, then (as a paying owner) the welcome and the monthly report.
+  for (const o of lang === "nl" ? [ONLINE.nl, HOSTILE] : [ONLINE.en]) {
+    const on = await prepareBusiness({ name: o.name, place: o.place, db });
+    const onRun = await runScan({ businessId: on.business.id, kind: "free", db });
+    await db.upsertBusiness({ id: on.business.id, slug: on.business.slug, name: on.business.name, place: on.business.place, ownerEmail: o.owner, language: lang });
+    await db.enqueueJob("email", { template: "baseline", scanRunId: onRun.scanRunId, businessId: on.business.id });
+    await drain();
+    // Only after the report mail, so that mail stays what the check found.
+    // The follow-ups need something wrong to show; the mock leaves some businesses without. One wrong website, as a real check would store it.
+    if (!(await db.listFindings(on.business.id)).length)
+      await db.upsertFindings([{ businessId: on.business.id, scanRunId: onRun.scanRunId, factKey: "website", subject: null, engine: "chatgpt", wrongValue: "voorbeeld-fout.example", correctValue: "voorbeeld.example", frequency: 2, sampleCount: 3, sourceUrl: null, sourceType: "none", evidenceBefore: null }]);
+    await setBusinessStatus(on.business.id, "scanned", { via: "mail-lab" });
+    await sendFollowUp(on.business.id, 7);
+    await sendFollowUp(on.business.id, 21);
+    if (o === HOSTILE) continue;
+    await db.upsertBusiness({ id: on.business.id, slug: on.business.slug, name: on.business.name, place: on.business.place, plan: "monitor" });
+    await sendWelcome(on.business.id);
+    await sendMonthlyReport(on.business.id, { scanRunId: onRun.scanRunId });
+  }
 
   // Journey 2: paying, verified owner. Everything after checkout.
   const paid = await prepareBusiness({ name: J.paid.name, place: J.paid.place, db });
@@ -190,7 +223,7 @@ async function journeys(lang: Lang) {
 for (const lang of LANGS) await journeys(lang);
 
 // Read every mail back and check it.
-type Mail = { file: string; kind: string; to: string; from: string; subject: string; headers: Record<string, string>; text: string; html: string | null; links: string[]; problems: string[]; warnings: string[]; journey?: Lang; lang?: Lang };
+type Mail = { online?: boolean; file: string; kind: string; to: string; from: string; subject: string; headers: Record<string, string>; text: string; html: string | null; links: string[]; problems: string[]; warnings: string[]; journey?: Lang; lang?: Lang };
 function parse(file: string, raw: string): Mail {
   const [head, ...rest] = raw.split("\r\n\r\n");
   const headers: Record<string, string> = {};
@@ -227,7 +260,9 @@ const routes: RegExp[] = [];
 
 const base = new URL(process.env.PUBLIC_BASE_URL!);
 /** owner address → the language that owner chose */
-const ownerOf: Record<string, Lang> = Object.fromEntries(LANGS.flatMap((l) => [[JOURNEY[l].free.owner, l], [JOURNEY[l].paid.owner, l]]));
+const ownerOf: Record<string, Lang> = Object.fromEntries([...LANGS.flatMap((l) => [[JOURNEY[l].free.owner, l], [JOURNEY[l].paid.owner, l], [ONLINE[l].owner, l]]), [HOSTILE.owner, HOSTILE.lang]]);
+/** online owner address → the business behind it */
+const onlineOf: Record<string, { name: string; place: string }> = Object.fromEntries([...LANGS.map((l) => [ONLINE[l].owner, ONLINE[l]]), [HOSTILE.owner, HOSTILE]]);
 const mails: Mail[] = [];
 for (const f of (await readdir(mailDir)).sort()) {
   const m = parse(f, await readFile(path.join(mailDir, f), "utf8"));
@@ -237,6 +272,7 @@ for (const f of (await readdir(mailDir)).sort()) {
   else if (want.to === "third_party" && ownerOf[m.to]) m.problems.push("third-party mail went to the owner");
   // Which journey it belongs to, and the language it must be in: the owner's; a letter to a third party is always Dutch.
   m.journey = ownerOf[m.to] ?? LANGS.find((l) => m.text.includes(JOURNEY[l].paid.name) || m.text.includes(JOURNEY[l].free.name));
+  m.online = onlineOf[m.to] != null;
   m.lang = want?.to === "owner" ? m.journey : "nl";
   if (!m.journey) m.problems.push("mail belongs to no journey");
   if (want?.to === "owner" && m.lang) {
@@ -244,7 +280,7 @@ for (const f of (await readdir(mailDir)).sort()) {
     if (m.html && !m.html.includes(`<html lang="${m.lang}">`)) m.problems.push(`HTML part is not <html lang="${m.lang}">`);
     if (m.headers["X-Vidalo-lang"] !== m.lang) m.problems.push(`lang tag is ${m.headers["X-Vidalo-lang"] ?? "missing"}, owner chose ${m.lang}`);
     // Dutch left in an English mail. Not counted: links and hosts, the question as it was asked (in Dutch), the names AI gave and its answers quoted as evidence.
-    const own = `${m.subject}\n${m.text}`.split("\n").filter((l) => !/^(Question|Named instead|Taken from|Was|Now): |^"/.test(l)).join("\n").replace(/\S*(https?:\/\/|\.nl\b|\.com\b)\S*/g, "");
+    const own = `${m.subject}\n${m.text}`.split("\n").filter((l) => !/^(Question|Named instead|Taken from|Was|Now|Checked as): |^"/.test(l)).join("\n").replace(/\S*(https?:\/\/|\.nl\b|\.com\b)\S*/g, "");
     const dutch = m.lang === "en" ? /\b(Hoi|Groet|je|jouw|niet|heeft|wij|ons|het|een|van|voor|staat|klopt|kloppen|hersteld|overzicht|Afmelden)\b/.exec(own.replace(new RegExp(Object.values(JOURNEY).flatMap((j) => [j.free.name, j.paid.name, j.free.place, j.paid.place]).join("|"), "g"), "")) : null;
     if (dutch) m.problems.push(`English owner mail with Dutch wording: "${dutch[0]}"`);
   }
@@ -266,6 +302,26 @@ for (const f of (await readdir(mailDir)).sort()) {
   if (want?.to === "owner" && !m.html?.includes('data-brand="vidalo"')) m.problems.push("owner mail without the Vidalo-branded HTML");
   if (want?.to === "owner" && m.html && !m.html.includes("A101 B.V.")) m.problems.push("owner mail without the company line");
   if (want?.to === "third_party" && m.html) m.problems.push("third-party mail carries Vidalo HTML; it is a letter from the owner");
+  const on = onlineOf[m.to];
+  if (on) {
+    // What a reader sees: subject, text, and the HTML without tags, entities or links (a facts-page link carries the business's slug).
+    const seen = `${m.subject}\n${m.text}\n${(m.html ?? "").replace(/<[^>]*>/g, " ").replace(/&#\d+;/g, "")}`.replace(/https?:\/\/\S+/g, "").replace(/\S*\.(com|io|nl|org|example)\b\S*/g, "");
+    if (seen.toLowerCase().includes(on.place.toLowerCase())) m.problems.push(`online mail names the town ${on.place}`);
+    const local = /openingstijd|opening hours|vestiging|branch\b|\bBing\b|\bApple\b|Google(?! AI)|\bgids|directories|directory|bedrijfsprofiel|business profile|Adres, telefoon|Address, phone/i.exec(seen);
+    if (local) m.problems.push(`online mail has local wording: "${local[0]}"`);
+    if (/Voorbeeld |\bDe Wit\b|\bVan der Berg\b/.test(seen)) m.problems.push("online mail names another business");
+    const score = /%|score|ranking|share of voice|\bplek\b|positie|\bposition\b|we make sure|zorgen dat/i.exec(seen);
+    if (score) m.problems.push(`online mail has a score, position or promise: "${score[0]}"`);
+    if (m.kind === "baseline") {
+      if (!/(Gecontroleerd als|Checked as): /.test(m.text)) m.problems.push("online report mail without the Gecontroleerd-als line");
+      if (!/(Genoemd in|Named in) \d+ (van|of) \d+ (antwoord|answer)/.test(m.text)) m.problems.push("online report mail without the competition counts");
+    }
+    // Security S-34: markup in the business's name arrives escaped in the HTML part and nowhere as a tag.
+    if (on.name.includes("<")) {
+      if ((m.html ?? "").includes("<b>Music") || (m.html ?? "").includes(on.name)) m.problems.push("hostile name is not escaped in the HTML");
+      if (!(m.html ?? "").includes("&lt;b&gt;Music&lt;/b&gt;")) m.problems.push("hostile name does not appear escaped in the HTML");
+    }
+  }
   mails.push(m);
 }
 
@@ -276,7 +332,11 @@ for (const group of seenBody.values()) if (group.length > 1) for (const m of gro
 const warned = mails.filter((m) => m.warnings.length);
 
 /** Every kind in both journeys: an owner mail in the owner's language, a third-party letter in Dutch either way. */
-const missing = LANGS.flatMap((l) => Object.keys(KINDS).filter((k) => !mails.some((m) => m.kind === k && m.journey === l)).map((k) => `${k}:${l}`));
+const missing = LANGS.flatMap((l) => Object.keys(KINDS).filter((k) => !mails.some((m) => m.kind === k && m.journey === l && !m.online)).map((k) => `${k}:${l}`));
+/** The online journey must reach these in both languages (the hostile name is Dutch, baseline and follow-ups only). */
+const ONLINE_KINDS = ["baseline", "followup_7", "followup_21", "welcome", "report"];
+const onlineMissing = LANGS.flatMap((l) => ONLINE_KINDS.filter((k) => !mails.some((m) => m.kind === k && m.to === ONLINE[l].owner)).map((k) => `online ${k}:${l}`));
+const hostileMissing = ["baseline", "followup_7", "followup_21"].filter((k) => !mails.some((m) => m.kind === k && m.to === HOSTILE.owner)).map((k) => `hostile ${k}`);
 const failing = mails.filter((m) => m.problems.length);
 
 // The page: one card per kind (the first of each; the rest counted), then the full list.
@@ -284,7 +344,7 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const JOURNEY_LABEL: Record<Lang, string> = { nl: "Dutch owner", en: "English owner" };
 const cards = LANGS.flatMap((lang) => Object.entries(KINDS).map(([kind, k]) => ({ kind, k, lang })))
   .map(({ kind, k, lang }) => {
-    const all = mails.filter((m) => m.kind === kind && m.journey === lang);
+    const all = mails.filter((m) => m.kind === kind && m.journey === lang && !m.online);
     const m = all[0];
     if (!m) return `<section class="card bad"><h2>${esc(k.label)} <code>${kind}</code> <span class="tag">${JOURNEY_LABEL[lang]}</span></h2><p>Not produced.</p></section>`;
     const problems = all.flatMap((x) => x.problems);
@@ -299,6 +359,18 @@ const cards = LANGS.flatMap((lang) => Object.entries(KINDS).map(([kind, k]) => (
 </section>`;
   })
   .join("\n");
+const onlineCards = [...LANGS.flatMap((l) => ONLINE_KINDS.map((kind) => ({ kind, to: ONLINE[l].owner, lang: l, label: `${KINDS[kind]!.label}, online business` }))), ...["baseline", "followup_7", "followup_21"].map((kind) => ({ kind, to: HOSTILE.owner, lang: HOSTILE.lang, label: `${KINDS[kind]!.label}, markup in the name` }))]
+  .map(({ kind, to, lang, label }) => {
+    const m = mails.find((x) => x.kind === kind && x.to === to);
+    if (!m) return `<section class="card bad"><h2>${esc(label)} <code>${kind}</code> <span class="tag">${JOURNEY_LABEL[lang]}</span></h2><p>Not produced.</p></section>`;
+    return `<section class="card${m.problems.length ? " bad" : ""}" id="online-${kind}-${lang}-${to}">
+  <h2>${esc(label)} <code>${kind}</code> <span class="tag">${JOURNEY_LABEL[lang]}</span></h2>
+  <dl><dt>To</dt><dd>${esc(m.to)}</dd><dt>Subject</dt><dd><b>${esc(m.subject)}</b></dd></dl>
+  ${m.problems.length ? `<ul class="problems">${[...new Set(m.problems)].map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : '<p class="ok">All checks passed.</p>'}
+  <div class="views">${m.html ? `<iframe sandbox title="${esc(m.subject)}" srcdoc="${esc(m.html)}"></iframe>` : ""}<pre>${esc(m.text)}</pre></div>
+</section>`;
+  })
+  .join("\n");
 const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vidalo mail lab</title>
 <style>body{font:15px/1.5 system-ui,sans-serif;margin:0;background:#f6f7f9;color:#111827}main{max-width:1200px;margin:0 auto;padding:24px 16px}h1{font-size:24px;margin:0 0 4px}.sum{color:#4b5563;margin:0 0 20px}
 .card{background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:16px;margin:0 0 16px}.card.bad{border-color:#dc2626}h2{font-size:17px;margin:0 0 8px}code{font:12px ui-monospace,monospace;color:#4b5563}
@@ -306,7 +378,9 @@ const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 .ok{color:#15803d;margin:4px 0}.warn{color:#b45309;margin:4px 0}.problems{color:#b91c1c;margin:4px 0}.views{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:800px){.views{grid-template-columns:1fr}}
 iframe{width:100%;height:520px;border:1px solid #e5e7eb;border-radius:6px;background:#fff}pre{white-space:pre-wrap;margin:0;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px;font:13px/1.5 ui-monospace,monospace;max-height:520px;overflow:auto}</style></head>
 <body><main><h1>Vidalo mail lab</h1><p class="sum">${mails.length} mails, ${Object.keys(KINDS).length * LANGS.length - missing.length} of ${Object.keys(KINDS).length * LANGS.length} kinds (each kind for a Dutch and an English owner), ${failing.length} with problems, ${warned.length} with warnings. Mock mode; nothing was sent. Generated ${new Date().toISOString()}. Not here: the sign-in link (sent by Supabase).</p>
-${cards}</main></body></html>`;
+${cards}
+<h1 style="margin-top:32px">Online business</h1><p class="sum">The same mails for a business that is only online: no town, no opening hours, no Google, Bing, Apple or directories, no name of another business; the profile as "Gecontroleerd als" and the competition as counts.</p>
+${onlineCards}</main></body></html>`;
 await mkdir(OUT, { recursive: true });
 await writeFile(path.join(OUT, "index.html"), page, "utf8");
 await writeFile(path.join(OUT, "mails.json"), JSON.stringify(mails.map(({ text: _t, html: _h, ...m }) => m), null, 2), "utf8");
@@ -318,10 +392,12 @@ for (const [kind, k] of Object.entries(KINDS)) {
   console.log(`  ${per.every((x) => x.n) ? "✓" : "✗"} ${kind.padEnd(22)} ${tags}  ${k.label}${k.to === "third_party" ? " (letter in Dutch)" : ""}`);
 }
 if (templateOnly.size) console.log("  * template only");
+const onlineBad = mails.filter((m) => m.online);
+console.log(`  online business: ${onlineBad.length} mails (${onlineBad.filter((m) => m.problems.length).length} with problems), missing: ${[...onlineMissing, ...hostileMissing].join(", ") || "none"}`);
 for (const w of new Set(warned.flatMap((m) => m.warnings.map((x) => `${m.kind}: ${x}`)))) console.log(`  ! ${w}`);
 for (const m of failing) for (const p of m.problems) console.log(`  ✗ ${m.kind}: ${p}  (${m.file})`);
-if (missing.length || failing.length) {
-  console.log(`FAIL: ${missing.length} kinds missing, ${failing.length} mails with problems`);
+if (missing.length || failing.length || onlineMissing.length || hostileMissing.length) {
+  console.log(`FAIL: ${missing.length + onlineMissing.length + hostileMissing.length} kinds missing, ${failing.length} mails with problems`);
   process.exit(1);
 }
 console.log("OK mail-lab");

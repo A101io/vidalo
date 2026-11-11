@@ -2,8 +2,9 @@
  * Reporter: turns db state into e-mails in the owner's language
  * (business.language) and proof-card data.
  */
-import type { Engine, Finding, Sample, ScanReport } from "../types.js";
-import { ENGINES, isUncheckedGrey, uncheckedAnswersOf } from "../types.js";
+import type { Engine, Finding, ProfileSummary, Sample, ScanReport } from "../types.js";
+import { ENGINES, competitionCountsOf, isOnlineProfile, isUncheckedGrey, uncheckedAnswersOf } from "../types.js";
+import { effectiveProfile } from "../scanner/understand.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb } from "../shared/db.js";
 import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
@@ -99,7 +100,18 @@ function sourceLabel(f: Finding, lang: Lang): string {
 /** Not-found answer count, visibility, colour and instable answers for a scan run, rebuilt from stored samples and claims. */
 async function notFoundStats(
   scanRunId: string | null | undefined,
-): Promise<(Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable" | "recommendations"> & { uncheckedAnswers: number; uncheckedQuestions: number; uncheckedGrey: boolean }) | null> {
+): Promise<
+  | (Pick<ScanReport, "notFoundAnswers" | "visibility" | "stip" | "engineStips" | "instable" | "recommendations" | "totalAnswers" | "wrongAnswers"> & {
+      uncheckedAnswers: number;
+      uncheckedQuestions: number;
+      uncheckedGrey: boolean;
+      /** the profile the scan was asked with, and whether it was an online business */
+      profile: ProfileSummary | null;
+      online: boolean;
+      competition: ReturnType<typeof competitionCountsOf>;
+    })
+  | null
+> {
   if (!scanRunId) return null;
   try {
     const { buildReport } = await import("../scanner/index.js");
@@ -108,7 +120,7 @@ async function notFoundStats(
     const checkedKeys = new Set(about.filter((a) => a.checked).map((a) => `${a.factKey}:${a.subject ?? ""}`));
     const uncheckedKeys = new Set(about.filter((a) => !a.checked).map((a) => `${a.factKey}:${a.subject ?? ""}`).filter((k) => !checkedKeys.has(k)));
     const uncheckedAnswers = uncheckedAnswersOf(r);
-    return { notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable, recommendations: r.recommendations, uncheckedAnswers, uncheckedQuestions: uncheckedAnswers > 0 ? Math.max(1, uncheckedKeys.size) : 0, uncheckedGrey: isUncheckedGrey(r) };
+    return { totalAnswers: r.totalAnswers, wrongAnswers: r.wrongAnswers, profile: r.profile ?? null, online: isOnlineProfile(r.profile), competition: competitionCountsOf(r), notFoundAnswers: r.notFoundAnswers, visibility: r.visibility, stip: r.stip, engineStips: r.engineStips, instable: r.instable, recommendations: r.recommendations, uncheckedAnswers, uncheckedQuestions: uncheckedAnswers > 0 ? Math.max(1, uncheckedKeys.size) : 0, uncheckedGrey: isUncheckedGrey(r) };
   } catch (err) {
     log.warn("reporter.not_found_stats_failed", { scanRunId, error: String((err as Error)?.message ?? err) });
     return null;
@@ -181,6 +193,7 @@ export async function sendWelcome(businessId: string): Promise<MailResult | null
     lang: langOf(business),
     business,
     plan: business.plan,
+    online: isOnlineProfile(effectiveProfile(business)),
     cname,
     links: {
       dashboardUrl: dashboardUrl(business),
@@ -204,14 +217,16 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
   const findings = await db.listFindingsByScanRun(scanRunId);
   const prompts = await db.listPrompts(business.id, { activeOnly: true });
   const samples = await db.listSamples(scanRunId);
-  const totalAnswers = samples.length || prompts.length * run.engines.length;
   const nf = await notFoundStats(scanRunId);
+  // The report's own count of answered questions: the unchecked count below is a part of exactly this number.
+  const totalAnswers = nf?.totalAnswers ?? (samples.length || prompts.length * run.engines.length);
   const m = baselineSummaryEmail({
     lang: langOf(business),
     business,
     checkedAt: run.finishedAt ?? run.startedAt,
     totalAnswers,
-    wrongAnswers: findings.filter((f) => f.verdict !== "not_found").length,
+    // The report's own count of wrong answers, like the total and the unchecked answers around it.
+    wrongAnswers: nf?.wrongAnswers ?? findings.filter((f) => f.verdict !== "not_found").length,
     notFoundAnswers: nf?.notFoundAnswers,
     visibility: nf?.visibility,
     stip: nf?.stip,
@@ -221,6 +236,9 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
     uncheckedAnswers: nf?.uncheckedAnswers,
     uncheckedQuestions: nf?.uncheckedQuestions,
     uncheckedGrey: nf?.uncheckedGrey,
+    online: nf?.online,
+    profile: nf?.profile,
+    competition: nf?.competition,
     findings,
     engines: run.engines,
     // A paying owner's button goes to the account; before that, to the report page, with the offer.
@@ -282,7 +300,6 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
   const engines: Engine[] = run?.engines ?? ENGINES;
   const prompts = await db.listPrompts(business.id, { activeOnly: true });
   const samples = run ? await db.listSamples(run.id) : [];
-  const totalAnswers = samples.length || prompts.length * engines.length;
 
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - 31);
@@ -296,6 +313,7 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
   const open: OpenFindingLine[] = openFindings.map((f) => ({ finding: f, nextStep: fixLabel(fixPathForFinding(f), lang), since: f.firstSeenAt }));
   const isNotFound = (f: Finding) => f.verdict === "not_found";
   const nf = await notFoundStats(run?.id);
+  const totalAnswers = nf?.totalAnswers ?? (samples.length || prompts.length * engines.length);
 
   const m = monthlyReportEmail({
     lang,
@@ -305,6 +323,7 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
     totalAnswers,
     uncheckedAnswers: nf?.uncheckedAnswers,
     uncheckedGrey: nf?.uncheckedGrey,
+    online: nf?.online,
     wrongAnswers: openFindings.filter((f) => !isNotFound(f)).length + unfixable.filter((f) => !isNotFound(f)).length,
     notFound: openFindings.filter(isNotFound).length + unfixable.filter(isNotFound).length,
     notFoundAnswers: nf?.notFoundAnswers,
@@ -360,6 +379,7 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
       business,
       wrongAnswers: findings.length,
       totalAnswers,
+      online: isOnlineProfile(lastRun?.profile),
       example,
       links: { dashboardUrl: dashboardUrl(business), resultUrl: resultUrl({ ...business, scanRunId: lastRun?.id }), unsubscribeUrl: unsubscribeUrl(business) },
       priceSetupEur: PRICE_SETUP,

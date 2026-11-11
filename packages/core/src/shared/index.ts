@@ -21,3 +21,5 @@ export * from "./typed-business.js";
 // Also exported on its own as "@vidalo/core/shared/gate": the edge middleware must not pull db.js in.
 export * from "./gate.js";
 export * from "./country.js";
+export * from "./profile-correction.js";
+export * from "./checked-as.js";
