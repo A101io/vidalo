@@ -22,6 +22,8 @@ export const accountSecurityNl = {
     body: "Log uit op elk apparaat waar je met dit account bent ingelogd, ook op dit apparaat.",
     button: "Overal uitloggen",
   },
+  /** /inloggen?opnieuw=1: deleting everything and changing the address need a sign-in from the last 15 minutes. */
+  reSignIn: "Voor deze stap log je eerst opnieuw in. We sturen je een nieuwe inloglink; daarmee kom je terug waar je was.",
   /** /inloggen?fout=verlopen, and when this browser's sign-in ended. */
   expired: "Je bent uitgelogd: je was een tijd niet ingelogd, of je logde ergens anders overal uit. Log hieronder opnieuw in.",
   /** /inloggen?uitgelogd=overal */

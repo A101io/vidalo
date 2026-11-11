@@ -49,6 +49,8 @@ export default defineConfig({
         SUPABASE_ANON_KEY: "fake-anon-key",
         SUPABASE_SERVICE_ROLE_KEY: "",
         VIDALO_AUTH_SECRET: "e2e-auth-secret",
+        // Fresh sign-in window of 20 s instead of 15 min, so a stale sign-in can be tested (lib/fresh-sign-in.ts; ignored in production builds).
+        VIDALO_TEST_FRESH_SECONDS: "20",
         DATABASE_URL: "",
         VIDALO_DB: "",
         VIDALO_COMING_SOON: "0",

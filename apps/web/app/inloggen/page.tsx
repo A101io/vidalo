@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
  *    22 Oct 2026 this showed the e-mail form with a red "geen bedrijf" error,
  *    and a new link could not fix it.
  */
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string; uitgelogd?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string; uitgelogd?: string; opnieuw?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   const a = copy.auth;
@@ -33,7 +33,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const session = await getSession();
   const S = copy.accountSecurity;
 
-  if (session) {
+  const again = sp.opnieuw === "1";
+  if (session && !again) {
     const owned = await getOwnedBusiness(session);
     // Only a business id, never a slug. The button only offers; claimBusiness checks the payment.
     const wanted = sp.business && isBusinessId(sp.business) ? await (await ready()).getBusiness(sp.business) : null;
@@ -104,7 +105,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <Shell>
       <h1 className="h2">{a.h1}</h1>
       <p role="status" aria-live="polite" className="mt-3 text-[15px] empty:hidden">
-        {sp.verwijderd === "1" ? copy.account.myData.deleted : sp.uitgelogd === "overal" ? S.signedOutEverywhere : expired ? S.expired : ""}
+        {sp.verwijderd === "1" ? copy.account.myData.deleted : sp.uitgelogd === "overal" ? S.signedOutEverywhere : again && !sp.sent ? S.reSignIn : expired ? S.expired : ""}
       </p>
       {sp.sent === "1" ? (
         <p className="lead mt-4">{a.sent}</p>
@@ -118,7 +119,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <label htmlFor="email" className="field-label">
               {a.label}
             </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} />
+            <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} defaultValue={again && session ? session.email : undefined} />
             {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
             {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
             {sp.fout === "wacht" && <p className="mt-2 text-[14px] text-rood">{a.rateLimited}</p>}

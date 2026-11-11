@@ -215,3 +215,73 @@ test("(d) Uitloggen ends this browser only; (f) the list shows both sign-ins; (e
   await a.close();
   await b.close();
 });
+
+// ---- A-03: link limits, no enumeration, Origin checks, fresh sign-in ----
+
+async function requestLink(page: import("@playwright/test").Page, email: string): Promise<{ url: string; action: { status: number; location: string | null } }> {
+  await page.goto("/inloggen");
+  await page.locator("input[name='email']").fill(email);
+  const posted = page.waitForResponse((r) => r.request().method() === "POST" && new URL(r.url()).pathname === "/inloggen");
+  await page.locator("form button[type='submit']").first().click();
+  const res = await posted;
+  await page.waitForURL(/\/inloggen\?(sent|fout)=/);
+  return { url: page.url(), action: { status: res.status(), location: res.headers()["x-action-redirect"] ?? res.headers()["location"] ?? null } };
+}
+
+test("AC-4(a): the same answer for an address with a business, with only an account, and unknown", async ({ page }) => {
+  const accountOnly = `alleen-account-${Date.now()}@example.nl`;
+  await linkFor(page.request, accountOnly); // the fake now has a user for it
+  const out = [];
+  for (const email of [DEMO_OWNER, accountOnly, `onbekend-${Date.now()}@example.nl`]) out.push(await requestLink(page, email));
+  for (const o of out) expect(o.url).toMatch(/\/inloggen\?sent=1$/);
+  expect(new Set(out.map((o) => JSON.stringify(o.action))).size, JSON.stringify(out.map((o) => o.action))).toBe(1);
+  // The dev server adds a per-request "?v=<time>" to its asset links and Next a per-render id (__next_r); nothing else may differ.
+  const bodies = await Promise.all([0, 1, 2].map(async () => (await (await page.request.get("/inloggen?sent=1")).text()).replace(/\?v=\d+/g, "").replace(/__next_r="[^"]*"/g, "")));
+  const at = [...bodies[0]!].findIndex((c, i) => c !== bodies[1]![i] || c !== bodies[2]![i]);
+  expect(new Set(bodies).size, at < 0 ? "" : `${bodies[0]!.slice(at - 60, at + 60)} | ${bodies[1]!.slice(at - 60, at + 60)}`).toBe(1);
+});
+
+test("AC-4(b): the 6th link for one address in an hour is refused, and nothing is mailed", async ({ page }) => {
+  const email = `zes-${Date.now()}@example.nl`;
+  const mails = async () => ((await (await page.request.get(`${process.env.FAKE_GOTRUE_URL}/__test/mails?email=${email}`)).json()) as unknown[]).length;
+  for (let i = 0; i < 5; i++) expect((await requestLink(page, email)).url).toMatch(/sent=1/);
+  expect(await mails()).toBe(5);
+  expect((await requestLink(page, email)).url).toMatch(/fout=wacht/);
+  expect(await mails()).toBe(5);
+  await expect(page.locator("form")).toContainText("Je hebt net al een inloglink gevraagd");
+});
+
+test("AC-4(e): a foreign POST to sign-out or the billing portal changes nothing", async ({ page }) => {
+  await signIn(page, DEMO_OWNER, "/app");
+  const out = await page.request.post("/auth/uitloggen", { headers: { origin: "https://evil.example" }, maxRedirects: 0 });
+  expect(out.status()).toBe(403);
+  const portal = await page.request.post("/api/billing/portal", { headers: { origin: "https://evil.example" }, form: { business: "x" }, maxRedirects: 0 });
+  expect(portal.status()).toBe(403);
+  await page.goto("/app");
+  expect(isSignInPage(page.url())).toBe(false);
+  // Control: from our own origin, sign-out works.
+  const own = await page.request.post("/auth/uitloggen", { headers: { origin: "http://localhost:3102" }, maxRedirects: 0 });
+  expect(own.status()).toBe(303);
+});
+
+test("AC-5(c): changing the address needs a recent sign-in and returns to the open form", async ({ page }) => {
+  test.setTimeout(120_000);
+  await signIn(page, DEMO_OWNER, "/app/account");
+  // Stale: the test server's fresh window is 20 s (VIDALO_TEST_FRESH_SECONDS).
+  await page.waitForTimeout(21_000);
+  await page.goto("/app/account");
+  await expect(page, "still signed in, only no longer fresh").toHaveURL(/\/app\/account/);
+  page.on("request", (r) => r.method() === "POST" && console.log("[ac5c] POST", r.url()));
+  page.on("response", (r) => r.request().method() === "POST" && console.log("[ac5c] answer", r.status(), r.headers()["x-action-redirect"] ?? ""));
+  page.on("requestfailed", (r) => console.log("[ac5c] failed", r.url(), r.failure()?.errorText));
+  await page.locator("input[name='email'][type='email']").fill("nieuw@example.nl");
+  await page.getByRole("button", { name: "Wijzig" }).click();
+  await page.waitForURL(/\/inloggen\?opnieuw=1/);
+  expect(new URL(page.url()).searchParams.get("next")).toBe("/app/account?stap=email#inlog");
+  await expect(page.getByRole("status")).toContainText("Voor deze stap log je eerst opnieuw in");
+  await expect(page.locator("input[name='email']")).toHaveValue(DEMO_OWNER);
+  // A new sign-in through that link lands on the open address form.
+  await signIn(page, DEMO_OWNER, "/app/account?stap=email#inlog");
+  await expect(page).toHaveURL(/\/app\/account\?stap=email/);
+  await expect(page.locator("input[data-step='open']")).toBeFocused();
+});

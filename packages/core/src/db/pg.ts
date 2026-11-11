@@ -845,6 +845,22 @@ export class PgDb implements Db {
     await this.sql`delete from auth_session where user_id = ${userId}`;
   }
 
+  async throttleAuth(keyHashes: string[], since: Date): Promise<number[]> {
+    if (!keyHashes.length) return [];
+    const rows = await this.sql`
+      with ins as (insert into auth_throttle (key_hash) select unnest(${keyHashes}::text[]) returning key_hash)
+      select k.key_hash, (select count(*) from auth_throttle t where t.key_hash = k.key_hash and t.at >= ${since})::int
+        + (select count(*) from ins where ins.key_hash = k.key_hash)::int as n
+      from unnest(${keyHashes}::text[]) as k(key_hash)`;
+    const by = new Map(rows.map((r) => [r.keyHash as string, Number(r.n)]));
+    return keyHashes.map((k) => by.get(k) ?? 0);
+  }
+
+  async pruneAuthThrottle(before: Date): Promise<number> {
+    const rows = await this.sql`delete from auth_throttle where at < ${before} returning 1`;
+    return rows.length;
+  }
+
   async close(): Promise<void> {
     await this.sql.end({ timeout: 5 });
   }

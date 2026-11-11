@@ -10,16 +10,15 @@ import { ready } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { getI18n } from "@/lib/i18n";
 import { passesTurnstile } from "@/lib/turnstile";
-import { claimPaidBusiness, clientIp, uaFamily } from "@vidalo/core/shared";
+import { claimPaidBusiness, clientIp, LINK_LIMITS, log, overLimit, safeNext, throttleIp, throttleKeys, uaFamily } from "@vidalo/core/shared";
 import { authCookieOptions } from "@/lib/auth-cookies";
 import { createHash, randomUUID } from "node:crypto";
 import { checkoutLoader } from "@/lib/stripe";
 
 export async function sendMagicLink(form: FormData) {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  const rawNext = String(form.get("next") ?? "/app");
-  // Only same-site paths: "next" comes from the query string.
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\") ? rawNext : "/app";
+  // Only same-site paths: "next" comes from the query string (core/shared/safe-next.ts).
+  const next = safeNext(String(form.get("next") ?? ""));
   const businessId = String(form.get("business") ?? "");
   const checkoutSessionId = String(form.get("session_id") ?? "");
   // Errors come back here with the checkout link intact, or the payer cannot link the business afterwards.
@@ -27,7 +26,8 @@ export async function sendMagicLink(form: FormData) {
   const { href } = await getI18n();
   if (!isEmail(email)) redirect(href(`/inloggen?fout=1&${q}`));
   // Bot check before anything is stored or mailed.
-  if (!(await passesTurnstile(form, clientIp({ headers: await headers() })))) redirect(href(`/inloggen?fout=check&${q}`));
+  const h = await headers();
+  if (!(await passesTurnstile(form, clientIp({ headers: h })))) redirect(href(`/inloggen?fout=check&${q}`));
 
   // Coming from /welkom after checkout: the link lands back on this page signed
   // in, where one button links the business if the checkout session is paid
@@ -37,17 +37,34 @@ export async function sendMagicLink(form: FormData) {
 
   const supabase = await createServerSupabase();
   if (supabase) {
+    // 5 links per address and 20 per IP per hour (ADR-0004), before anything is mailed. No count, no mail.
+    let counts: number[];
+    try {
+      const ip = throttleIp(h, false);
+      if (ip === "unknown") log.info("auth.throttle_no_ip", {});
+      const keys = await throttleKeys(email, ip, env.authSecret);
+      counts = await db.throttleAuth(keys, new Date(Date.now() - LINK_LIMITS.windowMs));
+    } catch (err) {
+      log.warn("auth.throttle_failed", { error: err instanceof Error ? err.name : "unknown" });
+      redirect(href(`/inloggen?fout=1&${q}`));
+    }
+    if (overLimit(counts)) {
+      log.info("auth.link_throttled", { which: (counts[0] ?? 0) > LINK_LIMITS.perAddress ? "address" : "ip" });
+      redirect(href(`/inloggen?fout=wacht&${q}`));
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email,
       // The Vidalo template appends token_hash and type to this (docs/auth-email/README.md).
       options: { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href(after))}` },
     });
     if (error) {
-      console.error("sign-in link refused", error.status, error.code, error.message);
+      // Status and code only: GoTrue's message can carry the address (SEC-34).
+      log.warn("auth.link_refused", { status: error.status ?? null, code: error.code ?? null });
       // Supabase sends a few links per hour; say so instead of a generic error.
       const limited = error.status === 429 || error.code === "over_email_send_rate_limit";
       redirect(href(`/inloggen?fout=${limited ? "wacht" : "1"}&${q}`));
     }
+    // The same answer for every address: whether it has an account or a business never shows (AC-4a).
     redirect(href(`/inloggen?sent=1`));
   }
 
@@ -58,7 +75,7 @@ export async function sendMagicLink(form: FormData) {
   // A sign-in like any other: its own session id and an auth_session row (feature 002, A-02).
   const userId = owned?.ownerUserId ?? mockUserId(email);
   const sid = randomUUID();
-  await db.recordSignIn({ sessionId: sid, userId, ...uaFamily((await headers()).get("user-agent")), at: new Date() });
+  await db.recordSignIn({ sessionId: sid, userId, ...uaFamily(h.get("user-agent")), at: new Date() });
   store.set(MOCK_SESSION_COOKIE, JSON.stringify({ userId, email, sid }), authCookieOptions());
   redirect(href(after));
 }
@@ -72,8 +89,7 @@ export async function sendMagicLink(form: FormData) {
  */
 export async function claimBusiness(form: FormData): Promise<void> {
   const { href } = await getI18n();
-  const rawNext = String(form.get("next") ?? "/app");
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\") ? rawNext : "/app";
+  const next = safeNext(String(form.get("next") ?? ""));
   const businessId = String(form.get("business") ?? "");
   const checkoutSessionId = String(form.get("session_id") ?? "") || null;
   const session = await getSession();

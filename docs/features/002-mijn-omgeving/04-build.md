@@ -151,3 +151,64 @@ snapshot's owner pages now show the sign-in page. F-A4: `requireOwner` (lane B) 
 the plain form. `signOutEverywhere` takes no `business` field: it acts on the login, not a
 business. The Cache-Control of the confirm action's response (a server action that sets
 cookies) was not read separately.
+
+### A-03 — Link limits, safe `next`, Origin check, fresh sign-in (2026-11-11)
+
+**What.** `core/shared/auth-throttle.ts`: `LINK_LIMITS` (5 per address, 20 per IP, rolling hour),
+`throttleKeys` (HMAC-SHA256 hex under `VIDALO_AUTH_SECRET` of `addr:<trimmed lower-case
+address>` and `ip:<ip>`, Web Crypto), `overLimit`, and `throttleIp` (only `cf-connecting-ip`;
+no header → one shared `unknown` key, logged `auth.throttle_no_ip`; `x-forwarded-for` never
+trusted in the real path, SEC-31). Db `throttleAuth` (insert + per-key count in one statement on
+PgDb; MemDb the same, "this request included") and `pruneAuthThrottle`.
+`core/shared/same-origin.ts`: `refuseCrossSite` + `isOwnOrigin` over the exact host list
+(`vidalo.ai`, the three redirect hosts, `PUBLIC_BASE_URL`'s origin, the staging and preview
+`workers.dev` hosts; never a suffix match). `env.authSecret` (throws when Supabase is configured
+and the secret is missing; `"vidalo-local"` otherwise). `lib/fresh-sign-in.ts`
+`requireFreshSignIn(next)`. `sendMagicLink`: format → Turnstile → limit → Supabase; over the limit
+or a database error → no Supabase call; GoTrue errors logged with status and code only (SEC-34);
+`auth.link_throttled { which }`; the limit runs only where a mail would go (Supabase configured),
+not on mock sign-ins. `safeNext` replaces both inline checks (`sendMagicLink`, `claimBusiness`).
+`/inloggen?opnieuw=1`: one sentence why, the form shown even while signed in, address pre-filled.
+`POST /auth/uitloggen` and `POST /api/billing/portal`: `refuseCrossSite` first,
+`auth.cross_site_refused { route }`; the portal takes the form's `business` (a member's
+business, else 404; a form without it, like lane B's dashboard button until B-05, gets the
+active business). `saveMailPrefs` → `requireOwnerOf(businessFromForm(form))`. `changeEmail` →
+`requireFreshSignIn("/app/account?stap=email#inlog")`; "bezet" when the address owns any
+business outside `listMyBusinesses(session)`; its confirmation link now goes straight to
+`/auth/confirm` (the Change Email template appends `token_hash` and `type=email_change`).
+`/app/account?stap=email` focuses the address field.
+
+**Tests.** `safe-next.test.ts` (20: every AC-4(c) and F-023 input, `/%0d%0aSet-Cookie:x`, NUL,
+kept paths), `auth-throttle.test.ts` (keys 64-hex, `A@X.nl` = `a@x.nl`, another secret → other
+keys; 5th/20th go, 6th/21st do not; cf header beats x-forwarded-for), `same-origin.test.ts` (17:
+the SEC-35 list), `db-account.test.ts` + limit cases on MemDb and PgDb (6th counted, another key
+separate, 61 minutes later under again, prune keeps the last 24 h). `e2e/auth-session.spec.ts`:
+AC-4(a) three addresses (with a business, with only an account, unknown) → identical action
+answer (`303 /inloggen?sent=1`) and byte-identical `sent=1` page once the dev server's
+`?v=<time>` asset stamp and Next's per-render `__next_r` id are taken out; AC-4(b) the 6th link
+for one address → `fout=wacht`, the fake GoTrue received 5 mails, not 6; AC-4(e) foreign POSTs
+to sign-out and the portal → 403, still signed in, control from our origin → 303; AC-5(c) a sign-in
+older than the window → `/inloggen?opnieuw=1&next=/app/account?stap=email#inlog`, sentence and
+address shown, a new sign-in through that link lands on the focused address form.
+`e2e/auth-redirect.spec.ts` route table: eight bad `next` values through the sign-in form (mock)
+all end on `/app` on this host.
+
+**Judgement call.** The fresh window in the browser test: `requireFreshSignIn` honours
+`VIDALO_TEST_FRESH_SECONDS` (20 in `playwright.auth.config.ts`) only when `NODE_ENV` is not
+`production`, so a stale sign-in can be shown without waiting 15 minutes. Production builds
+ignore it; the 15-minute rule itself is the unit test of `isFreshSignIn`.
+
+**Shown to fail without the change.** With `inloggen/actions.ts`, `/auth/uitloggen` and the
+portal route as at A-02: AC-4(b) red (the 6th request landed on `sent=1`), AC-4(e) red (a foreign
+POST answered 303). Restored, green.
+
+**Runs.** `pnpm e2e:auth` 14/14; `pnpm -r typecheck` green; `pnpm -r test` green (core 1329 +
+15 skipped, worker 24); `pnpm e2e:mock` OK; `verify:pg` green; mock Playwright
+(`auth-redirect`, `signed-in`, `forms`) 19/19. Two earlier full `e2e:auth` runs stopped at
+AC-5(c): the address form's server action never answered and the run took 16 minutes; it passed
+alone, in three subsets and in the next full run, with request logging left in the test. Cause
+not found; noted for verify.
+
+**Not verified.** SEC-33's timing medians (50 runs each) were not measured. SEC-31's "count is
+global across two Db handles on one PgDb" is by construction (one table), not a separate test.
+D1 items (Secure email change, rate limits) are Julian's.

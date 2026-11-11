@@ -145,6 +145,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             <p className="mt-1 max-w-[52ch] text-[15px] text-muted">{B.portalNote}</p>
           </div>
           <form action="/api/billing/portal" method="post">
+            <input type="hidden" name="business" value={business.id} />
             <button type="submit" className="btn-sm">
               {copy.dashboard.openPortal}
             </button>

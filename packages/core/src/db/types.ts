@@ -329,6 +329,12 @@ export interface Db {
   listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
   deleteSignIns(userId: string): Promise<void>;
 
+  // --- sign-in link limit (feature 002, migration 0018) ---
+  /** Inserts one row per key now, and returns per key how many rows exist since `since`, this one included. One round trip. */
+  throttleAuth(keyHashes: string[], since: Date): Promise<number[]>;
+  /** Deletes rows older than `before`. Returns how many. */
+  pruneAuthThrottle(before: Date): Promise<number>;
+
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;
 }

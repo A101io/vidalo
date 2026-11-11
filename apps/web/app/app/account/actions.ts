@@ -11,6 +11,8 @@ import { businessFromForm, requireOwner, requireOwnerOf } from "@/lib/owner";
 import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
 import { getSession, MOCK_SESSION_COOKIE } from "@/lib/session";
 import { authCookieOptions } from "@/lib/auth-cookies";
+import { requireFreshSignIn } from "@/lib/fresh-sign-in";
+import { listMyBusinesses } from "@/lib/active-business";
 import { createServerSupabase } from "@/lib/supabase";
 import { log, MAIL_PREF_KEYS, setMailPrefs, type MailPrefs } from "@vidalo/core/shared";
 
@@ -21,6 +23,8 @@ import { log, MAIL_PREF_KEYS, setMailPrefs, type MailPrefs } from "@vidalo/core/
  * Mock auth changes it at once. The event carries no addresses.
  */
 export async function changeEmail(formData: FormData) {
+  // A new sign-in address is the key to the account: only right after signing in (AC-5c).
+  await requireFreshSignIn("/app/account?stap=email#inlog");
   const { business, session } = await requireOwner("/app/account");
   const { href } = await getI18n();
   const back = (q: string) => href(`/app/account?email=${q}#inlog`);
@@ -28,14 +32,16 @@ export async function changeEmail(formData: FormData) {
   if (!isEmail(email)) redirect(back("fout"));
   if (email === session.email.toLowerCase()) redirect(back("zelfde"));
   const db = await ready();
+  // Taken when the address is the owner address of any business this login is not a member of (SEC-38).
+  const mine = new Set((await listMyBusinesses(session)).map((b) => b.id));
   const other = await db.getBusinessByOwner({ email });
-  if (other && other.id !== business.id) redirect(back("bezet"));
+  if (other && !mine.has(other.id)) redirect(back("bezet"));
 
   const supabase = await createServerSupabase();
   if (supabase) {
     const { error } = await supabase.auth.updateUser(
       { email },
-      { emailRedirectTo: `${env.baseUrl}/auth/callback?next=${encodeURIComponent(href("/app/account?email=bevestigd#inlog"))}` },
+      { emailRedirectTo: `${env.baseUrl}/auth/confirm?next=${encodeURIComponent(href("/app/account?email=bevestigd#inlog"))}` },
     );
     if (error) redirect(back("fout"));
     await db.logEvent(business.id, "account.email_change_requested", {});
@@ -51,7 +57,7 @@ export async function changeEmail(formData: FormData) {
 
 /** "Mails die je krijgt": a ticked box is on, an unticked one off. Required mails have no box. */
 export async function saveMailPrefs(formData: FormData) {
-  const { business } = await requireOwner("/app/account");
+  const { business } = await requireOwnerOf(businessFromForm(formData), "/app/account");
   const prefs: MailPrefs = Object.fromEntries(MAIL_PREF_KEYS.map((k) => [k, formData.get(k) === "aan"]));
   const db = await ready();
   await setMailPrefs(db, business.id, prefs);

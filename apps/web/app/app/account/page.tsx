@@ -32,7 +32,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
  * gegevens" (download, delete). Reading only, apart from the language and
  * the delete, the e-mail address and the mail choices; every other change has its own page (gegevens, domein, google, abonnement).
  */
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string; email?: string; mails?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string; email?: string; mails?: string; stap?: string }> }) {
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/account");
   const data = await loadDashboard(business.id);
@@ -64,7 +64,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <Row label={A.loginEmail}>{session.email}</Row>
           <Row label={A.changeEmail.label}>
             <form action={changeEmail} className="flex flex-wrap items-center gap-3">
-              <input type="email" name="email" required autoComplete="email" aria-label={A.changeEmail.label} className="field-sm w-auto min-w-[240px]" />
+              <input type="email" name="email" required autoComplete="email" aria-label={A.changeEmail.label} className="field-sm w-auto min-w-[240px]" autoFocus={sp.stap === "email"} data-step={sp.stap === "email" ? "open" : undefined} />
               <button type="submit" className="btn-sm">
                 {A.changeEmail.button}
               </button>

@@ -5,12 +5,19 @@ import { createServerSupabase } from "@/lib/supabase";
 import { getSession, MOCK_SESSION_COOKIE } from "@/lib/session";
 import { NO_STORE } from "@/lib/auth-cookies";
 import { ready } from "@/lib/db";
+import { log, refuseCrossSite } from "@vidalo/core/shared";
 
 /**
  * "Uitloggen": this browser only (feature 002, AC-3d). Other browsers of the same login stay
  * signed in; "Overal uitloggen" on the account page ends them all.
  */
-export async function POST() {
+export async function POST(req: Request) {
+  // A foreign page cannot sign this browser out (AC-4e).
+  const refused = refuseCrossSite(req, env.baseUrl);
+  if (refused) {
+    log.info("auth.cross_site_refused", { route: "uitloggen" });
+    return refused;
+  }
   const session = await getSession();
   if (session) await (await ready()).endSignIns(session.userId, "signed_out", { sessionId: session.sessionId });
   const supabase = await createServerSupabase();

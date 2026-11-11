@@ -131,3 +131,34 @@ describe.each(backends)("%s: sign-ins (0018)", (_n, makeDb) => {
     expect(await db.endSignIns(user, "signed_out", { sessionId: "x'; drop table auth_session;--" })).toBe(0);
   });
 });
+
+describe.each(backends)("%s: sign-in link limit (0018)", (_n, makeDb) => {
+  let db: Db;
+  beforeEach(async () => {
+    db = await makeDb();
+  });
+  const hour = () => new Date(Date.now() - 3_600_000);
+
+  it("counts per key, this request included; another key is its own count", async () => {
+    const [addr, ip, other] = ["a".repeat(64), "b".repeat(64), "c".repeat(64)];
+    let counts: number[] = [];
+    for (let i = 0; i < 6; i++) counts = await db.throttleAuth([addr, ip], hour());
+    expect(counts).toEqual([6, 6]);
+    expect(await db.throttleAuth([other, ip], hour())).toEqual([1, 7]);
+  });
+
+  it("after the window the address is under again (fake clock: the window starts 61 minutes later)", async () => {
+    const addr = "d".repeat(64);
+    for (let i = 0; i < 6; i++) await db.throttleAuth([addr], hour());
+    const later = new Date(Date.now() + 61 * 60_000 - 3_600_000);
+    expect(await db.throttleAuth([addr], later)).toEqual([1]);
+  });
+
+  it("prunes only rows older than the cut-off", async () => {
+    const addr = "e".repeat(64);
+    await db.throttleAuth([addr], hour());
+    expect(await db.pruneAuthThrottle(new Date(Date.now() - 24 * 3_600_000))).toBe(0);
+    expect(await db.pruneAuthThrottle(new Date(Date.now() + 1000))).toBeGreaterThanOrEqual(1);
+    expect(await db.throttleAuth([addr], hour())).toEqual([1]);
+  });
+});

@@ -22,6 +22,7 @@ export const accountSecurityEn: CopyShape["accountSecurity"] = {
     body: "Sign out on every device where you are signed in with this account, this one included.",
     button: "Sign out everywhere",
   },
+  reSignIn: "For this step, sign in again first. We send you a new sign-in link; it brings you back to where you were.",
   expired: "You are signed out: you had not signed in for a while, or you signed out everywhere on another device. Sign in again below.",
   signedOutEverywhere: "You are signed out on all your devices.",
 };

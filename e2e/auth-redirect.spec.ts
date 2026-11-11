@@ -48,3 +48,18 @@ test("an English next renders the page in English", async ({ request }) => {
   const html = await (await request.get(`/auth/confirm?next=${encodeURIComponent("/en/app")}`)).text();
   expect(html).toContain("Sign in to Vidalo");
 });
+
+// AC-4(c) route table (feature 002, A-03): every bad `next` given to the sign-in form ends on this site.
+const TABLE = ["//evil.example", "/\\evil.example", "/%2F%2Fevil.example", "https://evil.example", "javascript:alert(1)", "/.//evil.example", "/app/..//evil.example", "/%2e%2e//evil.example"];
+test("the sign-in form never continues off the site (mock sign-in)", async ({ page, baseURL }) => {
+  test.setTimeout(120_000);
+  for (const next of TABLE) {
+    await page.context().clearCookies();
+    await page.goto(`/inloggen?next=${encodeURIComponent(next)}`);
+    await page.locator("input[name='email']").fill("eigenaar@bakkerijdevries.nl");
+    await page.locator("form button[type='submit']").first().click();
+    await page.waitForURL((u) => u.pathname !== "/inloggen" || u.search.includes("fout="));
+    expect(new URL(page.url()).host, next).toBe(new URL(baseURL!).host);
+    expect(new URL(page.url()).pathname, next).toBe("/app");
+  }
+});

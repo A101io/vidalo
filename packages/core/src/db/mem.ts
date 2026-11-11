@@ -58,6 +58,8 @@ export class MemDb implements Db {
   private questionRefs = new Map<string, string>();
   /** auth_session (migration 0018), by session id. */
   signIns = new Map<string, SignInRow>();
+  /** auth_throttle (migration 0018). */
+  authThrottle: { keyHash: string; at: string }[] = [];
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -80,6 +82,7 @@ export class MemDb implements Db {
     this.questionUse = [];
     this.questionRefs.clear();
     this.signIns.clear();
+    this.authThrottle = [];
   }
 
   // --- business ---
@@ -669,6 +672,20 @@ export class MemDb implements Db {
 
   async deleteSignIns(userId: string): Promise<void> {
     for (const r of [...this.signIns.values()]) if (r.userId === userId) this.signIns.delete(r.sessionId);
+  }
+
+  async throttleAuth(keyHashes: string[], since: Date): Promise<number[]> {
+    // Like PgDb: the rows already in the window, plus this request's own row(s).
+    const before = keyHashes.map((k) => this.authThrottle.filter((r) => r.keyHash === k && Date.parse(r.at) >= since.getTime()).length);
+    const at = nowIso();
+    for (const k of keyHashes) this.authThrottle.push({ keyHash: k, at });
+    return keyHashes.map((k, i) => before[i]! + keyHashes.filter((x) => x === k).length);
+  }
+
+  async pruneAuthThrottle(before: Date): Promise<number> {
+    const n = this.authThrottle.length;
+    this.authThrottle = this.authThrottle.filter((r) => Date.parse(r.at) >= before.getTime());
+    return n - this.authThrottle.length;
   }
 
   async close(): Promise<void> {}
