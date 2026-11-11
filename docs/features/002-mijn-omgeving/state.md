@@ -11,7 +11,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | Design gate rounds used | 0 of 2 |
 | Verify rounds used | 0 of 2 |
 | Open P0s | none |
-| Waiting on Julian | Scan retention and Scan Google period (defaults in place, build not blocked); D1 Supabase dashboard before verify |
+| Waiting on Julian | D1 Supabase dashboard before verify |
 
 ## Phase log
 | Date | Phase | What happened | Who |
@@ -22,6 +22,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-11 | 1 shape | 02-architecture.md with shared contract, ADR 0001–0007, tickets C-00, A-01…A-07, B-01…B-05 and README with a disjoint file-ownership table | architect |
 | 2026-11-11 | 1 shape | checklists/security.md (SEC-01…59, no P0 against the design; SEC-15, SEC-44 are P0 if observed in phase 4) and checklists/compliance.md (no hard stop; B2B cancel: terms already exceed the consumer standard) | security, compliance |
 | 2026-11-11 | 1 shape | F-010…F-023 folded back into the design by the architect (new ticket B-05, C-00 ships safe `safeNext` and the cookie row); F-022 accepted risk, F-016 deferred | architect |
+| 2026-11-11 | 1 shape | Julian decided: Scan retention 24 months (`SCAN_RETENTION_MONTHS`), Scan Google token 60 days (`SCAN_GOOGLE_DAYS`); Supabase plan stays free for now (F-022 accepted) | Julian |
 | 2026-11-11 | 1 shape | Lane split checked: no file owned by both lanes; merge order lane B then lane A; C-00 must land on `claude/002-mijn-omgeving` before either lane worktree is cut | Claude |
 
 ## Skipped phases
@@ -29,7 +30,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 |---|---|
 
 ## Decisions needed
-**Retention for Vidalo Scan customers (F-012, F-015)**
+**Retention for Vidalo Scan customers (F-012, F-015)** — DECIDED 2026-11-11 by Julian: 24 months and 60 days, as the default.
 - What: Scan (€149 once) customers never churn, so the published retention rule never reaches them; their Google token has no end either.
 - Default in the design: delete 24 months after the later of last sign-in and last payment, reminder 14 days before (`SCAN_RETENTION_MONTHS`); Google token revoked 60 days after the first full check unless a fix is open (`SCAN_GOOGLE_DAYS`).
 - Alternatives: 12 months; or no automatic deletion (owner deletes themselves; privacy text then must say so).
