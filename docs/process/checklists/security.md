@@ -57,3 +57,7 @@ exploit path, not opinions about structure.
 ## Learned (Vidalo, 11 Nov 2026)
 - Every regex run on AI answer text, or on values extracted from it, gets a length cap before matching and a timing test on a long hostile input; no `\s*` or `.*` next to a repeated group under the `m` flag.
 - A public page reachable by a guessable key (slug, name + town) shows nothing beyond what that key's owner chose to publish; private data only behind an unguessable id or the owner's session.
+- A redirect-target check (`next`, `returnTo`) runs again on the **normalised** result: `new URL("/.//evil.example", base).pathname` is `//evil.example`, which passes every check on the raw input (002 F-023).
+- A response that carries a refreshed auth `Set-Cookie` is `Cache-Control: private, no-store`; middleware runs on static pages too, and one cached response hands a session to the next visitor (002 F-018).
+- A delete of an outside resource (custom hostname, route, OAuth grant) by name happens only when this record provably holds that resource; a name the user typed is not proof (002 F-019).
+- A purge or deletion guard that protects paying customers asks the payment provider, not only our own status column, which can drift from it (002 F-021).

@@ -97,3 +97,7 @@ Tone, layout and feature value. Compliance blocks on law, and files P1s on the r
 ## Learned (Vidalo, 11 Nov 2026)
 - A 'checked' or 'all correct' claim is computed from the same count on every surface: report page, mail and dashboard.
 - A label a heuristic puts in front of the customer describes what the heuristic actually detects ("een ander bedrijf", not "met dezelfde naam").
+- A dry-run or arming switch for a retention purge never holds back a person's own deletion request; test the owner path and the retention path separately with the switch off (002, F-010).
+- A second route to the same contractual act (a cancel triggered by "delete everything") owes the same confirmation as the main route, worded true for that route (002, F-013).
+- A cookie constant added in a scaffold ticket brings its cookie-table row, version date and `legal:lock` in that same ticket; `legal.test.ts` reads every exported `…COOKIE…` constant (002, F-011).
+- A one-off plan needs its own retention end and token end: "zolang je klant bent" never ends for a customer who never churns (002, F-012, F-015).
