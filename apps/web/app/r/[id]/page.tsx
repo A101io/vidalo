@@ -11,7 +11,7 @@ import { StipHero, Stip } from "@/components/Stip";
 import { AnswerCard } from "@/components/AnswerCard";
 import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
-import { getScanReport, latestScanReport } from "@/lib/core";
+import { FREE_REPORT_DAYS, getScanReport, latestScanReport } from "@/lib/core";
 import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
@@ -23,7 +23,6 @@ import { PrintButton } from "./PrintButton";
 export const dynamic = "force-dynamic";
 
 /** copy.landing.footer.reportNote and the privacy text promise this number. */
-const FREE_REPORT_DAYS = 30;
 
 async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean } | null> {
   if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };

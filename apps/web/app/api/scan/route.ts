@@ -107,6 +107,8 @@ export async function POST(req: Request) {
   if (recent) {
     await db.logEvent(business.id, "scan.reused", { scanRunId: recent.id, via: "web" });
     if (!business.ownerEmail && !alreadyAsked) await db.enqueueJob("email", { template: "baseline", scanRunId: recent.id, businessId: business.id, to: requester.email, lang });
+    // The reused report is this address's too (the signed-in page lists it).
+    await db.logEvent(business.id, REPORT_EMAIL_EVENT, { email: requester.email, lang, scanRunId: recent.id, via: "linked" });
     return done(NextResponse.redirect(to(`/r/${recent.id}`), 303));
   }
 

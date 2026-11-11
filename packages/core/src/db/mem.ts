@@ -426,6 +426,15 @@ export class MemDb implements Db {
     return this.events.filter((e) => e.businessId === businessId).slice(-limit).reverse();
   }
 
+  async listEventsByEmail(type: string, email: string, limit = 50): Promise<EventRow[]> {
+    const want = email.trim().toLowerCase();
+    return this.events
+      .filter((e) => e.type === type && e.businessId && String((e.payload as Record<string, unknown>).email ?? "").toLowerCase() === want)
+      .slice()
+      .reverse()
+      .slice(0, limit);
+  }
+
   async countEventsSince(type: string, since: Date): Promise<number> {
     return this.events.filter((e) => e.type === type && new Date(e.at).getTime() >= since.getTime()).length;
   }

@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { env } from "@/lib/env";
 import { getSession, getOwnedBusiness } from "@/lib/session";
 import { ready } from "@/lib/db";
+import { reportsRequestedBy } from "@/lib/core";
+import { dateShort } from "@/lib/format";
 import { claimBusiness, sendMagicLink } from "./actions";
 import { safeNext } from "@/lib/auth-confirm";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
@@ -56,13 +58,38 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     }
     if (owned && sp.fout !== "geen" && sp.fout !== "bezet" && sp.fout !== "betaling") redirect(href(next));
     if (owned) redirect(href("/app"));
-    // Signed in, but no business belongs to this address yet (requireOwner).
+    // Signed in, but no business belongs to this address yet (requireOwner). The free checks
+    // this address asked for are still its own to see (Julian, 11 Nov 2026: "vorige scans beschikbaar").
+    const checks = await reportsRequestedBy(session.email);
     return (
       <Shell>
         <h1 className="h2">{a.signedInH1}</h1>
         {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
         <p className="lead mt-3">{sp.fout === "bezet" ? `${a.signedInAs(session.email)} ${a.linkTaken}` : sp.fout === "betaling" ? `${a.signedInAs(session.email)} ${a.linkUnpaid}` : a.noBusinessSignedIn(session.email)}</p>
-        <Link href={href("/#top")} className="btn-primary mt-6 w-full">
+        {checks.length > 0 && (
+          <section className="mt-8" aria-labelledby="my-checks">
+            <h2 id="my-checks" className="h3">
+              {a.myChecksH2}
+            </h2>
+            <p className="mt-2 text-[15px] text-ink-2">{a.myChecksNote}</p>
+            <ul className="mt-4 flex list-none flex-col gap-2 p-0">
+              {checks.map((c) => (
+                <li key={c.runId} className="card flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                  <span className="min-w-0">
+                    <strong>
+                      {c.name}, {c.place}
+                    </strong>
+                    <span className="block text-[14px] text-muted">{dateShort(c.checkedAt)}</span>
+                  </span>
+                  <Link href={href(`/r/${c.runId}`)} className="btn-sm">
+                    {a.viewReport}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <Link href={href("/#top")} className={checks.length > 0 ? "btn-sm mt-6 w-full" : "btn-primary mt-6 w-full"}>
           {a.startCheck}
         </Link>
         <SignOut label={a.otherEmail} />

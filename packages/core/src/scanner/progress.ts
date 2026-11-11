@@ -7,7 +7,7 @@
 import type { Db } from "../db/types.js";
 import type { Engine, ScanKind, ScanReport } from "../types.js";
 import { getDb } from "../shared/db.js";
-import { requesterFromEvents } from "../shared/free-check.js";
+import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
 import { runScan, type ScanProgress } from "./index.js";
 
 export interface ScanProgressStep {
@@ -113,7 +113,11 @@ export async function runScanWithProgress(
     if (kind === "free") {
       const asker = requesterFromEvents(await db.listEvents(state.businessId, 500));
       const business = await db.getBusiness(state.businessId);
-      if (asker && !business?.ownerEmail) await db.enqueueJob("email", { template: "baseline", scanRunId: report.scanRunId, businessId: state.businessId, to: asker.email, lang: asker.lang });
+      if (asker && !business?.ownerEmail) {
+        await db.enqueueJob("email", { template: "baseline", scanRunId: report.scanRunId, businessId: state.businessId, to: asker.email, lang: asker.lang });
+        // Which check this address asked for: the signed-in page lists exactly these (11 Nov 2026).
+        await db.logEvent(state.businessId, REPORT_EMAIL_EVENT, { email: asker.email, lang: asker.lang, scanRunId: report.scanRunId, via: "linked" });
+      }
     }
     return report;
   } catch (err) {
