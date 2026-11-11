@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { localizeHref } from "@/lib/lang-paths";
-import { COMING_SOON_ROUTE, PREVIEW_COOKIE } from "@vidalo/core/shared/gate";
+import { COMING_SOON_ROUTE, PREVIEW_COOKIE, samePreviewToken } from "@vidalo/core/shared/gate";
+import { currentPreviewToken, previewCookieOf } from "@/lib/gate-state";
 
 export const runtime = "nodejs";
 
@@ -9,8 +10,7 @@ const COOKIE = { httpOnly: true, sameSite: "lax" as const, path: "/" };
 
 /** GET → what the preview bar needs to know: is the gate on, and does this browser bypass it. */
 export async function GET(req: Request) {
-  const preview = /(?:^|;\s*)vidalo_preview=1(?:;|$)/.test(req.headers.get("cookie") ?? "");
-  return NextResponse.json({ comingSoon: env.comingSoon, preview }, { headers: { "cache-control": "no-store" } });
+  return NextResponse.json({ comingSoon: env.comingSoon, preview: samePreviewToken(previewCookieOf(req.headers.get("cookie")), currentPreviewToken()) }, { headers: { "cache-control": "no-store" } });
 }
 
 /** Same length and same bytes, compared without stopping at the first difference. */
@@ -44,6 +44,6 @@ export async function POST(req: Request) {
   if (!allowed) return NextResponse.redirect(page(String(form.get("from") ?? "") === "voorvertoning" ? "/voorvertoning?fout=1" : COMING_SOON_ROUTE), 303);
   const res = NextResponse.redirect(page("/"), 303);
   // A session cookie: closing the browser ends the preview (copy.legal.cookies says so).
-  res.cookies.set(PREVIEW_COOKIE, "1", COOKIE);
+  res.cookies.set(PREVIEW_COOKIE, currentPreviewToken()!, COOKIE);
   return res;
 }
