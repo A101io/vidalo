@@ -174,7 +174,9 @@ describe("buildSnapshot (mock pipeline)", () => {
     const { buildSnapshot, runScan, createMockEngine } = await import("../src/scanner");
     const { prepareBusiness } = await import("../src/scanner/onboard");
     const db = withMockDb();
-    const { business, prompts } = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
+    const { business } = await prepareBusiness({ name: "Bakkerij De Vries", place: "Haarlem", db });
+    const { storeDoorPrompts } = await import("./scanner-fixtures");
+    const prompts = await storeDoorPrompts(db, business);
     const engines = ["chatgpt", "google_ai"] as const;
 
     const messy = await runScan({ businessId: business.id, kind: "monthly", engines: [...engines], samplesPerPrompt: 3, db });

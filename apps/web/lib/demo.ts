@@ -19,7 +19,7 @@ import type { CopyShape } from "@vidalo/core/copy";
 
 export const DEMO_OWNER_EMAIL = "eigenaar@bakkerijdevries.nl";
 export const DEMO_SLUG = "bakkerij-de-vries-haarlem";
-export const DEMO_IDS = { red: "voorbeeld", grey: "voorbeeld-grijs" } as const;
+export const DEMO_IDS = { red: "voorbeeld", grey: "voorbeeld-grijs", online: "voorbeeld-online" } as const;
 
 const checkedAt = "2026-10-07T12:32:00.000Z";
 const base = { businessId: "demo", scanRunId: DEMO_IDS.red, sampleCount: 3, verdict: "wrong" as const, resolvedAt: null, evidenceBefore: null, evidenceAfter: null, status: "open" as const, firstSeenAt: checkedAt };
@@ -273,4 +273,97 @@ export async function seedDemo(db: Db): Promise<void> {
     const latest = [...runDates.entries()].sort((a, b) => a[1].localeCompare(b[1])).pop()?.[0];
     if (latest) await openFixesForScan(latest);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Online: a fictional provider without a shop front (feature 001). Every name here is made up.
+// ---------------------------------------------------------------------------
+
+export const DEMO_ONLINE_DOMAIN = "vloedlijn-audio.example";
+const onlineBase = { ...base, businessId: "demo-online", scanRunId: DEMO_IDS.online, sampleCount: 5 };
+
+const demoOnlineFindings: Finding[] = [
+  // One of fifteen answers calls the business another kind of business: criterium 11, orange.
+  { ...onlineBase, id: "o-1", factKey: "identity", subject: "kind", engine: "perplexity", wrongValue: "other", correctValue: "same", frequency: 1, sourceUrl: null, sourceType: "none", evidenceKind: "about", criterium: 11 },
+];
+
+export function demoOnlineReport(): ScanReport {
+  const findings = demoOnlineFindings;
+  const answers = 30;
+  return {
+    profile: { mode: "online", offer: "achtergrondmuziek voor hotels en horeca", audience: "hotels en horeca", category: "aanbieder van achtergrondmuziek", source: "auto" },
+    business: { id: "demo-online", slug: "vloedlijn-audio-rotterdam", name: "Vloedlijn Audio", place: "Rotterdam" },
+    scanRunId: DEMO_IDS.online,
+    kind: "free",
+    checkedAt,
+    totalAnswers: 11,
+    wrongAnswers: 1,
+    notFoundAnswers: 0,
+    visibility: "found",
+    engines: [
+      { engine: "chatgpt", correct: 5, wrong: 0, notFound: 0, skipped: false },
+      { engine: "google_ai", correct: 1, wrong: 0, notFound: 0, skipped: false },
+      { engine: "perplexity", correct: 4, wrong: 1, notFound: 0, skipped: false },
+    ],
+    findings,
+    correct: [
+      ...Array.from({ length: 5 }, () => ({ prompt: "Wat doet Vloedlijn Audio?", engine: "chatgpt" as Engine, value: "hetzelfde soort bedrijf", raw: "same", factKey: "identity" as const, subject: "kind" })),
+      { prompt: "Wat doet Vloedlijn Audio?", engine: "google_ai" as Engine, value: "hetzelfde soort bedrijf", raw: "same", factKey: "identity" as const, subject: "kind" },
+      ...Array.from({ length: 4 }, () => ({ prompt: "Wat doet Vloedlijn Audio?", engine: "perplexity" as Engine, value: "hetzelfde soort bedrijf", raw: "same", factKey: "identity" as const, subject: "kind" })),
+    ],
+    stip: "oranje",
+    engineStips: [
+      { engine: "chatgpt", stip: "groen", usage: 0.83, counts: true },
+      { engine: "google_ai", stip: "groen", usage: 0.6, counts: true },
+      { engine: "perplexity", stip: "oranje", usage: 0.15, counts: true },
+    ],
+    findingsBySeverity: groupBySeverity(findings),
+    instable: [],
+    criteriaNotFound: [],
+    asked: [
+      { factKey: "identity", subject: "kind", engine: "chatgpt", kind: "about", samples: 5, checked: true },
+      { factKey: "identity", subject: "kind", engine: "google_ai", kind: "about", samples: 1, checked: true },
+      { factKey: "identity", subject: "kind", engine: "perplexity", kind: "about", samples: 5, checked: true },
+    ],
+    recommendations: [
+      {
+        promptId: "demo-online-1",
+        prompt: "Welke aanbieder van achtergrondmuziek is goed voor hotels en horeca?",
+        intent: "specialty",
+        family: "rec_category",
+        quotes: [
+          { text: "Vloedlijn Audio levert achtergrondmuziek voor hotels en horeca, met speellijsten per tijdstip van de dag.", engine: "chatgpt" },
+          { text: "Vloedlijn Audio is een kleine aanbieder die zich op horeca richt.", engine: "perplexity" },
+        ],
+        pool: "core",
+        probe: null,
+        answers: answers / 2,
+        named: 4,
+        others: [
+          { name: "Klankbord Collectief", answers: 11 },
+          { name: "Muziekwolk Zakelijk", answers: 9 },
+          { name: "Sfeertoon Studio", answers: 6 },
+          { name: "Tikkeltoon", answers: 3 },
+          { name: "Zachtstem Radio", answers: 2 },
+        ],
+        sources: [],
+      },
+      {
+        promptId: "demo-online-2",
+        prompt: "Wat is een alternatief voor Vloedlijn Audio?",
+        intent: "alternative",
+        family: "alternative",
+        quotes: [],
+        pool: "core",
+        probe: null,
+        answers: answers / 2,
+        named: 0,
+        others: [
+          { name: "Klankbord Collectief", answers: 8 },
+          { name: "Muziekwolk Zakelijk", answers: 5 },
+        ],
+        sources: [],
+      },
+    ],
+  };
 }

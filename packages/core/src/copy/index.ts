@@ -166,9 +166,9 @@ export const copy = {
       h2: "Zo werkt Vidalo",
       sub: "Jij doet vijf minuten werk bij de start. De rest loopt vanzelf, elke maand.",
       steps: [
-        { n: "1", tone: "ink", title: "Vastleggen", body: "Je gegevens één keer goed: adres, telefoon, openingstijden, wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
+        { n: "1", tone: "ink", title: "Vastleggen", body: "Eerst lezen wij wat je bedrijf doet: uit Google, je website en één AI-zoekopdracht. Dan leg je je gegevens één keer goed vast, zoals telefoon, openingstijden en wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
         { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Voor Google, Bing, Apple en de bedrijvengidsen zie je wat daar anders staat en wat je moet aanpassen.", meta: "Live zodra je DNS-regel staat" },
-        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die je klanten stellen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
+        { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die bij jouw soort bedrijf passen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
         { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Waar een bron een correctie van ons aanneemt, vragen we die namens jou; waar alleen de eigenaar iets kan wijzigen, zie je precies wat je moet aanpassen. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
       ],
       note: "Meerdere keren vragen is nodig: AI geeft zelden twee keer precies hetzelfde antwoord. Daarom tellen we hoe vaak een fout terugkomt.",
@@ -661,6 +661,7 @@ export const copy = {
         { q: "Hoe vaak controleren jullie?", a: "Met Vidalo Monthly elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout. Met alleen Vidalo Scan doen we één volledige controle en controleren we daarna de herstelde fouten opnieuw." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
         { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple nemen we wel mee. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
+        { q: "Werkt dit ook als ik geen winkel heb?", a: "Ja. Eerst kijken we wat voor bedrijf je hebt: een zaak waar klanten langskomen, een bedrijf dat naar de klant toe gaat, of een bedrijf dat online of door heel het land werkt. Een online bedrijf krijgt geen vragen over openingstijden of een adres, maar vragen over wat je doet, over je website en over wie AI noemt als iemand een aanbieder zoekt of een alternatief voor jou. In je rapport zie je als aantallen hoe vaak AI je noemt en wie het dan wel noemt. Of AI je noemt, kunnen wij niet bepalen; de stip gaat over of je feiten kloppen." },
         { q: "Wat als AI mijn concurrent noemt?", a: "Dat kunnen we niet verbieden. Wel zorgen we dat de AI over jou de juiste feiten heeft, zodat je niet wegvalt omdat het denkt dat je dicht bent of iets niet doet." },
       ],
     },
@@ -1341,14 +1342,34 @@ export const copy = {
 
   scan: {
     title: "We controleren je bedrijf",
-    steps: {
-      resolving: "Bedrijf zoeken",
-      found: "Bedrijf gevonden",
-      asking: (engine: string) => `${engine} gevraagd`,
-      comparing: "Antwoorden vergelijken",
-      sources: "Bronnen opzoeken",
+    /** Waiting page (feature 001, FE-01). Labels come from the stage key, never from the stored state. */
+    stages: {
+      understand: "Je bedrijf begrijpen",
+      choose: "De juiste vragen kiezen",
+      /** `engines`: the AI systems of this scan; empty until the scan has said which. */
+      ask: (engines: string[]) => (engines.length === 0 ? "Vragen stellen aan AI" : `Vragen aan ${engines.length === 1 ? engines[0] : `${engines.slice(0, -1).join(", ")} en ${engines[engines.length - 1]}`}`),
+      compare: "Antwoorden lezen en vergelijken",
       done: "Rapport klaar",
     },
+    /** One sentence per stage for the screen-reader announcement. */
+    live: {
+      understand: "We lezen wat je bedrijf doet.",
+      choose: "We kiezen de juiste vragen.",
+      ask: "We stellen de vragen aan AI.",
+      compare: "We lezen de antwoorden en vergelijken ze met je gegevens.",
+      done: "De controle is klaar. We openen het rapport.",
+    },
+    /** Said in text so colour is never the only signal. */
+    state: { done: "klaar", active: "bezig", waiting: "volgt nog", stopped: "gestopt" },
+    /** Vidalo's reading of the business, worded as a reading and never as a fact. Null when there is nothing to say. */
+    profileSentence: (p: { offer: string | null; audience: string | null; category: string | null }, name: string): string | null => {
+      if (p.offer) return `We lezen ${name} als: ${p.offer}${p.audience ? `, voor ${p.audience}` : ""}.`;
+      if (p.category) return `We lezen ${name} als: ${p.category}.`;
+      return null;
+    },
+    answers: (n: number) => (n === 1 ? "1 antwoord" : `${n} antwoorden`),
+    moreQuestions: (n: number) => (n === 1 ? "en nog 1 vraag" : `en nog ${n} vragen`),
+    refresh: "Vernieuwen",
     waiting: "Dit duurt meestal minder dan twee minuten.",
     failed: "De controle is niet gelukt. Probeer het nog een keer.",
     retry: "Opnieuw proberen",
@@ -1386,6 +1407,10 @@ export const copy = {
       h1Grey: (name: string, place: string) => `${name}, ${place}: AI kent je niet.`,
       /** Grey because no answer could be checked: we do not know the business's facts (Sonable, 11 Nov 2026). */
       h1Unchecked: (name: string, place: string) => `${name}, ${place}: we konden de antwoorden niet controleren.`,
+      /** An online business has no town in its heading (feature 001). */
+      h1Online: (name: string, stip: "rood" | "oranje" | "groen") => `${name}: jouw stip is ${stip}.`,
+      h1GreyOnline: (name: string) => `${name}: AI kent je niet.`,
+      h1UncheckedOnline: (name: string) => `${name}: we konden de antwoorden niet controleren.`,
       /** How often each AI system was asked per question: "elk 3 keer", or "ChatGPT 3 keer en Google AI 1 keer". */
       times: (per: { name: string; n: number }[]) => {
         if (new Set(per.map((p) => p.n)).size <= 1) return `elk ${per[0]?.n ?? 0} keer`;
@@ -1467,6 +1492,34 @@ export const copy = {
       profile: (kind: string, place: string) => `Vergeleken als: ${kind} in ${place}.`,
       profileHint: "Klopt dat niet? Als eigenaar pas je het aan onder ‘Je gegevens’, bij ‘Soort zaak’; de volgende controle vraagt dan naar het juiste soort zaak.",
     },
+    /** Online businesses (feature 001): who AI names next to the business, per question, as counts. Never a position, share or score. */
+    competition: {
+      h2: "Wie AI noemt bij jouw soort bedrijf",
+      body: "Wie jou niet kent, vraagt AI om een aanbieder of een alternatief. Dit antwoordde AI daarop, geteld uit deze controle.",
+      summary: (named: number, total: number) => `Genoemd in ${named} van ${total} ${total === 1 ? "antwoord" : "antwoorden"}`,
+      you: (named: number, total: number) => `Genoemd in ${named} van ${total} ${total === 1 ? "antwoord" : "antwoorden"}`,
+      others: "Ook genoemd",
+      times: (n: number, total: number) => `${n} van ${total}`,
+      quotesTitle: "Wat AI over jou schreef",
+      quoteBy: (engine: string) => `Volgens ${engine}`,
+      quotesNote: "Zinnen letterlijk uit de antwoorden van deze controle. Een zin die eindigt op … is ingekort.",
+      note: "We tellen alleen of AI je noemt en wie het daarnaast noemt, nooit in welke volgorde. De stip gaat over of wat AI over je zegt klopt; of je genoemd wordt verandert zijn kleur niet. Of AI je noemt, bepalen wij niet.",
+      demoCaption: "Fictief voorbeeld: het bedrijf en alle namen zijn verzonnen.",
+    },
+    /** "Gecontroleerd als": how Vidalo read the business, never a statement about it (compliance C-20, C-21). */
+    checkedAs: {
+      line: (what: string) => `Gecontroleerd als: ${what}`,
+      forAudience: (audience: string) => `voor ${audience}`,
+      mode: { door: "met een locatie waar klanten langskomen", visit: "komt naar de klant toe", online: "online" },
+      modeOnly: { door: "een bedrijf met een locatie waar klanten langskomen", visit: "een bedrijf dat naar de klant toe gaat", online: "een online bedrijf" },
+      how: {
+        auto: "Zo lazen wij je bedrijf, uit Google, je website en één AI-zoekopdracht. Het is onze lezing, geen feit over je bedrijf.",
+        owner: "Zo heeft de eigenaar het bedrijf vastgelegd.",
+        fallback: "We konden je bedrijf niet met zekerheid lezen en gingen uit van deze soort bedrijf.",
+      },
+      fixOwner: "Klopt het niet? Als eigenaar pas je het aan onder ‘Je gegevens’; de volgende controle stelt dan andere vragen.",
+      fixOther: "Klopt het niet? Mail het naar",
+    },
     sources: {
       h2: "Waar het vandaan komt",
       h2Grey: "Waarom de AI niets vindt",
@@ -1512,6 +1565,22 @@ export const copy = {
       setupGrey: "Alleen vindbaar maken · €149",
       exclVat: "Excl. btw · geen opzegtermijn · herstel bij derden duurt meestal 2 tot 4 weken",
       exclVatGrey: "Excl. btw · geen opzegtermijn",
+      /** The panel of an online business: no promise of Google, Bing, Apple or directory work (compliance B6), and "1 bedrijf" for "1 vestiging". */
+      online: {
+        stepFacts: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"}, met datum, die AI kan lezen.`,
+        stepsGreen: [
+          "Je gegevens één keer vastleggen, zodat elke bron hetzelfde zegt.",
+          "Een feitenpagina op je eigen domein, met datum, die AI kan lezen.",
+          "Met Vidalo Monthly: elke maand dezelfde vragen opnieuw. Verandert er iets, dan zie je het als eerste.",
+        ],
+        stepsGrey: {
+          facts: "Je gegevens één keer vastleggen: wat je doet, voor wie, je website en wat je wel en niet doet. Vijf minuten.",
+          publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen.`,
+          recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wat er veranderd is.`,
+        },
+        exclVat: "1 bedrijf · Excl. btw · geen opzegtermijn · herstel bij derden duurt meestal 2 tot 4 weken",
+        exclVatGrey: "1 bedrijf · Excl. btw · geen opzegtermijn",
+      },
     },
     email: {
       h3: "Stuur dit rapport naar mij",
@@ -2059,6 +2128,8 @@ export const copy = {
       credential: (who: string) => `Welke erkenningen heeft ${who}?`,
       identitySubject: (who: string, subject: string) => `Is ${who} hetzelfde als ${subject}?`,
       identity: (who: string) => `Is ${who} hetzelfde als het bedrijf met die naam elders?`,
+      /** Online: no town. */
+      identityKind: (who: string) => `Wat doet ${who}?`,
     },
     /** A stored value in words. */
     value: {
@@ -2075,6 +2146,8 @@ export const copy = {
       no: "nee",
       otherBusiness: "een ander bedrijf",
       sameBusiness: "hetzelfde bedrijf",
+      otherKind: "beschreven als een ander soort bedrijf",
+      sameKind: "beschreven als hetzelfde soort bedrijf",
     },
     /** One "do it yourself" step: source, engine, what it said, what is true, the fix. */
     selfStep: (source: string, engine: string, verdict: string, said: string, truth: string, fix: string) => `${source}: ${engine} ${verdict} “${said}”, het is ${truth}. ${fix}`.trim(),

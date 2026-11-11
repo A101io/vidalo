@@ -147,6 +147,14 @@ export function normalizePrice(raw: string | number): string | null {
 /** Words that count as "pin / card payment" in paymentMethods or policies. */
 const PIN_WORDS = ["pin", "pinnen", "pinpas", "debitcard", "debit", "maestro", "kaart", "card", "contactloos", "ideal"];
 
+/** Does the profile hold an offer that rests on something other than the AI lookup? */
+function kindIsGrounded(facts: Facts): boolean {
+  const p = facts.profile;
+  if (!p || !p.grounded || !p.offer) return false;
+  return !(p.basis.length > 0 && p.basis.every((b) => b === "ai_lookup"));
+}
+
+
 /**
  * The owner-asserted value for a (factKey, subject) in the normalised value
  * space, or null when the facts do not say anything about it (skip compare).
@@ -219,6 +227,9 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
       return facts.credentials?.some((c) => normalizeLabel(c) === s) ? "yes" : null;
     }
     case "identity":
+      // "wat doet X": only a grounded offer (Google, the business's own site, the owner) is a reference.
+      // An offer that came from the AI lookup alone would grade the AI against itself (ADR-0005).
+      if (subject === "kind") return kindIsGrounded(facts) ? "same" : null;
       // The owner's position is always: that is a different business.
       return facts.notConfusedWith.length || subject ? "no" : null;
   }
@@ -275,7 +286,7 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
     case "credential":
       return value === "yes" ? "ja" : value === "no" ? "nee" : value;
     case "identity":
-      return value === "no" ? "een ander bedrijf" : value === "yes" ? "hetzelfde bedrijf" : value;
+      return value === "no" ? "een ander bedrijf" : value === "yes" ? "hetzelfde bedrijf" : value === "other" ? "een ander soort bedrijf" : value === "same" ? "dit soort bedrijf" : value;
     case "price":
       return `€ ${value.replace(".", ",")}`;
     default:
@@ -311,7 +322,7 @@ export function describeFact(factKey: FactKey, subject: string | null): string {
     case "credential":
       return subject ? `erkenning: ${subject}` : "erkenningen";
     case "identity":
-      return subject ? `naamgenoot: ${subject}` : "naamgenoot";
+      return subject === "kind" ? "wat het bedrijf doet" : subject ? `naamgenoot: ${subject}` : "naamgenoot";
   }
 }
 

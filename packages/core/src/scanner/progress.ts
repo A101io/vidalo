@@ -9,6 +9,7 @@ import type { Engine, ProfileSummary, ScanKind, ScanReport } from "../types.js";
 import { getDb } from "../shared/db.js";
 import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
 import { runScan, type ScanProgress } from "./index.js";
+import type { EngineClient } from "./engines/types.js";
 
 export interface ScanProgressStep {
   key: string;
@@ -43,7 +44,7 @@ export function businessIdFromToken(token: string): string | null {
 }
 
 export async function persistScanState(state: ScanJobState, db: Db = getDb()): Promise<void> {
-  await db.logEvent(state.businessId, "scan.progress", { token: state.token, scanRunId: state.scanRunId, status: state.status, stage: state.stage, profile: state.profile, questions: state.questions, engines: state.engines, steps: state.steps, error: state.error ?? null });
+  await db.logEvent(state.businessId, "scan.progress", { token: state.token, scanRunId: state.scanRunId, status: state.status, stage: state.stage, profile: state.profile, questions: state.questions, engines: state.engines, error: state.error ?? null });
 }
 
 /** The latest stored state for a waiting-room token, or null. */
@@ -55,24 +56,45 @@ export async function readScanState(token: string, db: Db = getDb()): Promise<Sc
   if (!ev) return null;
   const p = ev.payload as unknown as Omit<ScanJobState, "token" | "businessId">;
   // A state stored before this feature has no stage: read it as "ask" with nothing to list.
-  return { token, businessId, scanRunId: p.scanRunId ?? null, status: p.status, stage: p.stage ?? "ask", profile: p.profile ?? null, questions: p.questions ?? [], engines: p.engines ?? [], steps: p.steps, error: p.error ?? null };
+  return { token, businessId, scanRunId: p.scanRunId ?? null, status: p.status, stage: p.stage ?? "ask", profile: p.profile ?? null, questions: p.questions ?? [], engines: p.engines ?? [], error: p.error ?? null };
+}
+
+/**
+ * The body of GET /api/scan/[token]/status: exactly the contract's fields and nothing else.
+ * Never the stored error text, the business id or the scan run id (beyond a finished scan's report path).
+ */
+export function scanStatusBody(state: ScanJobState) {
+  return {
+    status: state.status,
+    stage: state.stage,
+    profile: state.profile,
+    questions: state.questions,
+    engines: state.engines,
+    reportUrl: state.status === "done" && state.scanRunId ? `/r/${state.scanRunId}` : null,
+  };
 }
 
 /** Run the scan and translate its progress events into waiting-room steps. */
 export async function runScanWithProgress(
   state: ScanJobState,
-  opts: { kind: ScanKind; engines: Engine[]; persist?: (s: ScanJobState) => Promise<void>; db?: Db },
+  opts: { kind: ScanKind; engines: Engine[]; persist?: (s: ScanJobState) => Promise<void>; db?: Db; clients?: EngineClient[]; profile?: ProfileSummary },
 ): Promise<ScanReport | null> {
   const db = opts.db ?? getDb();
   const { engines, kind } = opts;
   const save = opts.persist ?? ((s: ScanJobState) => persistScanState(s, db));
-  const perEngine = new Map<Engine, number>();
-  let perEngineTotal = Number.POSITIVE_INFINITY;
-  const mark = (key: string) => {
-    const s = state.steps?.find((x) => x.key === key);
-    if (s) s.done = true;
+  const STAGE_ORDER: ScanStage[] = ["understand", "choose", "ask", "compare", "done"];
+  // Stages only move forward, whatever order events arrive in.
+  const advance = (to: ScanStage) => {
+    if (STAGE_ORDER.indexOf(to) > STAGE_ORDER.indexOf(state.stage)) state.stage = to;
   };
-  const markAllAsk = () => engines.forEach((e) => mark(`ask:${e}`));
+  const row = (engine: Engine) => {
+    let r = state.engines.find((x) => x.engine === engine);
+    if (!r) {
+      r = { engine, received: 0, expected: 0 };
+      state.engines.push(r);
+    }
+    return r;
+  };
   let dirty = false;
   let flushing: Promise<void> | null = null;
   const flush = () => {
@@ -90,33 +112,31 @@ export async function runScanWithProgress(
 
   state.status = "running";
   const onProgress = (ev: ScanProgress) => {
-    if (ev.type === "start") {
+    if (ev.type === "profile") {
+      state.profile = ev.profile;
+      advance("choose");
+    } else if (ev.type === "questions") {
+      state.questions = ev.questions;
+      advance("choose");
+    } else if (ev.type === "start") {
       state.scanRunId = ev.scanRunId;
-      perEngineTotal = engines.length ? Math.ceil(ev.total / engines.length) : ev.total;
-      mark("found");
+      state.engines = [];
+      for (const [engine, n] of Object.entries(ev.perEngine) as [Engine, number][]) row(engine).expected = n;
+      advance("ask");
+    } else if (ev.type === "escalate") {
+      for (const [engine, n] of Object.entries(ev.perEngine) as [Engine, number][]) row(engine).expected += n;
     } else if (ev.type === "asked") {
-      const n = (perEngine.get(ev.engine) ?? 0) + 1;
-      perEngine.set(ev.engine, n);
-      if (n >= perEngineTotal) mark(`ask:${ev.engine}`);
-    } else if (ev.type === "phase") {
-      if (ev.phase === "extract" || ev.phase === "compare") {
-        markAllAsk();
-        if (ev.phase === "compare") mark("comparing");
-      } else if (ev.phase === "attribute" || ev.phase === "persist") {
-        markAllAsk();
-        mark("comparing");
-        if (ev.phase === "persist") mark("sources");
-      } else if (ev.phase === "done") {
-        state.steps?.forEach((s) => (s.done = true));
-      }
+      row(ev.engine).received++;
+    } else if (ev.type === "phase" && (ev.phase === "extract" || ev.phase === "compare")) {
+      advance("compare");
     }
     flush();
   };
   flush();
   try {
-    const report = await runScan({ businessId: state.businessId, kind, engines, onProgress, db });
+    const report = await runScan({ businessId: state.businessId, kind, engines, onProgress, db, clients: opts.clients, profile: opts.profile });
     state.scanRunId = report.scanRunId;
-    state.steps?.forEach((s) => (s.done = true));
+    state.stage = "done";
     state.status = "done";
     await flushing;
     await save(state);

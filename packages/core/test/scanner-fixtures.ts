@@ -33,3 +33,12 @@ export function sampleFacts(overrides: Partial<Facts> = {}): Facts {
     ...overrides,
   };
 }
+
+/** Store the questions a business with a door is asked, as the first scan does (prepareBusiness no longer stores any). Returns the active rows. */
+export async function storeDoorPrompts(db: import("../src/db").Db, business: import("../src/db").BusinessRecord) {
+  const { loadPrompts } = await import("../src/scanner");
+  const { withCountry } = await import("../src/shared/country");
+  const facts = withCountry((await db.latestFacts(business.id))!, business);
+  await loadPrompts(db, business.id, facts, "baseline", business.sector);
+  return db.listPrompts(business.id, { activeOnly: true });
+}

@@ -67,7 +67,9 @@ export async function saveFacts(form: FormData) {
   const data = parseFacts(form, business.id);
   if (!data.name || !data.place) redirect((await getI18n()).href("/app/gegevens?fout=1"));
   // Not on the form: the Google types (they pick the question word) carry over from the version before.
-  data.googleTypes = (await db.latestFacts(business.id))?.googleTypes;
+  const before = await db.latestFacts(business.id);
+  data.googleTypes = before?.googleTypes;
+  data.serviceAreaOnly = before?.serviceAreaOnly;
   const now = new Date().toISOString();
   const facts = await db.insertFacts(business.id, data, { provisional: false, verifiedAt: now });
   const countryRaw = str(form, "country");

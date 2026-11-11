@@ -66,13 +66,14 @@ function nameTokens(name: string): string[] {
  * most of its distinctive words (and, when the name is a single common word,
  * the place as well). Never looks at position or count.
  */
-export function mentionsBusiness(answerText: string, facts: Pick<Facts, "name" | "place">): boolean {
+export function mentionsBusiness(answerText: string, facts: Pick<Facts, "name" | "place"> & Partial<Pick<Facts, "profile">>): boolean {
   const answer = ` ${normalizeName(answerText)} `;
   const full = normalizeName(facts.name);
   if (!full) return false;
   const tokens = nameTokens(facts.name);
   // One distinctive word only ("Jansen"): ask for the place too so a namesake elsewhere does not count.
-  const placeOk = tokens.length > 1 || answer.includes(` ${normalizeName(facts.place)} `);
+  // An online business has no town: its name stands alone, so the place is not asked for.
+  const placeOk = tokens.length > 1 || facts.profile?.mode === "online" || answer.includes(` ${normalizeName(facts.place)} `);
   if (answer.includes(` ${full} `)) return placeOk;
   if (!tokens.length) return false;
   const hits = tokens.filter((t) => answer.includes(` ${t} `) || answer.includes(` ${t}s `)).length;
@@ -198,7 +199,7 @@ export function isNotFoundClaim(c: Pick<Claim, "value">): boolean {
 // Rule-based extractor
 // ---------------------------------------------------------------------------
 
-const NL_CITIES = [
+export const NL_CITIES = [
   "Amsterdam", "Rotterdam", "Den Haag", "Utrecht", "Eindhoven", "Groningen", "Tilburg", "Almere", "Breda", "Nijmegen",
   "Apeldoorn", "Haarlem", "Arnhem", "Enschede", "Amersfoort", "Zaanstad", "Haarlemmermeer", "Den Bosch", "'s-Hertogenbosch",
   "Zwolle", "Zoetermeer", "Leiden", "Leeuwarden", "Maastricht", "Dordrecht", "Ede", "Alphen aan den Rijn", "Alkmaar",
@@ -254,6 +255,8 @@ export function detectOtherEntity(answer: string, facts: Facts): boolean {
   const place = facts.place.toLowerCase();
   const lower = answer.toLowerCase();
   if (namesOnlyAnotherBusiness(answer, facts.name)) return true;
+  // The town is not the identity of an online business: "gevestigd in Amsterdam" says nothing about whom the answer is about.
+  if (facts.profile?.mode === "online") return false;
   if (/dit gaat over .+ in [A-Z]/.test(answer) && !lower.includes(`dit gaat over ${facts.name.toLowerCase()} in ${place}`)) return true;
   const area = new Set((facts.serviceArea?.places ?? []).map((p) => p.toLowerCase()));
   for (const city of NL_CITIES) {
@@ -262,6 +265,50 @@ export function detectOtherEntity(answer: string, facts: Facts): boolean {
     if (re.test(answer) && !lower.includes(`niet in ${city.toLowerCase()}`)) return true;
   }
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// "Wat doet X?": is the business described as the kind of business it is?
+// ---------------------------------------------------------------------------
+
+const KIND_STOPWORDS = new Set([
+  "voor", "met", "een", "het", "van", "naar", "bedrijf", "bedrijven", "aanbieder", "aanbieders", "organisatie", "wordt", "deze", "dient", "doet",
+  "maar", "zijn", "ook", "onder", "over", "dat", "die", "heeft", "hebben", "kunnen", "kunt", "waar", "waarbij", "gevestigd", "bieden", "biedt",
+  "that", "with", "from", "this", "company", "provider", "business", "their", "which", "offers", "offer", "your",
+]);
+
+/** Kinds of business an answer can wrongly call this one. Short on purpose: a word outside the list never decides. */
+const OTHER_KINDS = ["winkel", "shop", "webshop", "restaurant", "kapper", "hoortoestel", "audicien", "makelaar", "bakkerij", "garage", "store", "hearing"];
+
+function contentWords(text: string, drop: Set<string>): string[] {
+  return normalizeName(text.slice(0, MATCH_LIMIT))
+    .split(" ")
+    .filter((w) => w.length >= 4 && !KIND_STOPWORDS.has(w) && !drop.has(w));
+}
+
+/** The same word, allowing a plural or a compound end ("winkel" / "winkels"): one starts with the other. */
+function sameStem(a: string, b: string): boolean {
+  return a === b || (Math.min(a.length, b.length) >= 4 && (a.startsWith(b) || b.startsWith(a)));
+}
+
+/**
+ * Reads a "wat doet X" answer against the profile: "same" when it shares a content
+ * word with the offer or category, "other" when it calls the business one of a short
+ * list of other kinds that the offer does not contain, else null (nothing to judge).
+ * Bounded prefix; no backtracking pattern.
+ */
+export function kindClaimFromAnswer(answer: string, facts: Pick<Facts, "name"> & Partial<Pick<Facts, "profile">>): "same" | "other" | null {
+  const profile = facts.profile;
+  if (!profile) return null;
+  const reference = [profile.offer, profile.category].filter(Boolean).join(" ");
+  if (!reference) return null;
+  const own = new Set(nameTokens(facts.name));
+  const refWords = contentWords(reference, own);
+  const answerWords = contentWords(answer, own);
+  if (refWords.some((r) => answerWords.some((a) => sameStem(r, a)))) return "same";
+  const named = OTHER_KINDS.find((k) => answerWords.some((a) => a === k || (a.startsWith(k) && a.length <= k.length + 2)));
+  if (named && !refWords.some((r) => sameStem(r, named))) return "other";
+  return null;
 }
 
 const TIME = String.raw`(\d{1,2}(?:[:.]\d{2})?\s*(?:[ap]\.?m\.?)?)\s*(?:uur)?`;
@@ -398,6 +445,11 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
       case "area":
       case "credential":
       case "identity": {
+        if (factKey === "identity" && subject === "kind") {
+          const kind = kindClaimFromAnswer(answerText, facts);
+          if (kind) push("identity", "kind", kind, answerText);
+          break;
+        }
         const v = yesNo(answerText);
         if (v && subject) push(factKey, subject, v, answerText);
         break;
@@ -451,7 +503,7 @@ const EXTRACTION_JSON_SCHEMA = {
           value: {
             type: "string",
             description:
-              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone in E.164 ("+31201234567", "+442079460000"); address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); price decimal number.',
+              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone in E.164 ("+31201234567", "+442079460000"); address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); identity with subject "kind": same (the answer describes the business as the kind of business in profiel.aanbod / profiel.categorie) | other (it describes it as a different kind of business); price decimal number.',
           },
           confidence: { type: "number" },
           otherEntity: { type: "boolean", description: "True when the answer is about a business with the same name in a different place." },
@@ -475,6 +527,7 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
       bedrijf: { naam: facts.name, plaats: facts.place, land: facts.country ?? "NL" },
       vraag: prompt.textNl,
       probes: prompt.probes,
+      ...(facts.profile && (facts.profile.offer || facts.profile.category) ? { profiel: { aanbod: facts.profile.offer, categorie: facts.profile.category } } : {}),
       antwoord: answerText,
     },
     null,

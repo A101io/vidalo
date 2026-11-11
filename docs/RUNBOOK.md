@@ -82,3 +82,16 @@ Not tried yet. On the preview Worker, which serves mock data, so nothing real is
 2. `wrangler deployments list --name vidalo-web-preview`, then `wrangler rollback <older-version> --name vidalo-web-preview -m "drill"`.
 3. `node scripts/verify-deploy.mjs https://vidalo-web-preview.julian-devriend.workers.dev` passes; note how long steps 2 and 3 took.
 4. Run the preview deploy once more to roll forward. Record the date and the times in go-live X5.
+
+## Reading the question library (feature 001)
+
+Which questions work for which kind of business. Locally: `pnpm library` writes `out/library.md` (stopped questions first, then one table per category). In production the worker has no file system, so read the view in the SQL editor:
+
+1. Open https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/sql/new
+2. Paste, run:
+
+```sql
+select category, mode, template_nl, asked, usable, businesses, usable_share from question_library order by category, mode, asked desc;
+```
+
+A question counts as bewezen when it was asked of at least 5 different businesses and at least 6 in 10 answers were usable; it is gestopt (never asked again in that category) when it was asked of at least 10 different businesses and fewer than 3 in 10 were usable. `businesses` is the number of different businesses, so one person running many checks on one business moves nothing. The numbers live in `packages/core/src/prompts/library.ts`; the view shows counts only. A stopped question can be brought back only by deleting its rows in `question_use` (write the reason in `A101/_OS/LEARNINGS.md`).

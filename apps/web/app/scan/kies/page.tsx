@@ -6,6 +6,7 @@ import { ScanField } from "@/components/ScanField";
 import { resolveBusiness, parseQuery } from "@/lib/core";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { kiesAllowed } from "@/lib/turnstile";
+import { typedBusinessProblem } from "@vidalo/core/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function ChoosePage({ searchParams }: { searchParams: Promi
   // No usable e-mail address on the post: the field again, nothing looked up.
   const emailInvalid = fout === "mail";
   // A lookup costs money: only after a passed check (the token from POST /api/scan), else the field to start again.
-  const allowed = Boolean(q) && !emailInvalid && kiesAllowed(q, placeParam ?? "", k);
+  const allowed = Boolean(q) && !emailInvalid && !typedBusinessProblem(q, place) && kiesAllowed(q, placeParam ?? "", k);
   const candidates = allowed ? await resolveBusiness(parsed.query, place) : [];
   const needsPlace = plaats === "1" || (candidates.length > 0 && candidates.every((c) => !c.place) && !place);
   const { copy, href } = await getI18n();

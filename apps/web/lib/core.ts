@@ -87,17 +87,6 @@ export type { ScanProgressStep, ScanJobState };
 
 export const FREE_SCAN_ENGINES: Engine[] = SCAN_DEFAULTS.free.engines;
 
-/** The ordered list of steps the waiting room shows; engines in scan order. */
-export function progressTemplate(engines: Engine[], copy: CopyShape): ScanProgressStep[] {
-  return [
-    { key: "found", label: copy.scan.steps.found, done: false },
-    ...engines.map((e) => ({ key: `ask:${e}`, label: copy.scan.steps.asking(ENGINE_LABEL[e]), done: false })),
-    { key: "comparing", label: copy.scan.steps.comparing, done: false },
-    { key: "sources", label: copy.scan.steps.sources, done: false },
-    { key: "done", label: copy.scan.steps.done, done: false },
-  ];
-}
-
 function progressMap() {
   g.__vidaloProgress ??= new Map();
   return g.__vidaloProgress;
@@ -134,8 +123,8 @@ export async function getScanState(token: string): Promise<ScanJobState | null> 
 }
 
 /** Create the waiting-room state (status queued). Call before the scan is started or queued. */
-export async function createScanState(businessId: string, copy: CopyShape, engines: Engine[] = FREE_SCAN_ENGINES): Promise<ScanJobState> {
-  const state: ScanJobState = { token: newScanToken(businessId), businessId, scanRunId: null, status: "queued", stage: "understand", profile: null, questions: [], engines: [], steps: progressTemplate(engines, copy), error: null };
+export async function createScanState(businessId: string): Promise<ScanJobState> {
+  const state: ScanJobState = { token: newScanToken(businessId), businessId, scanRunId: null, status: "queued", stage: "understand", profile: null, questions: [], engines: [], error: null };
   await persist(state);
   return state;
 }

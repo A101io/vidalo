@@ -142,7 +142,11 @@ export interface ScanRunCreate {
   profile?: BusinessProfile | null;
 }
 
-/** One question template's use in one scan (ADR-0004: an append-only ledger). */
+/**
+ * One question template's use in one scan (ADR-0004: an append-only ledger). Holds only the template
+ * key, family, mode, category and counts. `templateNl` has slots ({naam}, {plaats}), never a filled
+ * question and never an owner's fact value. The Db adds an opaque per-business reference itself.
+ */
 export interface QuestionUseInput {
   scanRunId: string;
   category: string;
@@ -165,6 +169,8 @@ export interface LibraryRow {
   intent: string | null;
   asked: number;
   usable: number;
+  /** How many DIFFERENT businesses were asked it (ADR-0004: thresholds count businesses, not answers). */
+  businesses: number;
 }
 
 export interface ScanRunUpdate {

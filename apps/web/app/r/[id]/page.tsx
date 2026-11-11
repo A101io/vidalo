@@ -16,7 +16,7 @@ import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
 import { buildReportView, type BuildViewOptions } from "@/lib/report";
-import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, demoGreySources, demoGreyReport, demoReport } from "@/lib/demo";
+import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, DEMO_ONLINE_DOMAIN, demoGreySources, demoGreyReport, demoOnlineReport, demoReport } from "@/lib/demo";
 import { EmailCapture } from "./EmailCapture";
 import { PrintButton } from "./PrintButton";
 
@@ -27,6 +27,7 @@ export const dynamic = "force-dynamic";
 async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean } | null> {
   if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };
   if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true, bySlug: false };
+  if (id === DEMO_IDS.online) return { report: demoOnlineReport(), opts: { domain: DEMO_ONLINE_DOMAIN }, demo: true, bySlug: false };
   // A scan-run id is unguessable and is the link we hand out. A business slug or id
   // ("sonable-rotterdam") is guessable: it only opens the latest report for the
   // signed-in owner of that business (security review, 11 Nov 2026).
@@ -97,6 +98,23 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             <p className="lead enter max-w-[56ch]" style={{ "--d": "220ms" } as React.CSSProperties}>
               {v.intro}
             </p>
+            {v.checkedAs && (
+              <div className="enter flex max-w-[56ch] flex-col gap-1 text-[14px]" style={{ "--d": "280ms" } as React.CSSProperties}>
+                <p className="font-semibold text-ink">{v.checkedAs}</p>
+                <p className="text-muted">
+                  {v.checkedAsNote} {owned && owned.id === report.business.id ? R.checkedAs.fixOwner : R.checkedAs.fixOther}
+                  {!(owned && owned.id === report.business.id) && (
+                    <>
+                      {" "}
+                      <a className="btn-link" href="mailto:support@vidalo.io">
+                        support@vidalo.io
+                      </a>
+                      .
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
             <div className="enter flex flex-wrap gap-x-6 gap-y-1 text-[14px] text-muted" style={{ "--d": "320ms" } as React.CSSProperties}>
               {v.engineLines.map((e) => (
                 <span key={e.name}>
@@ -107,6 +125,51 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             <PrintButton label={R.print} />
           </div>
         </section>
+
+        {/* Online: who AI names next to the business, per question, as counts. Next to the dot, outside it. */}
+        {v.competition && (
+          <section aria-labelledby="competition-h" className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
+            <div className="flex flex-col gap-3.5 lg:col-span-5">
+              <h2 id="competition-h" className="h2-sm">
+                {R.competition.h2}
+              </h2>
+              <p className="max-w-[48ch] text-[16px] leading-[1.55] text-ink-2">{R.competition.body}</p>
+              <p className="text-[18px] font-bold">{v.competition.summary}</p>
+              <p className="max-w-[48ch] text-[13px] text-muted">{v.competition.note}</p>
+              {demo && id === DEMO_IDS.online && <p className="max-w-[48ch] text-[13px] text-muted">{R.competition.demoCaption}</p>}
+            </div>
+            <ul className="flex flex-col gap-3 lg:col-span-7">
+              {v.competition.questions.map((q) => (
+                <li key={q.question} className="flex flex-col gap-2 rounded-2xl border-[1.5px] border-line p-4 text-[14px]">
+                  <span className="font-semibold">{q.question}</span>
+                  <span className="text-ink-2">{q.you}</span>
+                  {q.others.length > 0 && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                      <span className="text-muted">{R.competition.others}:</span>
+                      {q.others.map((o) => (
+                        <span key={o.name}>
+                          <span className="font-semibold">{o.name}</span> <span className="text-muted">{o.times}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {q.quotes.length > 0 && (
+                    <div className="mt-1 flex flex-col gap-2">
+                      <span className="text-[13px] font-semibold text-muted">{R.competition.quotesTitle}</span>
+                      {q.quotes.map((quote, i) => (
+                        <figure key={i} className="m-0 rounded-xl bg-panel px-4 py-3">
+                          <blockquote className="m-0 text-ink-2">“{quote.text}”</blockquote>
+                          <figcaption className="mt-1 text-[13px] text-muted">{quote.engine}</figcaption>
+                        </figure>
+                      ))}
+                      <span className="text-[12px] text-muted">{R.competition.quotesNote}</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Three answers */}
         {v.cards.length > 0 && (

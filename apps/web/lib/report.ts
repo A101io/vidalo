@@ -41,6 +41,14 @@ export interface NamedBlock {
   sources: { host: string; href: string; times: string }[];
 }
 
+/** The competition block of an online business: per question, counts only. */
+export interface CompetitionView {
+  /** "Genoemd in 4 van 30 antwoorden", over every category and alternative question. */
+  summary: string;
+  questions: { question: string; you: string; others: { name: string; times: string }[]; quotes: { text: string; engine: string }[] }[];
+  note: string;
+}
+
 export interface PlanStep {
   tone: Stip;
   text: string;
@@ -66,6 +74,11 @@ export interface ReportView {
   named: NamedBlock[];
   /** "Vergeleken als: afhaalrestaurant in Rotterdam." when the report knows its comparison profile. */
   profile: string | null;
+  /** "Gecontroleerd als: …" when the report carries a profile (every mode), with how it was read and how to correct it. */
+  checkedAs: string | null;
+  checkedAsNote: string | null;
+  /** Online businesses only (and only when there are category or alternative questions). */
+  competition: CompetitionView | null;
   sources: SourceRowData[];
   sourcesTitle: string;
   sourcesBody: string;
@@ -109,7 +122,7 @@ function namedBlocks(report: ScanReport, copy: CopyShape): NamedBlock[] {
 }
 
 /** Group findings and correct answers into one row per question. */
-function groupQuestions(report: ScanReport, copy: CopyShape): QuestionGroup[] {
+function groupQuestions(report: ScanReport, copy: CopyShape, online: boolean): QuestionGroup[] {
   const { name, place } = report.business;
   const groups = new Map<string, QuestionGroup>();
   const get = (key: string, question: string) => {
@@ -123,14 +136,14 @@ function groupQuestions(report: ScanReport, copy: CopyShape): QuestionGroup[] {
   for (const c of report.correct) {
     // Older reports carry only the Dutch prompt and wording; newer ones let the page word both itself.
     const key = c.factKey ? keyOf(c.factKey, c.subject) : `p:${c.prompt}`;
-    const question = c.factKey ? questionFor(c.factKey, c.subject ?? null, name, place, copy) : c.prompt;
+    const question = c.factKey ? questionFor(c.factKey, c.subject ?? null, name, place, copy, online) : c.prompt;
     const value = c.factKey && c.raw != null ? humanValue(c.factKey, c.raw, c.subject ?? null, copy) : c.value;
     get(key, question).correct.push({ engine: c.engine, value });
   }
   for (const f of report.findings) {
     const rec = f.evidenceKind === "recommendation";
     const key = keyOf(f.factKey, f.subject, rec);
-    const q = rec ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, name, place, copy);
+    const q = rec ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, name, place, copy, online);
     const g = groups.get(key) ?? get(key, q);
     g.findings.push(f);
   }
@@ -188,10 +201,10 @@ function rowFor(g: QuestionGroup, copy: CopyShape): ReportRowData {
   return { question: g.question, said: value, tone: "groen", correct: T.ok, source: T.none };
 }
 
-function cardFor(f: Finding, report: ScanReport, copy: CopyShape): AnswerCardData {
+function cardFor(f: Finding, report: ScanReport, copy: CopyShape, online: boolean): AnswerCardData {
   const A = copy.result.answerCard;
   const business = report.business;
-  const question = f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, business.name, business.place, copy);
+  const question = f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, business.name, business.place, copy, online);
   const engine = ENGINE_LABEL[f.engine];
   const caption = A.frequency(f.frequency, f.sampleCount) + (f.sourceType === "other_entity" ? ` · ${A.otherEntity}` : "");
   if (f.verdict === "not_found") return { question, engine, highlight: A.notFoundQuote, highlightTone: "grijs", caption };
@@ -199,7 +212,7 @@ function cardFor(f: Finding, report: ScanReport, copy: CopyShape): AnswerCardDat
   return { question, engine, highlight: wrongText(f, copy), highlightTone: "rood", caption };
 }
 
-function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy: CopyShape): AnswerCardData[] {
+function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy: CopyShape, online: boolean): AnswerCardData[] {
   const sorted = [...findings].sort((a, b) => severityRank[findingSeverity(a)] - severityRank[findingSeverity(b)] || b.frequency - a.frequency);
   if (!grey) {
     // One card per question: the worst finding of each question first.
@@ -208,7 +221,7 @@ function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy:
       const k = keyOf(f.factKey, f.subject, f.evidenceKind === "recommendation");
       return seen.has(k) ? false : (seen.add(k), true);
     });
-    return picks.slice(0, 3).map((f) => cardFor(f, report, copy));
+    return picks.slice(0, 3).map((f) => cardFor(f, report, copy, online));
   }
   // Grey: show the three kinds of "AI kent je niet" when they exist: not named, not found, another business.
   const picks: Finding[] = [];
@@ -217,7 +230,37 @@ function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy:
   add(sorted.find((f) => f.verdict === "not_found"));
   add(sorted.find((f) => f.sourceType === "other_entity"));
   for (const f of sorted) if (picks.length < 3) add(f);
-  return picks.slice(0, 3).map((f) => cardFor(f, report, copy));
+  return picks.slice(0, 3).map((f) => cardFor(f, report, copy, online));
+}
+
+/** "Gecontroleerd als: aanbieder van achtergrondmuziek voor hotels en horeca, online": Vidalo's reading, and how to correct it. */
+function checkedAsFor(report: ScanReport, copy: CopyShape): { checkedAs: string | null; checkedAsNote: string | null } {
+  const p = report.profile;
+  if (!p) return { checkedAs: null, checkedAsNote: null };
+  const C = copy.result.checkedAs;
+  // A fallback reading shows the mode words only: we did not read the business, we assumed its kind (compliance B4).
+  const described = p.source === "fallback" ? null : (p.category ?? p.offer);
+  const what = described ? [described, p.audience && p.category ? C.forAudience(p.audience) : null].filter(Boolean).join(" ") + `, ${C.mode[p.mode]}` : C.modeOnly[p.mode];
+  return { checkedAs: C.line(what), checkedAsNote: C.how[p.source] };
+}
+
+/** One entry per category and alternative question: how often the business was named, who else, and what AI wrote about it. Counts only. */
+function competitionFor(report: ScanReport, copy: CopyShape): CompetitionView | null {
+  const K = copy.result.competition;
+  const rows = (report.recommendations ?? []).filter((r) => r.family === "rec_category" || r.family === "alternative");
+  if (!rows.length) return null;
+  const named = rows.reduce((n, r) => n + r.named, 0);
+  const answers = rows.reduce((n, r) => n + r.answers, 0);
+  return {
+    summary: K.summary(named, answers),
+    questions: rows.map((r) => ({
+      question: r.prompt,
+      you: K.you(r.named, r.answers),
+      others: r.others.slice(0, 5).map((o) => ({ name: o.name, times: K.times(o.answers, r.answers) })),
+      quotes: r.quotes.slice(0, 3).map((q) => ({ text: q.text, engine: K.quoteBy(ENGINE_LABEL[q.engine]) })),
+    })),
+    note: K.note,
+  };
 }
 
 export interface BuildViewOptions {
@@ -233,7 +276,8 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const R = copy.result;
   const grey = report.visibility === "unknown" || report.stip === "grijs";
   const state: ReportState = grey ? "grijs" : report.stip === "groen" ? "groen" : "rood";
-  const groups = groupQuestions(report, copy);
+  const online = report.profile?.mode === "online";
+  const groups = groupQuestions(report, copy, online);
   const rows = groups.map((g) => rowFor(g, copy));
   const wrongQuestions = rows.filter((r) => r.tone === "rood").length;
   const notFoundQuestions = rows.filter((r) => r.tone === "grijs").length;
@@ -275,7 +319,10 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
         ? { number: questions, label: R.hero.okLabel(questions) }
         : { number: wrongQuestions, label: R.hero.wrongLabel(questions) };
 
-  const h1 = uncheckedGrey ? R.hero.h1Unchecked(report.business.name, report.business.place) : state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood");
+  const tone = report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood";
+  const h1 = online
+    ? uncheckedGrey ? R.hero.h1UncheckedOnline(report.business.name) : state === "grijs" ? R.hero.h1GreyOnline(report.business.name) : R.hero.h1Online(report.business.name, tone)
+    : uncheckedGrey ? R.hero.h1Unchecked(report.business.name, report.business.place) : state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, tone);
   const intro = uncheckedGrey
     ? R.hero.introUnchecked(enginesText, questions, times, report.notFoundAnswers, report.totalAnswers, otherEntityTotal)
     : state === "grijs"
@@ -287,7 +334,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     return { name: ENGINE_LABEL[e.engine], text: e.skipped ? R.hero.engineSkipped : R.hero.engineCounts(e.correct, Math.max(0, e.wrong - other), e.notFound, other, e.unchecked ?? 0) };
   });
 
-  const cards = pickCards(report.findings, report, grey && !uncheckedGrey, copy);
+  const cards = pickCards(report.findings, report, grey && !uncheckedGrey, copy, online);
 
   // One line per question, AI system and answer, with how often it came: a wrong answer 3 of 3 times
   // reads differently from 1 of 3, and the lines add up to the count in the heading (9 Nov 2026: the
@@ -330,7 +377,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const covered = new Map<string, number>();
   for (const l of all) covered.set(lineKey(l.question, l.engine), (covered.get(lineKey(l.question, l.engine)) ?? 0) + l.n);
   for (const a of askedAbout) {
-    const question = questionFor(a.factKey, a.subject, report.business.name, report.business.place, copy);
+    const question = questionFor(a.factKey, a.subject, report.business.name, report.business.place, copy, online);
     const engine = ENGINE_LABEL[a.engine];
     const k = lineKey(question, engine);
     let used = covered.get(k) ?? 0;
@@ -348,7 +395,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const allCount = report.asked?.length ? all.reduce((s, l) => s + l.n, 0) : report.totalAnswers;
 
   const instable = report.instable.map((f) => ({
-    question: f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, report.business.name, report.business.place, copy),
+    question: f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, report.business.name, report.business.place, copy, online),
     engine: ENGINE_LABEL[f.engine],
     value: f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy),
     note: copy.instableLine,
@@ -361,8 +408,10 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   else if (uncheckedGrey) sources = [];
   else if (state === "grijs") {
     const S = R.sources;
-    sources = [
-      { label: S.rows.website, status: opts.website ? S.known : S.missing, tone: opts.website ? "muted" : "rood", href: opts.website ?? null },
+    const website: SourceRowData = { label: S.rows.website, status: opts.website ? S.known : S.missing, tone: opts.website ? "muted" : "rood", href: opts.website ?? null };
+    // No Google, Bing, Apple or directory rows for an online business: there is no listing to audit (compliance B6).
+    sources = online ? [website, { label: S.rows.kvk, status: opts.kvk ? S.ok : S.unchecked, tone: opts.kvk ? "groen" : "muted" }] : [
+      website,
       { label: S.rows.gbp, status: opts.googlePlaceId ? S.known : S.unclaimed, tone: opts.googlePlaceId ? "muted" : "rood" },
       { label: S.rows.bingApple, status: S.unchecked, tone: "muted" },
       { label: S.rows.directories(13), status: S.unchecked, tone: "muted" },
@@ -384,45 +433,56 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   // Plan
   const hosts = [...new Set(report.findings.filter((f) => f.verdict !== "not_found" && f.sourceUrl && f.sourceType !== "owned_website" && f.sourceType !== "owned_facts_page").map((f) => hostOf(f.sourceUrl)))];
   const firstTone: Stip = state === "grijs" ? "grijs" : state === "groen" ? "grijs" : report.stip === "oranje" ? "oranje" : "rood";
+  // An online business has no listing to compare: its panel promises no Google, Bing, Apple or directory work
+  // (compliance B6) and says "1 bedrijf".
+  const O = R.plan.online;
+  const greenSteps = (online ? O.stepsGreen : R.plan.stepsGreen).map((text, i) => ({ tone: (["grijs", "oranje", "groen"] as const)[i]!, text }));
+  const excl = online ? O.exclVat : R.plan.exclVat;
   const plan = uncheckedGrey
     ? {
         h2: R.plan.h2Unchecked,
-        steps: R.plan.stepsGreen.map((text, i) => ({ tone: (["grijs", "oranje", "groen"] as const)[i]!, text })),
+        steps: greenSteps,
         monitor: R.plan.monitor,
         setup: R.plan.setup,
-        excl: R.plan.exclVat,
+        excl,
       }
     : state === "grijs"
       ? {
           h2: R.plan.h2Grey,
-          steps: [
-            { tone: "grijs" as const, text: R.plan.stepsGrey.facts },
-            { tone: "oranje" as const, text: R.plan.stepsGrey.publish(opts.domain ?? null) },
-            { tone: "groen" as const, text: R.plan.stepsGrey.recheck(questions) },
-          ],
+          steps: online
+            ? [
+                { tone: "grijs" as const, text: O.stepsGrey.facts },
+                { tone: "oranje" as const, text: O.stepsGrey.publish(opts.domain ?? null) },
+                { tone: "groen" as const, text: O.stepsGrey.recheck(questions) },
+              ]
+            : [
+                { tone: "grijs" as const, text: R.plan.stepsGrey.facts },
+                { tone: "oranje" as const, text: R.plan.stepsGrey.publish(opts.domain ?? null) },
+                { tone: "groen" as const, text: R.plan.stepsGrey.recheck(questions) },
+              ],
           note: R.plan.noteGrey,
           monitor: R.plan.monitorGrey,
           setup: R.plan.setupGrey,
-          excl: R.plan.exclVatGrey,
+          excl: online ? O.exclVatGrey : R.plan.exclVatGrey,
         }
       : state === "groen"
         ? {
             h2: R.plan.h2Green,
-            steps: R.plan.stepsGreen.map((text, i) => ({ tone: (["grijs", "oranje", "groen"] as const)[i]!, text })),
+            steps: greenSteps,
             monitor: R.plan.monitor,
             setup: R.plan.setup,
-            excl: R.plan.exclVat,
+            excl,
           }
         : {
             h2: R.plan.h2,
             steps: [
               { tone: firstTone, text: hosts.length ? R.plan.stepSources(hosts.join(", ")) : R.plan.stepSourcesNone },
-              { tone: "oranje" as const, text: R.plan.stepFacts(opts.domain ?? null) },
+              { tone: "oranje" as const, text: online ? O.stepFacts(opts.domain ?? null) : R.plan.stepFacts(opts.domain ?? null) },
               { tone: "groen" as const, text: R.plan.stepRecheck(14, questions) },
             ],
             monitor: R.plan.monitor,
             setup: R.plan.setup,
-            excl: R.plan.exclVat,
+            excl,
           };
 
   const wrongSteps = report.findings
@@ -450,8 +510,11 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     rows,
     all,
     instable,
-    named: namedBlocks(report, copy),
-    profile: report.comparedAs ? R.named.profile(report.comparedAs, report.business.place) : null,
+    // An online business has no town questions: its competition block replaces "Wie AI wel noemt".
+    named: online ? [] : namedBlocks(report, copy),
+    profile: report.comparedAs && !online ? R.named.profile(report.comparedAs, report.business.place) : null,
+    ...checkedAsFor(report, copy),
+    competition: online ? competitionFor(report, copy) : null,
     sources,
     sourcesTitle: state === "grijs" ? R.sources.h2Grey : R.sources.h2,
     sourcesBody: state === "grijs" ? R.sources.bodyGrey : R.sources.body,

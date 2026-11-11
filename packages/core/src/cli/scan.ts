@@ -228,7 +228,7 @@ export function markdownNl(report: ScanReport): string {
 async function scanOne(name: string, place: string, args: Args): Promise<ScanReport> {
   const prepared = await prepareBusiness({ name, place, db });
   if (args.verbose) {
-    console.log(`[${prepared.business.slug}] ${prepared.created ? "nieuw" : "bestaand"} bedrijf, feiten v${prepared.factsVersion}, ${prepared.prompts.length} vragen`);
+    console.log(`[${prepared.business.slug}] ${prepared.created ? "nieuw" : "bestaand"} bedrijf, feiten v${prepared.factsVersion}`);
   }
   return runScan({
     businessId: prepared.business.id,

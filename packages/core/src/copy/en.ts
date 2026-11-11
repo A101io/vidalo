@@ -150,9 +150,9 @@ export const en: CopyShape = {
       h2: "How Vidalo works",
       sub: "You do five minutes of work at the start. The rest runs by itself, every month.",
       steps: [
-        { n: "1", tone: "ink", title: "Record", body: "Your details right, once: address, phone, opening hours, what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
+        { n: "1", tone: "ink", title: "Record", body: "First we read what your business does: from Google, your website and one AI search. Then you record your details right, once, such as phone, opening hours and what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
         { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. For Google, Bing, Apple and the business directories you see what differs there and what to change.", meta: "Live as soon as your DNS record is in place" },
-        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions your customers ask. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
+        { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions that fit your kind of business. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
         { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Where a source accepts a correction from us, we request it on your behalf; where only the owner can change something, you see exactly what to change. Then we ask again and you see before and after.", meta: "Proof for every error" },
       ],
       note: "Asking several times is necessary: AI rarely gives exactly the same answer twice. That is why we count how often an error comes back.",
@@ -645,6 +645,7 @@ export const en: CopyShape = {
         { q: "How often do you check?", a: "With Vidalo Monthly every month, and again after every change to your details and after every fixed error. With Vidalo Scan alone we do one full check and then check the fixed errors again." },
         { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
         { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do include. Paying for a business outside the Netherlands we still set up with you through support@vidalo.io." },
+        { q: "Does this work if I have no shop?", a: "Yes. First we look at what kind of business you have: a place customers visit, a business that goes to the customer, or one that works online or nationwide. An online business gets no questions about opening hours or an address, but questions about what you do, your website and who AI names when someone looks for a provider or an alternative to you. In your report you see, as counts, how often AI names you and who it names instead. Whether AI names you is not ours to decide; the dot is about whether your facts are right." },
         { q: "What if AI names my competitor?", a: "We cannot prevent that. What we do make sure of is that the AI has the right facts about you, so you do not drop out because it thinks you are closed or do not do something." },
       ],
     },
@@ -1312,14 +1313,29 @@ export const en: CopyShape = {
 
   scan: {
     title: "We are checking your business",
-    steps: {
-      resolving: "Looking for the business",
-      found: "Business found",
-      asking: (engine: string) => `Asked ${engine}`,
-      comparing: "Comparing answers",
-      sources: "Looking up sources",
+    stages: {
+      understand: "Understanding your business",
+      choose: "Choosing the right questions",
+      ask: (engines: string[]) => (engines.length === 0 ? "Asking AI" : `Asking ${engines.length === 1 ? engines[0] : `${engines.slice(0, -1).join(", ")} and ${engines[engines.length - 1]}`}`),
+      compare: "Reading and comparing the answers",
       done: "Report ready",
     },
+    live: {
+      understand: "We are reading what your business does.",
+      choose: "We are choosing the right questions.",
+      ask: "We are asking the questions to AI.",
+      compare: "We are reading the answers and comparing them with your details.",
+      done: "The check is done. We are opening the report.",
+    },
+    state: { done: "done", active: "in progress", waiting: "still to come", stopped: "stopped" },
+    profileSentence: (p: { offer: string | null; audience: string | null; category: string | null }, name: string): string | null => {
+      if (p.offer) return `We read ${name} as: ${p.offer}${p.audience ? `, for ${p.audience}` : ""}.`;
+      if (p.category) return `We read ${name} as: ${p.category}.`;
+      return null;
+    },
+    answers: (n: number) => (n === 1 ? "1 answer" : `${n} answers`),
+    moreQuestions: (n: number) => (n === 1 ? "and 1 more question" : `and ${n} more questions`),
+    refresh: "Refresh",
     waiting: "This usually takes less than two minutes.",
     failed: "The check did not work. Please try again.",
     retry: "Try again",
@@ -1355,6 +1371,10 @@ export const en: CopyShape = {
         `${name}, ${place}: your dot is ${stip === "rood" ? "red" : stip === "oranje" ? "orange" : "green"}.`,
       h1Grey: (name: string, place: string) => `${name}, ${place}: AI does not know you.`,
       h1Unchecked: (name: string, place: string) => `${name}, ${place}: we could not check the answers.`,
+      /** An online business has no town in its heading (feature 001). */
+      h1Online: (name: string, stip: "rood" | "oranje" | "groen") => `${name}: your dot is ${stip === "rood" ? "red" : stip === "oranje" ? "orange" : "green"}.`,
+      h1GreyOnline: (name: string) => `${name}: AI does not know you.`,
+      h1UncheckedOnline: (name: string) => `${name}: we could not check the answers.`,
       times: (per: { name: string; n: number }[]) => {
         const t = (n: number) => (n === 1 ? "once" : `${n} times`);
         if (new Set(per.map((p) => p.n)).size <= 1) return `each ${t(per[0]?.n ?? 0)}`;
@@ -1431,6 +1451,34 @@ export const en: CopyShape = {
       profile: (kind: string, place: string) => `Compared as: ${kind} in ${place}.`,
       profileHint: "Not right? As the owner you change it under ‘Your details’, at ‘Kind of business’; the next check then asks about the right kind.",
     },
+    /** Online businesses (feature 001): who AI names next to the business, per question, as counts. Never a position, share or score. */
+    competition: {
+      h2: "Who AI names for your kind of business",
+      body: "Someone who does not know you asks AI for a provider or an alternative. This is what AI answered, counted from this check.",
+      summary: (named: number, total: number) => `Named in ${named} of ${total} ${total === 1 ? "answer" : "answers"}`,
+      you: (named: number, total: number) => `Named in ${named} of ${total} ${total === 1 ? "answer" : "answers"}`,
+      others: "Also named",
+      times: (n: number, total: number) => `${n} of ${total}`,
+      quotesTitle: "What AI wrote about you",
+      quoteBy: (engine: string) => `According to ${engine}`,
+      quotesNote: "Sentences word for word from the answers of this check. A sentence ending in … has been shortened.",
+      note: "We only count whether AI names you and who else it names, never in what order. The dot is about whether what AI says about you is right; being named does not change its colour. Whether AI names you is not ours to decide.",
+      demoCaption: "Fictional example: the business and every name are made up.",
+    },
+    /** "Checked as": how Vidalo read the business, never a statement about it (compliance C-20, C-21). */
+    checkedAs: {
+      line: (what: string) => `Checked as: ${what}`,
+      forAudience: (audience: string) => `for ${audience}`,
+      mode: { door: "with a place customers visit", visit: "goes to the customer", online: "online" },
+      modeOnly: { door: "a business with a place customers visit", visit: "a business that goes to the customer", online: "an online business" },
+      how: {
+        auto: "This is how we read your business, from Google, your website and one AI search. It is our reading, not a fact about your business.",
+        owner: "This is how the owner recorded the business.",
+        fallback: "We could not read your business with certainty and assumed this kind of business.",
+      },
+      fixOwner: "Not right? As the owner you change it under ‘Your details’; the next check then asks different questions.",
+      fixOther: "Not right? Mail it to",
+    },
     sources: {
       h2: "Where it comes from",
       h2Grey: "Why the AI finds nothing",
@@ -1474,6 +1522,22 @@ export const en: CopyShape = {
       setupGrey: "Only make it findable · €149",
       exclVat: "Excl. VAT · no notice period · fixes at third parties usually take 2 to 4 weeks",
       exclVatGrey: "Excl. VAT · no notice period",
+      /** The panel of an online business: no promise of Google, Bing, Apple or directory work (compliance B6), and "1 business" for "1 location". */
+      online: {
+        stepFacts: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"}, with a date, that AI can read.`,
+        stepsGreen: [
+          "Record your details once, so every source says the same thing.",
+          "A facts page on your own domain, with a date, that AI can read.",
+          "With Vidalo Monthly: the same questions again every month. If something changes, you are the first to see it.",
+        ],
+        stepsGrey: {
+          facts: "Record your details once: what you do, for whom, your website and what you do and do not do. Five minutes.",
+          publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read.`,
+          recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. With Vidalo Monthly, then every month. You see what has changed.`,
+        },
+        exclVat: "1 business · Excl. VAT · no notice period · fixes at third parties usually take 2 to 4 weeks",
+        exclVatGrey: "1 business · Excl. VAT · no notice period",
+      },
     },
     email: {
       h3: "Send this report to me",
@@ -2017,6 +2081,8 @@ export const en: CopyShape = {
       credential: (who: string) => `Which accreditations does ${who} have?`,
       identitySubject: (who: string, subject: string) => `Is ${who} the same as ${subject}?`,
       identity: (who: string) => `Is ${who} the same as the business with that name elsewhere?`,
+      /** Online: no town. */
+      identityKind: (who: string) => `What does ${who} do?`,
     },
     value: {
       notFound: "not found",
@@ -2032,6 +2098,8 @@ export const en: CopyShape = {
       no: "no",
       otherBusiness: "another business",
       sameBusiness: "the same business",
+      otherKind: "described as another kind of business",
+      sameKind: "described as the same kind of business",
     },
     selfStep: (source: string, engine: string, verdict: string, said: string, truth: string, fix: string) => `${source}: ${engine} ${verdict} “${said}”, it is ${truth}. ${fix}`.trim(),
   },

@@ -49,7 +49,9 @@ export class MemDb implements Db {
   googleIndex = new Map<string, GoogleIndexState>();
   waitlist = new Map<string, WaitlistInput & { createdAt: string; unsubscribedAt: string | null }>();
   supportLog: Array<SupportLogRow & { createdAt: string }> = [];
-  questionUse: QuestionUseInput[] = [];
+  /** The ledger. businessRef is the opaque per-business reference (PgDb: business.question_ref); scanRunId goes null with its business. */
+  questionUse: Array<Omit<QuestionUseInput, "scanRunId"> & { scanRunId: string | null; businessRef: string }> = [];
+  private questionRefs = new Map<string, string>();
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -70,6 +72,7 @@ export class MemDb implements Db {
     this.googleIndex.clear();
     this.waitlist.clear();
     this.questionUse = [];
+    this.questionRefs.clear();
   }
 
   // --- business ---
@@ -196,6 +199,9 @@ export class MemDb implements Db {
     for (const [k, c] of this.channels) if (c.businessId === id) this.channels.delete(k);
     this.events = this.events.filter((e) => e.businessId !== id);
     for (const [k, j] of this.jobs) if (!j.doneAt && j.payload.businessId === id) this.jobs.delete(k);
+    // Like PgDb: the ledger rows stay, unlinked (run id null, and the business's reference is gone with it).
+    for (const u of this.questionUse) if (u.scanRunId && runs.has(u.scanRunId)) u.scanRunId = null;
+    this.questionRefs.delete(id);
   }
 
   async latestFacts(businessId: string): Promise<Facts | null> {
@@ -207,7 +213,9 @@ export class MemDb implements Db {
     const list = this.facts.get(businessId) ?? [];
     const version = (list[list.length - 1]?.version ?? 0) + 1;
     const provisional = opts.provisional ?? data.provisional ?? true;
-    const row: Facts = { ...(data as Facts), businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null, createdAt: nowIso() };
+    // The profile is copied in by withProfile() and never stored with the facts (ADR-0001).
+    const { profile: _profile, ...stored } = data as Facts;
+    const row: Facts = { ...stored, businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null, createdAt: nowIso() };
     list.push(row);
     this.facts.set(businessId, list);
     return { ...row };
@@ -220,7 +228,7 @@ export class MemDb implements Db {
 
   async insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]> {
     return prompts.map((p) => {
-      const row: Prompt = { id: randomUUID(), businessId, category: p.category, textNl: p.textNl, probes: [...p.probes], active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null };
+      const row: Prompt = { id: randomUUID(), businessId, category: p.category, textNl: p.textNl, probes: [...p.probes], active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null };
       this.prompts.set(row.id, row);
       return { ...row };
     });
@@ -253,12 +261,17 @@ export class MemDb implements Db {
   async recordQuestionUse(rows: QuestionUseInput[]): Promise<void> {
     for (const r of rows) {
       if (this.questionUse.some((u) => u.scanRunId === r.scanRunId && u.templateKey === r.templateKey)) continue;
-      this.questionUse.push({ ...r });
+      // PgDb refuses a run that does not exist (foreign key); MemDb stays lenient so a bare ledger test needs no business.
+      const owner = this.scanRuns.get(r.scanRunId)?.businessId ?? `run:${r.scanRunId}`;
+      let ref = this.questionRefs.get(owner);
+      if (!ref) this.questionRefs.set(owner, (ref = randomUUID()));
+      this.questionUse.push({ ...r, businessRef: ref });
     }
   }
 
   async questionLibrary(filter: { category?: string; mode?: ProfileMode } = {}): Promise<LibraryRow[]> {
     const sums = new Map<string, LibraryRow>();
+    const refs = new Map<string, Set<string>>();
     for (const u of this.questionUse) {
       if (filter.category !== undefined && u.category !== filter.category) continue;
       if (filter.mode !== undefined && u.mode !== filter.mode) continue;
@@ -267,10 +280,13 @@ export class MemDb implements Db {
       if (row) {
         row.asked += u.asked;
         row.usable += u.usable;
+        refs.get(key)!.add(u.businessRef);
       } else {
-        sums.set(key, { category: u.category, mode: u.mode, templateKey: u.templateKey, templateNl: u.templateNl, family: u.family, intent: u.intent, asked: u.asked, usable: u.usable });
+        sums.set(key, { category: u.category, mode: u.mode, templateKey: u.templateKey, templateNl: u.templateNl, family: u.family, intent: u.intent, asked: u.asked, usable: u.usable, businesses: 0 });
+        refs.set(key, new Set([u.businessRef]));
       }
     }
+    for (const [k, row] of sums) row.businesses = refs.get(k)!.size;
     return [...sums.values()];
   }
 

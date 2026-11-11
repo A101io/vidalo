@@ -26,6 +26,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "scan": "tsx src/cli/scan.ts",
+    "library": "tsx src/cli/library.ts",
     "legal:lock": "UPDATE_LEGAL_LOCK=1 vitest run test/legal.test.ts"
   },
   "dependencies": {

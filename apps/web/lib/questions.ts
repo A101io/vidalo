@@ -8,9 +8,10 @@ function dayName(subject: string | null, copy: CopyShape): string | null {
 }
 
 /** The question a customer would ask for a given fact, in the page's language; the "Vraag" line on cards. */
-export function questionFor(factKey: FactKey, subject: string | null, name: string, place: string, copy: CopyShape): string {
+export function questionFor(factKey: FactKey, subject: string | null, name: string, place: string, copy: CopyShape, online = false): string {
   const q = copy.report.question;
-  const who = `${name} in ${place}`;
+  // An online business has no town in its questions (feature 001); the name alone is the subject.
+  const who = online ? name : `${name} in ${place}`;
   switch (factKey) {
     case "existence":
       return q.existence(who);
@@ -39,6 +40,7 @@ export function questionFor(factKey: FactKey, subject: string | null, name: stri
     case "credential":
       return subject ? q.credentialSubject(who, subject) : q.credential(who);
     case "identity":
+      if (subject === "kind") return q.identityKind(name);
       return subject ? q.identitySubject(who, subject) : q.identity(who);
   }
 }
@@ -100,6 +102,7 @@ export function humanValue(factKey: FactKey, value: string, subject: string | nu
     case "credential":
       return value === "yes" ? V.yes : value === "no" ? V.no : value;
     case "identity":
+      if (subject === "kind") return value === "other" ? V.otherKind : value === "same" ? V.sameKind : value;
       return value === "no" ? V.otherBusiness : value === "yes" ? V.sameBusiness : value;
     case "price":
       return `€ ${value.replace(".", ",")}`;

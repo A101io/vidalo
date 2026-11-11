@@ -5,9 +5,9 @@ import { localizeHref } from "@/lib/lang-paths";
 import { langFromReferer } from "@/lib/request-lang";
 import { env } from "@/lib/env";
 import { ready } from "@/lib/db";
-import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, progressTemplate, type BusinessCandidate } from "@/lib/core";
+import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, type BusinessCandidate } from "@/lib/core";
 import { requestBehindGate } from "@/lib/gate-state";
-import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, scanIpEvent } from "@vidalo/core/shared";
+import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, scanIpEvent, typedBusinessProblem } from "@vidalo/core/shared";
 import { passesTurnstile, kiesToken } from "@/lib/turnstile";
 import { CHECK_COOKIE, CHECK_COOKIE_OPTIONS, checkCookieValue, checkFromCookie } from "@/lib/free-check";
 import { freeCheckEvents, parseFreeCheckRequest, REPORT_EMAIL_EVENT } from "@vidalo/core/shared";
@@ -52,6 +52,8 @@ export async function POST(req: Request) {
   const { q, pick, place: placeInput, form, email, marketing } = await readInput(req);
   const copy = copyFor(lang);
   if (!q) return NextResponse.redirect(to("/?fout=leeg#controle"), 303);
+  // Length and markup limits on what was typed, before anything that costs money (security S-04). The place can ride in the name ("Sonable, Rotterdam").
+  if (typedBusinessProblem(q, placeInput ?? parseQuery(q).place)) return NextResponse.redirect(to("/?fout=leeg#controle"), 303);
   // The address: from this post, or from the cookie the first post set (the pick page's forms carry none).
   const asked = email != null && String(email).trim() !== "" ? parseFreeCheckRequest({ email, marketing }) : null;
   const requester = asked?.ok ? asked : asked === null ? checkFromCookie(req) : null;
@@ -124,7 +126,7 @@ export async function POST(req: Request) {
 
   await db.logEvent(business.id, "scan.requested", { q, created, via: "web" });
 
-  const state = await createScanState(business.id, copy, FREE_SCAN_ENGINES);
+  const state = await createScanState(business.id);
   // On Cloudflare a scan outlives a request (several minutes with live
   // engines; waitUntil allows 30 s), so it goes on the queue and the
   // background worker runs it. Elsewhere (local, mock) it runs right after
@@ -143,5 +145,5 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const copy = copyFor(langFromReferer(req));
-  return NextResponse.json({ ok: true, steps: progressTemplate(FREE_SCAN_ENGINES, copy).map((s) => s.label), note: copy.scan.waiting });
+  return NextResponse.json({ ok: true, stages: ["understand", "choose", "ask", "compare", "done"], note: copy.scan.waiting });
 }

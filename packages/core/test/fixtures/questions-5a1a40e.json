@@ -1,0 +1,5978 @@
+{
+ "commit": "5a1a40e",
+ "now": "2026-03-15T12:00:00.000Z",
+ "fixtures": {
+  "kapper": {
+   "free": [
+    {
+     "text": "Is Kapsalon Mila in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Kapsalon Mila in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is de beste kapper in Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Kapsalon Mila in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Kapsalon Mila in Haarlem nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Kapsalon Mila in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Kapsalon Mila in Haarlem op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Kapsalon Mila in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Kapsalon Mila in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Kapsalon Mila in Haarlem telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Kapsalon Mila in Haarlem?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Kapsalon Mila in Haarlem?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook knippen?",
+     "category": "service",
+     "probes": [
+      "service:knippen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook kleuren?",
+     "category": "service",
+     "probes": [
+      "service:kleuren"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook extensions?",
+     "category": "service",
+     "probes": [
+      "service:extensions"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost knippen dames bij Kapsalon Mila in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:knippen dames"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Kapsalon Mila in Haarlem: \"Op afspraak\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Op afspraak"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Kapsalon Mila in Haarlem pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Kapsalon Mila in Haarlem zonder afspraak terecht?",
+     "category": "policy",
+     "probes": [
+      "policy:Op afspraak"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is de beste kapper in Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welke kapper in Haarlem doet knippen?",
+     "category": "service",
+     "probes": [
+      "service:knippen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Kapper bij mij in de buurt in Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede kapper in Haarlem aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem zou jij kiezen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem wordt vaak aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Eerlijke kapper in Haarlem, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie is gespecialiseerd in knippen in Haarlem?",
+     "category": "service",
+     "probes": [
+      "service:knippen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem doet kleuren?",
+     "category": "service",
+     "probes": [
+      "service:kleuren"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie is gespecialiseerd in kleuren in Haarlem?",
+     "category": "service",
+     "probes": [
+      "service:kleuren"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Kapper in Haarlem met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Kapper in het centrum van Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Kapsalon Mila in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Kapsalon Mila in Haarlem nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Kapsalon Mila in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Kapsalon Mila in Haarlem op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Kapsalon Mila in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Kapsalon Mila in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Kapsalon Mila in Haarlem telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Kapsalon Mila in Haarlem?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Kapsalon Mila in Haarlem?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook knippen?",
+     "category": "service",
+     "probes": [
+      "service:knippen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook kleuren?",
+     "category": "service",
+     "probes": [
+      "service:kleuren"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Kapsalon Mila in Haarlem ook extensions?",
+     "category": "service",
+     "probes": [
+      "service:extensions"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost knippen dames bij Kapsalon Mila in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:knippen dames"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Kapsalon Mila in Haarlem: \"Op afspraak\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Op afspraak"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Kapsalon Mila in Haarlem pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Kapsalon Mila in Haarlem zonder afspraak terecht?",
+     "category": "policy",
+     "probes": [
+      "policy:Op afspraak"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Kapsalon Mila in Haarlem op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is de beste kapper in Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welke kapper in Haarlem doet knippen?",
+     "category": "service",
+     "probes": [
+      "service:knippen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare kapper in Haarlem, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Kapper bij mij in de buurt in Haarlem?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede kapper in Haarlem aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem doet kleuren?",
+     "category": "service",
+     "probes": [
+      "service:kleuren"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke kapper in Haarlem is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    }
+   ]
+  },
+  "bakkerij": {
+   "free": [
+    {
+     "text": "Is Bakkerij De Vries in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Bakkerij De Vries in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Bakkerij De Vries in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Bakkerij De Vries in Haarlem?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook bezorgen?",
+     "category": "service",
+     "probes": [
+      "service:bezorgen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Kan ik bij Bakkerij De Vries in Haarlem pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Bakkerij De Vries in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Bakkerij De Vries in Haarlem nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Bakkerij De Vries in Haarlem permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Bakkerij De Vries in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Bakkerij De Vries in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Bakkerij De Vries in Haarlem op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Bakkerij De Vries in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Bakkerij De Vries in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Bakkerij De Vries in Haarlem telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Bakkerij De Vries in Haarlem?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Bakkerij De Vries in Haarlem?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook taarten op bestelling?",
+     "category": "service",
+     "probes": [
+      "service:taarten op bestelling"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook glutenvrij brood?",
+     "category": "service",
+     "probes": [
+      "service:glutenvrij brood"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook bezorgen?",
+     "category": "service",
+     "probes": [
+      "service:bezorgen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook catering?",
+     "category": "service",
+     "probes": [
+      "service:catering"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost een brood bij Bakkerij De Vries in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:een brood"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Wat kost appeltaart bij Bakkerij De Vries in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:appeltaart"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Bakkerij De Vries in Haarlem: \"Pinnen mogelijk\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Pinnen mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Geldt bij Bakkerij De Vries in Haarlem: \"Bestellen kan telefonisch\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Bestellen kan telefonisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Bakkerij De Vries in Haarlem pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Bakkerij De Vries in Haarlem nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Bakkerij De Vries in Haarlem nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Bakkerij De Vries in Haarlem permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Bakkerij De Vries in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Bakkerij De Vries in Haarlem op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Bakkerij De Vries in Haarlem op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Bakkerij De Vries in Haarlem?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Bakkerij De Vries in Haarlem?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Bakkerij De Vries in Haarlem telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Bakkerij De Vries in Haarlem?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Bakkerij De Vries in Haarlem?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook taarten op bestelling?",
+     "category": "service",
+     "probes": [
+      "service:taarten op bestelling"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook glutenvrij brood?",
+     "category": "service",
+     "probes": [
+      "service:glutenvrij brood"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook bezorgen?",
+     "category": "service",
+     "probes": [
+      "service:bezorgen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Doet Bakkerij De Vries in Haarlem ook catering?",
+     "category": "service",
+     "probes": [
+      "service:catering"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost een brood bij Bakkerij De Vries in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:een brood"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Wat kost appeltaart bij Bakkerij De Vries in Haarlem?",
+     "category": "price",
+     "probes": [
+      "price:appeltaart"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Bakkerij De Vries in Haarlem: \"Pinnen mogelijk\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Pinnen mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Geldt bij Bakkerij De Vries in Haarlem: \"Bestellen kan telefonisch\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Bestellen kan telefonisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Bakkerij De Vries in Haarlem pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    }
+   ]
+  },
+  "horeca": {
+   "free": [
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het beste restaurant in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft de beste reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Restaurant De Gouden Lepel in Utrecht nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Restaurant De Gouden Lepel in Utrecht op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Restaurant De Gouden Lepel in Utrecht?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Restaurant De Gouden Lepel in Utrecht telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook afhalen?",
+     "category": "service",
+     "probes": [
+      "service:afhalen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost driegangenmenu bij Restaurant De Gouden Lepel in Utrecht?",
+     "category": "price",
+     "probes": [
+      "price:driegangenmenu"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Restaurant De Gouden Lepel in Utrecht: \"Reserveren mogelijk\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Reserveren mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Restaurant De Gouden Lepel in Utrecht pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Kan ik bij Restaurant De Gouden Lepel in Utrecht reserveren voor 6 personen?",
+     "category": "policy",
+     "probes": [
+      "policy:Reserveren mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Heeft Restaurant De Gouden Lepel in Utrecht terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Heeft Restaurant De Gouden Lepel in Utrecht ook vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wat is het beste restaurant in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft de beste reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Goedkoop en lekker eten in Utrecht, welk restaurant?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Restaurant bij mij in de buurt in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Waar kan ik lekker eten in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht moet ik echt eens proberen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Leuk restaurant in Utrecht voor een etentje?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht zou jij aanraden voor een verjaardag?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Waar eet je het lekkerst in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Restaurant met een goede sfeer in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht wordt het vaakst aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Goed aangeschreven restaurant in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Waar gaan mensen uit Utrecht zelf graag eten?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "bank",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Restaurant in Utrecht waar ik kan reserveren voor 6?",
+     "category": "policy",
+     "probes": [
+      "policy:Reserveren mogelijk"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Waar in Utrecht vind ik terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Waar in Utrecht vind ik vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is betaalbaar?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Restaurant in het centrum van Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft een terras in de zon?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": "zomer",
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Restaurant De Gouden Lepel in Utrecht nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Restaurant De Gouden Lepel in Utrecht op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Restaurant De Gouden Lepel in Utrecht?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Restaurant De Gouden Lepel in Utrecht telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Restaurant De Gouden Lepel in Utrecht?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Restaurant De Gouden Lepel in Utrecht ook afhalen?",
+     "category": "service",
+     "probes": [
+      "service:afhalen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost driegangenmenu bij Restaurant De Gouden Lepel in Utrecht?",
+     "category": "price",
+     "probes": [
+      "price:driegangenmenu"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Restaurant De Gouden Lepel in Utrecht: \"Reserveren mogelijk\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Reserveren mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Restaurant De Gouden Lepel in Utrecht pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Restaurant De Gouden Lepel in Utrecht op maandag open?",
+     "category": "hours",
+     "probes": [
+      "hours.0"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Kan ik bij Restaurant De Gouden Lepel in Utrecht reserveren voor 6 personen?",
+     "category": "policy",
+     "probes": [
+      "policy:Reserveren mogelijk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Heeft Restaurant De Gouden Lepel in Utrecht terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Heeft Restaurant De Gouden Lepel in Utrecht ook vegetarisch?",
+     "category": "service",
+     "probes": [
+      "service:vegetarisch"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wat is het beste restaurant in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft de beste reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welk restaurant in Utrecht heeft terras?",
+     "category": "service",
+     "probes": [
+      "service:terras"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Goedkoop en lekker eten in Utrecht, welk restaurant?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Restaurant bij mij in de buurt in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "bank",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welk restaurant in Utrecht moet ik echt eens proberen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht wordt het vaakst aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welk restaurant in Utrecht zou jij aanraden voor een verjaardag?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Goed aangeschreven restaurant in Utrecht?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Leuk restaurant in Utrecht voor een etentje?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ]
+  },
+  "winkel": {
+   "free": [
+    {
+     "text": "Is Boekhandel Tuin in Zwolle nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Boekhandel Tuin in Zwolle?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is de beste boekhandel in Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Boekhandel Tuin in Zwolle nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Boekhandel Tuin in Zwolle nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Boekhandel Tuin in Zwolle?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Boekhandel Tuin in Zwolle op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Boekhandel Tuin in Zwolle?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Boekhandel Tuin in Zwolle?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Boekhandel Tuin in Zwolle telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Boekhandel Tuin in Zwolle?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Boekhandel Tuin in Zwolle?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Boekhandel Tuin in Zwolle ook cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Boekhandel Tuin in Zwolle ook verzenden?",
+     "category": "service",
+     "probes": [
+      "service:verzenden"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Kan ik bij Boekhandel Tuin in Zwolle pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle op koopzondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Verkoopt Boekhandel Tuin in Zwolle ook cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kan ik bij Boekhandel Tuin in Zwolle verzenden?",
+     "category": "service",
+     "probes": [
+      "service:verzenden"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Zit Boekhandel Tuin in Zwolle nog op hetzelfde adres?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de beste boekhandel in Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welke boekhandel in Zwolle verkoopt cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Boekhandel bij mij in de buurt in Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede boekhandel in Zwolle aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle zou jij kiezen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle wordt vaak aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Eerlijke boekhandel in Zwolle, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle heeft cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Waar in Zwolle vind ik cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Boekhandel in Zwolle met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Boekhandel in het centrum van Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Boekhandel Tuin in Zwolle nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Boekhandel Tuin in Zwolle nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Boekhandel Tuin in Zwolle?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Boekhandel Tuin in Zwolle op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Boekhandel Tuin in Zwolle?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Boekhandel Tuin in Zwolle?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Boekhandel Tuin in Zwolle telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Boekhandel Tuin in Zwolle?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Boekhandel Tuin in Zwolle?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Boekhandel Tuin in Zwolle ook cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Boekhandel Tuin in Zwolle ook verzenden?",
+     "category": "service",
+     "probes": [
+      "service:verzenden"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Kan ik bij Boekhandel Tuin in Zwolle pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Is Boekhandel Tuin in Zwolle op koopzondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Verkoopt Boekhandel Tuin in Zwolle ook cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kan ik bij Boekhandel Tuin in Zwolle verzenden?",
+     "category": "service",
+     "probes": [
+      "service:verzenden"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Zit Boekhandel Tuin in Zwolle nog op hetzelfde adres?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de beste boekhandel in Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle is op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Welke boekhandel in Zwolle verkoopt cadeaubonnen?",
+     "category": "service",
+     "probes": [
+      "service:cadeaubonnen"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Boekhandel bij mij in de buurt in Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle wordt vaak aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke boekhandel in Zwolle zou jij kiezen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Boekhandel in het centrum van Zwolle?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Boekhandel in Zwolle met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Eerlijke boekhandel in Zwolle, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede boekhandel in Zwolle, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ]
+  },
+  "loodgieter": {
+   "free": [
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is de beste loodgieter in Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert cv-ketels in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Loodgietersbedrijf Hendriks in Amersfoort nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Loodgietersbedrijf Hendriks in Amersfoort op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op vrijdag terecht bij Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Loodgietersbedrijf Hendriks in Amersfoort telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook cv-ketels?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook dakwerk?",
+     "category": "service",
+     "probes": [
+      "service:dakwerk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost uurtarief bij Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "price",
+     "probes": [
+      "price:uurtarief"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Loodgietersbedrijf Hendriks in Amersfoort: \"Geen voorrijkosten\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Geen voorrijkosten"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Loodgietersbedrijf Hendriks in Amersfoort pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Rekent Loodgietersbedrijf Hendriks in Amersfoort voorrijkosten?",
+     "category": "policy",
+     "probes": [
+      "policy:Geen voorrijkosten"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Wat is de beste loodgieter in Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert cv-ketels in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter bij mij in de buurt in Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede loodgieter in Amersfoort aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort zou jij kiezen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort wordt vaak aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Eerlijke loodgieter in Amersfoort, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort doet cv-ketels?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie is gespecialiseerd in cv-ketels in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort doet lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie is gespecialiseerd in lekkages in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter in Amersfoort met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter in het centrum van Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Verwarming doet het niet, wie helpt met cv-ketels in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": "winter",
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Loodgietersbedrijf Hendriks in Amersfoort nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Loodgietersbedrijf Hendriks in Amersfoort op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Loodgietersbedrijf Hendriks in Amersfoort op zaterdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op vrijdag terecht bij Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Loodgietersbedrijf Hendriks in Amersfoort telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook cv-ketels?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Doet Loodgietersbedrijf Hendriks in Amersfoort ook dakwerk?",
+     "category": "service",
+     "probes": [
+      "service:dakwerk"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "Wat kost uurtarief bij Loodgietersbedrijf Hendriks in Amersfoort?",
+     "category": "price",
+     "probes": [
+      "price:uurtarief"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Geldt bij Loodgietersbedrijf Hendriks in Amersfoort: \"Geen voorrijkosten\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Geen voorrijkosten"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Kan ik bij Loodgietersbedrijf Hendriks in Amersfoort pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Rekent Loodgietersbedrijf Hendriks in Amersfoort voorrijkosten?",
+     "category": "policy",
+     "probes": [
+      "policy:Geen voorrijkosten"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Wat is de beste loodgieter in Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert cv-ketels in Amersfoort?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare loodgieter in Amersfoort, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter bij mij in de buurt in Amersfoort?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede loodgieter in Amersfoort aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort doet cv-ketels?",
+     "category": "service",
+     "probes": [
+      "service:cv-ketels"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort doet lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Amersfoort is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    }
+   ]
+  },
+  "loodgieter-geen-uren": {
+   "free": [
+    {
+     "text": "Is Loodgieter Visser in Delft nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgieter Visser in Delft op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgieter Visser in Delft?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is de beste loodgieter in Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert lekkages in Delft?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Loodgieter Visser in Delft nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Loodgieter Visser in Delft nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgieter Visser in Delft permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Loodgieter Visser in Delft?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Loodgieter Visser in Delft op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Loodgieter Visser in Delft op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Loodgieter Visser in Delft?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgieter Visser in Delft?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Loodgieter Visser in Delft telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Loodgieter Visser in Delft?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Loodgieter Visser in Delft?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Loodgieter Visser in Delft ook lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kan ik bij Loodgieter Visser in Delft pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Wat is de beste loodgieter in Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert lekkages in Delft?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter bij mij in de buurt in Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede loodgieter in Delft aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft is echt goed?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft zou jij kiezen?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft heeft goede reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft wordt vaak aangeraden?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Eerlijke loodgieter in Delft, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft doet lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie is gespecialiseerd in lekkages in Delft?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft is niet te duur?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter in Delft met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter in het centrum van Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Loodgieter Visser in Delft nog open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Bestaat Loodgieter Visser in Delft nog?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Loodgieter Visser in Delft permanent gesloten?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Wat zijn de openingstijden van Loodgieter Visser in Delft?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Loodgieter Visser in Delft op zondag open?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Hoe laat is Loodgieter Visser in Delft op vrijdag open?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Tot hoe laat kan ik op zaterdag terecht bij Loodgieter Visser in Delft?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Wat is het telefoonnummer van Loodgieter Visser in Delft?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Hoe kan ik Loodgieter Visser in Delft telefonisch bereiken?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "Wat is het adres van Loodgieter Visser in Delft?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Wat is de website van Loodgieter Visser in Delft?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Doet Loodgieter Visser in Delft ook lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kan ik bij Loodgieter Visser in Delft pinnen?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Wat is de beste loodgieter in Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betrouwbare loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Wie installeert lekkages in Delft?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Betaalbare loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter bij mij in de buurt in Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Kun je een goede loodgieter in Delft aanraden?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Eerlijke loodgieter in Delft, wie kun je vertrouwen?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Ik zoek een goede loodgieter in Delft, wie raad je aan?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Loodgieter in Delft met een goede prijs-kwaliteitverhouding?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Loodgieter in het centrum van Delft?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft doet lekkages?",
+     "category": "service",
+     "probes": [
+      "service:lekkages"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Welke loodgieter in Delft heeft de meeste ervaring?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ]
+  },
+  "riverside-en": {
+   "free": [
+    {
+     "text": "Is Riverside Plumbing in Leeds still open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Riverside Plumbing in Leeds open on Sunday?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "What is the phone number of Riverside Plumbing in Leeds?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "What is the best plumber in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Reliable plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds is open on Saturday?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    }
+   ],
+   "all": [
+    {
+     "text": "Is Riverside Plumbing in Leeds still open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds still exist?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Riverside Plumbing in Leeds permanently closed?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "What are the opening hours of Riverside Plumbing in Leeds?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Riverside Plumbing in Leeds open on Sunday?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "What time is Riverside Plumbing in Leeds open on Friday?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Until what time can I go to Riverside Plumbing in Leeds on Saturday?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "What is the phone number of Riverside Plumbing in Leeds?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "How can I reach Riverside Plumbing in Leeds by phone?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "What is the address of Riverside Plumbing in Leeds?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "What is the website of Riverside Plumbing in Leeds?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also offer boiler repair?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also offer solar panels?",
+     "category": "service",
+     "probes": [
+      "service:solar panels"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "How much does an hourly rate cost at Riverside Plumbing in Leeds?",
+     "category": "price",
+     "probes": [
+      "price:an hourly rate"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Is this true at Riverside Plumbing in Leeds: \"Free quotes\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Free quotes"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Can I pay by card at Riverside Plumbing in Leeds?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also do boiler repair?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "What is the best plumber in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Reliable plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds is open on Saturday?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Who installs boiler repair in Leeds?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Affordable plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Plumber near me in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Can you recommend a good plumber in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds is really good?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "I'm looking for a good plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds would you choose?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds has the most experience?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds has good reviews?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds is often recommended?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Honest plumber in Leeds, who can you trust?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds does boiler repair?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Who specialises in boiler repair in Leeds?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds isn't too expensive?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Plumber in Leeds with good value for money?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Plumber in the centre of Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    }
+   ],
+   "full": [
+    {
+     "text": "Is Riverside Plumbing in Leeds still open?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds still exist?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "Is Riverside Plumbing in Leeds permanently closed?",
+     "category": "existence",
+     "probes": [
+      "existence"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 1
+    },
+    {
+     "text": "What are the opening hours of Riverside Plumbing in Leeds?",
+     "category": "hours",
+     "probes": [
+      "hours.0",
+      "hours.1",
+      "hours.2",
+      "hours.3",
+      "hours.4",
+      "hours.5",
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Is Riverside Plumbing in Leeds open on Sunday?",
+     "category": "hours",
+     "probes": [
+      "hours.6"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "What time is Riverside Plumbing in Leeds open on Friday?",
+     "category": "hours",
+     "probes": [
+      "hours.4"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Until what time can I go to Riverside Plumbing in Leeds on Saturday?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "What is the phone number of Riverside Plumbing in Leeds?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "How can I reach Riverside Plumbing in Leeds by phone?",
+     "category": "phone",
+     "probes": [
+      "phone"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 2
+    },
+    {
+     "text": "What is the address of Riverside Plumbing in Leeds?",
+     "category": "address",
+     "probes": [
+      "address"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "What is the website of Riverside Plumbing in Leeds?",
+     "category": "website",
+     "probes": [
+      "website"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 8
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also offer boiler repair?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also offer solar panels?",
+     "category": "service",
+     "probes": [
+      "service:solar panels"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 7
+    },
+    {
+     "text": "How much does an hourly rate cost at Riverside Plumbing in Leeds?",
+     "category": "price",
+     "probes": [
+      "price:an hourly rate"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Is this true at Riverside Plumbing in Leeds: \"Free quotes\"?",
+     "category": "policy",
+     "probes": [
+      "policy:Free quotes"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Can I pay by card at Riverside Plumbing in Leeds?",
+     "category": "payment",
+     "probes": [
+      "payment:pin"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 10
+    },
+    {
+     "text": "Does Riverside Plumbing in Leeds also do boiler repair?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "about",
+     "intent": null,
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "What is the best plumber in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Reliable plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds is open on Saturday?",
+     "category": "hours",
+     "probes": [
+      "hours.5"
+     ],
+     "kind": "recommendation",
+     "intent": "now",
+     "pool": "core",
+     "season": null,
+     "criterium": 3
+    },
+    {
+     "text": "Who installs boiler repair in Leeds?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Affordable plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "core",
+     "season": null,
+     "criterium": 9
+    },
+    {
+     "text": "Plumber near me in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:dichtbij"
+     ],
+     "kind": "recommendation",
+     "intent": "place",
+     "pool": "core",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Which plumber in Leeds would you choose?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Who specialises in boiler repair in Leeds?",
+     "category": "service",
+     "probes": [
+      "service:boiler repair"
+     ],
+     "kind": "recommendation",
+     "intent": "specialty",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Can you recommend a good plumber in Leeds?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Honest plumber in Leeds, who can you trust?",
+     "category": "existence",
+     "probes": [
+      "existence:betrouwbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "trust",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "I'm looking for a good plumber in Leeds, who would you recommend?",
+     "category": "existence",
+     "probes": [
+      "existence:beste"
+     ],
+     "kind": "recommendation",
+     "intent": "quality",
+     "pool": "bank",
+     "season": null,
+     "criterium": 6
+    },
+    {
+     "text": "Plumber in Leeds with good value for money?",
+     "category": "existence",
+     "probes": [
+      "existence:betaalbaar"
+     ],
+     "kind": "recommendation",
+     "intent": "price",
+     "pool": "bank",
+     "season": null,
+     "criterium": 9
+    }
+   ]
+  }
+ }
+}
