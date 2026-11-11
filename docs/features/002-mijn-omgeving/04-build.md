@@ -414,3 +414,48 @@ first retention test is red at day 0. Restored, green.
 **Not done here.** The sandbox run itself (D2: Julian's Mac with sandbox keys; recorded by the
 delivery-lead in `05-verification.md`). COMP-16 (who reads `retention.overdue` daily) is the
 delivery-lead's. F-022's cron step on `auth.sessions` stays open as accepted.
+
+### A-07 — Privacy text, the new mails in the lab, auth docs (2026-11-12)
+
+**What.** `copy.legal` privacy, NL and EN, as `checklists/compliance.md` §4.1 with Julian's
+decisions filled in: P1 (the sign-in list without IP address, the link-limit codes kept at most a
+day), P1b (legitimate interest for those two), P1c (a sign-in ends after 30 days unused or 90
+days), P2 (the Google key revoked at Google and deleted on disconnect, at the end of a Monthly, for
+Vidalo Scan 60 days after the first full check when nothing is open, and on deletion), P3 (end of
+a Monthly: Google at once, 90 days, one free check, a reminder 14 days before, deletion at most 30
+days after that check; Vidalo Scan: 24 months after the last sign-in or payment with a reminder;
+what deletion means; invoices 7 years at Stripe), P4 (download without access keys, delete on
+every plan, a running Monthly at the end date without a refund of the running month and
+revocable until then, support@ for earlier deletion, the confirmation mail, the Google
+disconnect), P5 (a customer keeps seeing the business's reports), P7 ("een inlog die vanzelf
+vervalt"). The bracketed backup period of §4.1 P3 is left out (not looked up). Cookie table:
+`sb-…-auth-token` "Tot je uitlogt; na 30 dagen zonder gebruik of 90 dagen na het inloggen log je
+opnieuw in" and the code verifier "anders hoogstens 90 dagen": both now carry `Max-Age=7776000`
+(the forced options of A-01, read back in the workerd run). New version "13 november 2026" /
+"13 November 2026" (later than C-00's 12 November), then `legal:lock`. `scripts/mail-lab.mts`:
+`deletion_scheduled`, `deletion_reminder`, `account_deleted` through their real senders for both
+journeys (the three mails now tag the owner's language, which the lab checks).
+`docs/auth-email/README.md`: Site URL `https://vidalo.ai`, the redirect list with vidalo.ai and
+www.vidalo.ai, the one-button confirm page, a new section 4 with the D1 table (Change Email link,
+Secure email change, sessions, JWT expiry, rate limit) and `VIDALO_AUTH_SECRET`.
+`docs/records-of-processing.md` (compliance B8): the account row gains the sign-in list; new rows
+for the link limit and Vidalo Scan retention; the ownership row gets the token end; the paid-service
+row gets retention as built, and the "purge not built yet" note becomes "dry run until
+`VIDALO_PURGE=1`, record that date here" (the note goes only when it is armed, §4.4).
+`docs/processors.md`: Supabase (sign-in records, hashed limit keys), Google (tokens revoked),
+Resend (the account mails; its log retention not looked up yet). No new outside host beyond
+`api.stripe.com` (F-A6).
+
+**Checks.** `legal.test.ts`: red after the wording and date change until the lock was refreshed
+("new version: run legal:lock"), green after (24). `pnpm mail:lab`: OK, the three new kinds in
+NL and EN with no problems (company line, branded HTML, owner's language, links resolve); a grep
+of the three mails and the account-security copy finds no banned word, no score and no
+exclamation mark. `pnpm -r typecheck` green; `pnpm -r test` green (core 1364 + 16 skipped, worker
+37); `pnpm e2e:mock` OK; the legal pages in the mock browser suite 6/6.
+
+**Not done here.** COMP-25 (one sentence in the terms on how long a Scan facts page stays online,
+with 30-day notice to existing Scan customers): the terms were not changed; it needs Julian's
+wording and the notice decision. COMP-26 (Supabase backup roll-off and Resend log retention)
+not looked up. COMP-44 (the privacy text describes behaviour that ships in the same release):
+the retention sentences describe the purge, which runs as a dry run until `VIDALO_PURGE=1`
+(COMP-31 is a go-live gate for the delivery-lead). Compliance ticks its own checklist rows.
