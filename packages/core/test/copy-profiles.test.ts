@@ -43,6 +43,8 @@ const PROFILE_KEYS: Record<string, (c: C, lang: "nl" | "en") => string[]> = {
     return item ? [item.q, item.a] : [];
   },
   "scan.stages (FE-01)": (c) => [c.scan.stages.understand, c.scan.stages.choose, c.scan.stages.ask([]), c.scan.stages.ask(["ChatGPT"]), c.scan.stages.ask(["ChatGPT", "Google AI"]), c.scan.stages.compare, c.scan.stages.done],
+  "scan.choose website field (ADR-0007)": (c) => [c.scan.choose.websiteTitle, c.scan.choose.websiteLabel, c.scan.choose.websiteHint, c.scan.choose.websiteError],
+  "result.checkedAs.neutral (ADR-0007)": (c) => [c.result.checkedAs.neutral.line, c.result.checkedAs.neutral.how],
   "scan.live (FE-01)": (c) => Object.values(c.scan.live),
   "scan.state, answers, moreQuestions, refresh (FE-01)": (c) => [...Object.values(c.scan.state), c.scan.answers(1), c.scan.answers(7), c.scan.moreQuestions(1), c.scan.moreQuestions(4), c.scan.refresh],
   "scan.profileSentence (FE-01)": (c) => [

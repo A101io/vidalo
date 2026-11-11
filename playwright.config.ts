@@ -80,6 +80,6 @@ export default defineConfig({
       },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] }, grep: /@mobile/ },
+    { name: "mobile", use: { ...devices["Pixel 7"] }, grep: mode === "gate" ? /(@gate.*@mobile)|(@mobile.*@gate)/ : /@mobile/ },
   ],
 });

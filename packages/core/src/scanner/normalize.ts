@@ -16,7 +16,7 @@
  *  - identity (subject = other business): "no" = a different business (the owner's position)
  *  - recommendation answers: PRESENT_VALUE | ABSENT_VALUE (is the business named)
  */
-import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Facts, type Hours } from "../types";
+import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, isNeutralProfile, type FactKey, type Facts, type Hours } from "../types";
 
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import { HOME_COUNTRY } from "../shared/country";
@@ -160,6 +160,8 @@ function kindIsGrounded(facts: Facts): boolean {
  * space, or null when the facts do not say anything about it (skip compare).
  */
 export function factValue(facts: Facts, factKey: FactKey, subject: string | null): string | null {
+  // The neutral set (ADR-0007): we could not read the business, so what AI says is shown, never judged.
+  if (isNeutralProfile(facts.profile) && (factKey === "existence" || factKey === "identity" || factKey === "website")) return null;
   switch (factKey) {
     case "existence":
       return facts.openStatus;

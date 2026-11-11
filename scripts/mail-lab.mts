@@ -121,7 +121,7 @@ async function journeys(lang: Lang) {
 
   // Journey 1b: an online business. The free-check mail and the follow-ups, then (as a paying owner) the welcome and the monthly report.
   for (const o of lang === "nl" ? [ONLINE.nl, HOSTILE] : [ONLINE.en]) {
-    const on = await prepareBusiness({ name: o.name, place: o.place, db });
+    const on = await prepareBusiness({ name: o.name, place: o.place, website: "https://www.voorbeeld-music.example", db });
     const onRun = await runScan({ businessId: on.business.id, kind: "free", db });
     await db.upsertBusiness({ id: on.business.id, slug: on.business.slug, name: on.business.name, place: on.business.place, ownerEmail: o.owner, language: lang });
     await db.enqueueJob("email", { template: "baseline", scanRunId: onRun.scanRunId, businessId: on.business.id });

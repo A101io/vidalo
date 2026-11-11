@@ -1,13 +1,14 @@
 /**
  * Which questions a business is asked, by how it meets its customers (ADR-0003, brief Amendment A2).
  * door: main's questions, text for text. visit: the same, minus what needs a shop front. online:
- * code-held templates (online.ts / online.en.ts) with sanitised slots, no town.
+ * code-held templates (online.ts / online.en.ts) with sanitised slots, no town. A business that could not be read
+ * (isNeutralProfile) gets the neutral set: exists, what, website.
  */
 import { FACT_KEY_CRITERIUM } from "../criteria";
 import { scanLang } from "../shared/country";
 import { mentionsBusiness, normalizeName } from "../scanner/extract";
 import type { BusinessProfile, Facts, Prompt, QuestionFamily, RecommendationSummary, ScanKind, SectorSlug } from "../types";
-import { INTENT_SUBJECT } from "../types";
+import { INTENT_SUBJECT, isNeutralProfile } from "../types";
 import { deBesteFor, welkFor } from "./nouns";
 import { ONLINE_SUBJECT, ONLINE_TEMPLATES, type OnlineTemplate } from "./online";
 import { ONLINE_TEMPLATES_EN } from "./online.en";
@@ -158,6 +159,13 @@ export function onlineQuestions(profile: BusinessProfile, facts: Facts, kind: Sc
     if (text) chosen.push({ t, text });
   };
 
+  // The neutral set (ADR-0007): the business could not be read, so only what AI says about the name, never a category or a competitor.
+  if (isNeutralProfile(profile)) {
+    add(by("online.existence.exists"));
+    add(by("online.what"));
+    add(by("online.website"));
+    return chosen.map((c) => build(c.t, c.text));
+  }
   if (free) {
     add(by("online.existence.exists"));
     add(by("online.what"));

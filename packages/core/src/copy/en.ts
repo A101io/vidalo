@@ -150,7 +150,7 @@ export const en: CopyShape = {
       h2: "How Vidalo works",
       sub: "You do five minutes of work at the start. The rest runs by itself, every month.",
       steps: [
-        { n: "1", tone: "ink", title: "Record", body: "First we read what your business does: from Google, your website and one AI search. Then you record your details right, once, such as phone, opening hours and what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
+        { n: "1", tone: "ink", title: "Record", body: "First we read what your business does: from Google and your website. Then you record your details right, once, such as phone, opening hours and what you do and do not do. We fill them in beforehand, you confirm.", meta: "You: 5 minutes" },
         { n: "2", tone: "blue", title: "Publish", body: "A facts page on your own domain, with a date. For Google, Bing, Apple and the business directories you see what differs there and what to change.", meta: "Live as soon as your DNS record is in place" },
         { n: "3", tone: "rood", title: "Check", body: "Every month we ask ChatGPT, Google AI, Gemini, Perplexity and Claude, in Dutch, the questions that fit your kind of business. Several times, because AI rarely answers the same way twice.", meta: "Every month, 1,000 answers" },
         { n: "4", tone: "groen", title: "Fix", body: "Every error with its source. Where a source accepts a correction from us, we request it on your behalf; where only the owner can change something, you see exactly what to change. Then we ask again and you see before and after.", meta: "Proof for every error" },
@@ -1355,6 +1355,12 @@ export const en: CopyShape = {
       /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
       again: "Enter your business here once more to continue.",
       email: "Enter your email address; that is where we send the report.",
+      /** A business Google does not list: the visitor may give the website, which Vidalo reads (ADR-0007). */
+      websiteTitle: "We did not find your business on Google.",
+      websiteLabel: "What is your website?",
+      websitePlaceholder: "www.yourbusiness.com",
+      websiteHint: "Vidalo reads your website to understand what you do. You can leave it empty: we then ask a few general questions.",
+      websiteError: "We cannot read that as a website. Enter an address like www.yourbusiness.com, or leave it empty.",
     },
     empty: "Enter a business name or website.",
   },
@@ -1476,9 +1482,14 @@ export const en: CopyShape = {
       mode: { door: "with a place customers visit", visit: "goes to the customer", online: "online" },
       modeOnly: { door: "a business with a place customers visit", visit: "a business that goes to the customer", online: "an online business" },
       how: {
-        auto: "This is how we read your business, from Google, your website and one AI search. It is our reading, not a fact about your business.",
+        auto: "This is how we read your business, from Google and your website. It is our reading, not a fact about your business.",
         owner: "This is how the owner recorded the business.",
         fallback: "We could not read your business with certainty and assumed this kind of business.",
+      },
+      /** The business could not be read: no listing and no website that names it (ADR-0007). */
+      neutral: {
+        line: "We could not read what your business does.",
+        how: "Google does not list your business and we found no website that belongs to it. So we asked three general questions and do not judge the answers: you see what AI says. Give your website when you run a new check. If you own the business, fill in what you do under ‘How we read your business’.",
       },
       fixOwner: "Not right? As the owner you change it under ‘Your details’; the next check then asks different questions.",
       fixOther: "Not right? Mail it to",
@@ -2796,7 +2807,7 @@ export const en: CopyShape = {
       audienceHint: "for example ‘hotels and restaurants’",
       category: "How a customer searches for you",
       categoryHint: "a noun, for example ‘background music provider’",
-      sourceAuto: (date: string) => `Worked out automatically on ${date}, from Google, your website and a search.`,
+      sourceAuto: (date: string) => `Worked out automatically on ${date}, from Google and your website.`,
       sourceOwner: (date: string) => `Changed by you on ${date}. A later automatic reading does not overwrite it.`,
       sourceFallback: (date: string) => `On ${date} we could not read your business clearly. We use a general reading until you change it.`,
       sourceNone: "We have not read your business yet. That happens at the next check; you can also fill it in now.",

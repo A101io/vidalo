@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 import { ready } from "@/lib/db";
 import { resolveBusiness, prepareBusiness, parseQuery, createScanState, startFreeScan, FREE_SCAN_ENGINES, type BusinessCandidate } from "@/lib/core";
 import { requestBehindGate } from "@/lib/gate-state";
-import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, scanIpEvent, typedBusinessProblem } from "@vidalo/core/shared";
+import { FREE_SCANS_PER_IP, TURNSTILE_FIELD, clientIp, dayStart, parseTypedWebsite, scanIpEvent, typedBusinessProblem } from "@vidalo/core/shared";
 import { passesTurnstile, kiesToken } from "@/lib/turnstile";
 import { CHECK_COOKIE, CHECK_COOKIE_OPTIONS, checkCookieValue, checkFromCookie } from "@/lib/free-check";
 import { freeCheckEvents, parseFreeCheckRequest, REPORT_EMAIL_EVENT } from "@vidalo/core/shared";
@@ -17,22 +17,22 @@ export const dynamic = "force-dynamic";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-async function readInput(req: Request): Promise<{ q: string; pick: number | null; place: string | null; form: FormData; email: unknown; marketing: unknown }> {
+async function readInput(req: Request): Promise<{ q: string; pick: number | null; place: string | null; form: FormData; email: unknown; marketing: unknown; website: unknown }> {
   const ct = req.headers.get("content-type") ?? "";
   if (ct.includes("application/json")) {
-    const body = (await req.json()) as { q?: string; pick?: number; place?: string; email?: string; marketing?: string; [TURNSTILE_FIELD]?: string };
+    const body = (await req.json()) as { q?: string; pick?: number; place?: string; email?: string; marketing?: string; website?: string; [TURNSTILE_FIELD]?: string };
     const form = new FormData();
     if (typeof body[TURNSTILE_FIELD] === "string") form.set(TURNSTILE_FIELD, body[TURNSTILE_FIELD]);
-    return { q: String(body.q ?? "").trim(), pick: typeof body.pick === "number" ? body.pick : null, place: body.place?.trim() || null, form, email: body.email, marketing: body.marketing };
+    return { q: String(body.q ?? "").trim(), pick: typeof body.pick === "number" ? body.pick : null, place: body.place?.trim() || null, form, email: body.email, marketing: body.marketing, website: body.website };
   }
   const form = await req.formData();
   const pick = form.get("pick");
   const place = String(form.get("place") ?? "").trim();
-  return { q: String(form.get("q") ?? "").trim(), pick: pick != null && pick !== "" ? Number(pick) : null, place: place || null, form, email: form.get("email"), marketing: form.get("marketing") };
+  return { q: String(form.get("q") ?? "").trim(), pick: pick != null && pick !== "" ? Number(pick) : null, place: place || null, form, email: form.get("email"), marketing: form.get("marketing"), website: form.get("website") };
 }
 
 /**
- * POST /api/scan  (q=<name or website>, email=<address>[, marketing=ja][, place=<plaats>][, pick=<candidate index>])
+ * POST /api/scan  (q=<name or website>, email=<address>[, marketing=ja][, place=<plaats>][, pick=<candidate index>][, website=<own website>])
  * Resolves the business; with several candidates (or none / no place) redirects to
  * /scan/kies; otherwise prepares business + provisional facts + prompts, records who
  * asked (the report is mailed there when the scan is done), starts the free scan after
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   // The gate hides the scan form, but a direct POST would otherwise still spend engine and
   // Places calls before launch. Checked before anything else, the lookup included.
   if (requestBehindGate(req)) return NextResponse.redirect(to("/binnenkort"), 303);
-  const { q, pick, place: placeInput, form, email, marketing } = await readInput(req);
+  const { q, pick, place: placeInput, form, email, marketing, website } = await readInput(req);
   const copy = copyFor(lang);
   if (!q) return NextResponse.redirect(to("/?fout=leeg#controle"), 303);
   // Length and markup limits on what was typed, before anything that costs money (security S-04). The place can ride in the name ("Sonable, Rotterdam").
@@ -83,6 +83,16 @@ export async function POST(req: Request) {
   if (candidates.length === 1) candidate = candidates[0];
   else if (pick != null && candidates[pick]) candidate = candidates[pick];
   if (!candidate) return withCookie(NextResponse.redirect(kies, 303));
+  // A business Google does not list: the website is asked for on /scan/kies (ADR-0007), the only place it is. A first post (no pick) goes there.
+  const unlisted = !candidate.placeId && !candidate.website;
+  if (unlisted && pick == null) return withCookie(NextResponse.redirect(kies, 303));
+  // What the visitor typed is checked here, before anything is stored or fetched; a refusal goes back next to the field and the value is never echoed.
+  let typedWebsite: string | null = null;
+  if (unlisted) {
+    const parsed = parseTypedWebsite(website);
+    if (!parsed.ok) return withCookie(NextResponse.redirect(`${kies}&fout=website&kandidaat=${pick ?? 0}`, 303));
+    typedWebsite = parsed.url;
+  }
   const finalPlace = candidate.place ?? place;
   if (!finalPlace) return withCookie(NextResponse.redirect(`${kies}&plaats=1`, 303));
 
@@ -93,7 +103,7 @@ export async function POST(req: Request) {
     return NextResponse.redirect(to("/scan/druk"), 303);
   }
 
-  const { business, created } = await prepareBusiness({ name: candidate.name, place: finalPlace, candidate });
+  const { business, created } = await prepareBusiness({ name: candidate.name, place: finalPlace, candidate, website: typedWebsite });
 
   // Who asked, and whether they want news: on the business, never as its owner (an address proves nothing).
   // The address is done travelling: the cookie goes.

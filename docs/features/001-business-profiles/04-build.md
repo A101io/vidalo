@@ -366,3 +366,12 @@ Then (both) the findings, "Wie AI noemt bij jouw soort bedrijf / Who AI names fo
 - The mock engines name other businesses "<surname> <town>" (e.g. "De Wit Utrecht"); they are generic surnames and never mailed for online, but they sit in the report JSON and CLI output of the mock.
 - Playwright (both suites) not run; the web change is `checkedAsFor` / `competitionFor` calling the shared functions (typecheck green, same logic). `/r/voorbeeld-online` not re-viewed.
 - `PgDb` not touched, nothing to run against Postgres.
+
+## ADR 0007 — grounded in the listing or the own website (11 Nov 2026)
+
+- `scanner/understand.ts`: the web-search lookup is gone (no `responses.create`, no citations). The step reads the Places record and the own website (`facts.website`, fetched with the existing guards, contacts redacted, 4,000 characters) and makes one tool-less classification call; `competitors` is no longer asked and stays `[]`. A profile is accepted only with a listing or a fetched site that names the business; otherwise fallback, nothing stored. `basis: "ai_lookup"` is no longer produced (old rows still read).
+- Neutral set for a business with no listing and no usable profile: "Bestaat X nog?", "Wat doet X?", "Wat is de website van X?" (NL/EN), shown as unchecked. The report says it could not read the business and how to fix it.
+- `/scan/kies`: optional "Wat is je website?" field only for a candidate with no place id and no website; `shared/typed-website.ts` `parseTypedWebsite` (public http(s), max 200, no credentials, no IP literal, no private host, no odd port, never echoed); `/api/scan` stores it as the provisional `facts.website`.
+- Cost of the step: the classification only, about 0.1 cent per business (was ~2.6 cent with the search).
+- Tests: `understand.test.ts` (recorded sonable.io page → online, background music; no listing/no site and site-not-naming → neutral set; no lookup call), `typed-website.test.ts`, `e2e/scan-website.spec.ts` (8, production mock build). Gate config: the mobile project only runs `@gate @mobile` tests in gate mode. Results: typecheck, 1250 core tests, e2e:mock, mail:lab, Playwright mock 103/103 and gate 8/8.
+- Not verified: a real run against OpenAI and live websites (next step); the privacy sentence about the search is still in `copy.legal` (next step).

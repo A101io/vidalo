@@ -14,6 +14,12 @@ export interface PrepareOptions {
   place: string;
   /** Confirmed candidate (from resolveBusiness); when omitted the first candidate is used. */
   candidate?: BusinessCandidate;
+  /**
+   * The website the visitor typed on /scan/kies for a business Google does not list (ADR-0007), already through
+   * parseTypedWebsite. Stored as the provisional facts.website only; business.domain stays unset (a domain is
+   * the owner's to prove). Ignored when the candidate has a listing or a website of its own.
+   */
+  website?: string | null;
   db?: Db;
 }
 
@@ -50,10 +56,16 @@ export async function prepareBusiness(opts: PrepareOptions): Promise<Prepared> {
     sector: existing?.sector ?? sectorForCandidate(candidate),
   });
 
+  const typedWebsite = !candidate.placeId && !candidate.website ? (opts.website ?? null) : null;
   let facts = await db.latestFacts(business.id);
   if (!facts) {
+    // The typed address is not given to the draft: that would scrape it with a fetch that follows redirects unguarded (security S-13).
     const draft = await draftProvisionalFacts({ ...candidate, name: opts.name }, { place: opts.place });
-    facts = await db.insertFacts(business.id, { ...draft, place: opts.place }, { provisional: true });
+    facts = await db.insertFacts(business.id, { ...draft, place: opts.place, ...(typedWebsite ? { website: typedWebsite } : {}) }, { provisional: true });
+  } else if (typedWebsite && facts.provisional && !facts.website) {
+    // An earlier check of this business had no website; the owner has confirmed nothing yet.
+    const { businessId: _b, version: _v, createdAt: _c, profile: _p, ...rest } = facts;
+    facts = await db.insertFacts(business.id, { ...rest, website: typedWebsite }, { provisional: true });
   }
   facts = withCountry(facts, business);
   // The questions are chosen per profile when the scan starts (loadPrompts); this is what is stored so far.

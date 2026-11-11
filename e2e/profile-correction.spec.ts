@@ -58,7 +58,7 @@ test("the group shows the current reading, where it came from, and the page keep
   await expect(page.locator("#profileOffer")).toHaveValue(ORIGINAL.offer);
   await expect(page.locator("#profileAudience")).toHaveValue(ORIGINAL.audience);
   await expect(page.locator("#profileCategory")).toHaveValue(ORIGINAL.category);
-  await expect(group.getByText(/^Automatisch bepaald op .* uit Google, je website en een zoekopdracht\.$/)).toBeVisible();
+  await expect(group.getByText(/^Automatisch bepaald op .* uit Google en je website\.$/)).toBeVisible();
   // The facts form's button is the only primary one; the save here is the secondary kind.
   await expect(page.locator("main .btn-primary")).toHaveCount(1);
   await expect(group.locator("button[type='submit']")).toHaveText("Opslaan");

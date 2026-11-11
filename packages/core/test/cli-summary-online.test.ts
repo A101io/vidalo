@@ -9,7 +9,8 @@ import { markdownNl, summarizeNl } from "../src/cli/scan";
 
 async function scanned(name: string, place: string) {
   const db = new MemDb();
-  const p = await prepareBusiness({ name, place, db });
+  // An online business is read from the website its visitor gave on /scan/kies (ADR-0007); a local one has a listing.
+  const p = await prepareBusiness({ name, place, website: "https://www.vloedlijn-music.io", db });
   const run = await runScan({ businessId: p.business.id, kind: "free", db });
   const report = await buildReport(run.scanRunId, db);
   const asked = new Set((await db.listSamples(run.scanRunId)).map((x) => x.promptId));

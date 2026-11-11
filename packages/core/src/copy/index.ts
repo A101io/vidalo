@@ -166,7 +166,7 @@ export const copy = {
       h2: "Zo werkt Vidalo",
       sub: "Jij doet vijf minuten werk bij de start. De rest loopt vanzelf, elke maand.",
       steps: [
-        { n: "1", tone: "ink", title: "Vastleggen", body: "Eerst lezen wij wat je bedrijf doet: uit Google, je website en één AI-zoekopdracht. Dan leg je je gegevens één keer goed vast, zoals telefoon, openingstijden en wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
+        { n: "1", tone: "ink", title: "Vastleggen", body: "Eerst lezen wij wat je bedrijf doet: uit Google en je website. Dan leg je je gegevens één keer goed vast, zoals telefoon, openingstijden en wat je wel en niet doet. Wij vullen vooraf in, jij bevestigt.", meta: "Jij: 5 minuten" },
         { n: "2", tone: "blue", title: "Publiceren", body: "Een feitenpagina op je eigen domein, met datum. Voor Google, Bing, Apple en de bedrijvengidsen zie je wat daar anders staat en wat je moet aanpassen.", meta: "Live zodra je DNS-regel staat" },
         { n: "3", tone: "rood", title: "Controleren", body: "Elke maand stellen we ChatGPT, Google AI, Gemini, Perplexity en Claude in het Nederlands de vragen die bij jouw soort bedrijf passen. Meerdere keren, want AI antwoordt zelden twee keer hetzelfde.", meta: "Elke maand, 1.000 antwoorden" },
         { n: "4", tone: "groen", title: "Herstellen", body: "Elke fout met bron. Waar een bron een correctie van ons aanneemt, vragen we die namens jou; waar alleen de eigenaar iets kan wijzigen, zie je precies wat je moet aanpassen. Daarna vragen we het opnieuw en zie je voor en na.", meta: "Bewijs bij elke fout" },
@@ -1390,6 +1390,12 @@ export const copy = {
       again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
       /** POST /api/scan without a usable e-mail address: the field again, nothing looked up. */
       email: "Vul je e-mailadres in; daar sturen we het rapport naartoe.",
+      /** A business Google does not list: the visitor may give the website, which Vidalo reads (ADR-0007). */
+      websiteTitle: "We vonden je bedrijf niet op Google.",
+      websiteLabel: "Wat is je website?",
+      websitePlaceholder: "www.jouwbedrijf.nl",
+      websiteHint: "Vidalo leest je website om te begrijpen wat je doet. Leeg laten mag: dan stellen we een paar algemene vragen.",
+      websiteError: "Dit is geen website die we kunnen lezen. Vul een adres in zoals www.jouwbedrijf.nl, of laat het leeg.",
     },
     empty: "Vul een bedrijfsnaam of website in.",
   },
@@ -1517,9 +1523,14 @@ export const copy = {
       mode: { door: "met een locatie waar klanten langskomen", visit: "komt naar de klant toe", online: "online" },
       modeOnly: { door: "een bedrijf met een locatie waar klanten langskomen", visit: "een bedrijf dat naar de klant toe gaat", online: "een online bedrijf" },
       how: {
-        auto: "Zo lazen wij je bedrijf, uit Google, je website en één AI-zoekopdracht. Het is onze lezing, geen feit over je bedrijf.",
+        auto: "Zo lazen wij je bedrijf, uit Google en je website. Het is onze lezing, geen feit over je bedrijf.",
         owner: "Zo heeft de eigenaar het bedrijf vastgelegd.",
         fallback: "We konden je bedrijf niet met zekerheid lezen en gingen uit van deze soort bedrijf.",
+      },
+      /** The business could not be read: no listing and no website that names it (ADR-0007). */
+      neutral: {
+        line: "We konden niet lezen wat je bedrijf doet.",
+        how: "Google kent je bedrijf niet en we vonden geen website die erbij hoort. Daarom stelden we drie algemene vragen en beoordelen we de antwoorden niet: je ziet wat AI zegt. Geef bij een nieuwe controle je website op. Ben je de eigenaar, vul dan onder ‘Zo lezen wij je bedrijf’ in wat je doet.",
       },
       fixOwner: "Klopt het niet? Als eigenaar pas je het aan onder ‘Je gegevens’; de volgende controle stelt dan andere vragen.",
       fixOther: "Klopt het niet? Mail het naar",
@@ -2870,7 +2881,7 @@ export const copy = {
       audienceHint: "bijvoorbeeld ‘hotels en horeca’",
       category: "Hoe zoekt een klant naar jou",
       categoryHint: "een zelfstandig naamwoord, bijvoorbeeld ‘aanbieder van achtergrondmuziek’",
-      sourceAuto: (date: string) => `Automatisch bepaald op ${date}, uit Google, je website en een zoekopdracht.`,
+      sourceAuto: (date: string) => `Automatisch bepaald op ${date}, uit Google en je website.`,
       sourceOwner: (date: string) => `Door jou aangepast op ${date}. Een volgende automatische lezing overschrijft dit niet.`,
       sourceFallback: (date: string) => `Op ${date} kregen we je bedrijf niet scherp. We gebruiken een algemene lezing tot jij hem aanpast.`,
       sourceNone: "We hebben je bedrijf nog niet gelezen. Dat gebeurt bij de volgende controle; je kunt het ook nu invullen.",

@@ -95,11 +95,15 @@ describe("free-check mail of an online business", () => {
     expect(m.text).not.toContain("Genoemd in 3 van 8");
   });
 
-  it("a fallback reading names the kind of business only (compliance B4)", () => {
+  it("a business that could not be read says so, and how to fix it, and names no kind of business (compliance B4, ADR-0007)", () => {
     const m = baselineSummaryEmail(base({ profile: { ...profile, source: "fallback", offer: "iets uit het niets", category: null, audience: null } }));
-    expect(m.text).toContain("Gecontroleerd als: een online bedrijf");
+    expect(m.text).not.toContain("Gecontroleerd als");
     expect(m.text).not.toContain("iets uit het niets");
-    expect(m.text).toMatch(/konden je bedrijf niet met zekerheid lezen/);
+    expect(m.text).toContain("We konden niet lezen wat je bedrijf doet.");
+    expect(m.text).toMatch(/Geef bij een nieuwe controle je website op/);
+    const en = baselineSummaryEmail(base({ lang: "en", profile: { ...profile, source: "fallback", offer: null, category: null, audience: null } }));
+    expect(en.text).toContain("We could not read what your business does.");
+    expect(en.text).toMatch(/Give your website when you run a new check/);
   });
 
   it("escapes the profile and the name (security S-34)", () => {
@@ -179,7 +183,7 @@ describe("through the real pipeline (mock mode)", () => {
   });
 
   async function onlineRun() {
-    const p = await prepareBusiness({ name: NAME, place: PLACE, db });
+    const p = await prepareBusiness({ name: NAME, place: PLACE, website: "https://www.vloedlijn-music.io", db });
     const run = await runScan({ businessId: p.business.id, kind: "free", db });
     return { business: p.business, run, report: await buildReport(run.scanRunId, db) };
   }

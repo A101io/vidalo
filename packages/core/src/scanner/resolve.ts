@@ -254,7 +254,7 @@ export function mockProfile(name: string): Profile {
   return PROFILES.find((p) => p.match.test(name))!;
 }
 
-/** Mock names that read as an online business: they come back without a listing, an address, a phone or hours (feature 001). */
+/** Mock names that read as an online business: they come back without a listing, an address, a phone, hours or a website (feature 001; ADR-0007: the website comes from the visitor on /scan/kies). */
 export const MOCK_ONLINE_RE = /sonable|muziek|music|software|saas|webshop|app\b/i;
 
 export function mockCandidate(query: string, place?: string): BusinessCandidate {
@@ -267,7 +267,7 @@ export function mockCandidate(query: string, place?: string): BusinessCandidate 
       place: plc,
       placeId: null,
       kvk: null,
-      website: `https://www.${slugify(query)}.io`,
+      website: null,
       phone: null,
       openStatus: "open",
       hours: [],

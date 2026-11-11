@@ -85,14 +85,21 @@ describe("online report view", () => {
         expect(v.checkedAsNote).toBe(c.result.checkedAs.how.auto);
       });
 
-      it("a fallback or owner profile is worded as such; a fallback shows the mode words only", () => {
+      it("an owner profile is worded as such; an online business that could not be read says so and how to fix it (ADR-0007); a fallback with a listing shows the mode words only", () => {
         const r = online();
         r.profile = { ...r.profile!, source: "fallback" };
         const v = buildReportView(r, c);
-        expect(v.checkedAs).toBe(c.result.checkedAs.line(c.result.checkedAs.modeOnly.online));
+        expect(v.checkedAs).toBe(c.result.checkedAs.neutral.line);
+        expect(v.checkedAsNote).toBe(c.result.checkedAs.neutral.how);
+        expect(v.checkedAsNeutral).toBe(true);
         expect(v.checkedAs).not.toContain("achtergrondmuziek");
-        r.profile = { ...r.profile!, source: "owner" };
+        r.profile = { ...r.profile!, mode: "door", source: "fallback" };
+        const listed = buildReportView(r, c);
+        expect(listed.checkedAs).toBe(c.result.checkedAs.line(c.result.checkedAs.modeOnly.door));
+        expect(listed.checkedAsNeutral).toBe(false);
+        r.profile = { ...r.profile!, mode: "online", source: "owner" };
         expect(buildReportView(r, c).checkedAsNote).toBe(c.result.checkedAs.how.owner);
+        expect(buildReportView(r, c).checkedAsNeutral).toBe(false);
       });
 
       it("the plan panel promises no Google, Bing, Apple or directory work in any state, and says one business", () => {

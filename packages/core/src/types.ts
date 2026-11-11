@@ -160,6 +160,7 @@ export type Severity = "afhaker" | "misleider" | "verwarring";
 
 /** How a business meets its customers: a shop front, visits to the customer, or online only (feature 001). */
 export type ProfileMode = "door" | "visit" | "online";
+/** "ai_lookup" is no longer written (ADR-0007); the type stays tolerant so an old stored row still reads. */
 export type ProfileBasis = "google" | "website" | "ai_lookup" | "owner";
 export type ProfileConfidence = "high" | "medium" | "low";
 
@@ -182,6 +183,15 @@ export interface BusinessProfile {
   /** true when offer/category rest on Google, the own website or the owner: then "wat doet X" can be judged. */
   grounded: boolean;
   decidedAt: string; // ISO
+}
+
+/**
+ * The business could not be read: no listing and no own website that names it (ADR-0007). Such a profile is
+ * a fallback in mode online; a fallback with a listing is mode door or visit. Its questions are the neutral
+ * set and its answers are shown, not judged.
+ */
+export function isNeutralProfile(p: { source: BusinessProfile["source"]; mode: ProfileMode } | null | undefined): boolean {
+  return p?.source === "fallback" && p.mode === "online";
 }
 
 /** What visitors see of a profile (waiting page, report). */

@@ -176,7 +176,16 @@ step("online business: Vloedlijn Music, Utrecht");
 const { competitionCountsOf, uncheckedAnswersOf } = await import("@vidalo/core/types");
 const ONLINE_NAME = "Vloedlijn Music";
 const ONLINE_PLACE = "Utrecht";
-const online = await prepareBusiness({ name: ONLINE_NAME, place: ONLINE_PLACE, db });
+// Without a Google listing the business is read from the website its visitor gave on /scan/kies (ADR-0007); with none, the neutral set.
+const unread = await prepareBusiness({ name: ONLINE_NAME, place: "Rotterdam", db });
+const unreadScan = await runScan({ businessId: unread.business.id, kind: "free", db });
+const unreadReport = await buildReport(unreadScan.scanRunId, db);
+assert.equal(unreadReport.profile?.source, "fallback", "no listing and no website: the business is not read");
+assert.equal((await db.getBusiness(unread.business.id))!.profileAuto, null, "nothing is stored for a business that was not read");
+const unreadAsked = new Set((await db.listSamples(unreadScan.scanRunId)).map((x) => x.promptId));
+assert.deepEqual((await db.listPrompts(unread.business.id)).filter((p) => unreadAsked.has(p.id)).map((p) => p.textNl).sort(), [`Bestaat ${ONLINE_NAME} nog?`, `Wat doet ${ONLINE_NAME}?`, `Wat is de website van ${ONLINE_NAME}?`].sort(), "the neutral set of three");
+assert.equal(unreadReport.findings.length, 0, "the neutral set is not judged");
+const online = await prepareBusiness({ name: ONLINE_NAME, place: ONLINE_PLACE, website: "https://www.vloedlijn-music.example", db });
 const onlineScan = await runScan({ businessId: online.business.id, kind: "free", db });
 const onlineReport = await buildReport(onlineScan.scanRunId, db);
 console.log(`online scan ${onlineScan.scanRunId}: mode ${onlineReport.profile?.mode}, ${onlineReport.totalAnswers} answers, stip ${onlineReport.stip}`);
@@ -184,7 +193,8 @@ assert.equal(onlineReport.profile?.mode, "online", "the report carries the onlin
 assert.equal(onlineReport.profile?.source, "auto", "the mock reading is automatic");
 const onlineRow = (await db.getBusiness(online.business.id))!;
 assert.equal(onlineRow.profileAuto?.mode, "online", "the automatic profile is stored on the business");
-assert.ok(onlineRow.profileAuto!.competitors.length > 0 && onlineRow.profileAuto!.competitors.every((c) => c.startsWith("Voorbeeld ")), "the mock competitors are made up");
+assert.deepEqual(onlineRow.profileAuto!.competitors, [], "competitors come from who AI names, not from the understanding step (ADR-0007)");
+assert.ok(!onlineRow.profileAuto!.basis.includes("ai_lookup"), "no AI lookup in the basis");
 
 const askedIds = new Set((await db.listSamples(onlineScan.scanRunId)).map((x) => x.promptId));
 const asked = (await db.listPrompts(online.business.id)).filter((p) => askedIds.has(p.id));
@@ -209,7 +219,8 @@ assert.ok(compRows.some((r) => r.family === "alternative") && compRows.some((r) 
 // The question library has its rows for this category, and no business in them (compliance C-14).
 const ledger = await db.questionLibrary({ mode: "online" });
 assert.ok(ledger.length >= 6, "the library ledger has rows for the online templates");
-assert.ok(ledger.every((l) => l.category === onlineRow.profileAuto!.category), "rows are filed under the category");
+assert.ok(ledger.every((l) => l.category === onlineRow.profileAuto!.category || l.category === "onbekend"), "rows are filed under the category, or under onbekend for the business that was not read");
+assert.ok(ledger.filter((l) => l.category === onlineRow.profileAuto!.category).length >= 6, "the read business has its rows under its category");
 assert.ok(!JSON.stringify(ledger).includes(ONLINE_NAME) && !JSON.stringify(ledger).toLowerCase().includes(ONLINE_PLACE.toLowerCase()), "the ledger holds no business name and no town");
 
 // The free-check mail goes to the asker, in the report's counts, without a town or a listing.

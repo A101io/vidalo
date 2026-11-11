@@ -102,8 +102,9 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
               <div className="enter flex max-w-[56ch] flex-col gap-1 text-[14px]" style={{ "--d": "280ms" } as React.CSSProperties}>
                 <p className="font-semibold text-ink">{v.checkedAs}</p>
                 <p className="text-muted">
-                  {v.checkedAsNote} {owned && owned.id === report.business.id ? R.checkedAs.fixOwner : R.checkedAs.fixOther}
-                  {!(owned && owned.id === report.business.id) && (
+                  {v.checkedAsNote}
+                  {!v.checkedAsNeutral && <> {owned && owned.id === report.business.id ? R.checkedAs.fixOwner : R.checkedAs.fixOther}</>}
+                  {!v.checkedAsNeutral && !(owned && owned.id === report.business.id) && (
                     <>
                       {" "}
                       <a className="btn-link" href="mailto:support@vidalo.io">

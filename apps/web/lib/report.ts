@@ -11,7 +11,7 @@ import { findingSeverity } from "@vidalo/core/scanner";
 import type { ReportRowData } from "@/components/ReportRow";
 import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
-import { competitionCountsOf, isUncheckedGrey } from "@vidalo/core/types";
+import { competitionCountsOf, isNeutralProfile, isUncheckedGrey } from "@vidalo/core/types";
 import { checkedAsParts } from "@vidalo/core/shared";
 import { hostOf } from "./format";
 
@@ -78,6 +78,8 @@ export interface ReportView {
   /** "Gecontroleerd als: …" when the report carries a profile (every mode), with how it was read and how to correct it. */
   checkedAs: string | null;
   checkedAsNote: string | null;
+  /** The business could not be read (ADR-0007): the note already says how to fix it. */
+  checkedAsNeutral: boolean;
   /** Online businesses only (and only when there are category or alternative questions). */
   competition: CompetitionView | null;
   sources: SourceRowData[];
@@ -235,10 +237,10 @@ function pickCards(findings: Finding[], report: ScanReport, grey: boolean, copy:
 }
 
 /** "Gecontroleerd als: aanbieder van achtergrondmuziek voor hotels en horeca, online": Vidalo's reading, and how to correct it. */
-function checkedAsFor(report: ScanReport, copy: CopyShape): { checkedAs: string | null; checkedAsNote: string | null } {
+function checkedAsFor(report: ScanReport, copy: CopyShape): { checkedAs: string | null; checkedAsNote: string | null; checkedAsNeutral: boolean } {
   // The same function the CLI and the mails use (core shared/checked-as.ts).
   const parts = checkedAsParts(report.profile, copy.result.checkedAs);
-  return { checkedAs: parts?.line ?? null, checkedAsNote: parts?.how ?? null };
+  return { checkedAs: parts?.line ?? null, checkedAsNote: parts?.how ?? null, checkedAsNeutral: isNeutralProfile(report.profile) };
 }
 
 /** One entry per category and alternative question: how often the business was named, who else, and what AI wrote about it. Counts only. */
