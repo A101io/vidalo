@@ -113,6 +113,7 @@ created or wired by the scaffold and then frozen (neither lane edits it).
 | `apps/web/app/auth/confirm/page.tsx`, `actions.ts` (new), `route.ts` (deleted) | A |
 | `apps/web/app/auth/callback/route.ts` | A |
 | `apps/web/app/auth/uitloggen/route.ts` | A |
+| `apps/web/app/layout.tsx` (only: skip trackers, chat widget, `ask.js`, `motion.js` on `/auth/*`; A-03, SEC-25, F-A1; assigned 12 Nov 2026) | A |
 | `apps/web/app/api/account/export/route.ts` | A |
 | `apps/web/app/api/billing/portal/route.ts` | A |
 | `apps/web/app/api/google/start/route.ts`, `apps/web/app/api/google/callback/route.ts` | A |
@@ -120,6 +121,7 @@ created or wired by the scaffold and then frozen (neither lane edits it).
 | `apps/worker/**` (cron, jobs, tests) | A |
 | `scripts/mail-lab.mts` | A |
 | `scripts/stripe-lifecycle-run.mts` | A |
+| `scripts/site/snapshot.mjs` (A-02, F-A2; assigned 12 Nov 2026) | A |
 | `scripts/backfill-run-summaries.mts` | B |
 | `scripts/perf/seed-history.mts`, `scripts/perf/owner-pages.mts` | B |
 | `scripts/rls/membership.sql` | B |

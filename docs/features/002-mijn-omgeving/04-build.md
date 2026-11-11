@@ -459,3 +459,19 @@ wording and the notice decision. COMP-26 (Supabase backup roll-off and Resend lo
 not looked up. COMP-44 (the privacy text describes behaviour that ships in the same release):
 the retention sentences describe the purge, which runs as a dry run until `VIDALO_PURGE=1`
 (COMP-31 is a go-live gate for the delivery-lead). Compliance ticks its own checklist rows.
+
+### F-A1, F-A2 — assigned to lane A after A-07 (2026-11-12)
+
+Assigned by the shape session: `apps/web/app/layout.tsx` (A-03, only the `/auth/*` skip) and
+`scripts/site/snapshot.mjs` (A-02). Commit b8a6772. **F-A1:** the root layout reads the route
+(`getRoute()`, set by the middleware) and on `/auth/*` renders no `Trackers`, no `ChatWidget`, no
+`motion.js` and no `ask.js`; nothing else in the file changed. Test in `e2e/auth-redirect.spec.ts`:
+with the consent cookie at every category, `/auth/confirm` has no `googletagmanager`,
+`connect.facebook.net`, `ask.js`, `motion.js` or chat button, and requests nothing from another
+host; control: the same browser on `/` loads GA4, `motion.js` and the chat button. Red on the old
+layout ("googletagmanager"), green after; with `pages.spec.ts` and `consent.spec.ts` 68/68.
+**F-A2:** the snapshot no longer writes `vidalo_mock_session` by hand; `signIn()` posts the mock
+sign-in form on `/inloggen` (its server action) as the demo owner and keeps the cookie it gets.
+Checked against a mock dev server: exit 0, 64 pages, `app.html` and `app-account.html` show the
+demo bakery, not the sign-in form. Not checked: the GitHub Actions run itself (`site.yml`, which
+uses `next start`).
