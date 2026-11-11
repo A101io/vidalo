@@ -43,6 +43,7 @@ export default async function CancelPage() {
         </p>
       )}
       <form action={cancelAction} className="card space-y-4 p-5 sm:p-6">
+            <input type="hidden" name="business" value={business.id} />
         <label className="block">
           <span className="field-label">{C.reasonLabel}</span>
           <select name="reason" defaultValue="" className="field">

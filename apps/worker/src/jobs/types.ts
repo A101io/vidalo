@@ -94,6 +94,18 @@ export interface OperatorTaskJob {
   [k: string]: unknown;
 }
 
+/** Feature 002: delete a business when its guard allows (core/shared/purge.ts). */
+export interface PurgeJob {
+  businessId: string;
+  guard: "no_subscription" | "due";
+}
+
+/** Feature 002: end the Google connection (revoke at Google, delete the channel). */
+export interface GoogleDisconnectJob {
+  businessId: string;
+  reason: "churn" | "purge" | "scan_done";
+}
+
 export type JobPayloads = {
   scan: ScanJob;
   setup: SetupJob;
@@ -108,9 +120,11 @@ export type JobPayloads = {
   operator_task: OperatorTaskJob;
   sitecheck: SiteCheckJob;
   index_check: IndexCheckJob;
+  purge: PurgeJob;
+  google_disconnect: GoogleDisconnectJob;
 };
 
 export type JobKind = keyof JobPayloads;
-export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task", "sitecheck", "index_check"];
+export const JOB_KINDS: JobKind[] = ["scan", "setup", "publish", "sync", "fixes", "fix", "recheck", "email", "report", "followup", "operator_task", "sitecheck", "index_check", "purge", "google_disconnect"];
 
 export type Handler<K extends JobKind> = (payload: JobPayloads[K], job: Job) => Promise<Record<string, unknown> | void>;

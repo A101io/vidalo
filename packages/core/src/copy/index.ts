@@ -3143,6 +3143,27 @@ export const copy = {
   mails: {
     hi: "Hoi,",
     regards: "Groet,\nVidalo",
+    /** Feature 002 (A-05): after "Verwijder alles" has deleted everything. Service mail. */
+    accountDeleted: (name: string) => ({
+      subject: `Alles van ${name} is verwijderd`,
+      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan, en de koppeling met Google, die we ook bij Google hebben ingetrokken. Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd.
+
+Wat blijft: je facturen, 7 jaar bij Stripe, omdat de wet dat vraagt. Wat al bij Google, gidsen of andere websites is hersteld, blijft daar staan.
+
+Je hoeft niets meer te doen.`,
+    }),
+    /** Feature 002 (A-05, F-013): "Verwijder alles" during a running Vidalo Monthly. Sent at once. Service mail. */
+    deletionScheduled: (name: string, date: string, url: string) => ({
+      subject: `Je abonnement voor ${name} stopt op ${date}, dan verwijderen we alles`,
+      body: `Je vroeg ons alles van ${name} te verwijderen. Je abonnement op Vidalo Monthly liep nog, dus we hebben het opgezegd tegen ${date}. Tot die dag loopt alles door. Het bedrag voor de lopende maand krijg je niet terug.
+
+Wat er op ${date} gebeurt
+We verwijderen alles van ${name}: de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan, en de koppeling met Google. Je feitenpagina gaat dan offline. Er volgt geen gratis controle meer.
+
+Wil je iets bewaren? Download vóór ${date} je rapporten en je gegevens onder 'Account', en je facturen in het klantportaal. Daarna kan dat niet meer in je account. Je facturen blijven 7 jaar bij Stripe.
+
+Toch bewaren? Dat kan tot ${date} met één klik: ${url}`,
+    }),
     and: "en",
     stip: (colour: string) => `Stip: ${colour}.`,
     unsubscribe: { lead: "Geen mails meer hierover?", link: "Afmelden" },

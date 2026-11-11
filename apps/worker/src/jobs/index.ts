@@ -2,6 +2,7 @@ import type { Job } from "@vidalo/core/db";
 import { email, fixes, followup, indexCheck, operatorTask, publish, recheck, report, sitecheck, sync } from "./misc.js";
 import { scan } from "./scan.js";
 import { setup } from "./setup.js";
+import { googleDisconnect, purge } from "./purge.js";
 import { paidOnlyBlock } from "./paid.js";
 import { spendBlock } from "./spend.js";
 import type { Handler, JobKind, JobPayloads } from "./types.js";
@@ -24,6 +25,8 @@ const handlers: { [K in JobKind]: Handler<K> } = {
   operator_task: operatorTask,
   sitecheck,
   index_check: indexCheck,
+  purge,
+  google_disconnect: googleDisconnect,
 };
 
 export function handlerFor(kind: string): AnyHandler | null {
@@ -62,6 +65,10 @@ export function validatePayload(kind: JobKind, payload: Record<string, unknown>)
         return payload.template ? null : need(["to", "subject", "text"]);
       case "operator_task":
         return need(["reason"]);
+      case "purge":
+        return need(["businessId", "guard"]);
+      case "google_disconnect":
+        return need(["businessId", "reason"]);
       default:
         return null;
     }

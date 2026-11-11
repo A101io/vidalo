@@ -285,3 +285,19 @@ test("AC-5(c): changing the address needs a recent sign-in and returns to the op
   await expect(page).toHaveURL(/\/app\/account\?stap=email/);
   await expect(page.locator("input[data-step='open']")).toBeFocused();
 });
+
+test("A-05 / SEC-37: the delete step needs a recent sign-in and returns to the same step", async ({ page }) => {
+  test.setTimeout(120_000);
+  await signIn(page, DEMO_OWNER, "/app/account/verwijderen");
+  await expect(page).toHaveURL(/\/app\/account\/verwijderen$/);
+  // Refreshed tokens do not make a sign-in fresh: wait past the test window (20 s) with refreshes in between.
+  await page.waitForTimeout(12_000);
+  await page.goto("/app");
+  await page.waitForTimeout(9_000);
+  await page.goto("/app/account/verwijderen");
+  await page.waitForURL(/\/inloggen\?opnieuw=1/);
+  expect(new URL(page.url()).searchParams.get("next")).toBe("/app/account/verwijderen");
+  await signIn(page, DEMO_OWNER, "/app/account/verwijderen");
+  await expect(page).toHaveURL(/\/app\/account\/verwijderen$/);
+  await expect(page.getByRole("button", { name: "Verwijder alles" })).toBeVisible();
+});

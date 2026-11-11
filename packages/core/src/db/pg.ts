@@ -29,6 +29,7 @@ import type {
   ScanRunCreate,
   ScanRunUpdate,
   WaitlistInput,
+  PurgeGuard,
   BrowserFamily,
   OsFamily,
   SignInEnd,
@@ -86,6 +87,11 @@ function mapBusiness(row: Row): BusinessRecord {
     mailPrefs: normalizeMailPrefs(r.mailPrefs),
     profileAuto: (r.profileAuto as BusinessProfile | null) ?? null,
     profileOwner: (r.profileOwner as BusinessProfile | null) ?? null,
+    lastActiveAt: (r.lastActiveAt as string | null) ?? null,
+    churnedAt: (r.churnedAt as string | null) ?? null,
+    deleteAt: (r.deleteAt as string | null) ?? null,
+    deleteReason: (r.deleteReason as BusinessRecord["deleteReason"]) ?? null,
+    deletionRemindedAt: (r.deletionRemindedAt as string | null) ?? null,
     createdAt: r.createdAt as string,
   };
 }
@@ -807,6 +813,7 @@ export class PgDb implements Db {
       await tx`insert into auth_session (session_id, user_id, signed_in_at, last_seen_at, browser, os)
         values (${row.sessionId}, ${row.userId}, ${row.at}, ${row.at}, ${row.browser}, ${row.os})
         on conflict (session_id) do nothing`;
+      await tx`update business set last_active_at = ${row.at} where owner_user_id = ${row.userId}`;
       await tx`delete from auth_session where user_id = ${row.userId} and ended_at is not null and session_id not in (
         select session_id from auth_session where user_id = ${row.userId} order by signed_in_at desc limit 10)`;
     });
@@ -879,6 +886,68 @@ export class PgDb implements Db {
   async deleteChannel(id: string): Promise<void> {
     if (!UUID.test(id)) return;
     await this.sql`delete from channel where id = ${id}`;
+  }
+
+  // --- deletion and retention (feature 002, migration 0019) ---
+  async setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord> {
+    const rows = input
+      ? await this.sql`update business set delete_at = ${new Date(input.at)}, delete_reason = 'owner', deletion_reminded_at = null where id = ${businessId} returning *`
+      : await this.sql`update business set delete_at = null, delete_reason = null, deletion_reminded_at = null where id = ${businessId} returning *`;
+    if (!rows[0]) throw new Error(`business ${businessId} not found`);
+    return mapBusiness(rows[0]);
+  }
+
+  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where delete_at <= ${now}
+      and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention'))
+      order by delete_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where delete_reason = 'retention' and deletion_reminded_at is null
+      and delete_at - interval '14 days' <= ${now} order by delete_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async claimDeletionReminder(businessId: string): Promise<boolean> {
+    const rows = await this.sql`update business set deletion_reminded_at = now() where id = ${businessId} and deletion_reminded_at is null returning id`;
+    return rows.length === 1;
+  }
+
+  async countOverdueDeletions(now: Date): Promise<number> {
+    const rows = await this.sql`select count(*)::int as n from business where delete_at < ${new Date(now.getTime() - 86_400_000)}`;
+    return Number(rows[0]?.n ?? 0);
+  }
+
+  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where plan = 'setup' and status = 'trial' order by created_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async setScanRetention(businessId: string, at: string | null): Promise<void> {
+    if (at === null) {
+      await this.sql`update business set delete_at = null, delete_reason = null, deletion_reminded_at = null
+        where id = ${businessId} and plan = 'setup' and status = 'trial'`;
+      return;
+    }
+    await this.sql`update business set delete_at = ${new Date(at)}, delete_reason = 'retention',
+        deletion_reminded_at = case when delete_at is null or delete_at < ${new Date(at)} then null else deletion_reminded_at end
+      where id = ${businessId} and plan = 'setup' and status = 'trial'`;
+  }
+
+  async purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean> {
+    if (!UUID.test(id)) return false;
+    return this.sql.begin(async (tx) => {
+      const gone =
+        guard === "due"
+          ? await tx`delete from business where id = ${id} and delete_at <= ${now}
+              and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention')) returning id`
+          : await tx`delete from business where id = ${id} and not (plan = 'monitor' and status in ('trial', 'active', 'paused')) returning id`;
+      if (!gone.length) return false;
+      await tx`delete from job where done_at is null and payload->>'businessId' = ${id}`;
+      return true;
+    });
   }
 
   async close(): Promise<void> {

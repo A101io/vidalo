@@ -8,7 +8,8 @@ import { getScanReport } from "@/lib/core";
 import { isUncheckedGrey, uncheckedAnswersOf } from "@vidalo/core/types";
 import { dateShort, dateTime } from "@/lib/format";
 import { checkNow } from "../actions";
-import { deleteMyData } from "./verwijderen/actions";
+import { callOffDeletion } from "./verwijderen/actions";
+import { longDate } from "@vidalo/core/reporter";
 import { LANGS } from "@/lib/lang-paths";
 import { MAIL_PREF_KEYS } from "@vidalo/core/shared";
 import { changeEmail, saveMailPrefs, setLanguage, signOutEverywhere } from "./actions";
@@ -36,7 +37,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/account");
   const data = await loadDashboard(business.id);
-  const { copy, href } = await getI18n();
+  const { copy, href, lang } = await getI18n();
   const A = copy.account;
   const S = copy.accountSecurity;
   const signIns = await (await ready()).listSignIns(session.userId, 10);
@@ -320,18 +321,28 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <a href={`/api/account/export?business=${encodeURIComponent(business.id)}`} download className="btn-link">
             {A.myData.download}
           </a>
-          <form action={deleteMyData} className="space-y-3 border-t-[1px] border-line pt-4">
-            <input type="hidden" name="business" value={business.id} />
-            <p className="text-ink-2">{A.myData.deleteBody}</p>
-            {sp.gegevens === "abonnement" && <p className="text-[14px] text-rood">{A.myData.blocked}</p>}
-            <label className="flex items-start gap-2">
-              <input type="checkbox" name="confirm" value="ja" required className="mt-1" />
-              <span>{A.myData.confirm}</span>
-            </label>
-            <button type="submit" className="btn-sm">
-              {A.myData.deleteButton}
-            </button>
-          </form>
+          <div className="space-y-3 border-t-[1px] border-line pt-4">
+            <p role="status" aria-live="polite" className="text-[14px] empty:hidden">
+              {sp.gegevens && S.deletion.status[sp.gegevens] ? S.deletion.status[sp.gegevens] : ""}
+            </p>
+            {business.deleteReason === "owner" && business.deleteAt ? (
+              <form action={callOffDeletion} className="space-y-2">
+                <input type="hidden" name="business" value={business.id} />
+                <p className="font-semibold">{S.deletion.scheduled(longDate(business.deleteAt, lang))}</p>
+                <p className="text-[14px] text-ink-2">{S.deletion.keepNote}</p>
+                <button type="submit" className="btn-sm">
+                  {S.deletion.keep}
+                </button>
+              </form>
+            ) : (
+              <>
+                <p className="text-ink-2">{S.deletion.goes}</p>
+                <Link href={href("/app/account/verwijderen")} className="btn-sm">
+                  {S.deletion.link}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </section>
 

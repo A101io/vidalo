@@ -75,3 +75,89 @@ test("A-04: Koppeling met Google verbreken removes the connection and keeps the 
   // Ownership proof stays (the first card still says verified).
   expect(await page.locator("section").first().innerText()).toContain(verifiedLine.split("\n")[1] ?? verifiedLine);
 });
+
+// ---- A-05: "Verwijder alles" on every plan ----
+
+const SCAN = "scan-eigenaar@example.nl";
+const MONTHLY = "maand-eigenaar@example.nl";
+
+test("A-05: a hand-edited business of another login changes nothing", async ({ page }) => {
+  await signInAs(page, DEMO);
+  const demoId = await demoBusinessId(page);
+  await page.context().clearCookies();
+  await signInAs(page, SCAN, "/app/account/verwijderen");
+  await page.goto("/app/account/verwijderen");
+  await page.locator("form input[name='business']").last().evaluate((el, id) => ((el as HTMLInputElement).value = id), demoId);
+  await page.locator("input[name='confirm']").check();
+  await page.getByRole("button", { name: "Verwijder alles" }).click();
+  await page.waitForURL((u) => u.pathname === "/app");
+  // Both businesses are still there.
+  await page.goto("/app/account");
+  await expect(page.locator("main")).toContainText("Fietsenmaker Scan");
+  await page.context().clearCookies();
+  await signInAs(page, DEMO);
+  expect(await demoBusinessId(page)).toBe(demoId);
+});
+
+test("A-05: the Monthly owner sees money and invoices before the button, schedules, gets the mail, calls it off", async ({ page }) => {
+  await signInAs(page, MONTHLY, "/app/account/verwijderen");
+  await page.goto("/app/account/verwijderen");
+  const money = page.locator("[data-money]");
+  await expect(money).toContainText("Het bedrag voor de lopende maand krijg je niet terug");
+  await expect(page.locator("[data-invoices]")).toContainText("Download ze dus eerst");
+  // Both sentences come before the button.
+  const order = await page.evaluate(() => {
+    const m = document.querySelector("[data-money]")!;
+    const b = [...document.querySelectorAll("button")].find((x) => x.textContent === "Verwijder alles")!;
+    return m.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
+  });
+  expect(order).toBeTruthy();
+  await page.locator("input[name='confirm']").check();
+  await page.getByRole("button", { name: "Verwijder alles" }).click();
+  await page.waitForURL(/gegevens=gepland/);
+  await expect(page.getByRole("status").filter({ hasText: "worden op de einddatum verwijderd" })).toBeVisible();
+  await expect(page.getByText(/Je gegevens worden op \d+ \w+ \d{4} verwijderd\./)).toBeVisible();
+  await page.goto("/app/abonnement");
+  await expect(page.locator("[data-deletion-scheduled]")).toContainText("Je gegevens worden op");
+  // The mail went out at once (logged on the business; read back through the owner's own download).
+  const id = (await page.locator("form input[name='business']").first().getAttribute("value"))!;
+  const data = await (await page.request.get(`/api/account/export?business=${id}`)).json();
+  expect(data.events.some((e: { type: string }) => e.type === "mail.deletion_scheduled")).toBe(true);
+  expect(data.business.deleteReason).toBe("owner");
+  // Toch bewaren.
+  await page.locator("[data-deletion-scheduled]").getByRole("button", { name: "Toch bewaren" }).click();
+  await page.waitForURL(/gegevens=bewaard/);
+  await expect(page.getByRole("status").filter({ hasText: "Je gegevens blijven bewaard." })).toBeVisible();
+  await expect(page.getByText(/Je gegevens worden op .* verwijderd\./)).toHaveCount(0);
+});
+
+test("A-05: the English delete page (the owner's language set to English first)", async ({ page }) => {
+  await signInAs(page, MONTHLY, "/app/account");
+  await page.goto("/app/account");
+  await page.locator("select[name='language']").selectOption("en");
+  await page.locator("select[name='language']").locator("xpath=ancestor::form").getByRole("button").click();
+  await page.waitForURL(/\/en\/app\/account\?taal=opgeslagen/);
+  await page.goto("/en/app/account/verwijderen");
+  await expect(page.locator("h1")).toHaveText("Delete everything");
+  await expect(page.locator("[data-money]")).toContainText("The amount for the current month is not refunded");
+  // Back to Dutch for the tests after this one.
+  await page.goto("/en/app/account");
+  await page.locator("select[name='language']").selectOption("nl");
+  await page.locator("select[name='language']").locator("xpath=ancestor::form").getByRole("button").click();
+  await page.waitForURL(/\/app\/account\?taal=opgeslagen/);
+});
+
+test("A-05: the Vidalo Scan owner deletes at once and has no business afterwards", async ({ page }) => {
+  await signInAs(page, SCAN, "/app/account/verwijderen");
+  await page.goto("/app/account/verwijderen");
+  await expect(page.locator("[data-money]")).toContainText("Vidalo Scan krijg je niet terug");
+  await page.locator("input[name='confirm']").check();
+  await page.getByRole("button", { name: "Verwijder alles" }).click();
+  await page.waitForURL(/\/inloggen\?verwijderd=1/);
+  await expect(page.getByRole("status")).toContainText("Je gegevens zijn verwijderd.");
+  // Cookies cleared: signed out. Signing in again finds no business.
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/inloggen/);
+  await signInAs(page, SCAN, "/app");
+  await expect(page).toHaveURL(/\/inloggen\?fout=geen/);
+});

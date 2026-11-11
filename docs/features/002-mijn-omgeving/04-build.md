@@ -268,3 +268,94 @@ code), the token test is red: the export contained `rt-…`. Restored, green.
 **Not verified.** A real revoke at Google (no keys here). The mock demo's Google channel holds no
 token, so the browser test shows the disconnect, not the recorded mock revoke (the unit test
 covers the revoke).
+
+### A-05 — "Verwijder alles" on every plan; one purge module guarded by the database (2026-11-12)
+
+**What.** Migration `0019_deletion_retention.sql`: `churned_at`, `delete_at`, `delete_reason`,
+`deletion_reminded_at`, `last_active_at`; CHECKs `business_delete_reason_with_date` and
+`business_delete_only_when_ending` (admits a Scan's retention date, F-012); trigger
+`business_retention` (security definer, `search_path = ''`, execute revoked) with rules 1–4;
+backfill; `job_unrun_business_idx` and `business_delete_at_idx`. One change to the architecture's
+rule 3: it fires only when the status or `cancel_at` changes. As written it also ran when
+`delete_at` alone was set, so it silently cleared a date on a paying business instead of letting
+the CHECK refuse it (the ticket's "setting `delete_at` on an active business without `cancel_at`
+fails on PgDb" could never hold). The migration is not applied anywhere but the local test
+database. `BusinessRecord` gains the five fields (written only by their own methods and the
+trigger; `upsertBusiness` ignores them in both Dbs). Db `setDeletion`, `listDueDeletions`,
+`listDeletionReminders`, `claimDeletionReminder`, `countOverdueDeletions`, `listScanRetention`,
+`setScanRetention`, `purgeBusiness` (conditional delete + unrun jobs in one transaction); MemDb
+mirrors the trigger and the CHECKs; `recordSignIn` sets `last_active_at` on the login's businesses.
+`core/shared/deletion.ts`: `SCAN_RETENTION_MONTHS = 24`, `SCAN_GOOGLE_DAYS = 60` (Julian),
+`deletionPlan`, `purgeAllowed` (lives here to avoid an import cycle through MemDb; re-exported
+from `purge.ts`), `scanRetentionDate`; `canDeleteMyData` removed. `core/shared/purge.ts`:
+`PurgeDeps`, `PurgeOutcome`, `purgeBusiness` in the architecture's order (read → guard → Stripe →
+dry run for retention only → members/mail target → Google revoke (failure logged, continues) →
+custom host only when this business is its verified holder and it is not ours → conditional
+delete → logins with no business left → mail → `account.deleted { guard, loginsDeleted }` with
+business null). `publisher/host.ts` `deleteCustomHostname` refuses our names (`vidalo.io`,
+`*.vidalo.io`, `vidalo.ai`, `*.vidalo.ai`) and non-hostnames before any call.
+`reporter/account-mails.ts`: `sendDeletedMail`, `sendDeletionScheduledMail` (logged
+`mail.deletion_scheduled`); wording in `copy.mails.accountDeleted` and
+`copy.mails.deletionScheduled` (NL, EN; company footer from `textToHtml`; no offer; no 90-day check
+in the scheduled mail). Worker: job kinds `purge` and `google_disconnect` (`jobs/purge.ts`, neither
+in `PAID_ONLY`); `VIDALO_PURGE` read at job time, armed only by `"1"`; `stripeLive` by fetch to the
+Stripe API (subscriptions of the customer, `status=all`); `deleteLogin` by the Supabase Admin
+API (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`); without them: mock in mock mode, otherwise
+Stripe refuses (throws). Web: `/app/account/verwijderen` (what goes, what stays, the money
+sentence for Monthly or Scan and the invoice sentence with a portal button, all before one
+primary button; fresh sign-in on GET and POST); `deleteMyData` in the order of SEC-52; `now` →
+purge inline, then sign-out and the mock and `vidalo_business` cookies cleared →
+`/inloggen?verwijderd=1`; a failing step → a `purge` job with the same guard and
+`?gegevens=bezig`; `at_period_end` → `cancelSubscription` when needed (refused →
+`?gegevens=fout`), `setDeletion(at from Stripe)`, the mail at once → `?gegevens=gepland`.
+`callOffDeletion` ("Toch bewaren") on `/app/account` and `/app/abonnement`. The abonnement actions
+(cancel, undo, pause, resume) take the form's `business` and pass `requireOwnerOf`, never a fresh
+sign-in (COMP-02). `lib/demo-account.ts` seeds `scan-eigenaar@example.nl` (Scan) and
+`maand-eigenaar@example.nl` (Monthly, verified custom facts host, Google channel).
+
+**Tests.** `deletion.test.ts` (13: every plan, `purgeAllowed`, `scanRetentionDate`, the CHECK on
+PgDb (Scan accepts a retention date, a Monthly in trial refuses one) and on MemDb).
+`db-account.test.ts` (6 deletion cases × MemDb and PgDb, each with a control that survives):
+`no_subscription` refuses a running Monthly, deletes a Scan owner, false the second time, unrun
+jobs gone and the control's kept; churn → `churnedAt` + 120 days, `due` refuses at day 119 and for
+an active control, deletes at 121, once; an owner's earlier date survives churn, calling off after
+churn falls back to churn + 120 days; undoing the cancel clears the deletion, a date on a paying
+business without a cancel is refused; reminders only for retention within 14 days, claimed once,
+overdue counted; Scan retention re-arms on a later date, a sign-in moves `lastActiveAt`, a Monthly is
+untouched. `purge.test.ts` (9): order of calls; F-010 one case per path (inline, fallback job,
+scheduled owner date delete with the dry run on; retention does not, and does when armed); F-021
+Stripe live → nothing called, Stripe unreachable → nothing deleted; a running Monthly refused by
+both guards; F-019 an unverified host, one held verified by another business, and our own
+fallback host are never sent to Cloudflare; Google failure continues; Cloudflare failure throws
+before the delete; two businesses on one login (first keeps the login, second deletes it); a
+failing mail is logged without the address; SEC-48 refusals. `apps/worker/test/purge-job.test.ts`
+(7): `VIDALO_PURGE` unset, `"true"`, `"0"` → dry run; `"1"` → deleted; an owner's fallback job
+deletes with it unset; `google_disconnect` skips a business that resubscribed (SEC-49).
+`e2e/account.spec.ts` (mock, 7 with A-04's): a hand-edited `business` of another login → `/app`,
+both businesses intact; the Monthly owner sees the money and invoice sentences before the button
+(DOM order checked), schedules, sees the date on `/app/account` and `/app/abonnement`, the
+`mail.deletion_scheduled` event is in their own download, "Toch bewaren" removes the date; the
+English page (after switching the owner's language); the Scan owner deletes at once, lands on
+`/inloggen?verwijderd=1`, is signed out, and a new sign-in finds no business.
+`e2e/auth-session.spec.ts`: the delete step with a stale sign-in (refreshed tokens in between) →
+`/inloggen?opnieuw=1&next=/app/account/verwijderen`, a new sign-in returns to the step.
+
+**Shown to fail without the change.** Not re-run against C-00: its `deleteMyData` refused every
+status but `scanned`/`churned` (`canDeleteMyData`, removed here), so the Scan owner's delete was
+refused by construction, and every new Db method and module did not exist. Recorded as not run.
+
+**Findings.** F-A5 (P1, lane B): the C-00 `owner-area.ts` stub throws in `next dev` server actions
+(`instanceof MemDb` across module graphs) and maps `owner_user_id` where postgres.js returns
+`ownerUserId`; `purge.ts` falls back to the business's own owner and keeps the login when
+membership cannot be read. F-A6: one line added to `legal.test.ts` (outside both lanes' tables)
+for `api.stripe.com`.
+
+**Runs.** `pnpm -r typecheck` green; `pnpm -r test` green (core 1364 + 16 skipped, worker 31);
+`pnpm e2e:mock` OK; `verify:pg` green (79 db tests); `e2e/account.spec.ts` 7/7; `pnpm e2e:auth` 15/15.
+
+**Not verified / not built.** SEC-54 (a publish job running while its business is purged does not
+re-add a hostname) has no test. COMP-17 (IndexNow ping and 410 on purge) not built (P2). The
+worker's Stripe and Supabase Admin calls ran only as mocks; the real ones need the D1 secrets.
+The Cloudflare removal is shown by the purge's recorded call in unit tests; in the browser run
+the mock's `cloudflare.custom_hostname.delete.skip` line is not captured (Playwright drops the dev
+server's stdout).

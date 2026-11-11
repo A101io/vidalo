@@ -3050,6 +3050,25 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
+    accountDeleted: (name: string) => ({
+      subject: `Everything of ${name} is deleted`,
+      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, your facts page and its address, and the connection with Google, which we also revoked at Google. If no other business belongs to your sign-in, your sign-in is deleted too.
+
+What stays: your invoices, for 7 years at Stripe, because the law requires it. What was already corrected at Google, directories or other websites stays there.
+
+There is nothing more you need to do.`,
+    }),
+    deletionScheduled: (name: string, date: string, url: string) => ({
+      subject: `Your subscription for ${name} ends on ${date}, then we delete everything`,
+      body: `You asked us to delete everything of ${name}. Your Vidalo Monthly subscription was still running, so we cancelled it as of ${date}. Until that day everything continues. The amount for the current month is not refunded.
+
+What happens on ${date}
+We delete everything of ${name}: your business's data, the reports, your facts page and its address, and the connection with Google. Your facts page then goes offline. There is no further free check.
+
+Want to keep something? Before ${date}, download your reports and your data under 'Account', and your invoices in the customer portal. After that this is no longer possible in your account. Your invoices stay at Stripe for 7 years.
+
+Keep everything after all? You can until ${date}, with one click: ${url}`,
+    }),
     and: "and",
     stip: (colour: string) => `Dot: ${colour}.`,
     unsubscribe: { lead: "No more emails about this?", link: "Unsubscribe" },

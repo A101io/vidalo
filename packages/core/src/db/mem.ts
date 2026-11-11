@@ -33,8 +33,48 @@ import type {
   SignInRow,
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
+import type { PurgeGuard } from "./types";
+import { purgeAllowed } from "../shared/deletion";
 
 const nowIso = () => new Date().toISOString();
+
+/** Columns only their own methods write (upsertBusiness never does), as in PgDb. */
+const MEM_OWN_COLUMNS = new Set(["profileAuto", "profileOwner", "lastActiveAt", "churnedAt", "deleteAt", "deleteReason", "deletionRemindedAt"]);
+const DAY_MS = 86_400_000;
+
+/** The business_retention trigger of migration 0019, rule for rule, and its CHECK. */
+function retentionTrigger(old: BusinessRecord | null, b: BusinessRecord): void {
+  const now = new Date();
+  if (b.status === "churned" && old?.status !== "churned") {
+    b.churnedAt = now.toISOString();
+    if (!b.deleteAt) {
+      b.deleteAt = new Date(now.getTime() + 120 * DAY_MS).toISOString();
+      b.deleteReason = "retention";
+    }
+  }
+  if (b.status === "churned" && !b.deleteAt) {
+    b.deleteAt = new Date(Date.parse(b.churnedAt ?? now.toISOString()) + 120 * DAY_MS).toISOString();
+    b.deleteReason = "retention";
+    b.deletionRemindedAt = null;
+  }
+  const scanRetention = b.plan === "setup" && b.status === "trial" && b.deleteReason === "retention";
+  const changed = !old || old.status !== b.status || old.cancelAt !== b.cancelAt;
+  if (changed && (b.status === "trial" || b.status === "active" || b.status === "paused") && !b.cancelAt && !scanRetention) {
+    b.deleteAt = null;
+    b.deleteReason = null;
+    b.deletionRemindedAt = null;
+    if (old?.status === "churned") b.churnedAt = null;
+  }
+  if ((b.status === "trial" || b.status === "active") && old?.status !== b.status) b.lastActiveAt = now.toISOString();
+  checkDeletion(b);
+}
+
+/** business_delete_reason_with_date and business_delete_only_when_ending (migration 0019). */
+function checkDeletion(b: BusinessRecord): void {
+  if ((b.deleteAt === null) !== (b.deleteReason === null)) throw new Error("violates check constraint business_delete_reason_with_date");
+  const ok = b.deleteAt === null || b.status === "scanned" || b.status === "churned" || b.cancelAt !== null || (b.plan === "setup" && b.status === "trial" && b.deleteReason === "retention");
+  if (!ok) throw new Error("violates check constraint business_delete_only_when_ending");
+}
 const OPEN_STATUSES: FindingStatus[] = ["open", "fixing", "recheck"];
 
 export class MemDb implements Db {
@@ -125,14 +165,20 @@ export class MemDb implements Db {
       mailPrefs: {},
       profileAuto: null,
       profileOwner: null,
+      lastActiveAt: null,
+      churnedAt: null,
+      deleteAt: null,
+      deleteReason: null,
+      deletionRemindedAt: null,
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };
     for (const [k, v] of Object.entries(input)) {
-      if (v !== undefined && k !== "id" && k !== "createdAt" && k !== "profileAuto" && k !== "profileOwner") (merged as unknown as Record<string, unknown>)[k] = v;
+      if (v !== undefined && k !== "id" && k !== "createdAt" && !MEM_OWN_COLUMNS.has(k)) (merged as unknown as Record<string, unknown>)[k] = v;
     }
     merged.slug = base.slug;
     merged.mailPrefs = normalizeMailPrefs(merged.mailPrefs);
+    retentionTrigger(existing ?? null, merged);
     this.businesses.set(merged.id, merged);
     return { ...merged };
   }
@@ -626,6 +672,7 @@ export class MemDb implements Db {
 
   // --- sign-ins (feature 002, migration 0018) ---
   async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
+    for (const b of this.businesses.values()) if (b.ownerUserId === row.userId) b.lastActiveAt = row.at.toISOString();
     if (!this.signIns.has(row.sessionId)) {
       const at = row.at.toISOString();
       this.signIns.set(row.sessionId, { sessionId: row.sessionId, userId: row.userId, signedInAt: at, lastSeenAt: at, endedAt: null, endedReason: null, browser: row.browser, os: row.os });
@@ -703,6 +750,59 @@ export class MemDb implements Db {
 
   async deleteChannel(id: string): Promise<void> {
     this.channels.delete(id);
+  }
+
+  // --- deletion and retention (feature 002, migration 0019) ---
+  async setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord> {
+    const b = this.businesses.get(businessId);
+    if (!b) throw new Error(`business ${businessId} not found`);
+    const next: BusinessRecord = { ...b, deleteAt: input?.at ?? null, deleteReason: input ? "owner" : null, deletionRemindedAt: null };
+    retentionTrigger(b, next);
+    this.businesses.set(businessId, next);
+    return { ...next };
+  }
+
+  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
+    return [...this.businesses.values()].filter((b) => purgeAllowed(b, "due", now)).slice(0, limit).map((b) => ({ ...b }));
+  }
+
+  async listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]> {
+    return [...this.businesses.values()]
+      .filter((b) => b.deleteReason === "retention" && b.deleteAt && !b.deletionRemindedAt && Date.parse(b.deleteAt) - 14 * DAY_MS <= now.getTime())
+      .slice(0, limit)
+      .map((b) => ({ ...b }));
+  }
+
+  async claimDeletionReminder(businessId: string): Promise<boolean> {
+    const b = this.businesses.get(businessId);
+    if (!b || b.deletionRemindedAt) return false;
+    b.deletionRemindedAt = nowIso();
+    return true;
+  }
+
+  async countOverdueDeletions(now: Date): Promise<number> {
+    return [...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).length;
+  }
+
+  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
+    return [...this.businesses.values()].filter((b) => b.plan === "setup" && b.status === "trial").slice(0, limit).map((b) => ({ ...b }));
+  }
+
+  async setScanRetention(businessId: string, at: string | null): Promise<void> {
+    const b = this.businesses.get(businessId);
+    if (!b || b.plan !== "setup" || b.status !== "trial") return;
+    const later = at && b.deleteAt ? Date.parse(at) > Date.parse(b.deleteAt) : true;
+    b.deleteAt = at;
+    b.deleteReason = at ? "retention" : null;
+    if (later || !at) b.deletionRemindedAt = null;
+  }
+
+  async purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean> {
+    const b = this.businesses.get(id);
+    if (!b || !purgeAllowed(b, guard, now)) return false;
+    for (const j of [...this.jobs.values()]) if (!j.doneAt && j.payload.businessId === id) this.jobs.delete(j.id);
+    await this.deleteBusiness(id);
+    return true;
   }
 
   async close(): Promise<void> {}

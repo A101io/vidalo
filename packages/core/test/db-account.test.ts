@@ -162,3 +162,106 @@ describe.each(backends)("%s: sign-in link limit (0018)", (_n, makeDb) => {
     expect(await db.throttleAuth([addr], hour())).toEqual([1]);
   });
 });
+
+describe.each(backends)("%s: deletion and retention (0019)", (_n, makeDb) => {
+  let db: Db;
+  beforeEach(async () => {
+    db = await makeDb();
+  });
+  const DAY = 86_400_000;
+  const days = (n: number) => new Date(Date.now() + n * DAY);
+  const biz = (name: string, over: Record<string, unknown> = {}) => db.upsertBusiness({ name: `${name} ${randomUUID().slice(0, 6)}`, place: "Haarlem", ...over });
+
+  it("no_subscription refuses a running Monthly and deletes a Scan owner; the control survives", async () => {
+    const monthly = await biz("Monthly", { plan: "monitor", status: "active" });
+    const scan = await biz("Scan", { plan: "setup", status: "trial" });
+    const control = await biz("Control", { plan: "setup", status: "trial" });
+    await db.enqueueJob("publish", { businessId: scan.id });
+    await db.enqueueJob("publish", { businessId: control.id });
+    expect(await db.purgeBusiness(monthly.id, "no_subscription", new Date())).toBe(false);
+    expect(await db.getBusiness(monthly.id)).not.toBeNull();
+    expect(await db.purgeBusiness(scan.id, "no_subscription", new Date())).toBe(true);
+    expect(await db.getBusiness(scan.id)).toBeNull();
+    expect(await db.purgeBusiness(scan.id, "no_subscription", new Date())).toBe(false);
+    expect(await db.getBusiness(control.id)).not.toBeNull();
+    // Unrun jobs of the purged business are gone, the control's stay.
+    const claimed: string[] = [];
+    for (let j = await db.claimJob(["publish"]); j; j = await db.claimJob(["publish"])) claimed.push(String(j.payload.businessId));
+    expect(claimed).toEqual([control.id]);
+  });
+
+  it("churn sets churnedAt and a date 120 days on; due refuses before it, deletes after, once", async () => {
+    const b = await biz("Churn", { plan: "monitor", status: "active" });
+    const control = await biz("Active control", { plan: "monitor", status: "active" });
+    const churned = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status: "churned" });
+    expect(churned.churnedAt).not.toBeNull();
+    expect(churned.deleteReason).toBe("retention");
+    expect(Math.abs(Date.parse(churned.deleteAt!) - (Date.parse(churned.churnedAt!) + 120 * DAY))).toBeLessThan(5000);
+    expect(await db.purgeBusiness(b.id, "due", days(119))).toBe(false);
+    expect((await db.listDueDeletions(days(119), 50)).map((x) => x.id)).not.toContain(b.id);
+    expect((await db.listDueDeletions(days(121), 50)).map((x) => x.id)).toContain(b.id);
+    expect(await db.purgeBusiness(control.id, "due", days(121))).toBe(false);
+    expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(true);
+    expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(false);
+    expect(await db.getBusiness(control.id)).not.toBeNull();
+  });
+
+  it("an owner's earlier date stays at churn; calling it off after churn falls back to churn + 120 days", async () => {
+    const b = await biz("Owner date", { plan: "monitor", status: "active" });
+    const end = days(20).toISOString();
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: end });
+    expect((await db.setDeletion(b.id, { at: end, reason: "owner" })).deleteReason).toBe("owner");
+    const churned = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status: "churned" });
+    expect(churned.deleteAt).toBe(end);
+    expect(churned.deleteReason).toBe("owner");
+    const off = await db.setDeletion(b.id, null);
+    expect(off.deleteReason).toBe("retention");
+    expect(Math.abs(Date.parse(off.deleteAt!) - (Date.parse(off.churnedAt!) + 120 * DAY))).toBeLessThan(5000);
+  });
+
+  it("undoing the cancel calls the deletion off; a date on a paying business without a cancel is refused", async () => {
+    const b = await biz("Undo", { plan: "monitor", status: "active" });
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: days(10).toISOString() });
+    await db.setDeletion(b.id, { at: days(10).toISOString(), reason: "owner" });
+    const undone = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, cancelAt: null });
+    expect(undone.deleteAt).toBeNull();
+    expect(undone.deleteReason).toBeNull();
+    await expect(db.setDeletion(b.id, { at: days(10).toISOString(), reason: "owner" })).rejects.toThrow(/business_delete_only_when_ending/);
+  });
+
+  it("reminders: only retention dates within 14 days, claimed once; overdue counted", async () => {
+    const r = await biz("Retention", { plan: "monitor", status: "active" });
+    await db.upsertBusiness({ id: r.id, slug: r.slug, name: r.name, place: r.place, status: "churned" });
+    const owner = await biz("Owner", { plan: "monitor", status: "active" });
+    await db.upsertBusiness({ id: owner.id, slug: owner.slug, name: owner.name, place: owner.place, cancelAt: days(5).toISOString() });
+    await db.setDeletion(owner.id, { at: days(5).toISOString(), reason: "owner" });
+    expect((await db.listDeletionReminders(days(100), 50)).map((x) => x.id)).not.toContain(r.id);
+    const due = (await db.listDeletionReminders(days(107), 50)).map((x) => x.id);
+    expect(due).toContain(r.id);
+    expect(due).not.toContain(owner.id);
+    expect(await db.claimDeletionReminder(r.id)).toBe(true);
+    expect(await db.claimDeletionReminder(r.id)).toBe(false);
+    expect((await db.listDeletionReminders(days(107), 50)).map((x) => x.id)).not.toContain(r.id);
+    expect(await db.countOverdueDeletions(days(122))).toBeGreaterThanOrEqual(1);
+    expect(await db.countOverdueDeletions(new Date())).toBe(0);
+  });
+
+  it("Scan retention: a sign-in moves last activity; a later date re-arms the reminder; a Monthly is untouched", async () => {
+    const owner = randomUUID();
+    const scan = await biz("Scan R", { plan: "setup", status: "trial", ownerUserId: owner });
+    const monthly = await biz("Monthly R", { plan: "monitor", status: "trial" });
+    expect((await db.getBusiness(scan.id))!.lastActiveAt).not.toBeNull();
+    await db.recordSignIn({ sessionId: randomUUID(), userId: owner, browser: "chrome", os: "macos", at: new Date("2027-07-01T10:00:00.000Z") });
+    expect((await db.getBusiness(scan.id))!.lastActiveAt).toBe("2027-07-01T10:00:00.000Z");
+    await db.setScanRetention(scan.id, "2028-11-01T00:00:00.000Z");
+    await db.claimDeletionReminder(scan.id);
+    await db.setScanRetention(scan.id, "2029-07-01T10:00:00.000Z");
+    const later = (await db.getBusiness(scan.id))!;
+    expect(later.deleteReason).toBe("retention");
+    expect(later.deletionRemindedAt).toBeNull();
+    await db.setScanRetention(monthly.id, "2028-11-01T00:00:00.000Z");
+    expect((await db.getBusiness(monthly.id))!.deleteAt).toBeNull();
+    expect((await db.listScanRetention(500)).map((x) => x.id)).toContain(scan.id);
+    expect((await db.listScanRetention(500)).map((x) => x.id)).not.toContain(monthly.id);
+  });
+});

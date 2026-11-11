@@ -2,13 +2,13 @@
  * "Je gegevens" on /app/account: the owner downloads everything Vidalo holds
  * about their business (AVG art. 15 and 20) or has it deleted (art. 17).
  *
- * Deleting waits until the subscription has ended: while Stripe still bills,
- * the webhook would find no business and the service would stop without the
- * billing stopping. Invoices stay at Stripe for the fiscal retention period
- * (7 years); the privacy text says so.
+ * Deleting works on every plan since feature 002 (core/shared/deletion.ts,
+ * core/shared/purge.ts): at once without a running subscription, on the end
+ * date for a running Vidalo Monthly. Invoices stay at Stripe for the fiscal
+ * retention period (7 years); the privacy text says so.
  */
 import type { Db } from "../db/types.js";
-import type { BusinessStatus, Channel } from "../types.js";
+import type { Channel } from "../types.js";
 
 /**
  * The channel `meta` keys the owner's download may carry (feature 002, ADR-0006). An allow-list,
@@ -25,13 +25,6 @@ export function exportChannel(c: Channel): Omit<Channel, "meta"> & { meta: Recor
   const meta: Record<string, unknown> = {};
   for (const k of CHANNEL_META_EXPORT_KEYS) if (c.meta && k in c.meta) meta[k] = c.meta[k];
   return { id: c.id, businessId: c.businessId, type: c.type, name: c.name, externalId: c.externalId, url: c.url, status: c.status, lastSyncedAt: c.lastSyncedAt, meta };
-}
-
-/** Statuses with no running subscription. */
-const DELETABLE: BusinessStatus[] = ["scanned", "churned"];
-
-export function canDeleteMyData(status: BusinessStatus): boolean {
-  return DELETABLE.includes(status);
 }
 
 /** Everything that hangs off one business, as one JSON-ready object. */
