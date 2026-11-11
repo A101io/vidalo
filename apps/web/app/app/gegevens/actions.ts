@@ -55,6 +55,8 @@ function parseFacts(form: FormData, businessId: string): Omit<Facts, "businessId
     urgency: urgencyAvailable == null ? undefined : { available: urgencyAvailable, hoursNl: str(form, "urgencyHours") },
     credentials: list("credentials"),
     sector,
+    // The comparison profile (prompts/nouns.ts): the owner's word for the kind of business, at most 60 characters.
+    kind: str(form, "kind")?.slice(0, 60) ?? null,
   };
 }
 

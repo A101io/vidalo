@@ -59,10 +59,12 @@ export interface ReportView {
   cards: AnswerCardData[];
   rows: ReportRowData[];
   /** Every answer, for the "Alle n antwoorden" list: question → engine → value. */
-  all: { question: string; engine: string; value: string; tone: ReportRowData["tone"] }[];
+  all: { question: string; engine: string; value: string; times: string; tone: ReportRowData["tone"] }[];
   instable: { question: string; engine: string; value: string; note: string }[];
   /** "Wie AI wel noemt": up to three recommendation questions where the business was left out. */
   named: NamedBlock[];
+  /** "Vergeleken als: afhaalrestaurant in Rotterdam." when the report knows its comparison profile. */
+  profile: string | null;
   sources: SourceRowData[];
   sourcesTitle: string;
   sourcesBody: string;
@@ -259,16 +261,37 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
 
   const cards = pickCards(report.findings, report, grey, copy);
 
+  // One line per question, AI system and answer, with how often it came: a wrong answer 3 of 3 times
+  // reads differently from 1 of 3, and the lines add up to the count in the heading (9 Nov 2026: the
+  // list showed findings once but every correct answer per sample, 10 lines under "Alle 12 antwoorden").
   const all = groups.flatMap((g) => {
     const row = rowFor(g, copy);
+    if (!row) return [];
+    const perEngine = new Map<Engine, { wrong: number; correct: Map<string, number>; total: number }>();
+    const cell = (e: Engine) => {
+      let c = perEngine.get(e);
+      if (!c) perEngine.set(e, (c = { wrong: 0, correct: new Map(), total: 0 }));
+      return c;
+    };
+    for (const f of g.findings) {
+      const c = cell(f.engine);
+      c.wrong += f.frequency;
+      c.total = Math.max(c.total, f.sampleCount);
+    }
+    for (const a of g.correct) {
+      const c = cell(a.engine);
+      c.correct.set(a.value, (c.correct.get(a.value) ?? 0) + 1);
+    }
+    for (const c of perEngine.values()) c.total = Math.max(c.total, c.wrong + [...c.correct.values()].reduce((s, n) => s + n, 0));
     const fromFindings = g.findings.map((f) => ({
       question: g.question,
       engine: ENGINE_LABEL[f.engine],
       value: f.verdict === "not_found" ? R.table.notFound : f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy),
+      times: R.table.times(f.frequency, cell(f.engine).total),
       tone: (f.verdict === "not_found" ? "grijs" : "rood") as ReportRowData["tone"],
     }));
-    const fromCorrect = g.correct.map((c) => ({ question: g.question, engine: ENGINE_LABEL[c.engine], value: c.value, tone: "groen" as const }));
-    return row ? [...fromFindings, ...fromCorrect] : [];
+    const fromCorrect = [...perEngine.entries()].flatMap(([e, c]) => [...c.correct.entries()].map(([value, n]) => ({ question: g.question, engine: ENGINE_LABEL[e], value, times: R.table.times(n, c.total), tone: "groen" as const })));
+    return [...fromFindings, ...fromCorrect];
   });
 
   const instable = report.instable.map((f) => ({
@@ -366,6 +389,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     all,
     instable,
     named: namedBlocks(report, copy),
+    profile: report.comparedAs ? R.named.profile(report.comparedAs, report.business.place) : null,
     sources,
     sourcesTitle: state === "grijs" ? R.sources.h2Grey : R.sources.h2,
     sourcesBody: state === "grijs" ? R.sources.bodyGrey : R.sources.body,

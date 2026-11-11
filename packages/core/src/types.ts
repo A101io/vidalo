@@ -119,6 +119,12 @@ export interface Facts {
   sector?: SectorSlug | null;
   /** Google Places types of the business, primary first ("bakery", "cafe"); pick the question word when the name does not say it. */
   googleTypes?: string[];
+  /**
+   * The owner's own word for the kind of business, as a customer says it ("Surinaams restaurant",
+   * "afhaalrestaurant"): the comparison profile every recommendation question is built on
+   * (prompts/nouns.ts). Empty: derived from the name, Google's type and the sector.
+   */
+  kind?: string | null;
 }
 
 export const EMPTY_SERVICE_AREA: ServiceArea = { places: [], radiusKm: null };
@@ -412,4 +418,6 @@ export interface ScanReport {
   criteriaNotFound: CriteriumNotFound[];
   /** Per recommendation question: named or not, who was named instead, which sites were cited. Absent on older reports. */
   recommendations?: RecommendationSummary[];
+  /** The comparison profile the recommendation questions were built on ("afhaalrestaurant"; prompts/nouns.ts). Null without a sector. */
+  comparedAs?: string | null;
 }

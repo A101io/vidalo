@@ -19,6 +19,7 @@
 import type { CriteriumId, FactKey, Facts, PromptPool, RecommendationIntent, Season, SectorSlug } from "../types";
 import { INTENT_SUBJECT } from "../types";
 import { SECTORS, type SectorPromptTemplate } from "./sectors";
+import { nounFromGoogleTypes, ownerKind } from "./nouns";
 
 /** A question in Dutch (the de-duplication key, as in sectors.ts) and in English (the text). */
 type Text = { nl: string; en: string };
@@ -124,9 +125,10 @@ const NOUNS_EN: Record<SectorSlug, { nouns: { match: RegExp; noun: string }[]; d
   },
 };
 
-function pickNoun(facts: Facts, nouns: { match: RegExp; noun: string }[], fallback: string): string {
+function pickNoun(facts: Facts, nouns: { match: RegExp; noun: string }[], fallback: string, lang: "nl" | "en"): string {
   const types = facts.googleTypes ?? [];
-  return nouns.find((n) => n.match.test(facts.name))?.noun ?? nouns.find((n) => types.some((t) => n.match.test(t)))?.noun ?? fallback;
+  // Same order as sectors.ts ctxFor; the owner's word is used as written (an owner abroad writes English).
+  return ownerKind(facts) ?? nouns.find((n) => n.match.test(facts.name))?.noun ?? nouns.find((n) => types.some((t) => n.match.test(t)))?.noun ?? nounFromGoogleTypes(types, lang) ?? fallback;
 }
 
 function ctxFor(facts: Facts, slug: SectorSlug): Ctx {
@@ -141,8 +143,8 @@ function ctxFor(facts: Facts, slug: SectorSlug): Ctx {
     facts,
     place: facts.place,
     x: `${facts.name} in ${facts.place}`,
-    nounNl: pickNoun(facts, nl.nouns, nl.defaultNoun),
-    noun: pickNoun(facts, en.nouns, en.defaultNoun),
+    nounNl: pickNoun(facts, nl.nouns, nl.defaultNoun, "nl"),
+    noun: pickNoun(facts, en.nouns, en.defaultNoun, "en"),
     yes: facts.servicesYes,
     no: facts.servicesNo,
     areaPlace: facts.serviceArea?.places.find((p) => p.toLowerCase() !== facts.place.toLowerCase()) ?? null,

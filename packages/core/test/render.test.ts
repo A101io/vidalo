@@ -111,7 +111,8 @@ describe("owner-typed website", () => {
     expect(page.html).toContain('<a class="btn btn-primary" href="tel:0231234567">Bellen</a>');
     expect(page.html).toContain('href="https://www.google.com/maps/dir/?api=1&amp;destination=Bakkerij%20Jansen%2C%20Grote%20Markt%2012%2C%202011%20RD%20Haarlem">Route</a>');
     const withSector = renderFactsPage({ ...facts, sector: "horeca", name: "Top Exotic", googleTypes: ["meal_takeaway"], servicesNo: [] }, business, { host: "x.nl" });
-    expect(withSector.html).toContain("Top Exotic is een restaurant in Haarlem.");
+    // Google's specific type beats the sector's default word (prompts/nouns.ts, 9 Nov 2026).
+    expect(withSector.html).toContain("Top Exotic is een afhaalrestaurant in Haarlem.");
     expect(withSector.html).toContain('<ul class="chips">');
   });
 });

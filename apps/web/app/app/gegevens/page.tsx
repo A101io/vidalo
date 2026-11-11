@@ -4,6 +4,7 @@ import { loadDashboard } from "@/lib/reads";
 import { dateShort } from "@/lib/format";
 import { FactsForm } from "./FactsForm";
 import { countryOptions } from "@vidalo/core/shared";
+import { businessNoun } from "@vidalo/core/prompts";
 
 export default async function FactsPage({ searchParams }: { searchParams: Promise<{ opgeslagen?: string; fout?: string; betwist?: string }> }) {
   const sp = await searchParams;
@@ -49,7 +50,7 @@ export default async function FactsPage({ searchParams }: { searchParams: Promis
         {sp.fout === "1" && <p className="mt-3 text-[14px] text-rood">{copy.errors.generic}</p>}
         {disputed && <p className="mt-3 rounded-xl bg-panel px-4 py-3 text-[15px]">{F.disputedNotice(copy.factKey[disputed.factKey])}</p>}
       </header>
-      <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} />
+      <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} kindDefault={businessNoun({ ...initial, kind: null }, business.sector)} />
     </div>
   );
 }
