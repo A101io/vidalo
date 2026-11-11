@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase";
+import { NO_STORE } from "@/lib/auth-cookies";
 
 /**
  * Where a sign-in may continue to: a path on this site only. "//host" and
@@ -22,6 +23,13 @@ const OTP_TYPES: readonly EmailOtpType[] = ["email", "magiclink", "signup", "inv
  *    for it, and only for the latest link; kept so old mails keep working.
  */
 export async function confirmSignIn(req: Request): Promise<NextResponse> {
+  const res = await confirm(req);
+  // It sets the session cookies: never cached (F-018).
+  res.headers.set("cache-control", NO_STORE);
+  return res;
+}
+
+async function confirm(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
   const next = safeNext(url.searchParams.get("next"));
   const tokenHash = url.searchParams.get("token_hash");
