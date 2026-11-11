@@ -96,6 +96,24 @@
         "out/mail-lab"
       ],
       "port": 8090
+    },
+    {
+      "name": "vidalo-turnstile-test",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "SUPABASE_URL=",
+        "SUPABASE_ANON_KEY=",
+        "VIDALO_MOCK=1",
+        "VIDALO_COMING_SOON=0",
+        "TURNSTILE_SITE_KEY=1x00000000000000000000AA",
+        "TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA",
+        "corepack",
+        "pnpm",
+        "--filter",
+        "@vidalo/web",
+        "dev"
+      ],
+      "port": 3000
     }
   ]
 }

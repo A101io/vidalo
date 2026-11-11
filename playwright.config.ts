@@ -19,6 +19,9 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`;
 
 const keyless = {
   VIDALO_MOCK: "1",
+  // The root .env's real Turnstile keys fail on localhost (Cloudflare 300030/300031) and broke 25 specs (QA, 11 Nov 2026).
+  TURNSTILE_SITE_KEY: "",
+  TURNSTILE_SECRET_KEY: "",
   VIDALO_DB: "",
   DATABASE_URL: "",
   SUPABASE_URL: "",

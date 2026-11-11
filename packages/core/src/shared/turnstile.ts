@@ -26,6 +26,8 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
 export type TurnstileMode = "off" | "on" | "misconfigured";
 
 export function turnstileMode(o: { secret?: string; siteKey?: string; production: boolean; mock: boolean }): TurnstileMode {
+  // Cloudflare's always-pass test keys on a real production server would let every form through (security review, 11 Nov 2026).
+  if (o.production && !o.mock && (o.secret === TURNSTILE_TEST_KEYS.secretPass || o.siteKey === TURNSTILE_TEST_KEYS.sitePass)) return "misconfigured";
   if (o.secret && o.siteKey) return "on";
   if (!o.production || o.mock) return "off";
   return "misconfigured";
