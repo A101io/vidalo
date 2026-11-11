@@ -13,8 +13,11 @@ import type {
   Finding,
   FindingStatus,
   Fix,
+  BusinessProfile,
   Prompt,
   PromptPool,
+  ProfileMode,
+  QuestionFamily,
   Sample,
   ScanKind,
   ScanRun,
@@ -41,6 +44,10 @@ export interface BusinessRecord extends Business {
   pauseUntil: string | null;
   /** Optional mail groups the owner switched off or on (shared/mail-prefs.ts); absent = on. */
   mailPrefs: MailPrefs;
+  /** The understanding step's profile (migration 0015); only setAutoProfile writes it. */
+  profileAuto: BusinessProfile | null;
+  /** The owner's correction; only setOwnerProfile writes it, an automatic profile never overwrites it. */
+  profileOwner: BusinessProfile | null;
 }
 
 /** What Google's URL Inspection API last said about the facts page. */
@@ -131,6 +138,33 @@ export interface ScanRunCreate {
   engines: Engine[];
   samplesPerPrompt: number;
   status?: ScanRun["status"];
+  /** The effective profile this scan is asked with (scan_run.profile). */
+  profile?: BusinessProfile | null;
+}
+
+/** One question template's use in one scan (ADR-0004: an append-only ledger). */
+export interface QuestionUseInput {
+  scanRunId: string;
+  category: string;
+  mode: ProfileMode;
+  templateKey: string;
+  templateNl: string;
+  family: QuestionFamily;
+  intent: string | null;
+  asked: number;
+  usable: number;
+}
+
+/** question_library: the ledger summed per (category, mode, template). */
+export interface LibraryRow {
+  category: string;
+  mode: ProfileMode;
+  templateKey: string;
+  templateNl: string;
+  family: QuestionFamily;
+  intent: string | null;
+  asked: number;
+  usable: number;
 }
 
 export interface ScanRunUpdate {
@@ -160,6 +194,10 @@ export interface Db {
    */
   deleteBusiness(id: string): Promise<void>;
   getBusinessByOwner(opts: { userId?: string | null; email?: string | null }): Promise<BusinessRecord | null>;
+  /** Writes business.profile_auto only. A fallback profile is never stored here. */
+  setAutoProfile(businessId: string, profile: BusinessProfile): Promise<void>;
+  /** Writes business.profile_owner only. */
+  setOwnerProfile(businessId: string, profile: BusinessProfile): Promise<void>;
 
   // --- facts (versioned, owner-asserted) ---
   latestFacts(businessId: string): Promise<Facts | null>;
@@ -185,6 +223,12 @@ export interface Db {
   listSamples(scanRunId: string): Promise<Sample[]>;
   insertClaims(claims: ClaimInput[]): Promise<Claim[]>;
   listClaims(sampleIds: string[]): Promise<Claim[]>;
+
+  // --- question library (ledger of which templates produce usable answers) ---
+  /** Insert; a row for an existing (scanRunId, templateKey) is ignored, so a retried scan counts once. */
+  recordQuestionUse(rows: QuestionUseInput[]): Promise<void>;
+  /** Ledger summed per (category, mode, templateKey). */
+  questionLibrary(filter?: { category?: string; mode?: ProfileMode }): Promise<LibraryRow[]>;
 
   // --- findings ---
   listFindings(businessId: string, status?: FindingStatus | FindingStatus[]): Promise<Finding[]>;

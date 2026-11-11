@@ -5,7 +5,7 @@
  * different processes. Moved here from apps/web/lib/core.ts unchanged.
  */
 import type { Db } from "../db/types.js";
-import type { Engine, ScanKind, ScanReport } from "../types.js";
+import type { Engine, ProfileSummary, ScanKind, ScanReport } from "../types.js";
 import { getDb } from "../shared/db.js";
 import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
 import { runScan, type ScanProgress } from "./index.js";
@@ -16,12 +16,23 @@ export interface ScanProgressStep {
   done: boolean;
 }
 
+export type ScanStage = "understand" | "choose" | "ask" | "compare" | "done";
+
 export interface ScanJobState {
   token: string;
   businessId: string;
   scanRunId: string | null;
   status: "queued" | "running" | "done" | "failed";
-  steps: ScanProgressStep[];
+  stage: ScanStage;
+  /** set when stage leaves "understand" */
+  profile: ProfileSummary | null;
+  /** set at "choose", in asking order, scan language */
+  questions: { id: string; text: string }[];
+  /** one per asked engine, from "ask" on; expected can grow (second round) */
+  engines: { engine: Engine; received: number; expected: number }[];
+  /** @deprecated v1 waiting room; whichever of BE-07 and FE-01 merges second deletes it. */
+  steps?: ScanProgressStep[];
+  /** stored, never sent to the browser */
   error?: string | null;
 }
 
@@ -32,7 +43,7 @@ export function businessIdFromToken(token: string): string | null {
 }
 
 export async function persistScanState(state: ScanJobState, db: Db = getDb()): Promise<void> {
-  await db.logEvent(state.businessId, "scan.progress", { token: state.token, scanRunId: state.scanRunId, status: state.status, steps: state.steps, error: state.error ?? null });
+  await db.logEvent(state.businessId, "scan.progress", { token: state.token, scanRunId: state.scanRunId, status: state.status, stage: state.stage, profile: state.profile, questions: state.questions, engines: state.engines, steps: state.steps, error: state.error ?? null });
 }
 
 /** The latest stored state for a waiting-room token, or null. */
@@ -43,7 +54,8 @@ export async function readScanState(token: string, db: Db = getDb()): Promise<Sc
   const ev = events.find((e) => e.type === "scan.progress" && e.payload.token === token);
   if (!ev) return null;
   const p = ev.payload as unknown as Omit<ScanJobState, "token" | "businessId">;
-  return { token, businessId, scanRunId: p.scanRunId ?? null, status: p.status, steps: p.steps, error: p.error ?? null };
+  // A state stored before this feature has no stage: read it as "ask" with nothing to list.
+  return { token, businessId, scanRunId: p.scanRunId ?? null, status: p.status, stage: p.stage ?? "ask", profile: p.profile ?? null, questions: p.questions ?? [], engines: p.engines ?? [], steps: p.steps, error: p.error ?? null };
 }
 
 /** Run the scan and translate its progress events into waiting-room steps. */
@@ -57,7 +69,7 @@ export async function runScanWithProgress(
   const perEngine = new Map<Engine, number>();
   let perEngineTotal = Number.POSITIVE_INFINITY;
   const mark = (key: string) => {
-    const s = state.steps.find((x) => x.key === key);
+    const s = state.steps?.find((x) => x.key === key);
     if (s) s.done = true;
   };
   const markAllAsk = () => engines.forEach((e) => mark(`ask:${e}`));
@@ -95,7 +107,7 @@ export async function runScanWithProgress(
         mark("comparing");
         if (ev.phase === "persist") mark("sources");
       } else if (ev.phase === "done") {
-        state.steps.forEach((s) => (s.done = true));
+        state.steps?.forEach((s) => (s.done = true));
       }
     }
     flush();
@@ -104,7 +116,7 @@ export async function runScanWithProgress(
   try {
     const report = await runScan({ businessId: state.businessId, kind, engines, onProgress, db });
     state.scanRunId = report.scanRunId;
-    state.steps.forEach((s) => (s.done = true));
+    state.steps?.forEach((s) => (s.done = true));
     state.status = "done";
     await flushing;
     await save(state);

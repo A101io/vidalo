@@ -117,6 +117,8 @@ export function summarizeRecommendations(args: {
       promptId: prompt.id,
       prompt: prompt.textNl,
       intent: prompt.intent ?? null,
+      family: prompt.intent === "alternative" ? "alternative" : "rec_town", // BE-06 fills rec_category and quotes
+      quotes: [],
       pool: prompt.pool ?? "core",
       probe: prompt.probes[0] ?? null,
       answers: samples.length,

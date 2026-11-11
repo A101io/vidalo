@@ -5,12 +5,14 @@
  * (`transform: postgres.camel`), Dates are converted to ISO strings here.
  */
 import postgres, { type Sql } from "postgres";
-import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
   BusinessRecord,
+  LibraryRow,
+  QuestionUseInput,
   BusinessUpsert,
   ChannelUpsert,
   ClaimInput,
@@ -78,6 +80,8 @@ function mapBusiness(row: Row): BusinessRecord {
     cancelAt: (r.cancelAt as string | null) ?? null,
     pauseUntil: (r.pauseUntil as string | null) ?? null,
     mailPrefs: normalizeMailPrefs(r.mailPrefs),
+    profileAuto: null, // BE-02 reads profile_auto (migration 0015)
+    profileOwner: null, // BE-02 reads profile_owner
     createdAt: r.createdAt as string,
   };
 }
@@ -279,6 +283,23 @@ export class PgDb implements Db {
       ? await this.sql`insert into business ${this.sql(insertRow)} on conflict (slug) do update set ${this.sql(cols, ...(updateCols as never[]))} returning *`
       : await this.sql`insert into business ${this.sql(insertRow)} on conflict (slug) do update set slug = excluded.slug returning *`;
     return mapBusiness(rows[0]!);
+  }
+
+  // BE-02 replaces these four with the migration 0015 columns and the question tables.
+  async setAutoProfile(_businessId: string, _profile: BusinessProfile): Promise<void> {
+    throw new Error("BE-02");
+  }
+
+  async setOwnerProfile(_businessId: string, _profile: BusinessProfile): Promise<void> {
+    throw new Error("BE-02");
+  }
+
+  async recordQuestionUse(_rows: QuestionUseInput[]): Promise<void> {
+    throw new Error("BE-02");
+  }
+
+  async questionLibrary(_filter?: { category?: string; mode?: ProfileMode }): Promise<LibraryRow[]> {
+    throw new Error("BE-02");
   }
 
   async businessesDueForMonthlyScan(dayOfMonth: number): Promise<BusinessRecord[]> {

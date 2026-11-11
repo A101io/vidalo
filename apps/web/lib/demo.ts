@@ -86,6 +86,8 @@ export function demoReport(): ScanReport {
         promptId: "demo-rec-1",
         prompt: "Wat is de beste bakker in Haarlem?",
         intent: "quality",
+        family: "rec_town",
+        quotes: [],
         pool: "core",
         probe: "existence:beste",
         answers: 9,

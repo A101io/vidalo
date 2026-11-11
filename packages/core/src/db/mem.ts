@@ -4,7 +4,7 @@
  * Semantics mirror PgDb (same matching rules for upserts, same job backoff).
  */
 import { randomUUID } from "node:crypto";
-import type { BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
@@ -25,6 +25,8 @@ import type {
   ScanRunCreate,
   ScanRunUpdate,
   WaitlistInput,
+  LibraryRow,
+  QuestionUseInput,
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
@@ -47,6 +49,7 @@ export class MemDb implements Db {
   googleIndex = new Map<string, GoogleIndexState>();
   waitlist = new Map<string, WaitlistInput & { createdAt: string; unsubscribedAt: string | null }>();
   supportLog: Array<SupportLogRow & { createdAt: string }> = [];
+  questionUse: QuestionUseInput[] = [];
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -66,6 +69,7 @@ export class MemDb implements Db {
     this.fixes.clear();
     this.googleIndex.clear();
     this.waitlist.clear();
+    this.questionUse = [];
   }
 
   // --- business ---
@@ -106,16 +110,30 @@ export class MemDb implements Db {
       cancelAt: null,
       pauseUntil: null,
       mailPrefs: {},
+      profileAuto: null,
+      profileOwner: null,
       createdAt: nowIso(),
     };
     const merged: BusinessRecord = { ...base };
     for (const [k, v] of Object.entries(input)) {
-      if (v !== undefined && k !== "id" && k !== "createdAt") (merged as unknown as Record<string, unknown>)[k] = v;
+      if (v !== undefined && k !== "id" && k !== "createdAt" && k !== "profileAuto" && k !== "profileOwner") (merged as unknown as Record<string, unknown>)[k] = v;
     }
     merged.slug = base.slug;
     merged.mailPrefs = normalizeMailPrefs(merged.mailPrefs);
     this.businesses.set(merged.id, merged);
     return { ...merged };
+  }
+
+  async setAutoProfile(businessId: string, profile: BusinessProfile): Promise<void> {
+    const b = this.businesses.get(businessId);
+    if (!b) throw new Error(`business ${businessId} not found`);
+    b.profileAuto = { ...profile, competitors: [...profile.competitors], basis: [...profile.basis] };
+  }
+
+  async setOwnerProfile(businessId: string, profile: BusinessProfile): Promise<void> {
+    const b = this.businesses.get(businessId);
+    if (!b) throw new Error(`business ${businessId} not found`);
+    b.profileOwner = { ...profile, competitors: [...profile.competitors], basis: [...profile.basis] };
   }
 
   async businessesDueForMonthlyScan(dayOfMonth: number): Promise<BusinessRecord[]> {
@@ -225,9 +243,35 @@ export class MemDb implements Db {
       finishedAt: null,
       costCents: 0,
       status: input.status ?? "queued",
+      profile: input.profile ?? null,
     };
     this.scanRuns.set(row.id, row);
     return { ...row };
+  }
+
+  // --- question library ---
+  async recordQuestionUse(rows: QuestionUseInput[]): Promise<void> {
+    for (const r of rows) {
+      if (this.questionUse.some((u) => u.scanRunId === r.scanRunId && u.templateKey === r.templateKey)) continue;
+      this.questionUse.push({ ...r });
+    }
+  }
+
+  async questionLibrary(filter: { category?: string; mode?: ProfileMode } = {}): Promise<LibraryRow[]> {
+    const sums = new Map<string, LibraryRow>();
+    for (const u of this.questionUse) {
+      if (filter.category !== undefined && u.category !== filter.category) continue;
+      if (filter.mode !== undefined && u.mode !== filter.mode) continue;
+      const key = `${u.category}\u0000${u.mode}\u0000${u.templateKey}`;
+      const row = sums.get(key);
+      if (row) {
+        row.asked += u.asked;
+        row.usable += u.usable;
+      } else {
+        sums.set(key, { category: u.category, mode: u.mode, templateKey: u.templateKey, templateNl: u.templateNl, family: u.family, intent: u.intent, asked: u.asked, usable: u.usable });
+      }
+    }
+    return [...sums.values()];
   }
 
   async updateScanRun(id: string, patch: ScanRunUpdate): Promise<ScanRun> {

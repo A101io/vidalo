@@ -85,6 +85,10 @@ export interface Urgency {
 export interface Facts {
   businessId: string;
   version: number;
+  /** Feature 001: the business sells from a service area only (no door). */
+  serviceAreaOnly?: boolean | null;
+  /** The profile a scan judges with, copied in by withProfile(); in memory only, never stored. */
+  profile?: BusinessProfile | null;
   verifiedAt: string | null; // null = provisional (scraped, not confirmed)
   provisional: boolean;
   /** When this version was stored (facts.created_at); read-only, set by the db. */
@@ -154,6 +158,39 @@ export type CriteriumId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export type Severity = "afhaker" | "misleider" | "verwarring";
 
+/** How a business meets its customers: a shop front, visits to the customer, or online only (feature 001). */
+export type ProfileMode = "door" | "visit" | "online";
+export type ProfileBasis = "google" | "website" | "ai_lookup" | "owner";
+export type ProfileConfidence = "high" | "medium" | "low";
+
+export interface BusinessProfile {
+  mode: ProfileMode;
+  /** What it sells, one short phrase in the scan language; sanitised; <= 120 chars. */
+  offer: string | null;
+  /** For whom; sanitised; <= 80. */
+  audience: string | null;
+  /** The noun a buyer searches with, singular, lowercase ("aanbieder van achtergrondmuziek"); <= 60. */
+  category: string | null;
+  /** Up to 3 names seen next to it; sanitised; never the business itself. Owner profiles keep the automatic list. */
+  competitors: string[];
+  /** Host of the business's own site, only when its page names the business ("sonable.io"). */
+  website: string | null;
+  confidence: ProfileConfidence;
+  basis: ProfileBasis[];
+  /** auto: understanding step; owner: corrected on /app/gegevens; fallback: the step failed or was unsure */
+  source: "auto" | "owner" | "fallback";
+  /** true when offer/category rest on Google, the own website or the owner: then "wat doet X" can be judged. */
+  grounded: boolean;
+  decidedAt: string; // ISO
+}
+
+/** What visitors see of a profile (waiting page, report). */
+export type ProfileSummary = Pick<BusinessProfile, "mode" | "offer" | "audience" | "category" | "source">;
+
+export type QuestionFamily =
+  | "existence" | "hours" | "address" | "payment" | "phone" | "what" | "website"
+  | "rec_town" | "rec_category" | "alternative" | "other";
+
 /**
  * "about": a question about the business ("Is X zondag open?"), judged on the
  * value. "recommendation": a question for a recommendation ("Welke bakker in
@@ -166,14 +203,14 @@ export type PromptKind = "about" | "recommendation";
  * What a customer is after when asking for a recommendation. Every sector
  * asks one question per intent in its fixed set (docs/CRITERIA.md).
  */
-export type RecommendationIntent = "quality" | "trust" | "now" | "specialty" | "price" | "place";
+export type RecommendationIntent = "quality" | "trust" | "now" | "specialty" | "price" | "place" | "alternative";
 export const RECOMMENDATION_INTENTS: RecommendationIntent[] = ["quality", "trust", "now", "specialty", "price", "place"];
 
 /**
  * Probe subjects for the intents that are not tied to one fact ("existence:beste").
  * The business only has to be open for its absence to count.
  */
-export const INTENT_SUBJECT = { quality: "beste", trust: "betrouwbaar", price: "betaalbaar", place: "dichtbij" } as const;
+export const INTENT_SUBJECT = { quality: "beste", trust: "betrouwbaar", price: "betaalbaar", place: "dichtbij", alternative: "alternatief" } as const;
 
 /** "core": asked on every full scan. "bank": a few rotate into each monthly scan. */
 export type PromptPool = "core" | "bank";
@@ -196,6 +233,8 @@ export interface Prompt {
   pool?: PromptPool;
   /** Bank prompts tied to a season ask only in that season. */
   season?: Season | null;
+  /** Online-template questions: the template this text came from (prompts/online.ts). */
+  templateKey?: string | null;
 }
 
 export type Season = "winter" | "lente" | "zomer" | "herfst";
@@ -337,6 +376,8 @@ export interface ScanRun {
   finishedAt: string | null;
   costCents: number;
   status: "queued" | "running" | "done" | "failed";
+  /** The profile this scan was asked with; null/absent on scans before feature 001 (read as door). */
+  profile?: BusinessProfile | null;
 }
 
 export type FixAction = "republish" | "sync" | "form" | "email" | "manual" | "none";
@@ -393,6 +434,9 @@ export interface RecommendationSummary {
   promptId: string;
   prompt: string;
   intent: RecommendationIntent | null;
+  family: "rec_town" | "rec_category" | "alternative";
+  /** Up to 3 sentences that name the business and none of `others`, <= 240 chars each. Empty for rec_town. */
+  quotes: { text: string; engine: Engine }[];
   pool: PromptPool;
   /** first probe of the prompt ("existence:beste", "urgency"), to link a finding to its question */
   probe: string | null;
@@ -406,6 +450,8 @@ export interface RecommendationSummary {
 }
 
 export interface ScanReport {
+  /** The profile the scan was asked with; null on reports before this feature (read them as door). */
+  profile?: ProfileSummary | null;
   business: Pick<Business, "id" | "slug" | "name" | "place">;
   scanRunId: string;
   kind: ScanKind;

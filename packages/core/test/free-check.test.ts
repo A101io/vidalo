@@ -53,7 +53,7 @@ describe("a finished free scan mails the report to who asked", () => {
       const { business } = await prepareBusiness({ name: ownerEmail ? "Kapper Met Eigenaar" : "Kapper Zonder", place: "Haarlem", db });
       if (ownerEmail) await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerEmail });
       for (const ev of freeCheckEvents({ email: "vraagt@proef.nl", marketing: false }, "en")) await db.logEvent(business.id, ev.type, ev.payload);
-      const state = { token: `${business.id}_abc`, businessId: business.id, scanRunId: null, status: "queued" as const, steps: [], error: null };
+      const state = { token: `${business.id}_abc`, businessId: business.id, scanRunId: null, status: "queued" as const, stage: "understand" as const, profile: null, questions: [], engines: [], steps: [], error: null };
       const report = await runScanWithProgress(state, { kind: "free", engines: ["chatgpt"], db });
       const jobs: { kind: string; payload: Record<string, unknown> }[] = [];
       for (let j = await db.claimJob(["email"]); j; j = await db.claimJob(["email"])) {

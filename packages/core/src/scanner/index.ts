@@ -8,7 +8,7 @@
  * deterministic synthetic answers.
  */
 import { withCountry } from "../shared/country";
-import { ENGINES, visibilityFor, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
+import { ENGINES, visibilityFor, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type ProfileSummary, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
 import { businessNoun, generatePrompts, promptsForFullScan, selectFreeScanPrompts } from "../prompts";
@@ -34,6 +34,7 @@ export * from "./onboard";
 export * from "./stip";
 export * from "./recommendations";
 export * from "./progress";
+export * from "./understand";
 
 /**
  * Engines a scan asks. Copilot stays out until its adapter ships
@@ -97,7 +98,10 @@ export interface RunScanOptions {
 }
 
 export type ScanProgress =
-  | { type: "start"; scanRunId: string; total: number }
+  | { type: "profile"; profile: ProfileSummary }
+  | { type: "questions"; questions: { id: string; text: string }[] }
+  | { type: "start"; scanRunId: string; total: number; perEngine: Partial<Record<Engine, number>> }
+  | { type: "escalate"; perEngine: Partial<Record<Engine, number>> }
   | { type: "asked"; engine: Engine; prompt: string; sampleIndex: number; ok: boolean; done: number; total: number }
   | { type: "phase"; phase: "extract" | "compare" | "attribute" | "persist" | "done" };
 
@@ -232,7 +236,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   await db.logEvent(business.id, "scan.started", { scanRunId: scanRun.id, kind: opts.kind, engines, samplesPerPrompt, firstSamples, prompts: prompts.length, skippedEngines: [...unavailable] });
   const firstRound: Cell[] = active.flatMap((client) => prompts.map((prompt) => ({ client, prompt, from: 0, to: Math.min(firstSamples, samplesFor(client.engine, samplesPerPrompt)) })));
   const progress = { total: firstRound.reduce((n, c) => n + (c.to - c.from), 0), done: 0 };
-  opts.onProgress?.({ type: "start", scanRunId: scanRun.id, total: progress.total });
+  opts.onProgress?.({ type: "start", scanRunId: scanRun.id, total: progress.total, perEngine: {} }); // per-engine counts are emitted by BE-07
 
   // Previous open findings, loaded before we upsert so we can diff afterwards.
   const previousOpen = await db.listFindings(business.id, ["open", "fixing", "recheck"]);

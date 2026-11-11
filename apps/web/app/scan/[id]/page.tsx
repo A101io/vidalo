@@ -21,7 +21,7 @@ export default async function ScanWaitingPage({ params }: { params: Promise<{ id
       <SiteHeader variant="minimal" right={business ? `${business.name}, ${business.place}` : undefined} />
       <main className="wrap max-w-[760px] py-12 sm:py-16">
         <h1 className="h2">{copy.scan.title}</h1>
-        <ScanProgress scanRunId={state.token} initialSteps={state.steps} initialStatus={state.status} lang={lang} />
+        <ScanProgress scanRunId={state.token} initialSteps={state.steps ?? []} initialStatus={state.status} lang={lang} />
       </main>
       <SiteFooter />
     </>

@@ -135,7 +135,7 @@ export async function getScanState(token: string): Promise<ScanJobState | null> 
 
 /** Create the waiting-room state (status queued). Call before the scan is started or queued. */
 export async function createScanState(businessId: string, copy: CopyShape, engines: Engine[] = FREE_SCAN_ENGINES): Promise<ScanJobState> {
-  const state: ScanJobState = { token: newScanToken(businessId), businessId, scanRunId: null, status: "queued", steps: progressTemplate(engines, copy), error: null };
+  const state: ScanJobState = { token: newScanToken(businessId), businessId, scanRunId: null, status: "queued", stage: "understand", profile: null, questions: [], engines: [], steps: progressTemplate(engines, copy), error: null };
   await persist(state);
   return state;
 }
