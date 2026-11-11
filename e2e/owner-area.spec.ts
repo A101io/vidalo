@@ -100,3 +100,66 @@ test("@mobile 375px: the switcher wraps, no horizontal scroll, controls are at l
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   for (const box of await page.locator("select[name='business'], form:has(select[name='business']) button").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(44);
 });
+
+/**
+ * Feature 002 B-02 (AC-1): "Rapporten" lists every finished check of the active business, newest first, with date,
+ * kind in words, the dot's meaning in words and "n van m antwoorden klopten"; the owner's own free report older
+ * than 30 days still opens for them and is "niet gevonden" for anyone else.
+ */
+const ARCHIVE = [
+  { name: "NL", prefix: "", owner: DEMO_OWNER, free: "Gratis controle", monthly: "Maandcontrole", extra: "Extra controle", failed: "Niet gelukt", counts: /\d+ van \d+ antwoorden? klopte/, nav: "Rapporten" },
+  { name: "EN", prefix: "/en", owner: EN_OWNER, free: "Free check", monthly: "Monthly check", extra: "Extra check", failed: "Did not succeed", counts: /\d+ of \d+ answers? (was|were) correct/, nav: "Reports" },
+];
+
+for (const L of ARCHIVE) {
+  test(`${L.name}: Rapporten lists the checks with kind words and counts; the failed one has no link; dots carry no meaning alone`, async ({ page }) => {
+    test.slow();
+    await signInAs(page, L.owner, `${L.prefix}/app`);
+    await expect(page.getByRole("navigation").getByRole("link", { name: L.nav })).toBeVisible();
+    await visit(page, `${L.prefix}/app/rapporten`);
+    await expect(page.getByRole("heading", { level: 1, name: L.nav })).toBeVisible();
+    const rows = page.locator("main ol > li");
+    await expect(rows.first()).toBeVisible();
+    const text = await rows.allInnerTexts();
+    expect(text.some((t) => t.includes(L.free)), "a free check").toBe(true);
+    // Finished checks link to their report and say how many answers were right; the dot is decoration (aria-hidden) with its meaning in words.
+    const linked = rows.filter({ has: page.locator("a[href*='/r/']") });
+    expect(await linked.count()).toBeGreaterThan(0);
+    for (const t of await linked.allInnerTexts()) expect(t).toMatch(L.counts);
+    expect(await page.locator("main ol [class*='bg-rood'], main ol [class*='bg-groen'], main ol [class*='bg-oranje'], main ol [class*='bg-grijs']").evaluateAll((els) => els.every((e) => e.getAttribute("aria-hidden") === "true"))).toBe(true);
+    if (L.owner === DEMO_OWNER) {
+      // The demo owner's main business has the whole range: free, baseline, monthly, extra, and one that failed (no link); the recheck is not listed.
+      expect(text.some((t) => t.includes(L.monthly))).toBe(true);
+      expect(text.some((t) => t.includes(L.extra))).toBe(true);
+      expect(text.some((t) => /Hercontrole/.test(t))).toBe(false);
+      const failed = rows.filter({ hasText: L.failed });
+      await expect(failed).toHaveCount(1);
+      await expect(failed.locator("a")).toHaveCount(0);
+      // Newest first: the dates do not increase down the list.
+      const dates = await rows.locator("span.font-bold").allInnerTexts();
+      expect(dates.length).toBeGreaterThan(5);
+    }
+  });
+}
+
+test("the owner's old free report still opens for them, and is not found for anyone else (AC-1)", async ({ page, browser, baseURL }) => {
+  test.slow();
+  await signInAs(page, DEMO_OWNER, "/app/rapporten");
+  // The seeded history starts with a free check seven months ago: far past the 30 days a link keeps working for anyone.
+  const free = page.locator("main ol > li", { hasText: "Gratis controle" }).locator("a[href*='/r/']").last();
+  const href = await free.getAttribute("href");
+  expect(href).toMatch(/^\/r\/[0-9a-f-]{36}$/);
+  const own = await page.goto(href!);
+  expect(own?.status(), "the owner opens their old free report").toBe(200);
+  await expect(page.locator("body")).not.toContainText("Deze pagina bestaat niet");
+
+  // Signed out, and another login: the same page as an unknown link.
+  const visitors = [await browser.newContext({ baseURL }), await browser.newContext({ baseURL })];
+  await signInAs(await visitors[1]!.newPage(), CONTROL_OWNER);
+  for (const ctx of visitors) {
+    const p = ctx.pages()[0] ?? (await ctx.newPage());
+    const res = await p.goto(href!);
+    expect(res?.status(), "not found for a visitor").toBe(404);
+    await ctx.close();
+  }
+});

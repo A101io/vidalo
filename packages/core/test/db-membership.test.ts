@@ -3,7 +3,8 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { withMockDb, createDb, type Db } from "../src/db";
 import { PgDb } from "../src/db/pg";
-import { isMember, linkBusinessesByEmail, listMemberBusinesses, listMemberUserIds } from "../src/db/owner-area";
+import { isMember, linkBusinessesByEmail, listMemberBusinesses, listMemberUserIds, listReportArchive, saveRunSummary, type RunSummary } from "../src/db/owner-area";
+import { prepareBusiness } from "../src/scanner";
 
 /**
  * Feature 002 B-01: who is a member of which business. MemDb derives membership from ownerUserId;
@@ -101,6 +102,54 @@ describe.each(backends)("%s membership", (_name, makeDb) => {
     expect(await listMemberBusinesses(db, one)).toEqual([]);
     if (db instanceof PgDb) expect((await db.sql`select 1 from business_member where business_id = ${a.id}`).length).toBe(0);
   });
+
+  it("the archive: 6 finished + 1 recheck + 1 failed gives 7 rows newest first, pages by cursor, and keeps businesses apart", async () => {
+    const { business } = await prepareBusiness({ name: "Bakkerij Archief", place: "Haarlem", db });
+    const { business: other } = await prepareBusiness({ name: "Bakkerij Ander", place: "Utrecht", db });
+    const ids: string[] = [];
+    const pause = () => new Promise((r) => setTimeout(r, 12));
+    const snapshotOf = (id: string, kind: "free" | "monthly") => ({ scanRunId: id, kind, checkedAt: new Date().toISOString(), engines: [], stip: "groen" as const, engineStips: [], cells: [] });
+    const make = async (b: string, kind: "free" | "baseline" | "monthly" | "recheck", status: "done" | "failed") => {
+      const run = await db.createScanRun({ businessId: b, kind, engines: ["chatgpt"], samplesPerPrompt: 1, status });
+      await pause();
+      return run.id;
+    };
+    for (const kind of ["free", "baseline", "monthly", "monthly", "monthly", "monthly"] as const) {
+      const id = await make(business.id, kind, "done");
+      await saveRunSummary(db, id, { v: 1, stip: "groen", answered: 5, correct: 5, snapshot: snapshotOf(id, "monthly") } satisfies RunSummary);
+      ids.push(id);
+    }
+    const recheck = await make(business.id, "recheck", "done");
+    const failed = await make(business.id, "monthly", "failed");
+    const foreign = await make(other.id, "monthly", "done");
+
+    const all = await listReportArchive(db, business.id, { limit: 24 });
+    expect(all.next).toBeNull();
+    expect(all.rows.map((r) => r.id)).toEqual([failed, ...[...ids].reverse()]);
+    expect(all.rows.map((r) => r.id)).not.toContain(recheck);
+    expect(all.rows.map((r) => r.id)).not.toContain(foreign);
+    expect(all.rows[0]).toMatchObject({ status: "failed", summary: null });
+    expect(all.rows[1]!.summary).toMatchObject({ answered: 5, correct: 5 });
+
+    // Paging: 3 + 3 + 1, every row once, `next` null at the end.
+    const p1 = await listReportArchive(db, business.id, { limit: 3 });
+    expect(p1.rows).toHaveLength(3);
+    expect(p1.next).toBeTruthy();
+    const p2 = await listReportArchive(db, business.id, { limit: 3, before: p1.next! });
+    const p3 = await listReportArchive(db, business.id, { limit: 3, before: p2.next! });
+    expect([...p1.rows, ...p2.rows, ...p3.rows].map((r) => r.id)).toEqual(all.rows.map((r) => r.id));
+    expect(p3.next).toBeNull();
+
+    // SEC-12: a cursor made from the other business's run moves a position, never the business; a forged one is the first page.
+    const fromOther = await listReportArchive(db, other.id, { limit: 1 });
+    const cursorFromOther = Buffer.from(`${new Date().toISOString()}|${foreign}`).toString("base64url");
+    const crossed = await listReportArchive(db, business.id, { limit: 24, before: cursorFromOther });
+    for (const row of crossed.rows) expect(all.rows.map((r) => r.id)).toContain(row.id);
+    expect(fromOther.rows.map((r) => r.id)).toEqual([foreign]);
+    for (const forged of ["'; select 1; --", "%%%", "x".repeat(500), Buffer.from("not|a|cursor").toString("base64url"), Buffer.from(`2026-13-45T99:99:99Z|${failed}`).toString("base64url")]) {
+      expect((await listReportArchive(db, business.id, { limit: 24, before: forged })).rows.map((r) => r.id), forged).toEqual(all.rows.map((r) => r.id));
+    }
+  });
 });
 
 describe.skipIf(!PG_URL)("PgDb business_member (migration 0016)", () => {
@@ -127,5 +176,21 @@ describe.skipIf(!PG_URL)("PgDb business_member (migration 0016)", () => {
     // unverified claims of the same host stay possible; a second verified holder is refused
     await db.sql`update business set facts_host = 'Feiten.Voorbeeld.nl' where id = ${y.id}`;
     await expect(db.sql`update business set facts_host_verified_at = now() where id = ${y.id}`).rejects.toThrow(/business_facts_host_verified_uniq/);
+  });
+});
+
+describe.skipIf(!PG_URL)("PgDb scan_run_summary_shape (migration 0017)", () => {
+  it("refuses a summary without answered, and accepts a whole one", async () => {
+    const raw = postgres(PG_URL!, { max: 1, onnotice: () => {} });
+    try {
+      await raw.unsafe(`truncate ${TABLES} restart identity cascade`);
+      const [b] = await raw`insert into business (slug, name, place) values ('shape', 'Shape', 'Haarlem') returning id`;
+      const [r] = await raw`insert into scan_run (business_id, kind, engines, samples_per_prompt, status) values (${b!.id}, 'free', '{chatgpt}', 1, 'done') returning id`;
+      await expect(raw`update scan_run set summary = ${raw.json({ v: 1, stip: "groen", correct: 1 })} where id = ${r!.id}`).rejects.toThrow(/scan_run_summary_shape/);
+      await expect(raw`update scan_run set summary = ${raw.json({ v: 1, stip: "groen", correct: 1, answered: "5" })} where id = ${r!.id}`).rejects.toThrow(/scan_run_summary_shape/);
+      await raw`update scan_run set summary = ${raw.json({ v: 1, stip: "groen", correct: 1, answered: 1 })} where id = ${r!.id}`;
+    } finally {
+      await raw.end();
+    }
   });
 });

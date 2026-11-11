@@ -7,7 +7,7 @@ import { randomBytes } from "node:crypto";
 import { db as moduleDb, MemDb, type Db } from "@vidalo/core/db";
 import { resolveBusiness as coreResolveBusiness, draftProvisionalFacts, prepareBusiness as corePrepareBusiness, buildReport, buildSnapshot, SCAN_DEFAULTS, runScanWithProgress, persistScanState, readScanState, businessIdFromToken, type BusinessCandidate, type ScanProgressStep, type ScanJobState } from "@vidalo/core/scanner";
 import { renderFactsPage } from "@vidalo/core/publisher";
-import { getDb as scopedDb, setBusinessStatus, setDb, REPORT_EMAIL_EVENT, runsRequested } from "@vidalo/core/shared";
+import { getDb as scopedDb, setBusinessStatus, setDb, REPORT_EMAIL_EVENT, runsRequested, FREE_REPORT_DAYS as FREE_DAYS } from "@vidalo/core/shared";
 import { ENGINE_LABEL, type BusinessStatus, type Engine, type ScanKind, type ScanReport } from "@vidalo/core/types";
 import type { CopyShape } from "@vidalo/core/copy";
 import { PROGRESS_SCAN_KINDS, type ScanSnapshot } from "@vidalo/core/progress";
@@ -146,8 +146,8 @@ export async function getScanReport(scanRunId: string): Promise<ScanReport | nul
   }
 }
 
-/** A free report stays reachable this long, as the footer and the privacy text say. */
-export const FREE_REPORT_DAYS = 30;
+/** A free report stays reachable this long, as the footer and the privacy text say (core shared/report-access.ts). */
+export const FREE_REPORT_DAYS = FREE_DAYS;
 
 /**
  * The free checks a signed-in address asked for (core shared/free-check runsRequested): runs

@@ -11,7 +11,7 @@
  * on one thing, named or not, never on position. Pure, so tests and the web
  * share it.
  */
-import type { CriteriumId, Engine, EngineStip, Finding, Prompt, PromptKind, Sample, ScanKind, Severity, Stip } from "./types";
+import type { CriteriumId, Engine, EngineStip, Finding, Prompt, PromptKind, Sample, ScanKind, ScanReport, Severity, Stip } from "./types";
 import { VISIBILITY_PARTIAL_RATIO, VISIBILITY_UNKNOWN_RATIO } from "./types";
 import { FACT_KEY_CRITERIUM, severityOf } from "./criteria";
 
@@ -264,4 +264,53 @@ export function repairSummary(findings: Finding[], period: Period, filter: Progr
     inProgress: mine.filter((f) => f.status === "fixing" || f.status === "recheck").length,
     medianDays: mid === null ? null : Math.max(0, Math.round(mid)),
   };
+}
+
+// ---------------------------------------------------------------------------
+// The report heading's counts (feature 002, B-02): one function for the report page and the archive
+// ---------------------------------------------------------------------------
+
+export interface QuestionCounts {
+  /** Questions on the report (also the ones without a fact to check them against). */
+  questions: number;
+  /** Questions whose answers were all right. */
+  correct: number;
+  /** Questions with a wrong answer. */
+  wrong: number;
+  /** Questions the AI could not answer about the business (and none was wrong). */
+  notFound: number;
+  /** Questions asked but not checkable and without a finding. */
+  unchecked: number;
+}
+
+const keyOf = (factKey: string, subject: string | null | undefined, rec = false) => `${factKey}:${subject ?? ""}${rec ? ":rec" : ""}`;
+
+/**
+ * The numbers the report heading is built from, one function for the page and the archive: one row per
+ * question (a finding or a correct answer groups by fact and subject), a question is "wrong" when any AI
+ * system said something wrong, "not found" when only that, else right. The report page
+ * (apps/web/lib/report.ts) calls this, so the archive can never disagree with the heading.
+ */
+export function reportCounts(report: ScanReport): QuestionCounts {
+  const groups = new Map<string, { findings: Finding[] }>();
+  const get = (key: string) => {
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { findings: [] }));
+    return g;
+  };
+  for (const c of report.correct) get(c.factKey ? keyOf(c.factKey, c.subject) : `p:${c.prompt}`);
+  for (const f of report.findings) get(keyOf(f.factKey, f.subject, f.evidenceKind === "recommendation")).findings.push(f);
+  let wrong = 0;
+  let notFound = 0;
+  for (const g of groups.values()) {
+    if (g.findings.some((f) => f.verdict !== "not_found")) wrong++;
+    else if (g.findings.length) notFound++;
+  }
+  const askedAbout = (report.asked ?? []).filter((a) => a.kind === "about");
+  const askedKeys = new Set(askedAbout.map((a) => keyOf(a.factKey, a.subject)));
+  const checkedKeys = new Set(askedAbout.filter((a) => a.checked).map((a) => keyOf(a.factKey, a.subject)));
+  const questions = askedKeys.size ? Math.max(askedKeys.size, groups.size) : groups.size;
+  // A question without a fact that still produced a finding (not found, another business) is on the table, not unchecked.
+  const unchecked = [...askedKeys].filter((k) => !checkedKeys.has(k) && !(groups.get(k)?.findings.length)).length;
+  return { questions, correct: groups.size - wrong - notFound, wrong, notFound, unchecked };
 }

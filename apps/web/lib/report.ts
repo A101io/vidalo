@@ -13,6 +13,7 @@ import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
 import { competitionCountsOf, isNeutralProfile, isUncheckedGrey } from "@vidalo/core/types";
 import { checkedAsParts } from "@vidalo/core/shared";
+import { reportCounts } from "@vidalo/core/progress";
 import { hostOf } from "./format";
 
 export type ReportState = "rood" | "groen" | "grijs";
@@ -280,17 +281,16 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const online = report.profile?.mode === "online";
   const groups = groupQuestions(report, copy, online);
   const rows = groups.map((g) => rowFor(g, copy));
-  const wrongQuestions = rows.filter((r) => r.tone === "rood").length;
-  const notFoundQuestions = rows.filter((r) => r.tone === "grijs").length;
+  // The counts of the heading come from core (progress.ts reportCounts), the same function the archive stores.
+  const counts = reportCounts(report);
+  const wrongQuestions = counts.wrong;
+  const notFoundQuestions = counts.notFound;
   const activeEngines = report.engines.filter((e) => !e.skipped);
   // What was really asked (reports since 11 Nov 2026): every question, also the ones without a fact to check them
   // against, and how often each engine answered it. Older reports fall back to the rows and an average.
   const askedAbout = (report.asked ?? []).filter((a) => a.kind === "about");
-  const askedKeys = new Set(askedAbout.map((a) => keyOf(a.factKey, a.subject)));
-  const checkedKeys = new Set(askedAbout.filter((a) => a.checked).map((a) => keyOf(a.factKey, a.subject)));
-  const questions = askedKeys.size ? Math.max(askedKeys.size, rows.length) : rows.length;
-  // A question without a fact that still produced a finding (not found, another business) is on the table, not unchecked.
-  const unchecked = [...askedKeys].filter((k) => !checkedKeys.has(k) && !groups.some((g) => g.key === k && g.findings.length > 0)).length;
+  const questions = counts.questions;
+  const unchecked = counts.unchecked;
   const legacyPerQuestion = report.findings[0]?.sampleCount ?? (rows.length && activeEngines.length ? Math.max(1, Math.round(report.totalAnswers / (rows.length * activeEngines.length))) : 3);
   // The most common number of answers per question: a paid check asks 5 times and goes on to 10 only where an answer was wrong.
   const timesPer = activeEngines.map((e) => {
@@ -315,7 +315,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const hero = uncheckedGrey
     ? { number: questions, label: R.hero.uncheckedLabel(questions) }
     : state === "grijs"
-      ? { number: rows.filter((r) => r.tone === "groen").length, label: R.hero.answeredLabel(questions) }
+      ? { number: counts.correct, label: R.hero.answeredLabel(questions) }
       : state === "groen"
         ? { number: questions, label: R.hero.okLabel(questions) }
         : { number: wrongQuestions, label: R.hero.wrongLabel(questions) };

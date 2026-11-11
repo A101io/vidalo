@@ -10,7 +10,8 @@
  * default active business and every existing page and test sees what it saw before.
  */
 import type { Db } from "@vidalo/core/db";
-import { prepareBusiness, runScan, createMockEngine } from "@vidalo/core/scanner";
+import { backfillRunSummaries, prepareBusiness, runScan, createMockEngine } from "@vidalo/core/scanner";
+import { ENGINES } from "@vidalo/core/types";
 import { DEMO_OWNER_EMAIL, DEMO_SLUG } from "./demo";
 
 export const DEMO_SECOND = { slug: "bakkerij-de-vries-amsterdam", name: "Bakkerij de Vries", place: "Amsterdam" } as const;
@@ -42,9 +43,34 @@ async function setCreatedAt(db: Db, businessId: string, iso: string): Promise<vo
   }
 }
 
+/**
+ * More kinds of check on the demo owner's main business, for the archive: an extra (on-demand) check, a
+ * recheck and a check that failed, dated between the last two monthly checks so the dashboard's "latest
+ * check" and the progress view keep what they showed. The free check from seven months ago is the owner's
+ * old free report that must still open for the owner (AC-1); the seed's history already holds it.
+ */
+async function archiveKinds(db: Db, businessId: string): Promise<void> {
+  const runs = (await db.listScanRuns(businessId, 50)).filter((r) => r.status === "done").sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const last = runs[runs.length - 1];
+  const before = runs[runs.length - 2];
+  if (!last || !before) return;
+  const mid = (k: number) => new Date(Date.parse(before.startedAt) + ((Date.parse(last.startedAt) - Date.parse(before.startedAt)) * k) / 4).toISOString();
+  const clients = (["chatgpt", "google_ai", "perplexity"] as const).map((e) => createMockEngine(e, { wrongPairRate: 0.1 }));
+  // A scan reads the business again and would replace the profile the demo seed set (shown on /app/gegevens): put it back.
+  const profileAuto = (await db.getBusiness(businessId))?.profileAuto ?? null;
+  const extra = await runScan({ businessId, kind: "ondemand", engines: ENGINES, samplesPerPrompt: 3, clients, db });
+  await db.updateScanRun(extra.scanRunId, { startedAt: mid(1), finishedAt: mid(1) });
+  if (profileAuto) await db.setAutoProfile(businessId, profileAuto);
+  const recheck = await db.createScanRun({ businessId, kind: "recheck", engines: ["chatgpt"], samplesPerPrompt: 3, status: "done" });
+  await db.updateScanRun(recheck.id, { startedAt: mid(2), finishedAt: mid(2) });
+  const failed = await db.createScanRun({ businessId, kind: "monthly", engines: ["chatgpt"], samplesPerPrompt: 3, status: "failed" });
+  await db.updateScanRun(failed.id, { status: "failed", startedAt: mid(3), finishedAt: mid(3), error: "mock: the AI system did not answer" });
+}
+
 export async function seedOwnerArea(db: Db): Promise<void> {
   const main = await db.getBusiness(DEMO_SLUG);
   if (!main || (await db.getBusiness(DEMO_SECOND.slug))) return;
+  await archiveKinds(db, main.id);
   const earlier = new Date(Date.parse(main.createdAt) - 86_400_000).toISOString();
 
   const second = (await prepareBusiness({ name: DEMO_SECOND.name, place: DEMO_SECOND.place, db })).business;
@@ -62,4 +88,7 @@ export async function seedOwnerArea(db: Db): Promise<void> {
     await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: DEMO_EN.email, ownerUserId: DEMO_EN.userId, plan: "monitor", status: "trial", language: "en" });
     await oneFreeCheck(db, b.id, new Date(Date.now() - 86_400_000).toISOString());
   }
+
+  // The summaries the scanner stored were taken when the checks ran; the seed back-dates them, so redo them with the dates.
+  await backfillRunSummaries(db, { all: true });
 }
