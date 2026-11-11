@@ -61,5 +61,5 @@ We do not ingest them and do not compete with them. In the owner's report, "how 
 
 ## Decisions for Julian
 
-1. Build stage 1 only when the Dutch trigger fires (suggested), or build it now for the businesses abroad that can already claim (online businesses only)?
+1. **Decided 11 Nov 2026 (Julian): wait.** Stage 1 is built only when the Dutch trigger fires, not now for the online businesses abroad that can already claim.
 2. Ask OpenAI whether agency access is open to Vidalo (suggested: yes, one mail from hello@vidalo.io once stage 1 is live).
