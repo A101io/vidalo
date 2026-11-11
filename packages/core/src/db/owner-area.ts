@@ -303,3 +303,49 @@ export async function overviewExtras(db: Db, businessId: string): Promise<{ fixe
   const [fixes, events] = await Promise.all([openFixesByFinding(db, businessId), db.listEvents(businessId, OVERVIEW_LIMITS.events)]);
   return { fixes, events };
 }
+
+// ---------------------------------------------------------------------------
+// Id-addressed rows and the verified facts host (B-05)
+// ---------------------------------------------------------------------------
+
+/** The business a finding belongs to, or null (unknown or malformed id: never a cast error). Pages call requireOwnerOf on it. */
+export async function findingBusinessId(db: Db, findingId: string): Promise<string | null> {
+  if (isPg(db)) {
+    if (!UUID.test(findingId)) return null;
+    const rows = await db.sql<{ businessId: string }[]>`select business_id from finding where id = ${findingId}::uuid`;
+    return rows[0]?.businessId ?? null;
+  }
+  if (isMem(db)) return db.findings.get(findingId)?.businessId ?? null;
+  return unsupported();
+}
+
+/** The business a channel belongs to, or null. */
+export async function channelBusinessId(db: Db, channelId: string): Promise<string | null> {
+  if (isPg(db)) {
+    if (!UUID.test(channelId)) return null;
+    const rows = await db.sql<{ businessId: string }[]>`select business_id from channel where id = ${channelId}::uuid`;
+    return rows[0]?.businessId ?? null;
+  }
+  if (isMem(db)) return db.channels.get(channelId)?.businessId ?? null;
+  return unsupported();
+}
+
+/**
+ * Marks `host` as this business's verified facts host. One business at most holds a verified host (migration 0016,
+ * business_facts_host_verified_uniq): a host another business verified first, or lost in a race, answers "taken"
+ * instead of an error. MemDb checks the same rule itself.
+ */
+export async function markFactsHostVerified(db: Db, business: Pick<BusinessRecord, "id" | "slug" | "name" | "place">, host: string): Promise<"ok" | "taken"> {
+  const h = host.toLowerCase();
+  if (isMem(db)) {
+    for (const b of db.businesses.values()) if (b.id !== business.id && b.factsHostVerifiedAt && b.factsHost?.toLowerCase() === h) return "taken";
+  }
+  try {
+    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, factsHost: host, factsHostVerifiedAt: new Date().toISOString() });
+    return "ok";
+  } catch (err) {
+    const e = err as { code?: string; constraint_name?: string; message?: string };
+    if (e?.code === "23505" && (e.constraint_name === "business_facts_host_verified_uniq" || /business_facts_host_verified_uniq/.test(String(e.message)))) return "taken";
+    throw err;
+  }
+}

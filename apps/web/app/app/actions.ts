@@ -4,12 +4,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
-import { requireOwner, requireVerifiedOwner } from "@/lib/owner";
+import { businessFromForm, requireOwnerOf, requireVerifiedOwnerOf } from "@/lib/owner";
 import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
 import { ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
 
-/** The finding named in a form, if it belongs to the signed-in owner's business. */
+// Every action below names its business in the form (<input type="hidden" name="business">, F-020): it is read with
+// businessFromForm and passed to requireOwnerOf / requireVerifiedOwnerOf FIRST, before anything is read or written. No
+// business, a business of another login and an unknown id all end at /app with nothing changed. The cookie is never
+// consulted, so a switch in another tab cannot send a form rendered for one business to another.
+
+/** The finding named in a form, if it belongs to the business the form named. */
 async function ownFinding(formData: FormData, businessId: string) {
   const db = await ready();
   const id = String(formData.get("finding") ?? "");
@@ -19,7 +24,7 @@ async function ownFinding(formData: FormData, businessId: string) {
 
 /** "Ik heb dit aangepast" on a finding: the recheck runs now instead of on the planned date. */
 export async function markFixed(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const finding = await ownFinding(formData, business.id);
   const { href } = await getI18n();
   if (!finding) redirect(href("/app"));
@@ -31,7 +36,7 @@ export async function markFixed(formData: FormData) {
 
 /** "Dit klopt wél" on a finding: recorded, then the facts form opens on that fact so the owner corrects it. */
 export async function dispute(formData: FormData) {
-  const { business } = await requireOwner();
+  const { business } = await requireOwnerOf(businessFromForm(formData));
   const finding = await ownFinding(formData, business.id);
   const { href } = await getI18n();
   if (!finding) redirect(href("/app"));
@@ -40,7 +45,7 @@ export async function dispute(formData: FormData) {
   redirect(href(`/app/gegevens?betwist=${finding.id}#${finding.factKey}`));
 }
 
-/** The channel named in a form, if it belongs to the signed-in owner's business. */
+/** The channel named in a form, if it belongs to the business the form named. */
 async function ownChannel(formData: FormData, businessId: string) {
   const db = await ready();
   const id = String(formData.get("channel") ?? "");
@@ -49,7 +54,7 @@ async function ownChannel(formData: FormData, businessId: string) {
 
 /** "Doorvoeren op Google": the held change is approved and a sync of that channel applies it. */
 export async function approveChannelDiff(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const channel = await ownChannel(formData, business.id);
   const { href } = await getI18n();
   if (!channel) redirect(href("/app"));
@@ -61,7 +66,7 @@ export async function approveChannelDiff(formData: FormData) {
 
 /** "Niet doorvoeren": the held change is declined; the profile stays as it is. */
 export async function declineChannelDiff(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const channel = await ownChannel(formData, business.id);
   const { href } = await getI18n();
   if (!channel) redirect(href("/app"));
@@ -72,8 +77,8 @@ export async function declineChannelDiff(formData: FormData) {
 }
 
 /** "Controleer nu": enqueue an on-demand scan for the owner's business. */
-export async function checkNow() {
-  const { business } = await requireVerifiedOwner();
+export async function checkNow(formData: FormData) {
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const db = await ready();
   const { href } = await getI18n();
   // The last check that ran, or one asked for and not started yet; the worker checks the runs again.

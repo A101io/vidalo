@@ -74,6 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-4">
               <form action={reconfirmFacts}>
+                <input type="hidden" name="business" value={business.id} />
                 <button type="submit" className="btn-sm">
                   {R.confirm}
                 </button>

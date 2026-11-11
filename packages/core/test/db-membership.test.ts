@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { withMockDb, createDb, type Db } from "../src/db";
 import { PgDb } from "../src/db/pg";
-import { isMember, linkBusinessesByEmail, listMemberBusinesses, listMemberUserIds, listReportArchive, saveRunSummary, type RunSummary } from "../src/db/owner-area";
+import { isMember, linkBusinessesByEmail, listMemberBusinesses, listMemberUserIds, listReportArchive, markFactsHostVerified, saveRunSummary, findingBusinessId, channelBusinessId, type RunSummary } from "../src/db/owner-area";
 import { prepareBusiness } from "../src/scanner";
 
 /**
@@ -101,6 +101,31 @@ describe.each(backends)("%s membership", (_name, makeDb) => {
     expect(await listMemberUserIds(db, a.id)).toEqual([]);
     expect(await listMemberBusinesses(db, one)).toEqual([]);
     if (db instanceof PgDb) expect((await db.sql`select 1 from business_member where business_id = ${a.id}`).length).toBe(0);
+  });
+
+  it("a facts host is verified by one business only: the second, and the loser of a race, get \"taken\" instead of an error (F-019)", async () => {
+    const x = await business("Host Een", one);
+    const y = await business("Host Twee", one);
+    const z = await business("Host Drie", two);
+    expect(await markFactsHostVerified(db, x, "Feiten.Voorbeeld.nl")).toBe("ok");
+    expect(await markFactsHostVerified(db, y, "feiten.voorbeeld.nl")).toBe("taken");
+    expect(await markFactsHostVerified(db, z, "feiten.voorbeeld.nl")).toBe("taken");
+    expect((await db.getBusiness(y.id))?.factsHostVerifiedAt).toBeNull();
+    // The same business may verify its own host again.
+    expect(await markFactsHostVerified(db, x, "feiten.voorbeeld.nl")).toBe("ok");
+    // Two verifies of one new host at the same moment: exactly one wins, nobody gets a 500.
+    const race = await Promise.all([markFactsHostVerified(db, y, "race.voorbeeld.nl"), markFactsHostVerified(db, z, "RACE.voorbeeld.nl")]);
+    expect(race.sort()).toEqual(["ok", "taken"]);
+  });
+
+  it("findingBusinessId and channelBusinessId answer null for unknown and malformed ids", async () => {
+    const a = await business("Eerste", one);
+    const ch = await db.upsertChannel({ businessId: a.id, type: "gbp", name: "Google", externalId: null, url: null });
+    expect(await channelBusinessId(db, ch.id)).toBe(a.id);
+    expect(await channelBusinessId(db, randomUUID())).toBeNull();
+    expect(await channelBusinessId(db, "'; drop table channel; --")).toBeNull();
+    expect(await findingBusinessId(db, randomUUID())).toBeNull();
+    expect(await findingBusinessId(db, "x")).toBeNull();
   });
 
   it("the archive: 6 finished + 1 recheck + 1 failed gives 7 rows newest first, pages by cursor, and keeps businesses apart", async () => {

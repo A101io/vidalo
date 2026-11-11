@@ -5,7 +5,8 @@ import { transitionStatus } from "@/lib/core";
 import { env } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { safeOrigin } from "@/lib/origin";
-import { getSession, getOwnedBusiness } from "@/lib/session";
+import { getSession } from "@/lib/session";
+import { listMyBusinesses } from "@/lib/active-business";
 import { HOME_COUNTRY, isVerifiedOwner, onlyOwnerMayBuy } from "@vidalo/core/shared";
 import { copyFor, PRICES } from "@vidalo/core/copy";
 import { localizeHref } from "@/lib/lang-paths";
@@ -54,9 +55,10 @@ export async function POST(req: Request) {
     if (!session || !isVerifiedOwner(business, session.userId)) return NextResponse.redirect(page(`/app/google?eerst=1`), 303);
   } else if (onlyOwnerMayBuy(business)) {
     // Paid before: a stranger's checkout would be fresh proof for claimBusiness (review SEC-01).
+    // "Owner" = a member of THIS business, whichever business the login has open (not "the active business").
     const session = await getSession();
-    const owned = session ? await getOwnedBusiness(session) : null;
-    if (owned?.id !== business.id) {
+    const owned = session ? (await listMyBusinesses(session)).find((b) => b.id === business.id) : undefined;
+    if (!owned) {
       await db.logEvent(business.id, "checkout.refused", { reason: "already_paid", plan });
       return NextResponse.redirect(`${back}?betaling=betaald`, 303);
     }

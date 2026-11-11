@@ -1,5 +1,6 @@
 import { getLang, getRoute, localizeHref } from "@/lib/i18n";
 import { getSession } from "@/lib/session";
+import { getActiveBusiness } from "@/lib/active-business";
 import { LANGS } from "@/lib/lang-paths";
 
 /**
@@ -12,9 +13,10 @@ import { LANGS } from "@/lib/lang-paths";
  * choice on the account before continuing, so the dashboard and the
  * report follow it.
  */
-export async function LangSwitch({ className = "" }: { className?: string }) {
+export async function LangSwitch({ className = "", business }: { className?: string; /** The business the language is saved on; default: the one the owner has open. The route re-checks membership. */ business?: string }) {
   const [lang, route, session] = [await getLang(), await getRoute(), await getSession()];
-  const hrefFor = (l: (typeof LANGS)[number]) => (session ? `/api/lang?to=${l}&next=${encodeURIComponent(route)}` : localizeHref(route, l));
+  const owned = session ? (business ?? (await getActiveBusiness(session))?.id) : undefined;
+  const hrefFor = (l: (typeof LANGS)[number]) => (session ? `/api/lang?to=${l}&next=${encodeURIComponent(route)}${owned ? `&business=${encodeURIComponent(owned)}` : ""}` : localizeHref(route, l));
   return (
     <span className={`lang-switch print:hidden ${className}`}>
       {LANGS.map((l) => (

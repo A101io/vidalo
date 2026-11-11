@@ -12,6 +12,7 @@
 import type { Db } from "@vidalo/core/db";
 import { backfillRunSummaries, prepareBusiness, runScan, createMockEngine } from "@vidalo/core/scanner";
 import { ENGINES } from "@vidalo/core/types";
+import { openFixesForScan } from "@vidalo/core/fixer";
 import { DEMO_OWNER_EMAIL, DEMO_SLUG } from "./demo";
 
 export const DEMO_SECOND = { slug: "bakkerij-de-vries-amsterdam", name: "Bakkerij de Vries", place: "Amsterdam" } as const;
@@ -24,8 +25,8 @@ export const DEMO_EN = {
   second: { name: "Harbour Bakery", place: "Leiden" },
 } as const;
 
-async function oneFreeCheck(db: Db, businessId: string, at: string): Promise<string> {
-  const clients = (["chatgpt", "google_ai", "perplexity"] as const).map((e) => createMockEngine(e, { wrongPairRate: 0.2 }));
+async function oneFreeCheck(db: Db, businessId: string, at: string, wrongPairRate = 0.2): Promise<string> {
+  const clients = (["chatgpt", "google_ai", "perplexity"] as const).map((e) => createMockEngine(e, { wrongPairRate }));
   const report = await runScan({ businessId, kind: "free", samplesPerPrompt: 3, clients, db });
   await db.updateScanRun(report.scanRunId, { startedAt: at, finishedAt: at });
   return report.scanRunId;
@@ -82,11 +83,14 @@ export async function seedOwnerArea(db: Db): Promise<void> {
   await db.upsertBusiness({ id: control.id, slug: control.slug, name: control.name, place: control.place, ownerEmail: DEMO_CONTROL.email, ownerUserId: DEMO_CONTROL.userId, plan: "monitor", status: "trial" });
   await oneFreeCheck(db, control.id, new Date().toISOString());
 
-  // English login: Leiden is created first (older), Rotterdam second, so Rotterdam is the default.
+  // English login: Leiden is created first (older), Rotterdam second, so Rotterdam is the default. Both have proven
+  // ownership, so the owner's buttons work (saving facts, "Check now", "I fixed this"), and both have findings to act on.
   for (const place of [DEMO_EN.second, DEMO_EN.first]) {
     const b = (await prepareBusiness({ name: place.name, place: place.place, db })).business;
-    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: DEMO_EN.email, ownerUserId: DEMO_EN.userId, plan: "monitor", status: "trial", language: "en" });
-    await oneFreeCheck(db, b.id, new Date(Date.now() - 86_400_000).toISOString());
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: DEMO_EN.email, ownerUserId: DEMO_EN.userId, plan: "monitor", status: "trial", language: "en", ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "mock" });
+    const run = await oneFreeCheck(db, b.id, new Date(Date.now() - 86_400_000).toISOString(), 0.6);
+    // The fix round the worker runs after a check: a fix per open finding, so "I fixed this" has something to recheck.
+    if (db.kind === "mem") await openFixesForScan(run);
   }
 
   // The summaries the scanner stored were taken when the checks ran; the seed back-dates them, so redo them with the dates.

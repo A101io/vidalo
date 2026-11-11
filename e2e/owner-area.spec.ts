@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
-import { activeName, CONTROL_OWNER, controlBusinessId, DEMO_OWNER, EN_OWNER, NAMES, signInAs, switcher, switchTo, visit } from "./helpers-owner-area";
+import { expect, test, type Page } from "@playwright/test";
+import { activeBusinessId, activeName, CONTROL_OWNER, controlBusinessId, controlIds, DEMO_OWNER, EN_OWNER, NAMES, signInAs, switcher, switchTo, visibleState, visit } from "./helpers-owner-area";
 
 /**
  * Feature 002 B-01 (AC-2): a login with more than one business sees each by name and place, switches
@@ -162,4 +162,178 @@ test("the owner's old free report still opens for them, and is not found for any
     expect(res?.status(), "not found for a visitor").toBe(404);
     await ctx.close();
   }
+});
+
+/**
+ * Feature 002 B-05 (F-020, SEC-04/05/13): every changing action names its business. The English owner holds Rotterdam (open
+ * by default) and Leiden, both with proven ownership and findings; `ander@example.nl` is the control. A form is rendered
+ * for one business, another tab switches to the other, and the first form is submitted: it must act on the business it
+ * was rendered for. A hand-edited `business` must change nothing.
+ */
+test.describe("every changing action names its business", () => {
+  // These write to the English owner's two businesses and compare what they show before and after: one after the other.
+  test.describe.configure({ mode: "serial" });
+  const P = "/en";
+
+  /** Clicks and waits for the server action's POST and the navigation it answers with to settle. */
+  async function press(page: Page, button: import("@playwright/test").Locator) {
+    await Promise.all([page.waitForResponse((r) => r.request().method() === "POST"), button.click()]);
+    await page.waitForLoadState("networkidle");
+  }
+
+  async function twoTabs(context: import("@playwright/test").BrowserContext, page: Page) {
+    const other = await context.newPage();
+    await visit(other, `${P}/app`);
+    await switchTo(other, NAMES.enLeiden);
+    expect(await activeName(other)).toBe(NAMES.enLeiden);
+    return other;
+  }
+
+  test("two tabs: saving facts writes to the business the form was rendered for", async ({ page, context }) => {
+    test.slow();
+    await signInAs(page, EN_OWNER, `${P}/app/gegevens`);
+    expect(await activeName(page)).toBe(NAMES.enRotterdam);
+    const address = `Havenstraat ${Date.now() % 100000}`;
+    await page.locator("input[name='address']").fill(address);
+    const other = await twoTabs(context, page); // tab 2 now acts on Leiden
+    await Promise.all([page.waitForURL(/opgeslagen=1/), page.locator("form:has(input[name='name']) button[type='submit']").last().click()]);
+    // Rotterdam has the new version; Leiden (open in the other tab) is untouched.
+    await visit(other, `${P}/app/gegevens`);
+    expect(await activeName(other)).toBe(NAMES.enLeiden);
+    await expect(other.locator("input[name='address']")).not.toHaveValue(address);
+    await switchTo(other, NAMES.enRotterdam);
+    await visit(other, `${P}/app/gegevens`);
+    await expect(other.locator("input[name='address']")).toHaveValue(address);
+  });
+
+  test("two tabs: Check now and \"I have changed this\" act on the business their form was rendered for", async ({ page, context }) => {
+    test.slow();
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    expect(await activeName(page)).toBe(NAMES.enRotterdam);
+    const findingHref = await page.locator("a[href*='/app/fouten/']").first().getAttribute("href");
+    expect(findingHref, "Rotterdam has a finding to act on").toBeTruthy();
+    const other = await twoTabs(context, page);
+
+    // Check now, from the page rendered for Rotterdam while Leiden is open in tab 2: queued for Rotterdam ...
+    await Promise.all([page.waitForURL(/controle=ingepland/), page.getByRole("button", { name: "Check now" }).click()]);
+    // ... so Leiden has not been checked yet (a second request for the same business would be "too soon").
+    await visit(other, `${P}/app`);
+    await Promise.all([other.waitForURL(/controle=/), other.getByRole("button", { name: "Check now" }).click()]);
+    expect(other.url()).toContain("controle=ingepland");
+
+    // "I have changed this" on Rotterdam's finding page while Leiden is the open business.
+    await visit(page, findingHref!);
+    await switchTo(other, NAMES.enLeiden);
+    await Promise.all([page.waitForURL(/hercontrole=/), page.getByRole("button", { name: "I have changed this" }).click()]);
+    expect(page.url()).toContain("hercontrole=ingepland");
+    expect(page.url()).toContain(findingHref!.split("/").pop()!);
+  });
+
+  test("a hand-edited business changes nothing: every action goes to /app", async ({ page, browser, baseURL }) => {
+    test.slow();
+    const control = await controlIds(browser, baseURL);
+    const before = { control: await visibleState(browser, baseURL, CONTROL_OWNER), own: await visibleState(browser, baseURL, EN_OWNER, P) };
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    const forge = (id: string) => page.locator("input[name='business']").evaluateAll((els, v) => els.forEach((e) => ((e as HTMLInputElement).value = v)), id);
+    const atApp = () => expect(new URL(page.url()).pathname).toBe(`${P}/app`);
+
+    // Check now (dashboard), saveFacts and saveProfile (gegevens), markFixed and dispute (a finding page).
+    await forge(control.business);
+    await press(page, page.getByRole("button", { name: "Check now" }));
+    atApp();
+    expect(page.url()).not.toContain("controle=");
+
+    await visit(page, `${P}/app/gegevens`);
+    await forge(control.business);
+    await page.locator("input[name='address']").fill("Forged street 1");
+    await press(page, page.locator("form:has(input[name='name']) button[type='submit']").last());
+    atApp();
+    await visit(page, `${P}/app/gegevens`);
+    await forge(control.business);
+    await press(page, page.locator("#profiel button[type='submit']"));
+    atApp();
+
+    await visit(page, `${P}/app`);
+    const findingHref = (await page.locator("a[href*='/app/fouten/']").first().getAttribute("href"))!;
+    await visit(page, findingHref);
+    await forge(control.business);
+    await press(page, page.getByRole("button", { name: "I have changed this" }));
+    atApp();
+    await visit(page, findingHref);
+    await forge(control.business);
+    await press(page, page.locator("form:has(input[name='finding']) button").last());
+    atApp();
+
+    // The control's finding and channel pages: another login's id goes to /app (SEC-13), and nothing of either business moved.
+    if (control.finding) {
+      await visit(page, `${P}/app/fouten/${control.finding}`);
+      expect(new URL(page.url()).pathname).toBe(`${P}/app`);
+    }
+    if (control.channel) {
+      await visit(page, `${P}/app/vermeldingen/${control.channel}`);
+      expect(new URL(page.url()).pathname).toBe(`${P}/app`);
+    }
+    expect(await visibleState(browser, baseURL, CONTROL_OWNER), "the control business is as it was").toBe(before.control);
+    expect(await visibleState(browser, baseURL, EN_OWNER, P), "the own business is as it was").toBe(before.own);
+  });
+
+  test("domain verify: the form's own business only; a host another business verified is refused", async ({ page, browser, baseURL }) => {
+    test.slow();
+    const control = await controlIds(browser, baseURL);
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    const rotterdam = await activeBusinessId(page, P);
+    await switchTo(page, NAMES.enLeiden);
+    const leiden = await activeBusinessId(page, P);
+    expect(leiden).not.toBe(rotterdam);
+    const host = `haven-${Date.now() % 1000000}.example`;
+    const post = async (form: Record<string, string>) => {
+      const res = await page.request.post("/api/domain/verify", { form: { host, simulate: "1", ...form }, maxRedirects: 0 });
+      return new URL(res.headers()["location"]!).pathname + new URL(res.headers()["location"]!).search;
+    };
+    expect(await post({}), "no business").toBe("/app");
+    expect(await post({ business: control.business }), "another login's business").toBe("/app");
+    expect(await post({ business: "not-a-uuid'; --" }), "a malformed id").toBe("/app");
+    expect(await post({ business: rotterdam }), "Rotterdam verifies the host").toBe("/app/domein?dns=ok");
+    expect(await post({ business: leiden }), "Leiden cannot take it").toBe("/app/domein?dns=nee");
+    expect(await post({ business: control.business, host: host }), "the control cannot either").toBe("/app");
+  });
+
+  test("checkout: a member buying for their second business is not refused; another login's business is", async ({ page, browser, baseURL }) => {
+    test.slow();
+    const control = await controlIds(browser, baseURL);
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    const rotterdam = await activeBusinessId(page, P); // the open business
+    await switchTo(page, NAMES.enLeiden);
+    const leiden = await activeBusinessId(page, P);
+    await switchTo(page, NAMES.enRotterdam); // Leiden is NOT the open business now
+    expect(rotterdam).not.toBe(leiden);
+    const buy = async (business: string) => (await page.request.post("/api/checkout", { form: { business, scan: "", plan: "monitor" }, maxRedirects: 0 })).headers()["location"] ?? "";
+    expect(await buy(leiden), "the second business of a member").toContain("/welkom?mock=1");
+    expect(await buy(control.business), "another login's business").toContain("betaling=betaald");
+  });
+
+  test("the language switch saves only on a business of the login", async ({ page, browser, baseURL }) => {
+    test.slow();
+    const control = await controlIds(browser, baseURL);
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    // A request that names another login's business, or none: only the redirect. The control owner's pages stay Dutch.
+    for (const q of [`&business=${control.business}`, ""]) {
+      const res = await page.request.get(`/api/lang?to=en&next=${encodeURIComponent("/app")}${q}`, { maxRedirects: 0 });
+      expect(res.status()).toBe(303);
+      expect(new URL(res.headers()["location"]!).pathname).toBe("/en/app");
+    }
+    const ctx = await browser.newContext({ baseURL });
+    const ander = await ctx.newPage();
+    await signInAs(ander, CONTROL_OWNER, "/app");
+    expect(new URL(ander.url()).pathname, "the control business is still Dutch").toBe("/app");
+    await ctx.close();
+    // On a public page the switch of a signed-in owner carries the business they have open (LangSwitch), and the route re-checks it.
+    const rotterdam = await activeBusinessId(page, P);
+    await visit(page, "/en/why");
+    const link = await page.locator("a[href^='/api/lang']").first().getAttribute("href");
+    expect(link, "a signed-in owner's language link").toContain(`&business=${rotterdam}`);
+    // `next` cannot leave the site.
+    const out = await page.request.get(`/api/lang?to=nl&next=${encodeURIComponent("//evil.example/x")}`, { maxRedirects: 0 });
+    expect(new URL(out.headers()["location"]!).host).toBe(new URL(baseURL!).host);
+  });
 });

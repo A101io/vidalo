@@ -61,3 +61,45 @@ export async function controlBusinessId(browser: Browser, baseURL: string | unde
   expect(id).toMatch(/^[0-9a-f-]{36}$/);
   return id!;
 }
+
+/** The id the active business's changing forms carry (hidden `business`), read off /app/gegevens in the page's own language. */
+export async function activeBusinessId(page: Page, prefix = ""): Promise<string> {
+  await visit(page, `${prefix}/app/gegevens`);
+  const id = await page.locator("main form input[name='business']").first().getAttribute("value");
+  expect(id).toMatch(/^[0-9a-f-]{36}$/);
+  return id!;
+}
+
+/** What a signed-in owner can see of one business, as text: the dashboard and the facts versions. Equal before and after = nothing written. */
+export async function visibleState(browser: Browser, baseURL: string | undefined, email: string, prefix = ""): Promise<string> {
+  const ctx = await browser.newContext({ baseURL });
+  const page = await ctx.newPage();
+  try {
+    await signInAs(page, email, `${prefix}/app`);
+    const parts: string[] = [];
+    for (const path of ["/app", "/app/gegevens/versies"]) {
+      await visit(page, `${prefix}${path}`);
+      parts.push((await page.locator("main").innerText()).replace(/\s+/g, " "));
+    }
+    return parts.join("\n--\n");
+  } finally {
+    await ctx.close();
+  }
+}
+
+/** The control owner's ids, learnt from its own dashboard: its business (from the report's checkout form) and its first finding. */
+export async function controlIds(browser: Browser, baseURL: string | undefined): Promise<{ business: string; finding: string | null; channel: string | null }> {
+  const business = await controlBusinessId(browser, baseURL);
+  const ctx = await browser.newContext({ baseURL });
+  const page = await ctx.newPage();
+  try {
+    await signInAs(page, CONTROL_OWNER);
+    const idOf = async (needle: string) => {
+      const href = await page.locator(`a[href*='${needle}']`).first().getAttribute("href", { timeout: 2000 }).catch(() => null);
+      return href ? href.split("/").pop()! : null;
+    };
+    return { business, finding: await idOf("/app/fouten/"), channel: await idOf("/app/vermeldingen/") };
+  } finally {
+    await ctx.close();
+  }
+}
