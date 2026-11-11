@@ -22,7 +22,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-11 | 1 shape | 02-architecture.md with shared contract, ADR 0001–0007, tickets C-00, A-01…A-07, B-01…B-05 and README with a disjoint file-ownership table | architect |
 | 2026-11-11 | 1 shape | checklists/security.md (SEC-01…59, no P0 against the design; SEC-15, SEC-44 are P0 if observed in phase 4) and checklists/compliance.md (no hard stop; B2B cancel: terms already exceed the consumer standard) | security, compliance |
 | 2026-11-11 | 1 shape | F-010…F-023 folded back into the design by the architect (new ticket B-05, C-00 ships safe `safeNext` and the cookie row); F-022 accepted risk, F-016 deferred | architect |
-| 2026-11-11 | 1 shape | Julian decided: Scan retention 24 months (`SCAN_RETENTION_MONTHS`), Scan Google token 60 days (`SCAN_GOOGLE_DAYS`); Supabase plan stays free for now (F-022 accepted) | Julian |
+| 2026-11-11 | 1 shape | Julian decided: Scan retention 24 months (`SCAN_RETENTION_MONTHS`), Scan Google token 60 days (`SCAN_GOOGLE_DAYS`) | Julian |
 | 2026-11-11 | 1 shape | Lane split checked: no file owned by both lanes; merge order lane B then lane A; C-00 must land on `claude/002-mijn-omgeving` before either lane worktree is cut | Claude |
 
 ## Skipped phases
