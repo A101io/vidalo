@@ -31,3 +31,13 @@ in the report. Then asked whether to write a brief for it. Julian:
   `scanner/recommendations.ts` ("Wie AI wel noemt"). The sector is inferred from the Google
   category or the KvK SBI code (`inferSector`); the owner can change it after paying.
   Rules: `docs/CRITERIA.md`.
+
+## 11 November 2026, later the same day (after the fixes of #115 were live)
+
+Julian, looking at the corrected Sonable report ("Alle 19 antwoorden", every line "niet te
+controleren" or "geen bruikbaar antwoord"), verbatim:
+
+> This is still incorrect. Why were these questions asked for Sonable, it is pointless to know for a music streaming provider if they are open on friday. Make sure to before you ask these questions, understand what the business we target does and what questions will be reliable. This needs to happen for every client and we can build up some kind of database with common and good questions. Come up with the best solution to ensure the right questions are asked for businesses so companies feel attracted to Vidalo. Also add a nice animation that reflects what Vidalo is doing while clients wait.
+
+Read as: approval of the brief's direction, with three changes recorded in `01-brief.md`,
+"Amendment A".

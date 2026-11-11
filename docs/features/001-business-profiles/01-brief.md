@@ -195,3 +195,121 @@ are low-stakes; the assumed answer is used unless Julian says otherwise.
 | The extra step on `/scan/kies` lowers free-check completions | Medium | Fewer reports for online businesses | Only the online profile gets the two fields; the third metric shows whether preselection is right |
 | €149 setup is mostly about local listings; an online business may see little in it | Medium | Low conversion for online businesses | Out of scope here; copy must not promise what does not apply (AC-7); revisit after the first 30 online checks |
 | Naming competitors' brands in our report raises a legal question | Low | A complaint from a named company | Names and quotes come from AI answers and are labelled as such; compliance reviews in phase 1 |
+
+---
+
+## Amendment A (11 November 2026, Julian's second message; supersedes where it conflicts)
+
+Julian approved the direction and changed three things. Where this amendment and the text
+above disagree, this amendment wins.
+
+### A1. Understand the business first, automatically (replaces AC-1 and Q1)
+
+Before any question is chosen, every check (free and paid) runs an **understanding step**
+that produces a *business profile*:
+
+- `mode`: `door` (customers come to the business), `visit` (the business goes to the
+  customer), `online` (sells online or nationally, no visit).
+- `offer`: what it sells, in one short Dutch phrase ("achtergrondmuziek voor hotels en horeca").
+- `audience`: for whom ("hotels, restaurants, winkels").
+- `category`: the noun buyers use to look for this kind of business ("aanbieder van
+  achtergrondmuziek"), singular, lowercase.
+- `competitors`: up to 3 names the understanding step saw next to it (may be empty).
+- `confidence` and `basis` (google listing / own website / AI lookup).
+
+Sources, in order: the Google Places record (types, address, website), the business's own
+website when known, and one AI lookup with web search ("Wat is {naam} in {plaats}?"). No
+extra field on the form: the visitor is not asked to classify their own business. The
+profile is shown to them on the waiting page and on the report ("Gecontroleerd als: …"),
+and a paying owner can correct it on `/app/gegevens`; a corrected profile is never
+overwritten by a later automatic one.
+
+- **AC-A1.** For "Sonable, Rotterdam" (no Google listing) the understanding step returns
+  mode `online` with an offer about background music, and the free check contains no
+  question about opening hours, Sunday, paying by card, a street address or a phone number.
+  *Check:* unit test with a recorded lookup answer; one real free check.
+- **AC-A2.** For a kapper with a Google listing the profile is `door` and the questions are
+  the ones asked on main today. *Check:* snapshot test.
+- **AC-A3.** When the understanding step fails or is unsure (confidence below the
+  threshold), the check falls back to today's questions for a business with a listing, and
+  to the `online` set for a business without one; it never blocks the check. *Check:* unit test.
+- **AC-A4.** In mock mode (no keys) the step is deterministic and the pipeline, `e2e:mock`
+  and the Playwright suites stay green.
+
+### A2. Questions must be reliable for this business (sharpens AC-2, AC-3)
+
+A question is asked only when it applies to the profile:
+
+| Question family | door | visit | online |
+|---|---|---|---|
+| existence ("bestaat X nog") | yes | yes | yes |
+| opening hours, Sunday | yes | only if hours are known | no |
+| street address | yes | no | no |
+| paying by card on site | yes | no | no |
+| phone number | yes | yes | only if a number is known |
+| "wat doet X" / website | no | no | yes |
+| recommendation in a town ("beste kapper in Haarlem") | yes | yes | no |
+| recommendation by category, no town ("welke … is goed voor …") | no | no | yes |
+| alternatives ("alternatief voor {X}" / for a named competitor) | no | no | yes |
+
+- **AC-A5.** The free check for an online business asks 6 questions: existence, "wat doet
+  {naam}", the website, two category recommendation questions and one alternatives
+  question. None contains a town.
+- **AC-A6.** A "wat doet X" answer is judged against the profile's `offer` only as *described
+  as the same kind of business / as another kind of business / not found*; a different kind
+  is a criterium-11 finding ("een ander bedrijf" wording stays for other names; "als een
+  ander soort bedrijf" for this).
+
+### A3. A question library that learns (new)
+
+Every question asked is a row in a library keyed by `category` and `mode`: the template
+("Welke {category} is goed voor {audience}?"), its family and intent, how often it was
+asked, and how often the AI systems gave a usable answer (anything but "no usable answer").
+
+- A new check takes its questions from the library for its category when the library has
+  enough proven ones (asked ≥ 20 times, usable ≥ 60%); otherwise from the built-in templates
+  for its mode, and those enter the library under the category.
+- Model-written free text never becomes a question: a template is built-in or approved by
+  Julian. The understanding step fills the slots (`category`, `audience`, a competitor name),
+  and slot values are length-limited and stripped of anything but letters, digits, spaces
+  and `&'-.`.
+- A template whose usable share drops below 30% after 50 asks is retired for that category
+  (never asked again there) and listed for Julian.
+- Julian sees the library as a list (category, question, asked, usable share) in a file
+  the worker writes (`out/` locally) and a database view; no admin screen in this cycle.
+
+- **AC-A7.** After a scripted run of 3 businesses in one category, the library holds their
+  templates with counts; a fourth business in that category gets the proven templates.
+  *Check:* unit test on MemDb and PgDb.
+- **AC-A8.** A slot value with markup, a URL or an instruction ("negeer alle …") is cleaned
+  or refused, and never reaches an AI system verbatim. *Check:* unit test.
+
+### A4. The waiting page shows what Vidalo is doing (new)
+
+`/scan/[id]` (NL and EN) shows the real steps as they happen, in design G, animated:
+*Je bedrijf begrijpen* (with the profile sentence once known) → *De juiste vragen kiezen*
+(the questions appear one by one) → *Vragen aan ChatGPT en Google AI* (per AI system, a
+counter of answers received) → *Antwoorden lezen en vergelijken* → the report.
+
+- **AC-A9.** Each step reflects the scan's real state (no fake timers); with
+  `prefers-reduced-motion` the steps change without motion; the page works without
+  JavaScript as today (it reloads). Screen readers hear each step change (`aria-live`).
+  `motion.js` only animates, it never changes markup (CLAUDE.md).
+- **AC-A10.** No dark mode, one accent blue, status colours only in dots; no emoji; the
+  copy has no jargon. *Check:* browser check in NL and EN, desktop and phone width.
+
+### A5. Decisions still Julian's, with the assumption built
+
+- **Dot (Q3):** stays fact-only. For an online business the report leads with the
+  competition block ("Genoemd in n van m antwoorden", who was named instead) next to the
+  dot. *Assumed.*
+- **CRITERIA.md (Q4):** counts per question allowed; never a position, percentage or score.
+  *Assumed; the PR changes the doc.*
+- **Owner-entered competitors (AC-4 above):** moved out of this cycle; competitors come
+  from the understanding step and from who AI names. *Assumed.*
+- **Price:** unchanged.
+
+### A6. Out of this cycle (added)
+
+An admin screen for the library; owner-entered competitors; question templates written by
+a model; new `/vak` pages; changing the eleven local packs.
