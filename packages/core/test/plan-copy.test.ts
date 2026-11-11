@@ -16,7 +16,7 @@ describe("copy follows the plan", () => {
 
     it(`${lang}: the result page's plan steps mark the monthly check as Monthly`, () => {
       expect(c.result.plan.stepsGreen[2]).toContain(monthly);
-      expect(c.result.plan.stepsGrey.recheck(6)).toContain(monthly);
+      expect(c.result.plan.stepsGrey.recheck).toContain(monthly);
     });
 
     it(`${lang}: the FAQ answers per plan`, () => {

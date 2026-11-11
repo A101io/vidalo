@@ -37,6 +37,7 @@ export * from "./onboard";
 export * from "./stip";
 export * from "./recommendations";
 export * from "./progress";
+export * from "./question-sets";
 export * from "./understand";
 
 /**

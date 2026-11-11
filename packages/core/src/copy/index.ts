@@ -1562,7 +1562,8 @@ export const copy = {
       stepSources: (sources: string) => `${sources}: we vragen om correctie of laten zien wat je moet aanpassen, met bewijs.`,
       stepSourcesNone: "Je gegevens één keer vastleggen en een feitenpagina publiceren die AI kan lezen.",
       stepFacts: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.`,
-      stepRecheck: (days: number, questions: number) => `Na ${days} dagen dezelfde ${questions} vragen opnieuw. Je ziet voor en na.`,
+      /** Rechecks ask only the questions that went wrong, per source after 1 to 4 weeks (fixer/paths.ts recheckDays 7–30). */
+      stepRecheck: "Na elke herstelstap stellen we de vragen die fout gingen opnieuw, meestal na 1 tot 4 weken. Je ziet voor en na.",
       stepsGreen: [
         "Je gegevens één keer vastleggen, zodat elke bron hetzelfde zegt.",
         "Een feitenpagina op je eigen domein, met datum, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.",
@@ -1571,7 +1572,7 @@ export const copy = {
       stepsGrey: {
         facts: "Je gegevens één keer vastleggen: adres, telefoon, openingstijden, wat je doet en niet doet. Vijf minuten.",
         publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en precies wat je bij Google, Bing, Apple en de gidsen moet invullen.`,
-        recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wanneer de AI je gaat noemen.`,
+        recheck: "Na 3 weken de vragen waarop je niet genoemd werd opnieuw. Met Vidalo Monthly daarna elke maand alle vragen. Je ziet wanneer de AI je gaat noemen.",
       },
       noteGrey: "Of en wanneer een AI je noemt bepalen wij niet. Of het je kán vinden wel. Antwoorden zonder zoekfunctie veranderen pas bij een nieuwe modelversie.",
       monitor: "Vidalo Scan + Monthly · €149 + €49/mnd",
@@ -1591,11 +1592,26 @@ export const copy = {
         stepsGrey: {
           facts: "Je gegevens één keer vastleggen: wat je doet, voor wie, je website en wat je wel en niet doet. Vijf minuten.",
           publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen.`,
-          recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wat er veranderd is.`,
+          recheck: "Na 3 weken de vragen waarop je niet genoemd werd opnieuw. Met Vidalo Monthly daarna elke maand alle vragen. Je ziet wat er veranderd is.",
         },
         exclVat: "1 bedrijf · Excl. btw · geen opzegtermijn · herstel bij derden duurt meestal 2 tot 4 weken",
         exclVatGrey: "1 bedrijf · Excl. btw · geen opzegtermijn",
       },
+    },
+    /**
+     * Free report: what a full check asks that this one did not (scanner/question-sets.ts), so a green table does
+     * not read as "all is well" (Julian, 11 Nov 2026). Counts and topics come from the business's real question set.
+     */
+    more: {
+      h2: (asked: number, total: number) => `De gratis controle stelde ${asked} van de ${total} vragen`,
+      /** about: questions about the business (the hero's count); recs: recommendation questions ("Wie AI wel noemt"). */
+      body: (about: number, recs: number, engines: string) =>
+        `Je zag ${[about > 0 ? `${about === 1 ? "1 vraag" : `${about} vragen`} over je zaak` : "", recs > 0 ? `${recs === 1 ? "1 vraag" : `${recs} vragen`} over wie AI aanraadt` : ""].filter(Boolean).join(" en ")}. Voor elk vak hebben we een vaste set vragen zoals klanten die aan AI stellen: over je zaak zelf, en wie de beste in je vak is. Een volledige controle stelt ze allemaal aan ${engines}, elke vraag 5 tot 10 keer per AI-systeem, Google AI één keer.`,
+      notAsked: "Nog niet gevraagd",
+      recommendations: (n: number) => (n === 1 ? "1 vraag over wie AI aanraadt in je vak" : `${n} vragen over wie AI aanraadt in je vak`),
+      examples: "Bijvoorbeeld",
+      urgency: "Een fout antwoord op zo'n vraag kan een klant naar een ander sturen, zonder dat jij het merkt.",
+      cta: (total: number) => `Laat alle ${total} vragen controleren`,
     },
     email: {
       h3: "Stuur dit rapport naar mij",
@@ -1603,7 +1619,11 @@ export const copy = {
       placeholder: "naam@bedrijf.nl",
       button: "Verstuur",
       sent: "We sturen het rapport naar je e-mailadres.",
+      /** Once the report has an address (since 9 Nov 2026 every free check does). */
+      h3Sent: "Het rapport staat in je mail",
       invalid: "Vul een geldig e-mailadres in.",
+      busy: "Even te veel tegelijk. Probeer het over een paar minuten opnieuw.",
+      enough: "Dit rapport is al naar 3 adressen gestuurd. Stuur de link zelf door.",
     },
     self: {
       h3: "Zelf rechtzetten?",
@@ -2164,8 +2184,19 @@ export const copy = {
       otherKind: "beschreven als een ander soort bedrijf",
       sameKind: "beschreven als hetzelfde soort bedrijf",
     },
-    /** One "do it yourself" step: source, engine, what it said, what is true, the fix. */
-    selfStep: (source: string, engine: string, verdict: string, said: string, truth: string, fix: string) => `${source}: ${engine} ${verdict} “${said}”, het is ${truth}. ${fix}`.trim(),
+    /** One "do it yourself" step: source, engine, what it said (null: not named), what is true, what the owner does. */
+    selfStep: (source: string, engine: string, said: string | null, truth: string, fix: string) =>
+      (said === null ? `${source}: ${engine} noemt je niet. ${fix}` : `${source}: ${engine} zegt “${said}”, het is ${truth}. ${fix}`).trim(),
+    /** What the owner does at each kind of source, on the free report's "Zelf rechtzetten?" (11 Nov 2026: it showed what Vidalo does). */
+    selfFix: {
+      owned_facts_page: "Zet het juiste gegeven op je feitenpagina.",
+      owned_website: "Pas het aan op je eigen website, op elke pagina waar het staat.",
+      directory_api: "Claim je vermelding bij deze gids en pas het daar aan.",
+      directory_form: "Vraag deze gids via hun correctieformulier om het aan te passen.",
+      third_party: "Mail deze website het juiste gegeven en vraag om een correctie. Het adres staat meestal onder Contact.",
+      other_entity: "Zet op je website en je Google-profiel dat je een ander bedrijf bent dan de zaak met dezelfde naam.",
+      none: "Hier is geen bron om aan te passen. Het antwoord komt uit het geheugen van het model en verandert pas bij een nieuwe versie.",
+    },
   },
   instableLine: "Dit antwoord klopte af en toe niet. Te zelden om te herstellen; we houden het in de gaten.",
   /** Recommendation questions: the business was not named where its facts say it belongs. */

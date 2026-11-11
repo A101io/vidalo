@@ -1519,7 +1519,7 @@ export const en: CopyShape = {
       stepSources: (sources: string) => `${sources}: we ask for a correction or show you what to change, with proof.`,
       stepSourcesNone: "Record your details once and publish a facts page AI can read.",
       stepFacts: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and for Google, Bing, Apple and the directories what to change there.`,
-      stepRecheck: (days: number, questions: number) => `After ${days} days, the same ${questions} questions again. You see before and after.`,
+      stepRecheck: "After each fix, we ask the questions that went wrong again, usually after 1 to 4 weeks. You see before and after.",
       stepsGreen: [
         "Record your details once, so every source says the same thing.",
         "A facts page on your own domain, with a date, and for Google, Bing, Apple and the directories what to change there.",
@@ -1528,7 +1528,7 @@ export const en: CopyShape = {
       stepsGrey: {
         facts: "Record your details once: address, phone, opening hours, what you do and do not do. Five minutes.",
         publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read, and exactly what to fill in at Google, Bing, Apple and the directories.`,
-        recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. With Vidalo Monthly, then every month. You see when the AI starts naming you.`,
+        recheck: "After 3 weeks, the questions where you were not named again. With Vidalo Monthly, every question every month after that. You see when the AI starts naming you.",
       },
       noteGrey: "Whether and when an AI names you is not up to us. Whether it can find you is. Answers without search only change with a new model version.",
       monitor: "Vidalo Scan + Monthly · €149 + €49/month",
@@ -1548,11 +1548,21 @@ export const en: CopyShape = {
         stepsGrey: {
           facts: "Record your details once: what you do, for whom, your website and what you do and do not do. Five minutes.",
           publish: (domain: string | null) => `A facts page${domain ? ` on ${domain}` : " on your own domain"} that AI can read.`,
-          recheck: (questions: number) => `After 3 weeks, the same ${questions} questions again. With Vidalo Monthly, then every month. You see what has changed.`,
+          recheck: "After 3 weeks, the questions where you were not named again. With Vidalo Monthly, every question every month after that. You see what has changed.",
         },
         exclVat: "1 business · Excl. VAT · no notice period · fixes at third parties usually take 2 to 4 weeks",
         exclVatGrey: "1 business · Excl. VAT · no notice period",
       },
+    },
+    more: {
+      h2: (asked: number, total: number) => `The free check asked ${asked} of the ${total} questions`,
+      body: (about: number, recs: number, engines: string) =>
+        `You saw ${[about > 0 ? `${about === 1 ? "1 question" : `${about} questions`} about your business` : "", recs > 0 ? `${recs === 1 ? "1 question" : `${recs} questions`} about who AI recommends` : ""].filter(Boolean).join(" and ")}. For every trade we keep a fixed set of questions like the ones customers ask AI: about your business itself, and who is the best in your trade. A full check asks all of them to ${engines}, each question 5 to 10 times per AI system, Google AI once.`,
+      notAsked: "Not asked yet",
+      recommendations: (n: number) => (n === 1 ? "1 question about who AI recommends in your trade" : `${n} questions about who AI recommends in your trade`),
+      examples: "For example",
+      urgency: "A wrong answer to a question like that can send a customer elsewhere, without you noticing.",
+      cta: (total: number) => `Have all ${total} questions checked`,
     },
     email: {
       h3: "Send this report to me",
@@ -1560,7 +1570,10 @@ export const en: CopyShape = {
       placeholder: "name@business.nl",
       button: "Send",
       sent: "We will send the report to your email address.",
+      h3Sent: "The report is in your inbox",
       invalid: "Enter a valid email address.",
+      busy: "Too many at once. Try again in a few minutes.",
+      enough: "This report has already gone to 3 addresses. Forward the link yourself.",
     },
     self: {
       h3: "Put it right yourself?",
@@ -2116,7 +2129,17 @@ export const en: CopyShape = {
       otherKind: "described as another kind of business",
       sameKind: "described as the same kind of business",
     },
-    selfStep: (source: string, engine: string, verdict: string, said: string, truth: string, fix: string) => `${source}: ${engine} ${verdict} “${said}”, it is ${truth}. ${fix}`.trim(),
+    selfStep: (source: string, engine: string, said: string | null, truth: string, fix: string) =>
+      (said === null ? `${source}: ${engine} does not name you. ${fix}` : `${source}: ${engine} says “${said}”, it is ${truth}. ${fix}`).trim(),
+    selfFix: {
+      owned_facts_page: "Put the right detail on your facts page.",
+      owned_website: "Change it on your own website, on every page where it appears.",
+      directory_api: "Claim your listing in this directory and change it there.",
+      directory_form: "Ask this directory to change it through their correction form.",
+      third_party: "Email this website the right detail and ask for a correction. The address is usually under Contact.",
+      other_entity: "Say on your website and your Google profile that you are a different business from the one with the same name.",
+      none: "There is no source to change here. The answer comes from the model's memory and only changes with a new version.",
+    },
   },
   instableLine: "This answer was wrong now and then. Too rarely to fix; we are keeping an eye on it.",
   /** Recommendation questions: the business was not named where its facts say it belongs. */

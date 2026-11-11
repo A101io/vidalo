@@ -12,6 +12,7 @@ import { AnswerCard } from "@/components/AnswerCard";
 import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
 import { FREE_REPORT_DAYS, getScanReport, latestScanReport } from "@/lib/core";
+import { ASKED_ENGINES, moreQuestionsView, questionSets } from "@vidalo/core/scanner";
 import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
@@ -24,7 +25,9 @@ export const dynamic = "force-dynamic";
 
 /** copy.landing.footer.reportNote and the privacy text promise this number. */
 
-async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean } | null> {
+type QuestionSets = Awaited<ReturnType<typeof questionSets>>;
+
+async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean; sets?: QuestionSets } | null> {
   if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };
   if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true, bySlug: false };
   if (id === DEMO_IDS.online) return { report: demoOnlineReport(), opts: { domain: DEMO_ONLINE_DOMAIN }, demo: true, bySlug: false };
@@ -42,7 +45,10 @@ async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; 
   const db = await ready();
   const business = await db.getBusiness(report.business.id);
   const facts = await db.latestFacts(report.business.id);
-  return { report, opts: { domain: business?.domain ?? null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug };
+  // The domain comes from the Google listing and can be a directory (nlcompanies.org); name it only once the owner is proven.
+  // A free report shows what a full check would ask on top (the business's real question set, not an estimate).
+  const sets = report.kind === "free" && business && facts ? await questionSets(db, business, facts) : undefined;
+  return { report, opts: { domain: business?.ownerVerifiedAt ? business.domain : null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug, sets };
 }
 
 /** A slug link opens only for the owner of that business. */
@@ -75,6 +81,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const owned = viewer ? await getOwnedBusiness(viewer) : null;
   if (owned && owned.id === report.business.id) await followPreferredLang(owned);
   const v = buildReportView(report, copy, opts);
+  const more = loaded.sets ? moreQuestionsView(loaded.sets, ASKED_ENGINES, copy) : null;
   const R = copy.result;
   const grey = v.state === "grijs";
   const business = demo ? null : await (await ready()).getBusiness(report.business.id);
@@ -219,6 +226,47 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
           </details>
         </section>
 
+        {/* What a full check asks on top: a green table is a sample, not "all is well" (11 Nov 2026) */}
+        {more && (
+          <section aria-labelledby="more-h" className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
+            <div className="flex flex-col gap-3.5 lg:col-span-6">
+              <h2 id="more-h" className="h2-sm">
+                {more.h2}
+              </h2>
+              <p className="max-w-[52ch] text-[16px] leading-[1.55] text-ink-2">{more.body}</p>
+              <p className="max-w-[52ch] text-[16px] font-semibold leading-[1.55] text-ink">{R.more.urgency}</p>
+              <a href="#plan" className="btn-sm self-start print:hidden">
+                {more.cta}
+              </a>
+            </div>
+            <div className="flex flex-col gap-4 lg:col-span-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-[13px] font-semibold text-muted">{R.more.notAsked}</span>
+                <ul className="flex flex-wrap gap-2">
+                  {more.topics.map((t) => (
+                    <li key={t} className="rounded-full border-[1.5px] border-line px-3 py-1 text-[14px] text-ink-2">
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {more.examples.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-muted">{R.more.examples}</span>
+                  <ul className="flex flex-col gap-2">
+                    {more.examples.map((q) => (
+                      <li key={q} className="row-grey justify-start text-[15px]">
+                        <Stip tone="grijs" />
+                        <span>{q}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Who AI names instead */}
         {v.named.length > 0 && (
           <section className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
@@ -277,7 +325,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
         )}
 
         {/* Plan + CTA */}
-        <section data-motion="rise" className="panel grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:gap-10">
+        <section id="plan" data-motion="rise" className="panel grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:gap-10">
           <div className="flex flex-col gap-3.5 lg:col-span-7">
             <h2 className="h2-sm">{v.plan.h2}</h2>
             <ol data-motion="timeline" className="flex flex-col gap-2 text-[16px] leading-[1.5] text-ink-2">
@@ -325,7 +373,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
         {/* Email + self */}
         <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2 print:hidden">
-          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} />
+          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} cta={more?.cta} problem={sp.mail === "druk" ? "busy" : sp.mail === "genoeg" ? "enough" : undefined} />
           <div className="flex flex-col gap-2.5">
             <h3 className="text-[16px] font-bold">{v.self.h3}</h3>
             <details id="zelf">
