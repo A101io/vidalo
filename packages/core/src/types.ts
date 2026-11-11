@@ -276,6 +276,19 @@ export function visibilityFor(totalAnswers: number, notFoundAnswers: number): Vi
   return "found";
 }
 
+/**
+ * Answers that could not be judged right or wrong, summed over the engines (no fact, or no
+ * usable claim). Every surface that says "klopt" or counts "gecontroleerd" subtracts these.
+ */
+export function uncheckedAnswersOf(report: Pick<ScanReport, "engines">): number {
+  return report.engines.reduce((n, e) => n + (e.skipped ? 0 : (e.unchecked ?? 0)), 0);
+}
+
+/** Grey because an AI system answered but none of its answers could be judged: "we konden de antwoorden niet controleren", not "AI kent je niet". */
+export function isUncheckedGrey(report: Pick<ScanReport, "engines" | "stip" | "visibility">): boolean {
+  return report.stip === "grijs" && report.visibility !== "unknown" && report.engines.some((e) => !e.skipped && e.correct + e.wrong + e.notFound === 0 && (e.unchecked ?? 0) > 0);
+}
+
 export type FindingStatus = "open" | "fixing" | "recheck" | "resolved" | "unfixable";
 
 export interface Finding {
@@ -403,7 +416,7 @@ export interface ScanReport {
   /** answers in which the engine said it has no information about the business */
   notFoundAnswers: number;
   visibility: Visibility;
-  engines: { engine: Engine; correct: number; wrong: number; notFound: number; skipped: boolean }[];
+  engines: { engine: Engine; correct: number; wrong: number; notFound: number; skipped: boolean; /** answers with a value that could not be checked (no fact); absent before 11 Nov 2026 */ unchecked?: number }[];
   findings: Finding[];
   /** Answers that matched the facts; factKey/subject identify the question (absent on reports stored before the G redesign). */
   correct: { prompt: string; engine: Engine; value: string; factKey?: FactKey; subject?: string | null; /** The normalised value, so the web can word it in its own language (absent on older reports). */ raw?: string }[];
@@ -420,4 +433,9 @@ export interface ScanReport {
   recommendations?: RecommendationSummary[];
   /** The comparison profile the recommendation questions were built on ("afhaalrestaurant"; prompts/nouns.ts). Null without a sector. */
   comparedAs?: string | null;
+  /**
+   * Every question key asked per engine: how many answers, and whether a fact existed to check them
+   * against. The report counts questions and answers from this (absent on reports before 11 Nov 2026).
+   */
+  asked?: { factKey: FactKey; subject: string | null; engine: Engine; kind: "about" | "recommendation"; samples: number; checked: boolean; unknown?: { value: string; n: number }[] }[];
 }

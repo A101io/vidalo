@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { ScanReport } from "@vidalo/core/types";
 import { getCopy, getI18n } from "@/lib/i18n";
 import { getSession, getOwnedBusiness } from "@/lib/session";
@@ -25,11 +25,16 @@ export const dynamic = "force-dynamic";
 /** copy.landing.footer.reportNote and the privacy text promise this number. */
 const FREE_REPORT_DAYS = 30;
 
-async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean } | null> {
-  if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true };
-  if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true };
-  const report = (await getScanReport(id)) ?? (await latestScanReport(id));
+async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean } | null> {
+  if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };
+  if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true, bySlug: false };
+  // A scan-run id is unguessable and is the link we hand out. A business slug or id
+  // ("sonable-rotterdam") is guessable: it only opens the latest report for the
+  // signed-in owner of that business (security review, 11 Nov 2026).
+  const byRun = await getScanReport(id);
+  const report = byRun ?? (await latestScanReport(id));
   if (!report) return null;
+  const bySlug = !byRun;
   // A free report is reachable for 30 days, as the footer and the privacy
   // text say (docs/content-check.md). Paid customers' reports stay with the
   // account. Expired: the same "niet gevonden" page as an unknown link.
@@ -37,7 +42,14 @@ async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; 
   const db = await ready();
   const business = await db.getBusiness(report.business.id);
   const facts = await db.latestFacts(report.business.id);
-  return { report, opts: { domain: business?.domain ?? null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false };
+  return { report, opts: { domain: business?.domain ?? null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug };
+}
+
+/** A slug link opens only for the owner of that business. */
+async function ownerOf(report: ScanReport): Promise<boolean> {
+  const viewer = await getSession();
+  const owned = viewer ? await getOwnedBusiness(viewer) : null;
+  return owned?.id === report.business.id;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -45,6 +57,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const copy = await getCopy();
   const loaded = await load(id, copy);
   if (!loaded) return { title: copy.result.notFound };
+  if (loaded.bySlug && !(await ownerOf(loaded.report))) return { title: copy.result.notFound, robots: { index: false } };
   return { title: copy.email.subjects.report(loaded.report.business.name), robots: { index: false } };
 }
 
@@ -54,6 +67,8 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const { copy, href } = await getI18n();
   const loaded = await load(id, copy);
   if (!loaded) notFound();
+  // Someone else's slug link: sign in first; after signing in only the owner gets through.
+  if (loaded.bySlug && !(await ownerOf(loaded.report))) redirect(href(`/inloggen?next=${encodeURIComponent(href(`/r/${id}`))}`));
   const { report, opts, demo } = loaded;
   // The owner reads their own report in the language saved on the account; visitors get the URL's language.
   const viewer = demo ? null : await getSession();
@@ -126,7 +141,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
             </div>
           )}
           <details id="alle" className="mt-4 self-start">
-            <summary className="btn-link">{R.table.showAll(report.totalAnswers)}</summary>
+            <summary className="btn-link">{R.table.showAll(v.allCount)}</summary>
             <ul className="mt-3 flex flex-col divide-y-[1px] divide-line rounded-2xl border-[1.5px] border-line text-[14px]">
               {v.all.map((a, i) => (
                 <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">

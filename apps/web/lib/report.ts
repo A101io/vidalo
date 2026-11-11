@@ -11,6 +11,7 @@ import { findingSeverity } from "@vidalo/core/scanner";
 import type { ReportRowData } from "@/components/ReportRow";
 import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
+import { isUncheckedGrey } from "@vidalo/core/types";
 import { hostOf } from "./format";
 
 export type ReportState = "rood" | "groen" | "grijs";
@@ -59,7 +60,7 @@ export interface ReportView {
   cards: AnswerCardData[];
   rows: ReportRowData[];
   /** Every answer, for the "Alle n antwoorden" list: question → engine → value. */
-  all: { question: string; engine: string; value: string; times: string; tone: ReportRowData["tone"] }[];
+  all: { question: string; engine: string; value: string; times: string; total: number; n: number; tone: ReportRowData["tone"] }[];
   instable: { question: string; engine: string; value: string; note: string }[];
   /** "Wie AI wel noemt": up to three recommendation questions where the business was left out. */
   named: NamedBlock[];
@@ -70,6 +71,8 @@ export interface ReportView {
   sourcesBody: string;
   plan: { h2: string; steps: PlanStep[]; note?: string; monitor: string; setup: string; excl: string };
   self: { h3: string; body: string; steps: string[] };
+  /** The count in "Alle N antwoorden bekijken": the answers the lines below it are drawn from. */
+  allCount: number;
 }
 
 const severityRank: Record<Severity, number> = { afhaker: 0, misleider: 1, verwarring: 2 };
@@ -232,11 +235,31 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const state: ReportState = grey ? "grijs" : report.stip === "groen" ? "groen" : "rood";
   const groups = groupQuestions(report, copy);
   const rows = groups.map((g) => rowFor(g, copy));
-  const questions = rows.length;
   const wrongQuestions = rows.filter((r) => r.tone === "rood").length;
   const notFoundQuestions = rows.filter((r) => r.tone === "grijs").length;
   const activeEngines = report.engines.filter((e) => !e.skipped);
-  const perQuestion = report.findings[0]?.sampleCount ?? (questions && activeEngines.length ? Math.max(1, Math.round(report.totalAnswers / (questions * activeEngines.length))) : 3);
+  // What was really asked (reports since 11 Nov 2026): every question, also the ones without a fact to check them
+  // against, and how often each engine answered it. Older reports fall back to the rows and an average.
+  const askedAbout = (report.asked ?? []).filter((a) => a.kind === "about");
+  const askedKeys = new Set(askedAbout.map((a) => keyOf(a.factKey, a.subject)));
+  const checkedKeys = new Set(askedAbout.filter((a) => a.checked).map((a) => keyOf(a.factKey, a.subject)));
+  const questions = askedKeys.size ? Math.max(askedKeys.size, rows.length) : rows.length;
+  // A question without a fact that still produced a finding (not found, another business) is on the table, not unchecked.
+  const unchecked = [...askedKeys].filter((k) => !checkedKeys.has(k) && !groups.some((g) => g.key === k && g.findings.length > 0)).length;
+  const legacyPerQuestion = report.findings[0]?.sampleCount ?? (rows.length && activeEngines.length ? Math.max(1, Math.round(report.totalAnswers / (rows.length * activeEngines.length))) : 3);
+  // The most common number of answers per question: a paid check asks 5 times and goes on to 10 only where an answer was wrong.
+  const timesPer = activeEngines.map((e) => {
+    const cells = askedAbout.filter((a) => a.engine === e.engine);
+    if (!cells.length) return { name: ENGINE_LABEL[e.engine], n: legacyPerQuestion };
+    const freq = new Map<number, number>();
+    for (const c of cells) freq.set(c.samples, (freq.get(c.samples) ?? 0) + 1);
+    const n = [...freq.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]![0];
+    return { name: ENGINE_LABEL[e.engine], n };
+  });
+  const times = R.hero.times(timesPer.length ? timesPer : [{ name: "", n: legacyPerQuestion }]);
+  const askedSamples = (key: string, engine: Engine) => askedAbout.filter((a) => a.engine === engine && keyOf(a.factKey, a.subject) === key).reduce((n, a) => Math.max(n, a.samples), 0);
+  // Grey because nothing could be checked, while the AI did answer: not "AI kent je niet".
+  const uncheckedGrey = isUncheckedGrey(report);
   const engineNames = activeEngines.map((e) => ENGINE_LABEL[e.engine]);
   const enginesText = engineNames.length > 1 ? `${engineNames.slice(0, -1).join(", ")} ${copy.report.and} ${engineNames[engineNames.length - 1]}` : (engineNames[0] ?? "");
 
@@ -244,22 +267,27 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   for (const f of report.findings) if (f.sourceType === "other_entity") otherByEngine.set(f.engine, (otherByEngine.get(f.engine) ?? 0) + f.frequency);
   const otherEntityTotal = [...otherByEngine.values()].reduce((a, b) => a + b, 0);
 
-  const hero =
-    state === "grijs"
+  const hero = uncheckedGrey
+    ? { number: questions, label: R.hero.uncheckedLabel(questions) }
+    : state === "grijs"
       ? { number: rows.filter((r) => r.tone === "groen").length, label: R.hero.answeredLabel(questions) }
       : state === "groen"
         ? { number: questions, label: R.hero.okLabel(questions) }
         : { number: wrongQuestions, label: R.hero.wrongLabel(questions) };
 
-  const h1 = state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood");
-  const intro = state === "grijs" ? R.hero.introGrey(enginesText, questions, perQuestion, report.notFoundAnswers, report.totalAnswers, otherEntityTotal) : R.hero.intro(enginesText, questions, perQuestion, wrongQuestions, notFoundQuestions);
+  const h1 = uncheckedGrey ? R.hero.h1Unchecked(report.business.name, report.business.place) : state === "grijs" ? R.hero.h1Grey(report.business.name, report.business.place) : R.hero.h1(report.business.name, report.business.place, report.stip === "oranje" ? "oranje" : state === "groen" ? "groen" : "rood");
+  const intro = uncheckedGrey
+    ? R.hero.introUnchecked(enginesText, questions, times, report.notFoundAnswers, report.totalAnswers, otherEntityTotal)
+    : state === "grijs"
+      ? R.hero.introGrey(enginesText, questions, times, report.notFoundAnswers, report.totalAnswers, otherEntityTotal)
+      : R.hero.intro(enginesText, questions, times, wrongQuestions, notFoundQuestions, unchecked);
 
   const engineLines = report.engines.map((e) => {
     const other = otherByEngine.get(e.engine) ?? 0;
-    return { name: ENGINE_LABEL[e.engine], text: e.skipped ? R.hero.engineSkipped : R.hero.engineCounts(e.correct, Math.max(0, e.wrong - other), e.notFound, other) };
+    return { name: ENGINE_LABEL[e.engine], text: e.skipped ? R.hero.engineSkipped : R.hero.engineCounts(e.correct, Math.max(0, e.wrong - other), e.notFound, other, e.unchecked ?? 0) };
   });
 
-  const cards = pickCards(report.findings, report, grey, copy);
+  const cards = pickCards(report.findings, report, grey && !uncheckedGrey, copy);
 
   // One line per question, AI system and answer, with how often it came: a wrong answer 3 of 3 times
   // reads differently from 1 of 3, and the lines add up to the count in the heading (9 Nov 2026: the
@@ -282,17 +310,42 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
       const c = cell(a.engine);
       c.correct.set(a.value, (c.correct.get(a.value) ?? 0) + 1);
     }
-    for (const c of perEngine.values()) c.total = Math.max(c.total, c.wrong + [...c.correct.values()].reduce((s, n) => s + n, 0));
+    for (const [e, c] of perEngine.entries()) c.total = Math.max(c.total, c.wrong + [...c.correct.values()].reduce((s, n) => s + n, 0), askedSamples(g.key, e));
     const fromFindings = g.findings.map((f) => ({
       question: g.question,
       engine: ENGINE_LABEL[f.engine],
       value: f.verdict === "not_found" ? R.table.notFound : f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy),
       times: R.table.times(f.frequency, cell(f.engine).total),
+      total: cell(f.engine).total,
+      n: f.frequency,
       tone: (f.verdict === "not_found" ? "grijs" : "rood") as ReportRowData["tone"],
     }));
-    const fromCorrect = [...perEngine.entries()].flatMap(([e, c]) => [...c.correct.entries()].map(([value, n]) => ({ question: g.question, engine: ENGINE_LABEL[e], value, times: R.table.times(n, c.total), tone: "groen" as const })));
+    const fromCorrect = [...perEngine.entries()].flatMap(([e, c]) => [...c.correct.entries()].map(([value, n]) => ({ question: g.question, engine: ENGINE_LABEL[e], value, times: R.table.times(n, c.total), total: c.total, n, tone: "groen" as const })));
     return [...fromFindings, ...fromCorrect];
   });
+  // Every answer asked is on the list (reports since 11 Nov 2026): per question and AI system what was said,
+  // values on a question we have no fact for marked "niet te controleren" (the Sonova address stayed hidden),
+  // and the rest as "geen bruikbaar antwoord". Per (question, engine), so one engine's finding never hides another's answers.
+  const lineKey = (question: string, engine: string) => `${question}|${engine}`;
+  const covered = new Map<string, number>();
+  for (const l of all) covered.set(lineKey(l.question, l.engine), (covered.get(lineKey(l.question, l.engine)) ?? 0) + l.n);
+  for (const a of askedAbout) {
+    const question = questionFor(a.factKey, a.subject, report.business.name, report.business.place, copy);
+    const engine = ENGINE_LABEL[a.engine];
+    const k = lineKey(question, engine);
+    let used = covered.get(k) ?? 0;
+    if (!a.checked) {
+      for (const u of a.unknown ?? []) {
+        if (used + u.n > a.samples) break;
+        all.push({ question, engine, value: `${humanValue(a.factKey, u.value, a.subject, copy)} (${R.table.unchecked})`, times: R.table.times(u.n, a.samples), total: a.samples, n: u.n, tone: "grijs" });
+        used += u.n;
+      }
+    }
+    if (a.samples > used) all.push({ question, engine, value: R.table.noAnswer, times: R.table.times(a.samples - used, a.samples), total: a.samples, n: a.samples - used, tone: "grijs" });
+    covered.set(k, Math.max(used, a.samples));
+  }
+  // The heading counts the answers behind these lines.
+  const allCount = report.asked?.length ? all.reduce((s, l) => s + l.n, 0) : report.totalAnswers;
 
   const instable = report.instable.map((f) => ({
     question: f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, report.business.name, report.business.place, copy),
@@ -304,6 +357,8 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   // Sources
   let sources: SourceRowData[];
   if (opts.sources) sources = opts.sources;
+  // Grey because we could not check: nothing to say about where AI looks for you (compliance round 2).
+  else if (uncheckedGrey) sources = [];
   else if (state === "grijs") {
     const S = R.sources;
     sources = [
@@ -329,8 +384,15 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   // Plan
   const hosts = [...new Set(report.findings.filter((f) => f.verdict !== "not_found" && f.sourceUrl && f.sourceType !== "owned_website" && f.sourceType !== "owned_facts_page").map((f) => hostOf(f.sourceUrl)))];
   const firstTone: Stip = state === "grijs" ? "grijs" : state === "groen" ? "grijs" : report.stip === "oranje" ? "oranje" : "rood";
-  const plan =
-    state === "grijs"
+  const plan = uncheckedGrey
+    ? {
+        h2: R.plan.h2Unchecked,
+        steps: R.plan.stepsGreen.map((text, i) => ({ tone: (["grijs", "oranje", "groen"] as const)[i]!, text })),
+        monitor: R.plan.monitor,
+        setup: R.plan.setup,
+        excl: R.plan.exclVat,
+      }
+    : state === "grijs"
       ? {
           h2: R.plan.h2Grey,
           steps: [
@@ -363,21 +425,21 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
             excl: R.plan.exclVat,
           };
 
-  const selfSteps =
-    state === "grijs"
-      ? [...R.self.stepsGrey]
-      : report.findings
+  const wrongSteps = report.findings
           .filter((f) => f.verdict !== "not_found")
           .map((f) => {
             const src = sourceLabel(f, copy);
             return copy.report.selfStep(src.label, ENGINE_LABEL[f.engine], copy.findingVerdict.wrong.toLowerCase(), f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy), correctText(f, copy), f.verdict === "wrong" ? copy.fixPath[f.sourceType] : "");
           });
+  // No wrong answer (green, or grey): the general steps, so "Bekijk de stappen" never opens on nothing (11 Nov 2026).
+  const general = state === "grijs" || wrongSteps.length === 0;
+  const selfSteps = general ? [...R.self.stepsGrey] : wrongSteps;
 
   return {
     state,
     stip: report.stip,
     questions,
-    perQuestion,
+    perQuestion: timesPer.length ? Math.max(...timesPer.map((t) => t.n)) : legacyPerQuestion,
     wrongQuestions,
     notFoundQuestions,
     hero,
@@ -394,6 +456,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     sourcesTitle: state === "grijs" ? R.sources.h2Grey : R.sources.h2,
     sourcesBody: state === "grijs" ? R.sources.bodyGrey : R.sources.body,
     plan,
-    self: { h3: state === "grijs" ? R.self.h3Grey : R.self.h3, body: state === "grijs" ? R.self.bodyGrey : R.self.body, steps: selfSteps },
+    self: { h3: general ? R.self.h3Grey : R.self.h3, body: general ? R.self.bodyGrey : R.self.body, steps: selfSteps },
+    allCount,
   };
 }

@@ -5,6 +5,7 @@ import { Stip } from "@/components/Stip";
 import { requireOwner } from "@/lib/owner";
 import { loadDashboard } from "@/lib/reads";
 import { getScanReport } from "@/lib/core";
+import { isUncheckedGrey, uncheckedAnswersOf } from "@vidalo/core/types";
 import { dateShort, dateTime } from "@/lib/format";
 import { checkNow, deleteMyData, setLanguage } from "../actions";
 import { LANGS } from "@/lib/lang-paths";
@@ -168,8 +169,18 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <div className="flex items-start gap-4">
               <Stip tone={report.stip} size={22} className="mt-1" />
               <div>
-                <p className="text-[17px] font-bold">{A.reportLine(report.totalAnswers - report.wrongAnswers - (report.notFoundAnswers ?? 0), report.totalAnswers)}</p>
-                <p className="mt-1 text-[15px] text-ink-2">{copy.stipLine[report.stip]}</p>
+                {(() => {
+                  // Answers we could not check never count as right (compliance round 2, 11 Nov 2026).
+                  const unchecked = uncheckedAnswersOf(report);
+                  const checked = report.totalAnswers - unchecked;
+                  const ok = Math.max(0, checked - report.wrongAnswers - (report.notFoundAnswers ?? 0));
+                  return (
+                    <>
+                      <p className="text-[17px] font-bold">{unchecked > 0 ? A.reportLineChecked(ok, checked) : A.reportLine(ok, report.totalAnswers)}</p>
+                      <p className="mt-1 text-[15px] text-ink-2">{isUncheckedGrey(report) ? copy.stipUnchecked.line : copy.stipLine[report.stip]}</p>
+                    </>
+                  );
+                })()}
                 <p className="mt-1 text-[14px] text-muted">
                   {A.reportDate(dateShort(lastRun.finishedAt ?? lastRun.startedAt))} · {A.openFindings(open)} · {A.resolvedFindings(resolved)}
                 </p>

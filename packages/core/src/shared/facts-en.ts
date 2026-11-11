@@ -5,6 +5,7 @@
  */
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Finding } from "../types.js";
 import { findingWordsNl, type FindingWordsNl } from "./facts-nl.js";
+import { displayAddress } from "../scanner/normalize.js";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -89,6 +90,7 @@ export function factFieldEn(factKey: FactKey, subject: string | null): string {
 
 /** Normalised value → English wording. "closed" → "closed", "09:00-17:00" → "09:00 to 17:00", "4.5" → "€4.50". */
 export function valueEn(factKey: FactKey, value: string): string {
+  if (!value.trim()) return "not known yet";
   const v = value.trim();
   if (v === NOT_FOUND_LABEL || v === NOT_FOUND_VALUE) return "not found";
   if (v === ABSENT_LABEL || v === ABSENT_VALUE) return "not named";
@@ -109,6 +111,7 @@ export function valueEn(factKey: FactKey, value: string): string {
   const hours = /^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(v);
   if (hours) return `${hours[1]} to ${hours[2]}`;
   if (factKey === "price" && /^\d+(\.\d+)?$/.test(v)) return `€${Number(v).toLocaleString("en-GB", { minimumFractionDigits: 2 })}`;
+  if (factKey === "address") return displayAddress(v);
   return v;
 }
 

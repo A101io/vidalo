@@ -132,9 +132,43 @@ export const NOT_FOUND_PATTERNS: RegExp[] = [
   /i do not have (?:any )?information/i,
 ];
 
-/** Does the answer say the engine has no information about the business? */
+/**
+ * Softer phrasings (Sonable, 11 Nov 2026: "geen specifieke informatie", "niet direct
+ * beschikbaar in de zoekresultaten"). They also occur as a hedge inside an answer that
+ * does give facts ("het nummer kon ik niet vinden, maar het adres is …"), so they only
+ * count when the answer names no business fact.
+ */
+export const SOFT_NOT_FOUND_PATTERNS: RegExp[] = [
+  /geen (?:\p{L}+[ \t]+){1,2}(?:informatie|gegevens)/iu,
+  /niet (?:direct |openbaar )?beschikbaar in de zoekresultaten/i,
+  /(?:heb|kon|kan) [^.\n]{0,80}niet (?:kunnen )?vinden/i,
+  /no (?:specific |detailed |current )information/i,
+];
+
+/** AI answers are third-party text: every pattern runs on a bounded prefix. */
+const MATCH_LIMIT = 8000;
+
+/** Does the answer say the engine has no information about the business? (The firm phrasings: they decide on their own.) */
 export function looksNotFound(answerText: string): boolean {
-  return NOT_FOUND_PATTERNS.some((re) => re.test(answerText));
+  const text = answerText.slice(0, MATCH_LIMIT);
+  return NOT_FOUND_PATTERNS.some((re) => re.test(text));
+}
+
+/**
+ * A softer phrasing with no business fact in the answer. Only decides when the answer
+ * gave no claim for the question asked: "Nee, je kunt er niet pinnen. Over creditcards
+ * heb ik geen specifieke informatie." is a (wrong or right) answer, not "niets gevonden"
+ * (QA round 2, 11 Nov 2026).
+ */
+export function looksSoftNotFound(answerText: string): boolean {
+  const text = answerText.slice(0, MATCH_LIMIT);
+  return SOFT_NOT_FOUND_PATTERNS.some((re) => re.test(text)) && !namesBusinessFacts(text);
+}
+
+/** Did the claims answer the question asked (any probe's fact key)? */
+function answersProbe(claims: Pick<Claim, "factKey">[], prompt: PromptLike): boolean {
+  const keys = new Set((prompt.probes.length ? prompt.probes : [prompt.category]).map((p) => parseProbe(p).factKey));
+  return claims.some((c) => keys.has(c.factKey));
 }
 
 /** Does the answer carry anything that looks like a business fact (phone, time range, price, street address, URL, open/closed)? */
@@ -174,10 +208,52 @@ const NL_CITIES = [
   "Doetinchem", "Hoofddorp", "Zutphen", "Harderwijk", "Weert", "Kampen", "Heerenveen", "Sneek", "Tiel", "Woerden", "Gorinchem",
 ];
 
-/** Does the answer talk about the same-named business in another town? */
+/** Words that say what kind of business it is, not which one: they do not identify it. */
+const GENERIC_NAME_WORDS = new Set(["bakkerij", "bakker", "restaurant", "cafe", "eetcafe", "kapsalon", "kapper", "salon", "garage", "autobedrijf", "installatiebedrijf", "loodgieter", "schildersbedrijf", "praktijk", "tandarts", "fysiotherapie", "advocaten", "notaris", "makelaar", "makelaardij", "winkel", "shop", "studio", "de", "het", "een", "van", "en", "bv", "nv", "b", "v", "the", "and"]);
+
+/** The words of a business name that identify it: lowercase, no accents, generic words and suffixes ("| Ambachtelijk brood") left out. */
+export function nameCore(name: string): string[] {
+  const head = name.split(/\s[|·–-]\s|\s\|/)[0] ?? name;
+  const words = head
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 3 && !GENERIC_NAME_WORDS.has(w));
+  return words.length ? words : head.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
+/**
+ * The answer is headed by another business: ChatGPT's map-card heading
+ * ("## [Sonova Retail Support Centre B.V.](…)") names a business that shares no
+ * identifying word with this one, and the answer never uses this name. ChatGPT
+ * answered Sonable's address question with Sonova's address this way (11 Nov 2026).
+ * Only the heading counts: a company mentioned in passing ("betalen via Worldline
+ * B.V.") says nothing about whom the answer is about.
+ */
+export function namesOnlyAnotherBusiness(answer: string, name: string): boolean {
+  const text = answer.slice(0, MATCH_LIMIT);
+  const heading = text.match(/^[ \t]*#{1,6}[ \t]*\[([^\]\n]{1,200})\]/m)?.[1];
+  if (!heading) return false;
+  const core = nameCore(name);
+  if (!core.length) return false;
+  const words = (s: string) => new Set(s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u));
+  const inHeading = words(heading);
+  const inAnswer = words(text);
+  if (core.some((w) => inHeading.has(w) || inAnswer.has(w))) return false;
+  // "Haar Zaken Kappers" for "Kapsalon Haarzaken", "Hair Lab" for "HairLab": the same letters, other spacing.
+  const letters = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  const joined = letters(core.join(""));
+  const head = letters(heading);
+  if (joined.length >= 4 && (head.includes(joined) || (head.length >= 4 && joined.includes(head)))) return false;
+  return true;
+}
+
+/** Does the answer talk about the same-named business in another town, or lead with another business? */
 export function detectOtherEntity(answer: string, facts: Facts): boolean {
   const place = facts.place.toLowerCase();
   const lower = answer.toLowerCase();
+  if (namesOnlyAnotherBusiness(answer, facts.name)) return true;
   if (/dit gaat over .+ in [A-Z]/.test(answer) && !lower.includes(`dit gaat over ${facts.name.toLowerCase()} in ${place}`)) return true;
   const area = new Set((facts.serviceArea?.places ?? []).map((p) => p.toLowerCase()));
   for (const city of NL_CITIES) {
@@ -190,7 +266,7 @@ export function detectOtherEntity(answer: string, facts: Facts): boolean {
 
 const TIME = String.raw`(\d{1,2}(?:[:.]\d{2})?\s*(?:[ap]\.?m\.?)?)\s*(?:uur)?`;
 const TIME_RANGE = new RegExp(`${TIME}\\s*(?:tot(?: en met)?|-|–|t/m|to|until|till)\\s*${TIME}`, "i");
-const PHONE_RE = /(?:\+31|0031|0)\s?[1-9](?:[\s-]?\d){8}\b/;
+const PHONE_RE = /(?:\+31|0031|0)\s?[1-9](?:[\s-]?\d){8}\b|\b0[89]00[\s-]?\d{3,7}\b/;
 
 /** The first phone number in an answer: Dutch notation for NL businesses, any notation of the country elsewhere. */
 function findPhone(text: string, country: string | undefined): { number: string; quote: string } | null {
@@ -233,9 +309,26 @@ function yesNo(answer: string): "yes" | "no" | null {
   return null;
 }
 
+/** The answer without its hedge sentences ("Over creditcards heb ik geen specifieke informatie."). */
+function withoutHedges(answerText: string): string {
+  return answerText
+    .slice(0, MATCH_LIMIT)
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => !SOFT_NOT_FOUND_PATTERNS.some((re) => re.test(s)))
+    .join(" ");
+}
+
 export function extractClaimsRules(answerText: string, facts: Facts, prompt: PromptLike, sampleId = ""): Claim[] {
   if (isRecommendationPrompt(prompt)) return extractRecommendation(answerText, facts, prompt, sampleId);
   if (looksNotFound(answerText)) return [notFoundClaim(prompt, sampleId, 0.9, answerText)];
+  // A hedge sentence is read apart from the answer: its "geen" is not a "no" (QA round 2).
+  if (SOFT_NOT_FOUND_PATTERNS.some((re) => re.test(answerText.slice(0, MATCH_LIMIT)))) {
+    const rest = withoutHedges(answerText);
+    if (rest !== answerText) {
+      const claims = rest.trim() ? extractClaimsRules(rest, facts, prompt, sampleId) : [];
+      return answersProbe(claims, prompt) || !looksSoftNotFound(answerText) ? claims : [notFoundClaim(prompt, sampleId, 0.8, answerText)];
+    }
+  }
   const claims: Claim[] = [];
   // An identity question ("is X in Y hetzelfde als X in Z?") names the other place by design.
   const otherEntity = prompt.category === "identity" || prompt.category === "area" ? false : detectOtherEntity(answerText, facts);
@@ -322,6 +415,7 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
       }
     }
   }
+  if (!answersProbe(claims, prompt) && looksSoftNotFound(answerText)) return [notFoundClaim(prompt, sampleId, 0.8, answerText)];
   return claims;
 }
 
@@ -403,7 +497,7 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
   const parsed = ExtractionSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) throw new Error(`extraction schema mismatch: ${parsed.error.message}`);
   // The model gives no claims and the answer names no facts: the engine knows nothing about the business.
-  if (looksNotFound(answerText) || (parsed.data.claims.length === 0 && !namesBusinessFacts(answerText))) {
+  if (looksNotFound(answerText) || (parsed.data.claims.length === 0 && !namesBusinessFacts(answerText)) || (!answersProbe(parsed.data.claims, prompt) && looksSoftNotFound(answerText))) {
     return [notFoundClaim(prompt, sampleId, parsed.data.claims.length === 0 ? 0.9 : 0.7, answerText)];
   }
   const otherEntityHint = detectOtherEntity(answerText, facts);

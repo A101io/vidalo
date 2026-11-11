@@ -51,6 +51,8 @@ export function computeEngineStips(input: StipInput): EngineStip[] {
     const instableAnswers = input.instable.filter((f) => f.engine === engine).reduce((n, f) => n + f.frequency, 0);
     const stip: Stip = engineStip({
       skipped: input.unavailable.has(engine) || total === 0,
+      // Not found is a verdict too (criterium 1 can make the dot red): only answers with nothing to judge at all are unchecked.
+      nothingChecked: judged === 0 && notFound === 0,
       findingSeverities: findings.filter((f) => f.verdict !== "not_found").map(findingSeverity),
       notFoundCriteria: input.criteriaNotFound.filter((c) => c.engine === engine).map((c) => c.criterium),
       fixesInProgress: findings.filter((f) => f.status === "fixing" || f.status === "recheck").length,

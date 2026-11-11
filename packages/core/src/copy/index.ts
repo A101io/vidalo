@@ -69,7 +69,7 @@ export const copy = {
       sub: "Bij ongeveer de helft van de bedrijven klopt minstens één antwoord niet, of de AI kent ze niet.",
       exampleLabel: "voorbeeld",
       caption: "Fictief voorbeeld: zo ziet een controle van 100 bedrijven bij ChatGPT en Google AI eruit",
-      legend: { rood: "minstens één fout", grijs: "niet gevonden", groen: "alles klopt" },
+      legend: { rood: "minstens één fout", grijs: "niet gevonden of niet te controleren", groen: "alles klopt" },
       /** 100 dots, row by row (r = rood, g = groen, x = grijs). */
       grid: "rggrrxrggrxrrggrxrggrxrrggrxrggrxrrggrxrrggrxrggrxgrrgrxrggrrxgrgrxrgrgrxgrrgrxgrrgrxgrgrxgrgrxrggrx",
       /** The animated hero: one answer, built from four sources, put right at the source. */
@@ -215,7 +215,7 @@ export const copy = {
       legend: [
         { stip: "rood", name: "Rood", body: "minstens één afhaker fout" },
         { stip: "oranje", name: "Oranje", body: "alleen misleiders of verwarring" },
-        { stip: "grijs", name: "Grijs", body: "AI kent je niet" },
+        { stip: "grijs", name: "Grijs", body: "AI kent je niet, of we konden het niet controleren" },
         { stip: "groen", name: "Groen", body: "alles klopt" },
       ],
     },
@@ -1379,32 +1379,50 @@ export const copy = {
       wrongLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "fout beantwoord"],
       okLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "goed beantwoord"],
       answeredLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "beantwoord"],
+      /** grey because nothing could be checked: the AI did answer */
+      uncheckedLabel: (m: number) => [`van ${m} ${m === 1 ? "vraag" : "vragen"}`, "beantwoord, niet te controleren"],
       /** "Bakkerij De Vries, Haarlem: jouw stip is rood." */
       h1: (name: string, place: string, stip: "rood" | "oranje" | "groen") => `${name}, ${place}: jouw stip is ${stip}.`,
       h1Grey: (name: string, place: string) => `${name}, ${place}: AI kent je niet.`,
-      /** The intro paragraph: engines, questions, samples, wrong, not found. */
-      intro: (engines: string, questions: number, perQuestion: number, wrongQuestions: number, notFoundQuestions: number) => {
-        const asked = `${engines} beantwoordden ${questions} ${questions === 1 ? "vraag" : "vragen"}, elk ${perQuestion} keer.`;
-        if (wrongQuestions === 0 && notFoundQuestions === 0) return `${asked} Elk antwoord klopte.`;
+      /** Grey because no answer could be checked: we do not know the business's facts (Sonable, 11 Nov 2026). */
+      h1Unchecked: (name: string, place: string) => `${name}, ${place}: we konden de antwoorden niet controleren.`,
+      /** How often each AI system was asked per question: "elk 3 keer", or "ChatGPT 3 keer en Google AI 1 keer". */
+      times: (per: { name: string; n: number }[]) => {
+        if (new Set(per.map((p) => p.n)).size <= 1) return `elk ${per[0]?.n ?? 0} keer`;
+        const parts = per.map((p) => `${p.name} ${p.n} keer`);
+        return `${parts.slice(0, -1).join(", ")} en ${parts[parts.length - 1]}`;
+      },
+      /** The intro paragraph: engines, questions, how often, wrong, not found, unchecked. */
+      intro: (engines: string, questions: number, times: string, wrongQuestions: number, notFoundQuestions: number, unchecked = 0) => {
+        const asked = `${engines} beantwoordden ${questions} ${questions === 1 ? "vraag" : "vragen"}, ${times}.`;
+        const tailUnchecked = unchecked > 0 ? ` Bij ${unchecked} ${unchecked === 1 ? "vraag" : "vragen"} konden we het antwoord niet controleren, omdat we die gegevens van je bedrijf nog niet kennen.` : "";
+        if (wrongQuestions === 0 && notFoundQuestions === 0) return unchecked > 0 ? `${asked} Elk antwoord dat we konden controleren klopte.${tailUnchecked}` : `${asked} Elk antwoord klopte.`;
         const parts: string[] = [];
         if (wrongQuestions > 0) parts.push(`Bij ${wrongQuestions} ${wrongQuestions === 1 ? "vraag" : "vragen"} klopte het antwoord niet`);
         if (notFoundQuestions > 0) parts.push(`bij ${notFoundQuestions} ${notFoundQuestions === 1 ? "vraag" : "vragen"} vond de AI niets`);
         const tail = wrongQuestions > 0 ? ", en elke fout komt uit een bron die je kunt laten herstellen." : ".";
         const sentence = parts.join(", ");
-        return `${asked} ${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}${tail}`;
+        return `${asked} ${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}${tail}${tailUnchecked}`;
       },
-      introGrey: (engines: string, questions: number, perQuestion: number, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
-        const asked = `${engines} kregen ${questions} ${questions === 1 ? "vraag" : "vragen"}, elk ${perQuestion} keer. Bij ${notFoundAnswers} van de ${totalAnswers} antwoorden vond de AI niets over je bedrijf.`;
+      introUnchecked: (engines: string, questions: number, times: string, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
+        const asked = `${engines} kregen ${questions} ${questions === 1 ? "vraag" : "vragen"}, ${times}.`;
+        const nf = notFoundAnswers > 0 ? ` Bij ${notFoundAnswers} van de ${totalAnswers} antwoorden vond de AI niets over je bedrijf.` : "";
+        const other = otherEntity > 0 ? ` ${otherEntity === 1 ? "Eén keer" : `${otherEntity} keer`} ging het antwoord over een ander bedrijf.` : "";
+        return `${asked}${nf}${other} ${nf || other ? "Voor de andere antwoorden" : "Voor deze antwoorden"} weten we niet wat het goede antwoord is: we kennen de gegevens van je bedrijf nog niet. Met Vidalo Scan leg je je gegevens vast; dan controleren we die antwoorden ook.`;
+      },
+      introGrey: (engines: string, questions: number, times: string, notFoundAnswers: number, totalAnswers: number, otherEntity: number) => {
+        const asked = `${engines} kregen ${questions} ${questions === 1 ? "vraag" : "vragen"}, ${times}. Bij ${notFoundAnswers} van de ${totalAnswers} antwoorden vond de AI niets over je bedrijf.`;
         const other = otherEntity > 0 ? ` ${otherEntity === 1 ? "Eén keer" : `${otherEntity} keer`} noemde het een ander bedrijf.` : "";
         return `${asked}${other} Je bestaat niet in het antwoord, en dus niet voor de klant die het vraagt.`;
       },
       /** Per-engine counts: "2 klopt · 4 fout · 1 niets". */
-      engineCounts: (correct: number, wrong: number, notFound: number, other: number) => {
+      engineCounts: (correct: number, wrong: number, notFound: number, other: number, unchecked = 0) => {
         const parts: string[] = [];
         if (correct > 0) parts.push(`${correct} klopt`);
         if (wrong > 0) parts.push(`${wrong} fout`);
         if (notFound > 0) parts.push(`${notFound} niets`);
         if (other > 0) parts.push(`${other} ander bedrijf`);
+        if (unchecked > 0) parts.push(`${unchecked} niet te controleren`);
         return parts.length ? parts.join(" · ") : "geen antwoord";
       },
       engineSkipped: "overgeslagen",
@@ -1414,7 +1432,7 @@ export const copy = {
       frequency: (n: number, of: number) => `${n} van ${of} keer`,
       notFoundQuote: "“Ik kan geen informatie vinden.”",
       namesOthers: "noemt andere bedrijven.",
-      otherEntity: "naamgenoot",
+      otherEntity: "ander bedrijf",
       notNamed: "noemt je niet.",
     },
     table: {
@@ -1427,8 +1445,12 @@ export const copy = {
       none: "—",
       noSource: "geen enkele bron noemt het",
       memory: "geheugen van het model",
-      otherEntity: "naamgenoot",
+      otherEntity: "ander bedrijf",
       showAll: (n: number) => `Alle ${n} antwoorden bekijken`,
+      /** a value on a question we have no fact for */
+      unchecked: "niet te controleren",
+      /** answers that gave nothing usable for the question asked */
+      noAnswer: "geen bruikbaar antwoord",
       allTitle: "Alle antwoorden",
       instableTitle: "Af en toe fout",
       recommendationTitle: "Aanbevelingsvragen",
@@ -1465,6 +1487,8 @@ export const copy = {
     plan: {
       h2: "Zo wordt je stip groen",
       h2Green: "Zo blijft je stip groen",
+      /** grey because we do not know the facts: record them, then every answer can be checked */
+      h2Unchecked: "Zo leggen we je gegevens vast",
       h2Grey: "Zo word je gevonden",
       /** Red/orange: three steps from the findings. */
       stepSources: (sources: string) => `${sources}: we vragen om correctie of laten zien wat je moet aanpassen, met bewijs.`,
@@ -1501,7 +1525,7 @@ export const copy = {
       h3: "Zelf rechtzetten?",
       body: "De tabel hierboven zegt per bron wat er moet veranderen.",
       h3Grey: "Zelf doen?",
-      bodyGrey: "Claim je Google-profiel, zet adres en diensten op je website, en meld je aan bij de gidsen hierboven.",
+      bodyGrey: "Claim je Google-profiel, zet adres en diensten op je website, en meld je aan bij de Nederlandse bedrijvengidsen.",
       link: "Bekijk de stappen",
       stepsTitle: "Wat er per bron moet veranderen",
       stepsGrey: [
@@ -1924,7 +1948,7 @@ export const copy = {
     directory_api: "bedrijfsgids",
     directory_form: "bedrijfsgids",
     third_party: "website van een derde",
-    other_entity: "bedrijf met dezelfde naam",
+    other_entity: "een ander bedrijf",
     none: "geheugen van het model",
   },
 
@@ -1992,6 +2016,8 @@ export const copy = {
     groen: "Groen",
     grijs: "Grijs",
   },
+  /** Grey because no answer could be checked (we do not know the facts), not because AI knows nothing. */
+  stipUnchecked: { meaning: "We konden niet alle antwoorden controleren", line: "We kennen de gegevens van je bedrijf nog niet, dus we weten niet wat het goede antwoord is." },
   stipMeaning: {
     rood: "AI stuurt klanten weg",
     oranje: "AI misleidt",
@@ -2037,6 +2063,7 @@ export const copy = {
     /** A stored value in words. */
     value: {
       notFound: "niet gevonden",
+      unknown: "nog niet bekend",
       absent: "niet genoemd",
       present: "genoemd",
       open: "open",
@@ -2316,10 +2343,12 @@ export const copy = {
 
     /** The overview in design G (docs/design-g/AppG.dc.html): the facts of the last check, then what to do. */
     checkTitle: (date: string) => `Controle van ${date}`,
-    checkIntro: (questions: number, engines: number, perQuestion: number, wrongQuestions: number, notFoundQuestions: number) =>
-      `We stelden ${questions} ${questions === 1 ? "vraag" : "vragen"} aan ${engines} AI-${engines === 1 ? "systeem" : "systemen"}, elk ${perQuestion} keer. ` +
-      (wrongQuestions === 0 ? "Elk antwoord klopte" : `Bij ${wrongQuestions} ${wrongQuestions === 1 ? "vraag" : "vragen"} gaf minstens één systeem een fout antwoord`) +
-      (notFoundQuestions > 0 ? `; bij ${notFoundQuestions} ${notFoundQuestions === 1 ? "vraag" : "vragen"} vond een systeem niets.` : "."),
+    /** `times`: copy.result.hero.times ("elk 5 keer"); `unchecked`: questions we have no fact for (11 Nov 2026). */
+    checkIntro: (questions: number, engines: number, times: string, wrongQuestions: number, notFoundQuestions: number, unchecked = 0) =>
+      `We stelden ${questions} ${questions === 1 ? "vraag" : "vragen"} aan ${engines} AI-${engines === 1 ? "systeem" : "systemen"}, ${times}. ` +
+      (unchecked >= questions && questions > 0 ? "Geen van de antwoorden was te controleren" : wrongQuestions === 0 ? (unchecked > 0 ? "Elk antwoord dat we konden controleren klopte" : "Elk antwoord klopte") : `Bij ${wrongQuestions} ${wrongQuestions === 1 ? "vraag" : "vragen"} gaf minstens één systeem een fout antwoord`) +
+      (notFoundQuestions > 0 ? `; bij ${notFoundQuestions} ${notFoundQuestions === 1 ? "vraag" : "vragen"} vond een systeem niets.` : ".") +
+      (unchecked > 0 ? ` Bij ${unchecked} ${unchecked === 1 ? "vraag" : "vragen"} kennen we je gegevens nog niet; vul ze aan bij Gegevens.` : ""),
     sinceLine: (date: string, found: number, resolved: number, open: number) => `Sinds ${date}: ${found} nieuw, ${resolved} hersteld, ${open} nog open.`,
     firstFull: "Dit was de eerste volledige controle.",
     fullReport: "Volledig rapport",
@@ -2348,14 +2377,16 @@ export const copy = {
     atUsLine: (label: string, date: string | null) => (date ? `${label} Opnieuw op ${date}.` : label),
     details: "Details",
     perEngine: "Per AI-systeem",
-    engineLine: (total: number, wrong: number, notFound: number) => {
+    engineLine: (total: number, wrong: number, notFound: number, unchecked = 0) => {
       const parts: string[] = [];
       if (wrong > 0) parts.push(`${wrong} van ${total} fout`);
       if (notFound > 0) parts.push(`${notFound} niets`);
-      return parts.length ? parts.join(", ") : total > 0 ? `${total} van ${total} klopt` : "niet gevraagd";
+      if (unchecked > 0) parts.push(`${unchecked} niet te controleren`);
+      const checked = total - unchecked;
+      return parts.length ? parts.join(", ") : checked > 0 ? `${checked} van ${checked} klopt` : "niet gevraagd";
     },
     answers: "Antwoorden",
-    engineLegend: "Rood: een antwoord stuurt klanten weg. Oranje: verkeerde details. Groen: alles klopt. Grijs: het systeem vindt niets over je. Het verloop per systeem staat in Voortgang.",
+    engineLegend: "Rood: een antwoord stuurt klanten weg. Oranje: verkeerde details. Groen: alles klopt. Grijs: het systeem vindt niets over je, of we konden het antwoord niet controleren. Het verloop per systeem staat in Voortgang.",
     open: "Nog open",
     source: (source: string) => `Bron: ${source}.`,
     weLine: (label: string, date: string | null) => `Wij: ${label.charAt(0).toLowerCase()}${label.slice(1)}${date ? ` Opnieuw ${date}.` : ""}`,
@@ -2587,7 +2618,7 @@ export const copy = {
     enginesAsked: (n: number) => `${n} AI-${n === 1 ? "systeem" : "systemen"}`,
     scanKind: { free: "Gratis controle", baseline: "Eerste volledige controle", monthly: "Maandcontrole", recheck: "Hercontrole", ondemand: "Extra controle" },
     notAsked: "niet gevraagd",
-    legend: "Een stip per controle: groen klopt, oranje misleidt, rood stuurt klanten weg, grijs kent je niet. Het getal eronder is het aantal antwoorden dat niet klopte of niets vond.",
+    legend: "Een stip per controle: groen klopt, oranje misleidt, rood stuurt klanten weg, grijs kent je niet of was niet te controleren. Het getal eronder is het aantal antwoorden dat niet klopte of niets vond.",
     misses: (n: number) => (n === 0 ? "Alles klopte" : `${n} ${n === 1 ? "antwoord klopte" : "antwoorden klopten"} niet of vond niets`),
     repairs: { found: "Nieuw gevonden", resolved: "Hersteld", open: "Nog open", inProgress: "In herstel" },
     method: "Per vraag en AI-systeem telt het antwoord dat het vaakst terugkwam, zodat een korte en een volledige controle te vergelijken zijn. Hercontroles stellen alleen de vragen die we herstellen en tellen hier niet mee. Elke controle wordt gelezen met je huidige gegevens.",
@@ -2659,6 +2690,8 @@ export const copy = {
     factsHistory: "Alle versies",
     setDomain: "Domein instellen",
     reportLine: (ok: number, total: number) => `${ok} van ${total} antwoorden kloppen`,
+    /** some answers could not be checked: count only the checked ones */
+    reportLineChecked: (ok: number, checked: number) => `${ok} van de ${checked} gecontroleerde antwoorden kloppen`,
     reportDate: (date: string) => `Gecontroleerd op ${date}`,
     openFindings: (n: number) => `${n} ${n === 1 ? "fout" : "fouten"} open`,
     resolvedFindings: (n: number) => `${n} hersteld`,
@@ -2961,13 +2994,13 @@ export const copy = {
     overview: (url: string) => `Je overzicht: ${url}`,
     source: {
       none: "uit het geheugen van het model",
-      otherEntity: (host: string | null) => (host ? `een ander bedrijf met dezelfde naam (${host})` : "een ander bedrijf met dezelfde naam"),
+      otherEntity: (host: string | null) => (host ? `een ander bedrijf (${host})` : "een ander bedrijf"),
       ownedWebsite: (host: string | null) => (host ? `je eigen website (${host})` : "je eigen website"),
       factsPage: "je feitenpagina",
       unknown: "onbekende bron",
     },
     /** The short source on a proof card. */
-    sourceShort: { none: "geheugen van het model", factsPage: "je feitenpagina", website: "je website", otherEntity: "naamgenoot", unknown: "onbekende bron" },
+    sourceShort: { none: "geheugen van het model", factsPage: "je feitenpagina", website: "je website", otherEntity: "ander bedrijf", unknown: "onbekende bron" },
     finding: {
       question: (q: string) => `Vraag: ${q}`,
       recommendationAbout: (what: string) => `Aanbevelingsvraag over: ${what}`,
@@ -2977,13 +3010,15 @@ export const copy = {
       from: (source: string) => `Waar het vandaan komt: ${source}`,
       whatWeDo: (next: string) => `Wat we doen: ${next}`,
       notFound: (correct: string) => `Niet gevonden. Jouw gegeven is: ${correct}`,
-      otherEntity: (engine: string, freq: string) => `${engine} antwoordde over een ander bedrijf met dezelfde naam (${freq})`,
+      otherEntity: (engine: string, freq: string) => `${engine} antwoordde over een ander bedrijf (${freq})`,
       said: (engine: string, wrong: string, freq: string) => `${engine} zei: ${wrong} (${freq})`,
       wrongYours: (correct: string) => `Klopt niet. Jouw gegeven is: ${correct}`,
       wrongIs: (correct: string) => `Klopt niet. Het is: ${correct}`,
     },
     status: {
       allRight: (n: number) => `${n} van ${n} antwoorden kloppen`,
+      /** some answers could not be checked: say only what was checked */
+      allRightChecked: (n: number) => `${n} gecontroleerde ${n === 1 ? "antwoord klopt" : "antwoorden kloppen"}`,
       found: (n: number) => `${n} ${n === 1 ? "fout" : "fouten"} gevonden`,
       resolved: (n: number) => `${n} hersteld`,
       inProgress: (n: number) => `${n} in behandeling`,
@@ -3042,6 +3077,7 @@ export const copy = {
       subject: {
         unknown: (name: string) => `Eerste controle van ${name}: AI vindt (bijna) niets over je`,
         clean: (name: string, total: number) => `Eerste controle van ${name}: alle ${total} antwoorden kloppen`,
+        unchecked: (name: string) => `Eerste controle van ${name}: niet alles was te controleren`,
         notFound: (name: string, count: string) => `Eerste controle van ${name}: ${count}`,
         wrong: (name: string, n: number) => `Eerste controle van ${name}: ${n} ${n === 1 ? "antwoord klopt" : "antwoorden kloppen"} niet`,
       },
@@ -3050,8 +3086,11 @@ export const copy = {
         unknown: (name: string) => `AI vindt (bijna) niets over ${name}`,
         partial: (name: string) => `AI vindt een deel van ${name} niet`,
         clean: (total: number, name: string) => `Alle ${total} antwoorden over ${name} kloppen`,
+        unchecked: (name: string) => `Niet elk antwoord over ${name} was te controleren`,
       },
       preheader: { wrong: (where: string) => `De belangrijkste fouten staan in deze mail, de rest ${where}.`, clean: "We controleren elke maand opnieuw.", cleanScan: "Alle antwoorden kloppen. Elke maand controleren hoort bij Vidalo Monthly." },
+      /** preheader when some answers could not be checked (no facts) */
+      preheaderUnchecked: "Met Vidalo Scan leg je je gegevens vast; dan controleren we die antwoorden ook.",
       intro: (date: string, total: number, name: string, engines: string) => `Op ${date} stelden we ${total} vragen over ${name} aan ${engines}.`,
       stats: { checked: "antwoorden gecontroleerd", wrong: (n: number) => (n === 1 ? "klopte niet" : "klopten niet"), empty: "waren leeg" },
       cardsTitle: (n: number) => (n === 1 ? "De fout" : "De belangrijkste fouten"),

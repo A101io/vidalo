@@ -30,7 +30,7 @@ Twaalf feitcategorieën, gerangschikt op ernst. De eerste vijf zijn *afhakers*: 
 | 8 | **Adres en locatie** | Waar zit X? Is er parkeergelegenheid? | Ander adres, oud adres, andere plaats | 1 van N | Misleider | Verhuizingen blijven jaren in gidsen staan. Bij 16% klopt de website-URL niet (Insites). |
 | 9 | **Prijzen en tarieven** | Wat kost een APK bij X? Wat is het uurtarief? | Afwijking groter dan 10% van opgave, of verouderde prijs | ≥ 30% | Misleider | De klant komt met een verkeerde verwachting of kiest een ander op een prijs die niet bestaat. |
 | 10 | **Afspraken en voorwaarden** | Alleen op afspraak? Pinnen? Offerte gratis? Voorrijkosten? | AI stelt een voorwaarde die niet geldt, of mist er een | ≥ 30% | Misleider | Kleine feiten met grote irritatie: "alleen contant" terwijl je pint, "op afspraak" terwijl je inloop hebt. |
-| 11 | **Identiteit en naamgenoot** | Is X hetzelfde als X in Z? | AI koppelt nieuws, sluiting of adres van een ander bedrijf met dezelfde naam aan jou | 1 van N | Verwarring | Een bakkerij in Ontario kreeg een sluitingsdatum van een naamgenoot in Illinois. Herstelbaar met een feitenpagina die de verwarring expliciet uitsluit. |
+| 11 | **Identiteit en naamgenoot** | Is X hetzelfde als X in Z? | AI koppelt nieuws, sluiting, adres of telefoon van een ander bedrijf aan jou: een naamgenoot elders, of (sinds 11 nov 2026) een antwoord dat jouw naam niet noemt en onder de kop van een ander bedrijf staat, zoals Sonova's adres op de vraag naar Sonable. Klant en rapport zeggen "een ander bedrijf", niet "met dezelfde naam" | 1 van N | Verwarring | Een bakkerij in Ontario kreeg een sluitingsdatum van een naamgenoot in Illinois. Herstelbaar met een feitenpagina die de verwarring expliciet uitsluit. |
 | 12 | **Erkenningen en kwalificaties** | Is X erkend installateur? Heeft X een BIG-registratie? Is X aangesloten bij Techniek Nederland? | AI ontkent een erkenning die je hebt, of kent er een toe die je niet hebt | ≥ 30% | Verwarring | Voor vakwerk en zorg is dit vaak de doorslag in de aanbeveling ("erkende installateurs in Haarlem"). Staat zelden ergens machineleesbaar. |
 
 Drempels: bij de afhakers 1, 2, 8 en 11 is één afwijkend antwoord al een bevinding, omdat één klant die dat antwoord krijgt al verloren is. Bij de overige criteria geldt 30% omdat AI-antwoorden ruis bevatten; onder 10% noemen we het "instabiel" en rapporteren we het zonder herstelactie.
@@ -43,7 +43,7 @@ De stip is de samenvatting van alle oordelen in één kleur. De regel is eenvoud
 
 | Kleur | Betekenis | Regel |
 |---|---|---|
-| Grijs | AI kent je niet | ≥ 60% van alle antwoorden is niet gevonden, óf criterium 1 (bestaan) is niet gevonden bij ≥ 50% |
+| Grijs | AI kent je niet, of we konden het niet controleren | ≥ 60% van alle antwoorden is niet gevonden, óf criterium 1 (bestaan) is niet gevonden bij ≥ 50%, óf (sinds 11 nov 2026) bij een AI-systeem was geen enkel antwoord te beoordelen omdat we de feiten niet kennen. Een vraag zonder feit wordt nooit "klopt"; niet gevonden en een ander bedrijf tellen wel. Rapport: "we konden de antwoorden niet controleren" |
 | Rood | AI stuurt klanten weg | Minstens één afhaker-bevinding (criterium 1 t/m 5), óf ≥ 30% van alle antwoorden klopt niet |
 | Oranje | AI misleidt | Geen afhakers, maar ≥ 1 misleider- of verwarringsbevinding, óf 25 tot 60% niet gevonden |
 | Groen | Klopt | Geen bevindingen; ≤ 10% instabiel; < 25% niet gevonden |

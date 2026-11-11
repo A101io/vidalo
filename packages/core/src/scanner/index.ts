@@ -192,15 +192,18 @@ function engineStats(engines: Engine[], samples: Pick<Sample, "id" | "engine">[]
     let correct = 0;
     let wrong = 0;
     let notFound = 0;
+    // Answers to fact questions that could not be judged: no fact to compare with, or no usable claim (QA round 2).
+    let unchecked = 0;
     for (const s of samples) {
       if (s.engine !== engine) continue;
       const v = verdicts.get(s.id);
       if (v === "correct") correct++;
       else if (v === "wrong" || v === "other_entity") wrong++;
       else if (v === "not_found") notFound++;
+      else if (v !== "named" && v !== "not_named") unchecked++;
     }
     const hasSamples = samples.some((s) => s.engine === engine);
-    return { engine, correct, wrong, notFound, skipped: unavailable.has(engine) || !hasSamples };
+    return { engine, correct, wrong, notFound, unchecked, skipped: unavailable.has(engine) || !hasSamples };
   });
 }
 
@@ -401,6 +404,7 @@ function assembleReport(args: {
     criteriaNotFound,
     recommendations: summarizeRecommendations({ samples, prompts, verdicts: result.verdicts, facts }),
     comparedAs: businessNoun(facts, business.sector ?? null),
+    asked: result.asked.map((a) => ({ ...a })),
   };
 }
 
