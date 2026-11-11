@@ -5,7 +5,7 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Vendor | Role | What it gets | Region | Transfer basis | DPA |
 |---|---|---|---|---|---|
 | Supabase | Processor: database, sign-in | Owner email, business facts, reports, events | EU (eu-west-1, Ireland), project `bbynmqvaxpjdnkaasutd` | EU | open: accept in Supabase dashboard (Org → Legal) |
-| OpenAI | Processor: asks the questions, extracts claims, and works out what a business offers before a check (one web-search lookup per check with the business name and place, then one classification call; `scanner/understand.ts`) | Business facts and the text of the business's own homepage with e-mail addresses and phone numbers removed (`redactContacts`), at most 4,000 characters; never account e-mail addresses | US | DPF / SCCs | open |
+| OpenAI | Processor: asks the questions, extracts claims, and works out what a business offers before a check (one classification call per check, no web search, ADR 0007; `scanner/understand.ts`) | Business facts and the text of the business's own homepage with e-mail addresses and phone numbers removed (`redactContacts`), at most 4,000 characters; never account e-mail addresses | US | DPF / SCCs | open |
 | Google (Gemini, Places, Business Profile, OAuth) | Processor; OAuth also sign-in | Business facts; for verification the owner's Google account id and their Business Profile locations | US/EU | DPF / SCCs | open |
 | Perplexity | Processor: asks the questions | Business facts only | US | SCCs | open |
 | Anthropic (Claude) | Processor: asks the questions | Business facts only | US | DPF / SCCs | open |
