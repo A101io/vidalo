@@ -44,3 +44,30 @@ Evidence:
 - `report-access.test.ts` (5): 31 days → member only, 29 days → everyone, the 30-day boundary, a paid kind 400 days old → everyone, an unparseable date never hides.
 - `e2e/owner-area.spec.ts` (production build): Rapporten NL and EN list kinds in words, counts text, the dot `aria-hidden`, the failed check without a link and the recheck not listed; the owner opens their seven-month-old free report (200) and signed-out and `ander@example.nl` get 404. Fails on today's code (restoring C-00's `/r/[id]`): "Expected: 200, Received: 404".
 - A seeded on-demand scan on the demo bakery re-ran the profile reader and replaced the profile the seed set; `profile-correction.spec.ts` caught it. The seed now puts the profile back. All of `signed-in`, `auth-redirect`, `profile-correction`, `pages`, `a11y` and `owner-area` are green on the production build.
+
+### B-03 — the owner pages stay fast as history grows
+Built: `test/helpers/counting-db.ts` (`countingDb`: PgDb counts each awaited `sql` statement and not the method that issued it; MemDb counts top-level Db method calls; also `seedHistory`, the fixture the scale test and the perf seed share); in `db/owner-area.ts` `OVERVIEW_LIMITS` (findings 500 per status group, events 200, runs 12, each named with the page that shows it), `capFindings`, `openFixesByFinding` (one query instead of one `listFixes` per open finding), `dashboardRows`, `overviewExtras`; `lib/reads.ts` and `lib/owner-data.ts` read through them (the RLS path gets the same limits: open and resolved findings capped apart); `lib/core.ts` `loadSnapshots` is now `runSummaries(db, id, 30)` and the snapshot is `summary.snapshot` (a check without a summary is left out of the counts); `scripts/perf/seed-history.mts` and `scripts/perf/owner-pages.mts` (`pnpm perf:owner`).
+Deviations:
+- The SQL limit on findings could not be added: `Db.listFindings` has no limit parameter and `db/types.ts` is lane A's. The cap is applied to the one query's rows (bounded page work, constant round trips); through RLS (Supabase) it is a real `.limit(500)` per group.
+- `lib/core.ts` now keeps a real Postgres when `VIDALO_DB=pg` is set under `VIDALO_MOCK=1` (as core's `db/index.ts` already did) and seeds the demo only into a MemDb; that is how a production build can run mock sign-in against the seeded local database. Nothing changes without `VIDALO_DB=pg`.
+- The fixture has 6 AI systems (`ENGINES` includes claude), so 10 × 6 × 10 = 600 answers per check, 21,600 samples and as many claims for the 36 checks; 500 findings (100 with an open fix), 2,000 events.
+Evidence:
+- Round trips, PgDb (`SCALE_VERBOSE=1 TEST_DATABASE_URL=… vitest run --no-file-parallelism test/owner-area-scale.test.ts`): the loaders behind `/app`, `/app/voortgang`, `/app/rapporten`: **14 round trips with 3 checks and 14 with 36**. Today's progress view (a snapshot rebuilt from samples per check): 16 with 3 and **151 with 36** (MemDb: 12 and 12 against 19 and 181). The test asserts both. `owner-area-scale.test.ts` is not matched by `verify-pg.sh`'s `test/db*.test.ts` glob (frozen), so it runs on Pg by hand like this; on MemDb it runs in `pnpm -r test`.
+- `pnpm perf:owner` on the local production build (`next build --webpack`, `next start`), local Postgres seeded by `seed-history.mts` (groot = 36 checks, klein = 3), 20 loads per page after one warm-up, the page must show the business name and answer 200 without a redirect:
+```
+page            business     p50 ms   p95 ms   max ms   (20 loads, budget p95 < 1000 ms)
+/app            groot            24       30       32
+/app/voortgang  groot            13       17       18
+/app/rapporten  groot             7       10       12
+/app/account    groot            16       18       18
+/app/abonnement groot             4        4        6
+/app            klein            11       13       14
+/app/voortgang  klein             5        7        8
+/app/rapporten  klein             3        4        4
+/app/account    klein            10       11       11
+/app/abonnement klein             4        8       11
+OK: every page p95 under budget
+```
+  The two lane A pages are the ones on the branch as C-00 left them; the delivery-lead repeats this after the merge.
+- `/app/voortgang` unchanged for the mock demo: the rendered text (2,753 characters) and all 302 status-dot elements of the demo owner's NL page are identical between the old per-check rebuild and the stored summaries (fetched from the same dev server before and after swapping `loadSnapshots`); `run-summary.test.ts` additionally asserts `summary.snapshot` equals `buildSnapshot` for a red, a green and a grey check on Mem and Pg. No screenshot was taken: text and dot equality is a stronger check than a picture.
+- `pnpm -r typecheck`, `pnpm -r test` (core 1275 passed, worker 24), `pnpm e2e:mock`, `pnpm verify:pg` (64 db tests) and the Playwright specs `owner-area`, `signed-in`, `profile-correction`, `pages` (75) green.

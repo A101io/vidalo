@@ -75,6 +75,15 @@ describe.each(backends)("%s run summary", (_name, makeDb) => {
     expect(reportCounts(grey).correct).toBeLessThan(reportCounts(grey).questions);
   });
 
+  it("the stored snapshot is what the progress view used to rebuild from the samples, check by check", async () => {
+    for (const [name, rate] of [["Bakkerij Rood", 1], ["Bakkerij Groen", 0], ["Polyvale Nieuw", 0.2]] as const) {
+      const report = await scan(name, rate);
+      const run = await db.getScanRun(report.scanRunId);
+      const [row] = await runSummaries(db, run!.businessId, 5);
+      expect(row!.summary!.snapshot, name).toEqual(await buildSnapshot(report.scanRunId, db));
+    }
+  });
+
   it("a recheck stores no summary and is not in the summaries", async () => {
     const report = await scan("Bakkerij Rood", 1);
     const run = await db.getScanRun(report.scanRunId);

@@ -8,8 +8,8 @@
  */
 import type { MemDb } from "./mem";
 import type { PgDb } from "./pg";
-import type { BusinessRecord, Db } from "./types";
-import type { ScanKind, ScanReport, ScanRun, Stip } from "../types";
+import type { BusinessRecord, Db, EventRow } from "./types";
+import type { Channel, Facts, Finding, Fix, ScanKind, ScanReport, ScanRun, Stip } from "../types";
 import { reportCounts, type ScanSnapshot } from "../progress";
 
 // Not `instanceof`: `next dev` and OpenNext bundle core once per route, so the Db a request holds can come from
@@ -235,4 +235,71 @@ export async function listRunsToSummarize(db: Db, opts: { limit: number; afterId
       .slice(0, limit);
   }
   return unsupported();
+}
+
+// ---------------------------------------------------------------------------
+// Bounded reads for the owner pages (AC-7, B-03)
+// ---------------------------------------------------------------------------
+
+/**
+ * What /app (and the other owner pages that show a list) read at most. Each limit is named by the page that shows it:
+ *  - findingsPerStatus: /app "Wat nu" and the grouped errors show open findings; /app/voortgang's repair counts and the
+ *    dot rows read resolved ones. Open and resolved are capped apart, newest first, so a long history cannot hide the open ones.
+ *  - events: /app's log ("Wat er gebeurde") shows the latest 200 events.
+ *  - runs: /app reads the latest 12 checks (last and previous full check, the dots).
+ */
+export const OVERVIEW_LIMITS = { findingsPerStatus: 500, events: 200, runs: 12 } as const;
+
+/**
+ * Keeps the newest `perStatus` findings of each group (open/fixing/etc. vs resolved), in the order they came.
+ * Db.listFindings has no SQL limit (db/types.ts is not lane B's), so the cap is applied to the one query's rows:
+ * the work of the page is bounded, and the number of round trips never depends on history.
+ */
+export function capFindings<T extends { id: string; status: string; firstSeenAt: string }>(list: T[], perStatus: number = OVERVIEW_LIMITS.findingsPerStatus): T[] {
+  const keep = new Set<string>();
+  for (const resolved of [false, true]) {
+    list
+      .filter((f) => (f.status === "resolved") === resolved)
+      .sort((a, b) => b.firstSeenAt.localeCompare(a.firstSeenAt))
+      .slice(0, perStatus)
+      .forEach((f) => keep.add(f.id));
+  }
+  return list.filter((f) => keep.has(f.id));
+}
+
+/** The open (unresolved) fix of each finding of a business, by finding id: one query, not one per finding. */
+export async function openFixesByFinding(db: Db, businessId: string): Promise<Map<string, Fix>> {
+  const out = new Map<string, Fix>();
+  if (isPg(db)) {
+    if (!UUID.test(businessId)) return out;
+    const rows = await db.sql<Record<string, unknown>[]>`
+      select fix.* from fix join finding on finding.id = fix.finding_id
+      where finding.business_id = ${businessId} and fix.resolved_at is null
+      order by fix.finding_id, fix.scheduled_at`;
+    const at = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
+    for (const r of rows) {
+      const findingId = r.findingId as string;
+      if (out.has(findingId)) continue;
+      out.set(findingId, { id: r.id as string, findingId, action: r.action as Fix["action"], target: r.target as string, scheduledAt: at(r.scheduledAt)!, sentAt: at(r.sentAt), recheckAt: at(r.recheckAt), resolvedAt: null, evidence: (r.evidence ?? {}) as Fix["evidence"] });
+    }
+    return out;
+  }
+  if (isMem(db)) {
+    const own = new Set([...db.findings.values()].filter((f) => f.businessId === businessId).map((f) => f.id));
+    for (const f of db.fixes.values()) if (own.has(f.findingId) && f.resolvedAt === null && !out.has(f.findingId)) out.set(f.findingId, { ...f });
+    return out;
+  }
+  return unsupported();
+}
+
+/** What loadDashboard reads from the database (the service path): bounded, a fixed number of queries. */
+export async function dashboardRows(db: Db, businessId: string): Promise<{ facts: Facts | null; findings: Finding[]; channels: Channel[]; scanRuns: ScanRun[] }> {
+  const [facts, findings, channels, scanRuns] = await Promise.all([db.latestFacts(businessId), db.listFindings(businessId), db.listChannels(businessId), db.listScanRuns(businessId, OVERVIEW_LIMITS.runs)]);
+  return { facts, findings: capFindings(findings), channels, scanRuns };
+}
+
+/** What /app reads on top of the dashboard: the log and the open fix of each open finding. */
+export async function overviewExtras(db: Db, businessId: string): Promise<{ fixes: Map<string, Fix>; events: EventRow[] }> {
+  const [fixes, events] = await Promise.all([openFixesByFinding(db, businessId), db.listEvents(businessId, OVERVIEW_LIMITS.events)]);
+  return { fixes, events };
 }
