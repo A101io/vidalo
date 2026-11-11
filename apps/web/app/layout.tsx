@@ -28,7 +28,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "light", themeColor: "#FFFFFF" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [lang, copy, gated] = [await getLang(), await getCopy(), await behindGate()];
+  const [lang, copy, gated, route] = [await getLang(), await getCopy(), await behindGate(), await getRoute()];
+  // The sign-in link's page loads nothing from outside and runs no script of ours (feature 002, SEC-25).
+  const bare = route.startsWith("/auth/");
   const trackers = trackerIds();
   return (
     <html lang={lang} className={jakarta.variable}>
@@ -37,14 +39,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <FormMessages messages={copy.errors.field} />
         <CookieConsent copy={copy.consent} cookiesHref={localizeHref("/cookies", lang)} categories={consentCategories(trackers)} />
         {/* GA4 and the Meta pixel: off without their id, and only after consent. */}
-        <Trackers ids={trackers} />
+        {!bare && <Trackers ids={trackers} />}
         {/* Temporary, only while the launch gate is on and this browser previews the site. */}
         <PreviewBar copy={copy.comingSoon} lang={lang} />
         {/* The assistant explains the open product; behind the launch gate there is nothing to ask about yet. */}
-        {!gated && <ChatWidget copy={copy.chat} lang={lang} />}
+        {!gated && !bare && <ChatWidget copy={copy.chat} lang={lang} />}
         {/* Scroll motion; hides nothing on its own, so the page is whole without it. */}
-        <script src="/motion.js" defer />
-        <script src="/ask.js" defer />
+        {!bare && <script src="/motion.js" defer />}
+        {!bare && <script src="/ask.js" defer />}
       </body>
     </html>
   );

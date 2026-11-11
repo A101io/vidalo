@@ -63,3 +63,27 @@ test("the sign-in form never continues off the site (mock sign-in)", async ({ pa
     expect(new URL(page.url()).pathname, next).toBe("/app");
   }
 });
+
+// SEC-25 / F-A1: the confirm page loads no tracker, chat widget or script of ours, even with full consent.
+test("the confirm page carries no tracker, chat or site script, even with every consent given", async ({ page, context, baseURL }) => {
+  const consent = encodeURIComponent(JSON.stringify({ v: 3, at: new Date().toISOString(), necessary: true, analytics: true, marketing: true }));
+  await context.addCookies([{ name: "vidalo_consent", value: consent, url: baseURL! }]);
+  const requested: string[] = [];
+  page.on("request", (r) => requested.push(r.url()));
+  await page.goto("/auth/confirm?token_hash=pkce_abcdef0123456789&type=email&next=%2Fapp");
+  await page.waitForLoadState("networkidle");
+  const html = await page.content();
+  for (const bad of ["googletagmanager", "connect.facebook.net", "/ask.js", "/motion.js"]) {
+    expect(html, bad).not.toContain(bad);
+    expect(requested.filter((u) => u.includes(bad)), bad).toEqual([]);
+  }
+  expect(requested.filter((u) => !u.startsWith(baseURL!))).toEqual([]);
+  await expect(page.locator("[aria-controls='vidalo-chat']")).toHaveCount(0);
+  // Control: the same browser on the home page does load them.
+  requested.length = 0;
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  expect(requested.some((u) => u.includes("/motion.js"))).toBe(true);
+  expect(requested.some((u) => u.includes("googletagmanager"))).toBe(true);
+  await expect(page.locator("[aria-controls='vidalo-chat']")).toHaveCount(1);
+});
