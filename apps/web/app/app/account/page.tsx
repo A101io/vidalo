@@ -317,7 +317,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <h2 className="h3">{A.myData.h}</h2>
         <div className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
           <p>{A.myData.body}</p>
-          <a href="/api/account/export" download className="btn-link">
+          <a href={`/api/account/export?business=${encodeURIComponent(business.id)}`} download className="btn-link">
             {A.myData.download}
           </a>
           <form action={deleteMyData} className="space-y-3 border-t-[1px] border-line pt-4">

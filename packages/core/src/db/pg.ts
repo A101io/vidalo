@@ -861,6 +861,26 @@ export class PgDb implements Db {
     return rows.length;
   }
 
+  async listSamplesForRuns(scanRunIds: string[]): Promise<Sample[]> {
+    const ids = scanRunIds.filter((id) => UUID.test(id));
+    if (!ids.length) return [];
+    const rows = await this.sql`select * from sample where scan_run_id = any(${ids}::uuid[]) order by captured_at, id`;
+    return rows.map(mapSample);
+  }
+
+  async listEventsPage(businessId: string, opts: { beforeId?: number; limit: number }): Promise<EventRow[]> {
+    const rows =
+      opts.beforeId === undefined
+        ? await this.sql`select * from event where business_id = ${businessId} order by id desc limit ${opts.limit}`
+        : await this.sql`select * from event where business_id = ${businessId} and id < ${opts.beforeId} order by id desc limit ${opts.limit}`;
+    return rows.map(mapEvent);
+  }
+
+  async deleteChannel(id: string): Promise<void> {
+    if (!UUID.test(id)) return;
+    await this.sql`delete from channel where id = ${id}`;
+  }
+
   async close(): Promise<void> {
     await this.sql.end({ timeout: 5 });
   }

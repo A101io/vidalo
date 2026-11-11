@@ -8,7 +8,24 @@
  * (7 years); the privacy text says so.
  */
 import type { Db } from "../db/types.js";
-import type { BusinessStatus } from "../types.js";
+import type { BusinessStatus, Channel } from "../types.js";
+
+/**
+ * The channel `meta` keys the owner's download may carry (feature 002, ADR-0006). An allow-list,
+ * so a token or secret stored under any other key (refreshToken, accessToken, expiresAt, a key
+ * added later) never reaches the file.
+ */
+export const CHANNEL_META_EXPORT_KEYS: readonly string[] = [
+  "factsVersion", "verified", "lastSync", "lastDiff", "note", "correction", "pendingDiff", "diffApproval",
+  "mode", "domain", "discovery", "factsPageUrl", "current", "url", "scope",
+];
+
+/** A channel as the download shows it: its own fields and only the allowed meta keys. */
+export function exportChannel(c: Channel): Omit<Channel, "meta"> & { meta: Record<string, unknown> } {
+  const meta: Record<string, unknown> = {};
+  for (const k of CHANNEL_META_EXPORT_KEYS) if (c.meta && k in c.meta) meta[k] = c.meta[k];
+  return { id: c.id, businessId: c.businessId, type: c.type, name: c.name, externalId: c.externalId, url: c.url, status: c.status, lastSyncedAt: c.lastSyncedAt, meta };
+}
 
 /** Statuses with no running subscription. */
 const DELETABLE: BusinessStatus[] = ["scanned", "churned"];
@@ -18,7 +35,7 @@ export function canDeleteMyData(status: BusinessStatus): boolean {
 }
 
 /** Everything that hangs off one business, as one JSON-ready object. */
-export async function exportMyData(db: Db, businessId: string, now: Date = new Date()) {
+export async function exportMyData(db: Db, businessId: string, now: Date = new Date(), opts: { userId?: string } = {}) {
   const business = await db.getBusiness(businessId);
   if (!business) return null;
   const scanRuns = await db.listScanRuns(businessId, 10_000);
@@ -40,8 +57,10 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
     scans,
     findings,
     fixes,
-    channels: await db.listChannels(businessId),
+    channels: (await db.listChannels(businessId)).map(exportChannel),
     googleIndex: await db.getGoogleIndex(businessId),
+    // The login's last sign-ins (date, browser and system family; art. 15), feature 002.
+    signIns: opts.userId ? await db.listSignIns(opts.userId, 10) : [],
     // Letters to directories go out in the owner's name to a directory's public address: those stay (AVG art. 15).
     events: (await db.listEvents(businessId, 10_000)).map((e) => (e.type === "email.directory_correction" ? e : { ...e, payload: ownAddressesOnly(e.payload, business.ownerEmail) })),
   };

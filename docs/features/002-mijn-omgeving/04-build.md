@@ -212,3 +212,59 @@ not found; noted for verify.
 **Not verified.** SEC-33's timing medians (50 runs each) were not measured. SEC-31's "count is
 global across two Db handles on one PgDb" is by construction (one table), not a separate test.
 D1 items (Secure email change, rate limits) are Julian's.
+
+### A-04 — Export without secrets, streamed; "Koppeling met Google verbreken" (2026-11-11)
+
+**What.** `core/shared/my-data.ts`: `CHANNEL_META_EXPORT_KEYS` (the architecture's 15 keys) and
+`exportChannel` (own fields + allowed meta only); `exportMyData` maps channels through it and
+gains `signIns` (the login's last 10, COMP-18) via an optional `{ userId }`.
+`core/shared/export-stream.ts`: `streamMyData(db, businessId, { signedInAs, userId?, now? })`, the
+same JSON shape written section by section: runs 6 a page (`listSamplesForRuns` + `listClaims`),
+events 500 a page (`listEventsPage`, newest first, by `business_id` in SQL), each event through
+`ownAddressesOnly`; the Db handle is passed in once. `userId` is an optional addition to the
+contract's options (needed for the sign-in list). Db `listSamplesForRuns`, `listEventsPage`,
+`deleteChannel` (MemDb, PgDb). `GET /api/account/export?business=`: 401 `login_required`; 404
+`not_found` for another login's, unknown or malformed ids alike (uuid checked before SQL, nothing
+logged on them); else `account.exported {}` and the streamed attachment with `no-store`,
+`nosniff`, no CORS header (SEC-36). The account page's link carries `?business=`.
+`core/shared/google-revoke.ts`: `revokeGoogleToken` (POST, token in the form body, 10-s timeout;
+200 or 400 `invalid_token` = done; else throws without the token) and `disconnectGoogle(db, id,
+revoke, reason)` (refresh token, else access token; a revoke failure keeps the channel and
+throws, except on `purge`; `google.revoke_failed { status, reason }`, `google.disconnected
+{ reason }`). `/app/google`: "Koppeling met Google verbreken" (form with hidden `business`, one
+secondary button) → `disconnectGoogle(form)` → `requireOwnerOf` → `?ontkoppeld=1|geen|fout` in a
+`role="status"` line; in mock (`!env.hasGoogle`) the revoke is recorded as `google.revoke_mock`.
+`sendOwnerPhoneCode` and `checkOwnerPhoneCode` take the form's `business` (F-020); the "Koppel
+Google" link carries `?business=` and the page names the signed-in address next to it (SEC-26).
+`GET /api/google/start?business=`: a business the login is a member of, else the existing claim
+path for an id (Google's proof decides); never a slug. The callback is unchanged (the state
+cookie binds the business).
+
+**Tests.** `export-secrets.test.ts` on MemDb and PgDb: a gbp channel with `rt-<random>`,
+`at-<random>` and an unknown `apiSecret: s-<random>`, plus other people's addresses on event
+pages 1 and 2 → neither the streamed body nor `exportMyData` contains any of them, both contain
+`pendingDiff`; the key order of the streamed object; 36 runs × 50 answers with another
+business's runs interleaved → every own sample id exactly once, nothing of the other business,
+`listSamplesForRuns` called `ceil(36/6)` = 6 times; an unknown business streams `null`.
+`google-revoke.test.ts`: URL and body, `invalid_token` done, 503 throws without the token; only
+the business's own gbp channel goes, the control business keeps its own, `ownerVerifiedAt`
+stays; a failure keeps the channel (owner) but not on purge. `e2e/account.spec.ts` (mock):
+download headers and content (no `refreshToken`/`accessToken`/`expiresAt` key, the sign-in list
+present); another login's business, an unknown and a malformed id → the same 404 body; signed
+out → 401; the disconnect button removes the connection and the ownership line stays.
+
+**Timing (AC-7 export line).** 36 runs × 50 answers streamed end to end: MemDb 10 ms, PgDb 12 ms
+(local Postgres 18 in the session scratchpad, `vidalo_verify` after `verify:pg`), far under 30 s.
+The delivery-lead repeats it with B-03's full seed on a production build after merge.
+`export-secrets.test.ts` is not matched by `verify:pg`'s `test/db*.test.ts` (frozen script), so
+its PgDb half was run by hand with `TEST_DATABASE_URL`.
+
+**Shown to fail without the change.** With `exportMyData`'s channel mapping taken out (today's
+code), the token test is red: the export contained `rt-…`. Restored, green.
+
+**Runs.** `pnpm -r typecheck` green; `pnpm -r test` green (core 1338 + 15 skipped, worker 24);
+`pnpm e2e:mock` OK; `verify:pg` green (67 db tests); `e2e/account.spec.ts` 3/3.
+
+**Not verified.** A real revoke at Google (no keys here). The mock demo's Google channel holds no
+token, so the browser test shows the disconnect, not the recorded mock revoke (the unit test
+covers the revoke).

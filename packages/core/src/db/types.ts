@@ -335,6 +335,13 @@ export interface Db {
   /** Deletes rows older than `before`. Returns how many. */
   pruneAuthThrottle(before: Date): Promise<number>;
 
+  // --- export paging and Google disconnect (feature 002, ADR-0006) ---
+  /** The samples of these scan runs, in one query (the export reads 6 runs a page). */
+  listSamplesForRuns(scanRunIds: string[]): Promise<Sample[]>;
+  /** A business's events, newest first, `limit` at a time; `beforeId` continues after the last page. */
+  listEventsPage(businessId: string, opts: { beforeId?: number; limit: number }): Promise<EventRow[]>;
+  deleteChannel(id: string): Promise<void>;
+
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;
 }

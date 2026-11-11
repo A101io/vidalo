@@ -22,6 +22,15 @@ export const accountSecurityNl = {
     body: "Log uit op elk apparaat waar je met dit account bent ingelogd, ook op dit apparaat.",
     button: "Overal uitloggen",
   },
+  /** /app/google: ending the connection (AC-5e). */
+  google: {
+    h: "Koppeling met Google verbreken",
+    body: "Vidalo houdt je Google-bedrijfsprofiel dan niet meer bij en past het niet meer aan. We trekken de toegang bij Google in en verwijderen de sleutel. Dat je hebt bewezen dat je de eigenaar bent, blijft vastgelegd.",
+    button: "Koppeling verbreken",
+    done: "De koppeling met Google is verbroken.",
+    none: "Er was geen koppeling met Google om te verbreken.",
+    failed: "Google gaf geen antwoord. Er is niets veranderd; probeer het later opnieuw.",
+  },
   /** /inloggen?opnieuw=1: deleting everything and changing the address need a sign-in from the last 15 minutes. */
   reSignIn: "Voor deze stap log je eerst opnieuw in. We sturen je een nieuwe inloglink; daarmee kom je terug waar je was.",
   /** /inloggen?fout=verlopen, and when this browser's sign-in ended. */

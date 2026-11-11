@@ -688,6 +688,23 @@ export class MemDb implements Db {
     return n - this.authThrottle.length;
   }
 
+  async listSamplesForRuns(scanRunIds: string[]): Promise<Sample[]> {
+    const want = new Set(scanRunIds);
+    return [...this.samples.values()].filter((s) => want.has(s.scanRunId));
+  }
+
+  async listEventsPage(businessId: string, opts: { beforeId?: number; limit: number }): Promise<EventRow[]> {
+    return this.events
+      .filter((e) => e.businessId === businessId && (opts.beforeId === undefined || e.id < opts.beforeId))
+      .sort((a, b) => b.id - a.id)
+      .slice(0, opts.limit)
+      .map((e) => ({ ...e }));
+  }
+
+  async deleteChannel(id: string): Promise<void> {
+    this.channels.delete(id);
+  }
+
   async close(): Promise<void> {}
 }
 
