@@ -7,10 +7,11 @@ import { loadDashboard } from "@/lib/reads";
 import { getScanReport } from "@/lib/core";
 import { isUncheckedGrey, uncheckedAnswersOf } from "@vidalo/core/types";
 import { dateShort, dateTime } from "@/lib/format";
-import { checkNow, deleteMyData, setLanguage } from "../actions";
+import { checkNow } from "../actions";
+import { deleteMyData } from "./verwijderen/actions";
 import { LANGS } from "@/lib/lang-paths";
 import { MAIL_PREF_KEYS } from "@vidalo/core/shared";
-import { changeEmail, saveMailPrefs } from "./actions";
+import { changeEmail, saveMailPrefs, setLanguage } from "./actions";
 
 export const dynamic = "force-dynamic";
 

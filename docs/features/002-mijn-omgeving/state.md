@@ -24,6 +24,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-11 | 1 shape | F-010…F-023 folded back into the design by the architect (new ticket B-05, C-00 ships safe `safeNext` and the cookie row); F-022 accepted risk, F-016 deferred | architect |
 | 2026-11-11 | 1 shape | Julian decided: Scan retention 24 months (`SCAN_RETENTION_MONTHS`), Scan Google token 60 days (`SCAN_GOOGLE_DAYS`) | Julian |
 | 2026-11-11 | 1 shape | Lane split checked: no file owned by both lanes; merge order lane B then lane A; C-00 must land on `claude/002-mijn-omgeving` before either lane worktree is cut | Claude |
+| 2026-11-11 | 2 build | C-00 scaffold committed: shared-contract names in code, safe `safeNext` (base `http://localhost`, not `x.invalid`, so `legal.test.ts` does not read it as a recipient), `vidalo_business` cookie row, legal version 12 November 2026 + lock, `setLanguage`/`deleteMyData` moved. Typecheck, 1258 core + 24 worker tests, `e2e:mock`, `signed-in` + `auth-redirect` specs (12) green. Lanes are cut from this commit | Claude |
 
 ## Skipped phases
 | Phase | Why skipping is safe here |

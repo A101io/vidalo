@@ -1,31 +1,13 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
 import { requireOwner, requireVerifiedOwner } from "@/lib/owner";
-import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
 import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
-import { MOCK_SESSION_COOKIE } from "@/lib/session";
-import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
-import { canDeleteMyData, ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
-
-/** The language row on the account page: save it, then show the account in that language. */
-export async function setLanguage(formData: FormData) {
-  const { business } = await requireOwner("/app/account");
-  const to = String(formData.get("language") ?? "") as Lang;
-  if (!LANGS.includes(to)) redirect((await getI18n()).href("/app/account"));
-  if (business.language !== to) {
-    const db = await ready();
-    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, language: to });
-    await db.logEvent(business.id, "account.language_set", { language: to });
-  }
-  revalidatePath("/app/account");
-  redirect(localizeHref("/app/account?taal=opgeslagen", to));
-}
+import { ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
 
 /** The finding named in a form, if it belongs to the signed-in owner's business. */
 async function ownFinding(formData: FormData, businessId: string) {
@@ -103,26 +85,4 @@ export async function checkNow() {
   await db.logEvent(business.id, ONDEMAND_EVENT, {});
   revalidatePath("/app");
   redirect(href("/app?controle=ingepland"));
-}
-
-/**
- * "Verwijder alles" on the account page (AVG art. 17, core/shared/my-data.ts):
- * the business and everything under it, then the login, then the session.
- * Waits until no subscription runs.
- */
-export async function deleteMyData(formData: FormData) {
-  const { business, session } = await requireOwner("/app/account");
-  const { href } = await getI18n();
-  if (String(formData.get("confirm") ?? "") !== "ja") redirect(href("/app/account#gegevens"));
-  if (!canDeleteMyData(business.status)) redirect(href("/app/account?gegevens=abonnement#gegevens"));
-  const db = await ready();
-  await db.deleteBusiness(business.id);
-  // No business id and no address: only that a deletion happened.
-  await db.logEvent(null, "account.deleted", {});
-  const admin = await createAdminSupabase();
-  if (admin && !session.userId.startsWith("mock-")) await admin.auth.admin.deleteUser(session.userId);
-  const supabase = await createServerSupabase();
-  if (supabase) await supabase.auth.signOut();
-  (await cookies()).delete(MOCK_SESSION_COOKIE);
-  redirect(href("/inloggen?verwijderd=1"));
 }

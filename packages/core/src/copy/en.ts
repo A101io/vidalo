@@ -1,4 +1,6 @@
 import type { CopyShape } from "./index.js";
+import { ownerAreaEn } from "./owner-area.en.js";
+import { accountSecurityEn } from "./account-security.en.js";
 
 /** "ChatGPT, Copilot and Gemini" */
 function joinEn(items: string[]): string {
@@ -726,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 11 November 2026",
+    updated: "Version of 12 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -1188,6 +1190,7 @@ export const en: CopyShape = {
               ["vidalo_google_state", "While connecting your Google account: protects that step against misuse.", "10 minutes"],
               ["vidalo_preview", "Only while the site is not yet open: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
               ["vidalo_check", "During the free check: carries your email address from the form to the page where you pick your business, so it need not be in the link.", "15 minutes, or sooner once the check starts"],
+              ["vidalo_business", "If more than one business belongs to your account: remembers which business you chose in your account.", "90 days"],
             ],
           },
         },
@@ -3295,4 +3298,6 @@ export const en: CopyShape = {
       button: "View your details",
     },
   },
+  ownerArea: ownerAreaEn,
+  accountSecurity: accountSecurityEn,
 };

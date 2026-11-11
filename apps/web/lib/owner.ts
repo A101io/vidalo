@@ -26,3 +26,25 @@ export async function requireVerifiedOwner(next = "/app"): Promise<{ session: Se
   if (!isVerifiedOwner(owner.business, owner.session.userId)) redirect((await getI18n()).href("/app/google?eerst=1"));
   return owner;
 }
+
+/**
+ * For every action that changes or removes something: the business named in the form, only if this login may act on it.
+ * Not its business, or unknown id: redirect(href("/app")), nothing changed. C-00 stub: requireOwner, then the ids must match.
+ */
+export async function requireOwnerOf(businessId: string, next = "/app"): Promise<{ session: Session; business: BusinessRecord }> {
+  const owner = await requireOwner(next);
+  if (owner.business.id !== businessId) redirect((await getI18n()).href("/app"));
+  return owner;
+}
+
+/** requireOwnerOf over requireVerifiedOwner: not verified goes to /app/google?eerst=1. C-00 stub: the ids must match. */
+export async function requireVerifiedOwnerOf(businessId: string, next = "/app"): Promise<{ session: Session; business: BusinessRecord }> {
+  const owner = await requireVerifiedOwner(next);
+  if (owner.business.id !== businessId) redirect((await getI18n()).href("/app"));
+  return owner;
+}
+
+/** The business id a changing form carries. One reader, so the field name never drifts. */
+export function businessFromForm(form: FormData): string {
+  return String(form.get("business") ?? "");
+}

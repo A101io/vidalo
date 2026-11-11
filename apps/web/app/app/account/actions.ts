@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { isEmail } from "@/lib/format";
 import { getI18n } from "@/lib/i18n";
 import { requireOwner } from "@/lib/owner";
+import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
 import { MOCK_SESSION_COOKIE } from "@/lib/session";
 import { createServerSupabase } from "@/lib/supabase";
 import { MAIL_PREF_KEYS, setMailPrefs, type MailPrefs } from "@vidalo/core/shared";
@@ -56,4 +57,18 @@ export async function saveMailPrefs(formData: FormData) {
   await db.logEvent(business.id, "account.mail_prefs_set", { off: MAIL_PREF_KEYS.filter((k) => !prefs[k]) });
   revalidatePath("/app/account");
   redirect((await getI18n()).href("/app/account?mails=opgeslagen#mails"));
+}
+
+/** The language row on the account page: save it, then show the account in that language. */
+export async function setLanguage(formData: FormData) {
+  const { business } = await requireOwner("/app/account");
+  const to = String(formData.get("language") ?? "") as Lang;
+  if (!LANGS.includes(to)) redirect((await getI18n()).href("/app/account"));
+  if (business.language !== to) {
+    const db = await ready();
+    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, language: to });
+    await db.logEvent(business.id, "account.language_set", { language: to });
+  }
+  revalidatePath("/app/account");
+  redirect(localizeHref("/app/account?taal=opgeslagen", to));
 }

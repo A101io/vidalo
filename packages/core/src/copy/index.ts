@@ -8,6 +8,8 @@
  */
 
 import { en } from "./en.js";
+import { ownerAreaNl } from "./owner-area.js";
+import { accountSecurityNl } from "./account-security.js";
 
 /** "ChatGPT, Copilot en Gemini" */
 function joinNl(items: string[]): string {
@@ -749,7 +751,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 11 november 2026",
+    updated: "Versie van 12 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -1211,6 +1213,7 @@ export const copy = {
               ["vidalo_google_state", "Tijdens het koppelen van je Google-account: beschermt die stap tegen misbruik.", "10 minuten"],
               ["vidalo_preview", "Alleen zolang de site nog niet open is: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
               ["vidalo_check", "Tijdens de gratis controle: neemt je e-mailadres mee van het formulier naar de pagina waar je je bedrijf kiest, zodat het niet in de link hoeft te staan.", "15 minuten, of eerder zodra de controle start"],
+              ["vidalo_business", "Als er meer dan één bedrijf bij je account hoort: onthoudt welk bedrijf je in je account koos.", "90 dagen"],
             ],
           },
         },
@@ -3397,6 +3400,8 @@ export const copy = {
       button: "Bekijk je gegevens",
     },
   },
+  ownerArea: ownerAreaNl,
+  accountSecurity: accountSecurityNl,
 } as const;
 
 export type Copy = typeof copy;
