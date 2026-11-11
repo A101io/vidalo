@@ -17,6 +17,12 @@ export interface DashboardData {
 
 type Row = Record<string, unknown>;
 
+/**
+ * The channel columns a member's JWT may read (migration 0016, F-017). Never meta: it holds the Google
+ * refresh and access tokens. Anything that needs meta reads it with the service handle after requireOwner.
+ */
+const CHANNEL_COLUMNS = "id, business_id, type, name, external_id, url, status, last_synced_at";
+
 function camel(row: Row): Row {
   const out: Row = {};
   for (const [k, v] of Object.entries(row)) out[k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())] = v;
@@ -33,7 +39,7 @@ export async function loadDashboard(businessId: string): Promise<DashboardData> 
   const [factsRes, findingsRes, channelsRes, runsRes] = await Promise.all([
     supabase.from("facts").select("*").eq("business_id", businessId).order("version", { ascending: false }).limit(1),
     supabase.from("finding").select("*").eq("business_id", businessId).order("first_seen_at", { ascending: false }),
-    supabase.from("channel").select("*").eq("business_id", businessId),
+    supabase.from("channel").select(CHANNEL_COLUMNS).eq("business_id", businessId),
     supabase.from("scan_run").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(12),
   ]);
   const factsRow = (factsRes.data?.[0] ?? null) as Row | null;
@@ -43,7 +49,7 @@ export async function loadDashboard(businessId: string): Promise<DashboardData> 
   return {
     facts,
     findings: ((findingsRes.data ?? []) as Row[]).map(camel) as unknown as Finding[],
-    channels: ((channelsRes.data ?? []) as Row[]).map(camel) as unknown as Channel[],
+    channels: ((channelsRes.data ?? []) as Row[]).map((r) => ({ ...camel(r), meta: {} })) as unknown as Channel[],
     scanRuns: ((runsRes.data ?? []) as Row[]).map(camel) as unknown as ScanRun[],
   };
 }
