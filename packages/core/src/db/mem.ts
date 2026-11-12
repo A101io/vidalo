@@ -788,7 +788,15 @@ export class MemDb implements Db {
   }
 
   async countOverdueDeletions(now: Date): Promise<number> {
-    return [...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).length;
+    const late = new Set([...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).map((b) => b.id));
+    for (const j of this.jobs.values()) {
+      const id = j.payload.businessId;
+      if (j.kind !== "purge" || typeof id !== "string" || !this.businesses.has(id)) continue;
+      const stuck = !j.doneAt && Date.parse(j.createdAt) < now.getTime() - DAY_MS;
+      const gaveUp = !!j.doneAt && !!j.error;
+      if (stuck || gaveUp) late.add(id);
+    }
+    return late.size;
   }
 
   async listScanRetention(limit: number): Promise<BusinessRecord[]> {

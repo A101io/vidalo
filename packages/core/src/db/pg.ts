@@ -918,7 +918,13 @@ export class PgDb implements Db {
   }
 
   async countOverdueDeletions(now: Date): Promise<number> {
-    const rows = await this.sql`select count(*)::int as n from business where delete_at < ${new Date(now.getTime() - 86_400_000)}`;
+    const dayAgo = new Date(now.getTime() - 86_400_000);
+    const rows = await this.sql`select count(*)::int as n from (
+        select id::text from business where delete_at < ${dayAgo}
+        union
+        select j.payload->>'businessId' from job j join business b on b.id::text = j.payload->>'businessId'
+          where j.kind = 'purge' and ((j.done_at is null and j.created_at < ${dayAgo}) or (j.done_at is not null and j.error is not null))
+      ) late`;
     return Number(rows[0]?.n ?? 0);
   }
 

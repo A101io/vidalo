@@ -106,3 +106,41 @@ describe("V-COMP-01: deleting the login fails closed outside mock mode", () => {
     await expect(deleteLogin("00000000-0000-4000-8000-000000000001")).resolves.toBeUndefined();
   });
 });
+
+describe("V-COMP-04: a failing purge job shows in the overdue count and is logged when it gives up", () => {
+  it("a fallback job that keeps failing → overdue 1 the next day, account.delete_failed when retired", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const saved = { mock: process.env.VIDALO_MOCK, key: process.env.STRIPE_SECRET_KEY };
+    delete process.env.VIDALO_MOCK; // Stripe cannot be asked: the job throws and retries
+    delete process.env.STRIPE_SECRET_KEY;
+    const lines: string[] = [];
+    const orig = console.error;
+    const origLog = console.log;
+    console.error = (l: string) => void lines.push(String(l));
+    console.log = (l: string) => void lines.push(String(l));
+    try {
+      const b = await db.upsertBusiness({ name: "Vast", place: "Haarlem", plan: "setup", status: "trial", stripeCustomerId: "cus_vast" });
+      const job = await db.enqueueJob("purge", { businessId: b.id, guard: "no_subscription" });
+      const { processJob } = await import("../src/loop");
+      expect(await db.countOverdueDeletions(new Date())).toBe(0);
+      for (let i = 0; i < job.maxAttempts; i++) {
+        db.jobs.get(job.id)!.runAt = new Date(0).toISOString();
+        const claimed = (await db.claimJob(["purge"]))!;
+        await processJob(claimed);
+      }
+      expect(db.jobs.get(job.id)!.doneAt).not.toBeNull();
+      expect(await db.getBusiness(b.id)).not.toBeNull();
+      expect(await db.countOverdueDeletions(new Date(Date.now() + 86_400_000 + 1000))).toBe(1);
+      const failed = lines.filter((l) => l.includes('"account.delete_failed"'));
+      expect(failed).toHaveLength(1);
+      expect(failed[0]).toContain(b.id);
+      expect(failed[0]).not.toContain("@");
+    } finally {
+      console.error = orig;
+      console.log = origLog;
+      process.env.VIDALO_MOCK = saved.mock;
+      if (saved.key !== undefined) process.env.STRIPE_SECRET_KEY = saved.key;
+    }
+  });
+});

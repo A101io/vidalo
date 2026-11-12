@@ -368,7 +368,10 @@ export interface Db {
   listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]>;
   /** Marks the reminder as sent; true only the first time. */
   claimDeletionReminder(businessId: string, at?: Date): Promise<boolean>;
-  /** Businesses whose deletion date is more than a day past. */
+  /**
+   * Businesses whose deletion is late: a deletion date more than a day past, or a purge job for a business that
+   * still exists which is unfinished after a day or gave up (V-COMP-04). Each business counted once.
+   */
   countOverdueDeletions(now: Date): Promise<number>;
   /** Vidalo Scan businesses (plan setup, status trial). */
   listScanRetention(limit: number): Promise<BusinessRecord[]>;
