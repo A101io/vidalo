@@ -294,3 +294,29 @@ describe.each(backends)("%s: V-COMP-02 Scan retention pages through every busine
     expect(new Set(seen)).toEqual(ids);
   });
 });
+
+describe.skipIf(!PG_URL)("PgDb: V-COMP-06 Supabase's own sign-in record goes with the login", () => {
+  it("deletes the user's auth.audit_log_entries and nobody else's; without the table it does nothing", async () => {
+    const db = createDb(PG_URL!);
+    const sql = postgres(PG_URL!, { max: 1, onnotice: () => {} });
+    try {
+      await sql`drop table if exists auth.audit_log_entries`;
+      expect(await db.deleteAuthAuditLog(randomUUID())).toBe(0);
+      await sql`create table auth.audit_log_entries (id uuid primary key default gen_random_uuid(), payload json, ip_address varchar(64), created_at timestamptz default now())`;
+      const user = randomUUID();
+      const other = randomUUID();
+      for (const actor of [user, user, other]) await sql`insert into auth.audit_log_entries (payload, ip_address) values (${sql.json({ actor_id: actor, action: "login" })}, '203.0.113.7')`;
+      expect(await db.deleteAuthAuditLog(user)).toBe(2);
+      const left = await sql`select payload->>'actor_id' as a from auth.audit_log_entries`;
+      expect(left.map((r) => r.a)).toEqual([other]);
+    } finally {
+      await sql`drop table if exists auth.audit_log_entries`;
+      await sql.end();
+      await db.close();
+    }
+  });
+});
+
+it("MemDb: deleteAuthAuditLog has nothing to delete", async () => {
+  expect(await withMockDb().deleteAuthAuditLog(randomUUID())).toBe(0);
+});

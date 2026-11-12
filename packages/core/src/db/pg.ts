@@ -847,6 +847,14 @@ export class PgDb implements Db {
     return rows.map(mapSignIn);
   }
 
+  async deleteAuthAuditLog(userId: string): Promise<number> {
+    if (!UUID.test(userId)) return 0;
+    const [t] = await this.sql`select to_regclass('auth.audit_log_entries') is not null as present`;
+    if (!t?.present) return 0;
+    const rows = await this.sql`delete from auth.audit_log_entries where payload->>'actor_id' = ${userId} returning 1`;
+    return rows.length;
+  }
+
   async deleteSignIns(userId: string): Promise<void> {
     if (!UUID.test(userId)) return;
     await this.sql`delete from auth_session where user_id = ${userId}`;

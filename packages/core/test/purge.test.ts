@@ -211,3 +211,16 @@ describe("V-SEC-04: an open Stripe checkout cannot complete after the deletion",
     expect(await db.getBusiness(other.b.id)).not.toBeNull();
   });
 });
+
+it("V-COMP-06: a deleted login's Supabase audit record is deleted too; a kept login's is not", async () => {
+  const db = new MemDb();
+  const deleted: string[] = [];
+  db.deleteAuthAuditLog = async (u: string) => (deleted.push(u), 1);
+  const user = randomUUID();
+  const one = await db.upsertBusiness({ name: "Een A", place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user });
+  const two = await db.upsertBusiness({ name: "Twee A", place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user });
+  await purgeBusiness(deps(db).d, one.id, "no_subscription");
+  expect(deleted).toEqual([]);
+  await purgeBusiness(deps(db).d, two.id, "no_subscription");
+  expect(deleted).toEqual([user]);
+});

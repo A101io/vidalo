@@ -718,6 +718,10 @@ export class MemDb implements Db {
       .map((r) => ({ ...r }));
   }
 
+  async deleteAuthAuditLog(_userId: string): Promise<number> {
+    return 0;
+  }
+
   async deleteSignIns(userId: string): Promise<void> {
     for (const r of [...this.signIns.values()]) if (r.userId === userId) this.signIns.delete(r.sessionId);
   }

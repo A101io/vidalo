@@ -341,6 +341,11 @@ export interface Db {
   /** Newest first. */
   listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
   deleteSignIns(userId: string): Promise<void>;
+  /**
+   * Supabase's own audit record of a deleted login (auth.audit_log_entries holds the IP address and browser of
+   * each sign-in, V-COMP-06). Returns how many rows went; 0 when the table is absent (MemDb, verify:pg).
+   */
+  deleteAuthAuditLog(userId: string): Promise<number>;
 
   // --- sign-in link limit (feature 002, migration 0018) ---
   /** Inserts one row per key now, and returns per key how many rows exist since `since`, this one included. One round trip. */

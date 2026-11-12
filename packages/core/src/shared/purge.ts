@@ -93,6 +93,12 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
       continue;
     }
     await db.deleteSignIns(userId);
+    // Supabase's own record of each sign-in (IP address, browser) goes with the login (V-COMP-06).
+    try {
+      await db.deleteAuthAuditLog(userId);
+    } catch (err) {
+      log.warn("account.audit_log_delete_failed", { error: err instanceof Error ? err.name : "unknown" });
+    }
     if (!UUID.test(userId)) continue; // a mock login has no Supabase user
     try {
       await deps.deleteLogin(userId);
