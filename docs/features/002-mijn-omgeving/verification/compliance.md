@@ -119,3 +119,94 @@ Not findings, for the record:
 3. Reflexwerking of BW 6:236 j/o on the cancellation clauses. (Carried; expected fine.)
 4. Deleting a Scan facts page after 24 months without a sign-in, while the terms are silent
    (V-COMP-08).
+
+## Round 2
+
+*compliance · 2026-11-12 · against `claude/002-mijn-omgeving` at `675a778` (lane B and lane A
+round-1 fixes, `origin/main` with feature 001 / PR #120); changes read as `git diff dd7a889..HEAD`.
+Julian's decisions applied: 11 Nov (Scan 24 months, Scan Google token 60 days); 12 Nov (the terms
+and privacy sentences exactly as in `bd497ea`; free Supabase plan, no backup sentence). No code
+edits, no builds, nothing hosted. I am not a lawyer.*
+
+### Verdict
+
+- **Legal hard stops observed: none.** No P0. One new finding (V2-COMP-01) becomes a hard stop
+  only if it occurs (a failed login deletion reported as done); filed P1 like V-COMP-01.
+- **Round-1 findings:** 12 of 15 fixed and verified (V-COMP-01, -02, -03, -04, -05, -06, -08,
+  -09, -10, -11, -12, -13). V-COMP-07 still open (P1, delivery-lead). V-COMP-14 deferred (P2).
+  V-COMP-15 is moot today (the date is now 12 November 2026, today), and is a deploy-day step only
+  if `main` deploys later.
+- **Round-1 COMP FAILs:** COMP-19, -25, -26, -44 now PASS (COMP-26 by Julian's free-plan
+  decision; COMP-44 in code, the arming is still the COMP-31 release gate). COMP-16 still FAIL
+  (= V-COMP-07). COMP-17 deferred (= V-COMP-14). COMP-31 still NOT VERIFIED (deploy time).
+- **New:** V2-COMP-01, -02, -03 (P1), V2-COMP-04 (P2).
+
+### Runs
+
+| What | Result |
+|---|---|
+| `DATABASE_URL= pnpm --filter @vidalo/core exec vitest run test/legal.test.ts` | 24 passed |
+| core `purge`, `deletion`, `db-account`, `export-secrets`, `google-revoke` tests (MemDb; PgDb halves skip) | 53 passed, 4 skipped |
+| worker `retention`, `purge-job` tests | 19 passed |
+| NL/EN parity script over `copy.legal` (array lengths per section, every number per string), scratchpad only | no differences |
+
+### The caller's checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Round-1 V-COMP and COMP FAILs | See table below | |
+| 2 | The two approved sentences, word for word | **PASS** | Each of the four strings from `bd497ea` (terms "Looptijd, opzeggen en pauzeren" NL/EN; privacy "Je account en inloggen" NL/EN) occurs exactly once in `index.ts` / `en.ts` at HEAD (`grep -F`, count 1 each). No other legal wording changed since round 1 (`git diff 6b6446e HEAD` on both copy files: only those two sentences and the date). `updated` "Versie van 12 november 2026" / "Version of 12 November 2026"; `legal.lock.json` carries the same dates and hashes `89de2336679af12b` / `09217c9d4c422757`; `legal.test.ts` green, so the lock matches the text |
+| 3 | Feature 001 and 002 texts did not clash | **PASS** | The merge `285615f` brought no file change (its main parent `b5577b1` has the same tree as `d6266b6`, already in 002). Every line of `copy.legal` at 001's tip `d6266b6` that is not at HEAD was replaced by 002 on purpose (the date, the sign-in and account rows, Google, paid-plan retention, security, rights, the two Supabase cookie rows); 001's own sentences (no OpenAI search, a website the requester gives is a source, free check e-mail first) are all present. One `updated` date per language. Watch: branch `claude/scan-mail-confirm` (`00c87e9`, not on main) also edits `legal.lock.json` and the date; whichever lands second must set a new date and run `legal:lock`, never merge the lock by hand |
+| 4 | NL and EN say the same | **PASS** | Parity script above; the two new sentences and `myData.body`, `accountDeleted`, `cancel_confirmed` read side by side |
+| 5 | Nothing keeps data longer or deletes less than the texts say | **No, three gaps** | V2-COMP-01, -02, -03 below. Plus, unchanged: every retention promise (privacy, terms Scan sentence, `cancel_confirmed` "Op {datum} verwijderen we je gegevens") holds only once `VIDALO_PURGE=1` (COMP-31 release gate) |
+
+### Round-1 findings, re-checked
+
+| ID | Status | Evidence |
+|---|---|---|
+| V-COMP-01 | fixed | `cf2d829`: worker `deleteLogin` and web `deleteLogin` throw without the Admin key unless mock; `STRIPE_SECRET_KEY` targets `web`, `worker`; `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL` target both. Residual: `purge.ts:105-110` catches that throw and the mail still says the login is gone (V2-COMP-01) |
+| V-COMP-02 | fixed | `cron.ts` walks `listScanRetention(200, after)` by id until a short page; `pg.ts:946-952` keyset; 201-business tests green |
+| V-COMP-03 | fixed | `pg.ts:915-921` orders `delete_reason = 'owner'` first; `cron.ts:291` passes `{ retention: !dryRun }`, so in dry run only owner rows are listed |
+| V-COMP-04 | fixed | `pg.ts:935-944` counts purge jobs unfinished after a day or retired with an error; `loop.ts` logs `account.delete_failed` |
+| V-COMP-05 | fixed (code) | `cron.ts:283` sends no reminder in dry run; `listDueDeletions` makes a retention row due only 14 days after its reminder, so arming reminds first. Arming itself: COMP-31 |
+| V-COMP-06 | fixed (code + text), hosted not verified | `purge.ts:97-103` `deleteAuthAuditLog` (`pg.ts:857-863`, `actor_id` = user); approved sentence published. A failure is only a `warn`. Gap: V2-COMP-02. Hosted DELETE permission on `auth.audit_log_entries` still a §7 item |
+| V-COMP-07 | **open** P1 | No reader of `retention.overdue`, `retention.would_purge`, `account.delete_failed` in `A101/_OS/control-room` or `_OS/routines` (grep, none) |
+| V-COMP-08 | fixed | Terms sentence as approved; code matches it: `scanRetentionDate(lastActiveAt)`, sign-in writes `last_active_at` (`pg.ts:816`), the next tick moves `delete_at` and clears the reminder (`setScanRetention`) |
+| V-COMP-09 | fixed per decision | Free plan, no backup sentence; `processors.md` records it |
+| V-COMP-10 | fixed | `googleRevoked = disconnected > 0 && !revokeFailed`; sentence conditional, NL/EN |
+| V-COMP-11 | fixed | `b202801`: prune keeps the newest 10 rows, open included |
+| V-COMP-12 | fixed | `cancel_confirmed` NL/EN names the Google end, the deletion date (end + `CHURN_DELETE_DAYS`), the reminder, invoices at Stripe 7 years |
+| V-COMP-13 | fixed | `myData.body` NL/EN names the sign-in and the customer portal under Abonnement (portal form on `abonnement/page.tsx:170`) |
+| V-COMP-14 | deferred | unchanged |
+| V-COMP-15 | moot today | date = 12 November 2026 = today; re-set and re-lock only if deployed later |
+
+### New findings
+
+| ID | Sev | Claim | Foreseeable at phase 1? |
+|---|---|---|---|
+| V2-COMP-01 | P1 (hard stop if it occurs unrepaired) | A login deletion that fails is reported as done and never retried. `purge.ts:105-110` catches `deleteLogin`'s throw (missing key outside mock since `cf2d829`, or any Supabase Admin error), logs `account.login_delete_failed`, and carries on; the business row is already gone, so nothing retries and no count shows it. The mail still says "Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd" (`copy.mails.accountDeleted`, NL/EN). The e-mail address in `auth.users` and the `auth.sessions` rows with IP and browser stay. AVG art. 17(1), 12(3) | Partly: round-1 V-COMP-01 named the mail; its fix covered the count only |
+| V2-COMP-02 | P1 | Deleting the login writes a new Supabase audit row holding the deleted person's e-mail address, which nothing removes. Supabase Auth `adminUserDelete` records `UserDeletedAction` with traits `user_id`, `user_email`, `user_phone` and the admin as actor `[page: github.com/supabase/auth internal/api/admin.go, read today]`. `deleteAuthAuditLog` runs **before** `deleteLogin` and matches only `payload->>'actor_id' = userId` (`pg.ts:861`), so this row survives, against the approved "verwijder je alles, dan verwijderen we het mee" and the deletion mail. Only if audit logs are written to the database (hosted setting not read) | Partly: my own round-1 fix proposal missed it |
+| V2-COMP-03 | P1 | A login with no business is kept for ever. `/inloggen` calls `signInWithOtp` with Supabase's default `shouldCreateUser: true` (`apps/web/app/inloggen/actions.ts:55`), so every address typed there gets an `auth.users` row and audit rows with IP, even an address of someone else. Without a business `requireOwner` sends the login to `/inloggen?fout=geen` (`apps/web/lib/owner.ts:16`), so "Verwijder alles" is out of reach, and the purge only removes logins of a business it deletes. Nothing ever deletes these. Privacy says "Hoe lang: zolang je account bestaat … Je verwijdert je account zelf", which such a person cannot do. AVG art. 5(1)(c), (e), 13(2)(a). Not a hard stop: the address was given to sign in, and the data is small; the gap is retention and the self-service promise | Yes (the security checklist named `shouldCreateUser`), so capped at P1 |
+| V2-COMP-04 | P2 | The deletion mail says "zoals je vroeg" / "as you asked" after a **retention** purge too: the worker's purge uses the same `sendDeletedMail` for guard `due` with `delete_reason = 'retention'`. Not true there | No |
+
+Not findings, for the record:
+- `cron.ts` queues due purges (step 2) before it moves Vidalo Scan dates (step 3a). A sign-in in
+  the last tick before a Scan's date leaves a queued purge with a stale date. The job re-reads the
+  business and `purgeAllowed`/`Db.purgeBusiness` refuse it, so nothing is deleted; only a job run
+  between the two steps could revoke Google or remove the custom host first. Swapping the steps
+  costs minutes; QA or the lane decides.
+- The 24-month Scan clock moves only on the recorded owner's sign-in (`pg.ts:816`,
+  `owner_user_id`), matching ADR-0001 (membership filled from owner). Revisit when members other
+  than the owner exist.
+
+### Needing a lawyer (ship report), round 2
+
+Unchanged from round 1 (items 1–3). Item 4 (deleting a Scan facts page while the terms were silent)
+is closed by the approved terms sentence; whether a sentence plus the 14-day reminder suffices is
+still worth one question to the lawyer, not a blocker.
+
+Overlap with security's round 2 (read in `findings.md` after filing): V2-SEC-02 is the same defect
+as V2-COMP-01 (security P2, compliance P1 because the mail states an erasure that did not happen);
+one fix closes both. V2-SEC-01 (the worker's Google revoke gated on `GOOGLE_OAUTH_CLIENT_ID`,
+which the manifest gives to web only, so the grant stays live while the mail says it was revoked)
+is also a deletion-completeness gap in compliance terms; I agree with P1 and did not file it twice.

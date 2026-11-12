@@ -197,3 +197,147 @@ variant is true depends on the plan at launch (F-022, go-live D2):
 
 Resend (sent mail and logs, 30 days on every non-Enterprise plan, https://resend.com/pricing) is
 recorded in `docs/processors.md`; compliance did not ask for a privacy sentence on it.
+
+---
+
+# Round 2 of 2
+
+*delivery-lead · 2026-11-12 · merged from the "Round 2" sections of `verification/qa.md`,
+`verification/security.md`, `verification/compliance.md` against `claude/002-mijn-omgeving` at
+`675a778` plus QA's uncommitted test files. Rules: `_OS/playbook/PIPELINE.md` rules 1, 2, 5;
+`templates/pipeline/SEVERITY.md`, applied literally. This is the last round; there is no third.*
+
+## R2.1 Verdict: SHIP, with four code/ops release gates before the production deploy
+
+The gate closes. **No P0 is open and no acceptance criterion fails** (QA: none failing; AC-4(f) and
+the AC-6 Stripe run are NOT VERIFIED, both waiting on Julian's D1/D2, which were never agent-runnable).
+Under PIPELINE rule 1 and SEVERITY only a P0 stops a gate; a P1 is "fixed this cycle, blocks
+nothing". So the open P1s do not hold the verdict, and no decision memo is needed for the gate.
+
+What makes this honest rather than a loophole: nothing deploys from this PR. The P1s that make the
+deletion mail claim something that did not happen are turned into **named release gates R1–R4**
+(R2.5) that must be true before the production deploy, which is Julian's step anyway. They are
+fixed this cycle, not after launch. Their fixes are checked by the delivery-lead at ship-check
+(diff read, the named test run, one control observed red with only the fix removed), the same way
+F-A5 was checked in round 1. That is not a third verify round: no reviewer re-opens the feature.
+
+## R2.2 P0 claims and severity rulings
+
+No agent claimed a P0 in round 2. Rulings on the open P1s and the one severity tie:
+
+| ID | Filed | Ruling | Grounds (one line) |
+|---|---|---|---|
+| V2-SEC-01 | security P1, QA P1 + release gate, compliance agrees | **P1, release gate R1** | Not an exploit (our token copy is gone, the host 404s) and AC-5(d) is checked in mock per the brief (D3), so not P0; but as the manifest deploys it, worker purges leave the Google grant live and the web purge leaves the Cloudflare hostname, while the mail says both were done |
+| V2-COMP-01 + V2-SEC-02 | compliance P1, security P2 | **One row, P1, release gate R2** | Same defect. Severity by consequence: when it occurs the mail states an erasure that did not happen and nothing retries it. Security's P2 recorded as the losing position |
+| V2-COMP-02 | compliance P1 | **P1, release gate R3** | The approved privacy sentence says "verwijderen we het mee"; Supabase's own `user_deleted` audit row keeps the address. Evidence (Supabase source), fix and cost present. Fix in code, so the gate does not wait on a dashboard read |
+| V2-COMP-03 | compliance P1 (foreseeable, capped) | **P1, not a release gate; question to Julian** | Pre-existing on `main` (`signInWithOtp` without `shouldCreateUser: false`; the "Je verwijdert je account zelf" sentence is on `main` too); 002 does not widen it. Its fix is a new automatic deletion of personal data plus a legal sentence, both "ask every time" (AUTHORITY §1) |
+| V-COMP-07 | compliance P1, open since round 1 | **P1, release gate R4** | Owner deletions run from the first deploy whether or not `VIDALO_PURGE` is armed; a failed one is counted but nobody reads the count. The Control Room step **counts only once the cell exists and has been seen red** on a forced overdue count; a planned step after SHIP does not close it |
+| V2-COMP-04 | compliance P2 | P2 | Wording; fixed in the same change as R2 because it is the same function signature |
+| V-SEC-03 | security P2, partly fixed | P2, ships past | Three lane-B route handlers lack `private, no-store`; no cache stores them today |
+| V2-QA-03 | qa P2 | P2 | A missing test, not a defect; done with R1 because it gives the web half of R1 its seam |
+| V2-SEC-03 | security P3 | P3, deferred | Millisecond window |
+
+Demotion rule: every round-2 row carries evidence, a concrete fix and a cost; none demoted.
+Foreseeability: only binds P0s; V2-COMP-03 is self-capped at P1 by compliance; V2-SEC-01 is
+security's own round-1 miss (SEC-48/49 passed on code, not on deployed config), recorded in R2.7.
+
+## R2.3 Failing acceptance criteria
+
+None. AC-1, -2, -3, -7, -8 PASS; AC-4 (a)–(e) PASS; AC-5 (a)–(f) PASS in mock as the brief
+checks it (V-QA-03 closed, with QA's new other-isolate control); AC-6 worker part PASS.
+
+## R2.4 Open items per lane, in order, with cost
+
+### Lane A (one change, worktree from `claude/002-mijn-omgeving`)
+
+| # | ID | Sev | Fix | Cost | Gate |
+|---|---|---|---|---|---|
+| 1 | V2-SEC-01 | P1 | Worker: revoke at Google unless `VIDALO_MOCK=1` (the revoke endpoint needs no client id); same for the web's `env.hasGoogle` gate. `deleteCustomHostname` throws when Cloudflare is not configured outside mock, so the web purge fails before the row delete and falls back to the worker job (existing path). Tests with `VIDALO_MOCK` unset for both | 45 min | **R1** |
+| 2 | V2-COMP-01 (+V2-SEC-02) | P1 | On a `deleteLogin` failure enqueue `login_delete { userId }` (re-checks no membership, retries to the job ceiling, `account.delete_failed` when retired, counted in `countOverdueDeletions`); `sendDeletedMail` gets `loginDeleted`; when false the mail says "Je inlog verwijderen we zo snel mogelijk" (NL, EN). Test: throwing `deleteLogin` → mail without the done-sentence, job queued, overdue 1 next day | 1 h | **R2** |
+| 3 | V2-COMP-02 | P1 | After a successful `deleteLogin`, delete `auth.audit_log_entries` where `payload->>'actor_id' = $1 or payload->'traits'->>'user_id' = $1` (MemDb no-op); PgDb test with a seeded `user_deleted` row | 30 min | **R3** |
+| 4 | V2-COMP-04 | P2 | `sendDeletedMail` gets `retention`; retention wording "Zoals aangekondigd …" (NL, EN); mail-lab case | 20 min | — |
+| 5 | V2-QA-03 | P2 | Move `webPurgeDeps`' closures to `apps/web/lib/purge-deps.ts`; vitest with `env.mock` false: no keys → `deleteLogin`, `expireOpenCheckouts` throw; fake Stripe → `expire` once per open session | 45 min | — |
+| 6 | V2-SEC-03 | P3 | Ask `stripeLive` again after expiring a session | 10 min | backlog |
+
+**Lane A:** gates 2 h 15 min; P2 1 h 05 min. Commit QA's three round-2 test files with this change
+(or with the round-2 docs), not separately edited.
+
+### Lane B
+
+| # | ID | Sev | Fix | Cost |
+|---|---|---|---|---|
+| 1 | V-SEC-03 | P2 | `private, no-store` on `api/checkout`, `api/lang`, `api/domain/verify` when they read the session | 20 min |
+
+Ships past if not done.
+
+### Outside both lanes
+
+| ID | Sev | Fix | Cost | Owner |
+|---|---|---|---|---|
+| V-COMP-07 | P1 | Vidalo Control Room cell reading daily `retention.overdue` (incl. stuck/retired purge and login_delete jobs), red when > 0; seen red once on a forced count; registered in `_OS/TASK_REGISTRY.md` if a routine changes | 30 min | delivery-lead (fix slot), gate **R4** |
+| V2-COMP-03 | P1 | Cron step deleting Supabase users with no membership and no owned business after 30 days, with their sessions and audit rows; privacy sentence (NL, EN), new date, `legal:lock` | 2 h after Julian's yes | Julian decides (memo in `state.md`), then lane A |
+| QA's `question_use` note | — | Whether "all its rows are gone" needs a word on anonymous question statistics (0015, feature 001) | — | compliance, next legal-desk run; not a finding |
+
+## R2.5 Release gates (before the production deploy)
+
+New this round, all must be true before `vidalo-web`/`vidalo-worker` go to production:
+
+| Gate | What must be true | Who |
+|---|---|---|
+| **R1** V2-SEC-01 | With `VIDALO_MOCK` unset and the manifest's env per Worker: a worker purge calls Google's revoke endpoint (or fails and says so in the mail); a web purge of a verified custom host without Cloudflare keys deletes nothing and queues the worker job. Tests green, control red | lane A fixes; delivery-lead verifies at ship-check |
+| **R2** V2-COMP-01 | A failing `deleteLogin` leaves a `login_delete` job, an overdue count of 1 the next day, and a mail without "dan is ook je inlog verwijderd" | lane A; delivery-lead verifies |
+| **R3** V2-COMP-02 | After a purge on PgDb no `auth.audit_log_entries` row carries the user id as actor or trait | lane A; delivery-lead verifies. The hosted DELETE permission on that table is still the §7 read |
+| **R4** V-COMP-07 | The Vidalo Control Room cell shows `retention.overdue` and is observed red on a forced count | delivery-lead |
+
+Still standing from round 1 §7, unchanged: `STRIPE_SECRET_KEY` on `vidalo-worker`;
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on both Workers; `VIDALO_AUTH_SECRET` on `vidalo-web`;
+D1 Supabase dashboard (AC-4(f) verified after it); Supabase audit-log setting and DELETE permission
+(read only); hosted migrations 0016–0019 + RLS block (now unblocked: V-SEC-01 and V-QA-05 fixed);
+D2 sandbox run (AC-6) before `VIDALO_PURGE=1`; `VIDALO_PURGE=1` on Julian's word; legal version
+date on deploy day if not 12 Nov (V-COMP-15); the production deploy itself, Julian's, always.
+
+## R2.6 Checked and passed in round 2
+
+- QA: whole desktop Playwright on the production build **171 passed, 0 failed** (32 skipped,
+  each run separately: `e2e:auth` 15/15, https 1/1, a11y + keyboard 49/49). `pnpm -r test` core
+  1401 passed / 22 skipped, worker 45. PgDb by hand 162/162. `perf:owner` every p95 under budget.
+  RLS block `RLS-OK` on a database holding 28 other businesses, control `RLS-FAIL`.
+- Every round-1 fix has a control observed red (QA table); two fixes had non-discriminating tests,
+  now closed by QA's V2-QA-01 (other isolate) and V2-QA-02 (owner-first order).
+- Security: 8 of 9 round-1 items fixed; 300-combination guard probe 0 mismatches, 0 paying deleted;
+  every `"use server"` export and route checks ownership first; no secret or hidden character in
+  the diff; feature 001's merged surfaces keep the 002 guards.
+- Compliance: 12 of 15 round-1 findings fixed; the two approved sentences in the code word for
+  word, once each, NL = EN; `legal.test.ts` 24/24; feature 001 and 002 legal texts do not clash.
+- Delivery-lead, 12 Nov: read `shared/purge.ts:97-111` (the swallowed `deleteLogin` throw, mail
+  sent regardless), `apps/worker/src/jobs/purge.ts` (`revoke` gated on `GOOGLE_OAUTH_CLIENT_ID`),
+  `publisher/host.ts` `deleteCustomHostname` (`delete.skip`, no throw), `secrets.manifest.json`
+  targets (Google web only, Cloudflare worker only), `copy.mails.accountDeleted` (both sentences
+  unconditional except Google), `inloggen/actions.ts` (no `shouldCreateUser`, same on `main`).
+  Re-ran `facts-after-purge-qa`, `db-due-order-qa`, `db-purge-race-qa`, `purge`, `legal` (42/42,
+  MemDb; PgDb halves skipped here) and the worker suite (45/45).
+
+## R2.7 Not checked
+
+| What | Why | When |
+|---|---|---|
+| AC-4(f) real mail; AC-6 Stripe sandbox run | D1, D2 are Julian's | Before deploy / before arming |
+| Real Google revoke, Cloudflare removal, Supabase Admin delete | Mocks and probes only (D3) | When those go live |
+| Purge race on PgDb with a forced interleaving | QA's PgDb run did not hit the window; MemDb is the proof | P2, not filed |
+| V-SEC-04 against real Stripe | No key in reach | D2 |
+| Mobile, WebKit, 320 px / 400 %, screen reader; AC-7 on real Workers | As round 1 | Next a11y pass; staging |
+| Hosted migrations, RLS, audit-log setting | Not run in round 2 | §7, delivery-lead |
+
+## R2.8 Waste routed back
+
+- **V2-SEC-01**: security passed SEC-48/49 on the code, not on the config each Worker actually gets.
+  Security has added the rule to `docs/process/checklists/security.md` (uncommitted; commits with
+  these docs). It is general to every venture with a secrets manifest: proposed for
+  `templates/pipeline/checklists/security.md`, Julian to promote.
+- **V2-COMP-01 is partly my miss.** Round-1 fix list item 3 asked for "throws, `loginsDeleted` 0"
+  and did not name the mail that reports the result. Rule I apply from now on: a fix-list item for
+  a failing step names every downstream claim of that step (mail, page, count).
+- **V2-COMP-02**: an erasure call to a third party can itself write a new record. Routed to
+  compliance to add to `docs/process/checklists/compliance.md` at its next pass.
+- **V2-QA-01/02**: a fix's test must be shown red with only that fix removed. QA did this in
+  round 2; it goes in every lane's definition of done.

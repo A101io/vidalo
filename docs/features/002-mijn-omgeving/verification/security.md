@@ -207,3 +207,73 @@ CNAME label) as the proof. Cost half a day. Owner: architect.
 - `scripts/stripe-lifecycle-run.mts` refuses non-test keys and the Sitty and Sonable accounts.
 - F-A5 is fixed in the merged code (`owner-area.ts` branches on `db.kind`, reads `r.userId`); its row in
   `findings.md` still says open.
+
+## Round 2 (2026-11-12, HEAD `675a778`, diff `dd7a889..HEAD`)
+
+Runs: my own databases `sec002r2` (probes) and one fresh database per Pg test file, all on the shared
+local Postgres (54433), migrations 0001–0019 through `scripts/local-auth-shim.sql`; `DATABASE_URL=`
+empty everywhere; no builds, no Playwright, nothing hosted. Probes in the session scratchpad
+(`probe/{addon,guards,webhook,host,host2}.mts`, `probe2/revoke.mts`).
+
+- Core on MemDb (`purge`, `deletion`, `db-account`, `facts-after-purge-qa`, `db-purge-qa`, `google-revoke`,
+  `safe-next`, `same-origin`, `export-secrets`, `db-membership`): **103 passed, 7 skipped**.
+- Core on PgDb, fresh database per file: `purge` 12, `db-account` 36, `db-purge-qa` 2,
+  `facts-after-purge-qa` 4, `db-membership` 19: **73 passed**. (On a database already holding my probe
+  rows three of these fail on their own global counts; test hygiene, not a product defect.)
+- Worker `purge-job`, `retention`, `retention-qa`: **21 passed**.
+- `scripts/rls/membership.sql` on `sec002r2` (which holds foreign probe businesses, the V-QA-05 case):
+  `RLS-OK login1[…=2] login2[…=1] anon[…=0]`; control `-v broken=1`: `RLS-FAIL login1 sees 4 business rows`.
+- `git diff dd7a889..HEAD`: no key-shaped string, no hidden or bidi character in any touched file.
+
+### Round-1 findings against the code
+
+| ID | Verdict | Evidence; does a control fail without the fix |
+|---|---|---|
+| V-SEC-01 | **fixed** | `0019:49-50` rule 3 fires on `old.plan is distinct from new.plan`; MemDb mirrors it. `addon.mts`, Mem and Pg: dated Scan + `monitor_addon` webhook → `activated`, `plan monitor`, `sub_probe`, `deleteAt null` (round 1 on the same probe: `THREW … business_delete_only_when_ending`). Re-ran `guards.mts`: 300 combos, 0 mismatches, 0 paying deleted; `webhook.mts`: undo clears the date, churn dates it, 0 churned without a date. The new rule never clears an owner's own date on a running Monthly (that has `cancel_at` set). |
+| V-SEC-02 | **fixed** | `api/domain/verify/route.ts:21-25` `refuseCrossSite` first, logs `auth.cross_site_refused {route}`. Lane B's route test red before, green after (not re-run by me: needs `next dev`). |
+| V-SEC-03 | **partly fixed, P2 stays open** | Portal, Google start and callback wrap their answer in `private, no-store`; export and sign-out already did. Still without it while reading the session: `api/checkout`, `api/lang`, `api/domain/verify` (my grep of every route handler that reads the session). No cache stores them today. |
+| V-SEC-04 | **fixed** | `shared/purge.ts:60-64` `expireOpenCheckouts` after `stripeLive`, before anything is touched; a throw deletes nothing (`purge.test.ts` V-SEC-04, my run). Every Checkout of a business with a customer id is created with `customer:` (`api/checkout/route.ts:126`), so the list finds it. Web: an expire error throws → job queued → the worker's retry sees the subscription (`stripe_live`). Worker: a 400 is swallowed, see V2-SEC-03 (P3). |
+| V-SEC-05 | **fixed** | `route.ts:64` writes `factsHostVerifiedAt: null` with the unproven host. `host2.mts` on Pg: X after a failed check `factsHostVerifiedAt: null`, `factsHostTaken(H2, V): false`, the victim's verify `ok`, `pollFactsHost(X)` not verified. Control `host.mts` (the old branch): still `taken` / verified. The other writers of `factsHost` (`markFactsHostVerified`, `ensureFactsHost`, `pollFactsHost`) each set the proof with the host, so the "clear on any change" half was not needed. |
+| V-SEC-06 | **fixed** | `account/actions.ts:36-37` → `Db.ownerEmailTakenOutside` (`pg.ts:850-855`: parameterised, `lower()`, uuid-filtered ids, an empty list counts every business). `db-account.test.ts` on Mem and Pg. |
+| V-SEC-07 | **fixed** | `secrets.manifest.json` `VIDALO_AUTH_SECRET` targets web; row in `docs/secrets-and-keys.md`. Setting it stays §7. |
+| V-COMP-01 | **fixed at the dependency, a gap stays** | Web `verwijderen/actions.ts:49-53` and worker `jobs/purge.ts:53-56` throw without the Admin key unless mock (web: `VIDALO_MOCK=1` or no `DATABASE_URL`; the Worker entry sets the latter from Hyperdrive); `STRIPE_SECRET_KEY` and `SUPABASE_SERVICE_ROLE_KEY` now target the worker. `purge-job.test.ts` V-COMP-01 passes. But `purgeBusiness` swallows that throw after the row is gone: V2-SEC-02. And the same fail-open shape remains in two other steps: V2-SEC-01. |
+| V-COMP-04 | **fixed** | `countOverdueDeletions` counts unfinished/retired purge jobs; `loop.ts:61-62` logs `account.delete_failed { businessId }` (no address, asserted in `purge-job.test.ts:135-138`, my run). |
+
+### New code, for regressions
+- **Checkout expiry in the purge**: correct order and fail-closed on web; worker race, V2-SEC-03 (P3).
+- **deleteLogin failing closed**: holds at the dependency; swallowed by the purge (V2-SEC-02, P2).
+- **Facts host 404 after purge** (`publisher/serve.ts`): a cached entry is re-read by id on every hit and
+  dropped when gone, re-statused or re-hosted; `clearServeCache` for both hosts after the row delete;
+  downstream `max-age=60`. `facts-after-purge-qa` 4/4 on Pg. No path serves one business's page on
+  another's host: a changed `factsHost` drops the entry and `resolve` reads by host again.
+- **domain/verify**: see V-SEC-02 and V-SEC-05. Side effect, no security impact: a verified owner who
+  tries a new host loses the proof on the old one and the old Cloudflare hostname is left behind (P3, not filed).
+- **no-store**: see V-SEC-03.
+- **ownerEmailTakenOutside**: see V-SEC-06.
+- **Secrets manifest**: the new entries are right, but reading every target against the code that runs
+  there found V2-SEC-01: `GOOGLE_OAUTH_CLIENT_ID` is web-only while the worker gates its revoke on it, and
+  `CLOUDFLARE_*` is worker-only while the web's "now" purge removes hostnames. Probe `probe2/revoke.mts`
+  (VIDALO_MOCK unset): worker purge `done`, `googleRevoked: true` in the mail, 0 outbound calls; web
+  `deleteCustomHostname` → `delete.skip`, no error.
+- New log lines (`account.delete_failed`, `purge.checkouts_expired`, `auth.cross_site_refused`,
+  `account.audit_log_delete_failed`): ids, counts, a route word, an error name; no address, token or user id.
+- `deleteAuthAuditLog` (`pg.ts:857-863`): uuid check, parameterised, only `payload->>'actor_id'`.
+
+### Feature 001 and the business check (F-020, B-05)
+Feature 001 was already in this branch's history before 002 began (`d6266b6` precedes `4f6cd2e`); the
+merge `285615f` brought only the PR merge commit. Its changing surfaces: `saveProfile` now opens with
+`requireVerifiedOwnerOf(businessFromForm(form))` (`gegevens/actions.ts:123-124`) and its form carries
+the hidden `business` (`ProfileGroup.tsx:50`); `POST /api/scan` and `GET /api/scan/[id]/status` are the
+public free check (no owner data; the status body is an allow-list, `scanStatusBody`). My grep of every
+`"use server"` export: each business-changing action calls `requireOwnerOf` / `requireVerifiedOwnerOf`
+first; `changeEmail` and `signOutEverywhere` act on the login, `chooseBusiness` checks membership,
+`claimBusiness`, `sendMagicLink` and `confirmSignInAction` are pre-business. **No action or route skips the check.**
+
+### Counts
+Round-1 items: 8 fixed (V-SEC-01, -02, -04, -05, -06, -07, V-COMP-04, V-COMP-01 at its dependency),
+1 partly fixed (V-SEC-03, P2 open), V-SEC-08 deferred as recorded. New: **V2-SEC-01 (P1)**,
+**V2-SEC-02 (P2)**, **V2-SEC-03 (P3)**. **No P0.** V2-SEC-01 means AC-5(d) is not met with the
+manifest as it stands (Google revoke on worker paths, Cloudflare removal on the web path); that is not
+an exploit, so I file it P1 and leave it to QA and compliance to rate it against the AC and the mail.
+SEC-43/59 (V-SEC-01) and SEC-44 (V-SEC-04) and SEC-47 (V-SEC-05) now PASS; SEC-35 now PASSES; SEC-15 stays
+FAIL (P2); SEC-48/49 reopen as V2-SEC-01.

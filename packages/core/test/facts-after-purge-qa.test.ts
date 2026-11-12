@@ -58,6 +58,20 @@ describe("AC-5(d): a deleted business's facts host", () => {
     }
   });
 
+  it("QA round 2: another isolate (its cache not cleared by the purge) answers not found at once too", async () => {
+    // The purge runs in the worker's job loop; the facts host may be served by another isolate whose cache the purge's
+    // clearServeCache never reaches. Model that: serve, delete the rows directly (no cache clear), serve again.
+    const user = randomUUID();
+    const b = await db.upsertBusiness({ name: "Bakkerij Ver", place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user, ownerEmail: "ver@example.nl", factsHost: HOST, factsHostVerifiedAt: "2026-10-01T10:00:00.000Z" });
+    await db.insertFacts(b.id, { ...facts, businessId: b.id, name: "Bakkerij Ver" }, { verifiedAt: "2026-10-01T10:00:00.000Z" });
+    const handler = createFactsHandler();
+    expect((await handler(new Request(`https://${HOST}/`))).status).toBe(200);
+    expect(await db.purgeBusiness(b.id, "no_subscription", new Date())).toBe(true);
+    for (const path of ["/", "/llms.txt", "/feiten.json"]) {
+      expect((await handler(new Request(`https://${HOST}${path}`))).status, `${path} in the other isolate`).toBe(404);
+    }
+  });
+
   it("today's bound: after the 10-minute cache it answers not found", async () => {
     let t = Date.now();
     const handler = await seedAndServe(() => new Date(t));
