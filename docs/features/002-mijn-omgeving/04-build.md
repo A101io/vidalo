@@ -576,3 +576,14 @@ sign-in form on `/inloggen` (its server action) as the demo owner and keeps the 
 Checked against a mock dev server: exit 0, 64 pages, `app.html` and `app-account.html` show the
 demo bakery, not the sign-in form. Not checked: the GitHub Actions run itself (`site.yml`, which
 uses `next start`).
+
+## After the merge (delivery-lead, 2026-11-12)
+
+`claude/002-mijn-omgeving`: C-00 `4cd414c`, lane B merged first (`73506af`), then lane A (`3ac2ac7`; only `04-build.md` and `findings.md` conflicted, both sides kept). Every run used `DATABASE_URL=` empty or a private local Postgres 18 on port 54433; nothing touched the hosted project, Stripe or Cloudflare.
+
+- `pnpm -r typecheck`, `pnpm -r test` (core 1383 passed / 19 skipped, worker 37), `pnpm e2e:mock`: green.
+- `pnpm verify:pg`: migrations 0001–0019 apply in order, 98 db tests on PgDb, pipeline wrote 1963 samples: green.
+- `scripts/rls/membership.sql` on that database: `RLS-OK` (login 1 sees its 2 businesses, login 2 its 1, anon none); control `-v broken=1`: `RLS-FAIL login1 sees 7 business rows, expected 2`.
+- `e2e/owner-a11y.spec.ts` whole with `OWNER_A11Y_LANE_A=1` (lane A pages no longer fixme): 27 passed, NL and EN, including the keyboard and switcher tests.
+- `pnpm perf:owner` on a production build (`next build --webpack`, `DATABASE_URL=` at build time) against `seed-history.mts`: first run failed at sign-in (F-M1), fixed in `scripts/perf/owner-pages.mts`; then p95 per page, 20 loads: groot (36 checks) `/app` 26 ms, `/app/voortgang` 18, `/app/rapporten` 9, `/app/account` 18, `/app/abonnement` 4; klein `/app` 13, `/app/voortgang` 7, `/app/rapporten` 6, `/app/account` 12, `/app/abonnement` 4. Budget p95 < 1000 ms: OK.
+- Not run here: the whole Playwright desktop suite (lane B saw F-024 `profile-correction.spec.ts` "English" fail), `pnpm e2e:auth` (lane A's fake-GoTrue session suite), the Stripe sandbox run (D2), AC-4(f) with a real mail (D1), migrations on the hosted project.

@@ -57,12 +57,28 @@ async function load(path: string, cookie: string, mustContain: string): Promise<
   return ms;
 }
 
+/**
+ * Signs in through the mock sign-in form on /inloggen (a server action) and returns the session cookie it sets.
+ * Since feature 002 (A-02) a mock session needs its own sign-in row, so the cookie cannot be written by hand.
+ */
+async function signIn(email: string): Promise<string> {
+  const html = await (await fetch(`${BASE}/inloggen`)).text();
+  const action = /name="(\$ACTION_ID_[^"]+)"/.exec(html)?.[1];
+  if (!action) throw new Error("no sign-in form on /inloggen");
+  const form = new FormData();
+  for (const [k, v] of Object.entries({ [action]: "", email, next: "/app", business: "", session_id: "" })) form.append(k, v);
+  const res = await fetch(`${BASE}/inloggen`, { method: "POST", body: form, headers: { origin: BASE }, redirect: "manual" });
+  const set = res.headers.getSetCookie().find((c) => c.startsWith("vidalo_mock_session="));
+  if (!set) throw new Error(`mock sign-in set no session for ${email} (status ${res.status})`);
+  return set.split(";")[0]!;
+}
+
 let failed = false;
 try {
   await waitUp();
   console.log(`page            business     p50 ms   p95 ms   max ms   (${LOADS} loads, budget p95 < ${BUDGET_MS} ms)`);
   for (const [label, o] of Object.entries(PERF_OWNERS)) {
-    const cookie = `vidalo_mock_session=${encodeURIComponent(JSON.stringify({ userId: o.userId, email: o.email }))}`;
+    const cookie = await signIn(o.email);
     for (const path of PAGES) {
       await load(path, cookie, o.name); // warm-up: compiles nothing in a production build, but opens the connection and warms caches
       const ms: number[] = [];

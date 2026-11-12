@@ -5,7 +5,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | 1 shape (complete; build starts with C-00) |
+| Phase | 3 build (both lanes merged into `claude/002-mijn-omgeving`; next: verify) |
 | Started | 2026-11-11 |
 | Design reviewed | <path and version under `designs/inbox/`, or none> |
 | Design gate rounds used | 0 of 2 |
@@ -25,6 +25,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-11 | 1 shape | Julian decided: Scan retention 24 months (`SCAN_RETENTION_MONTHS`), Scan Google token 60 days (`SCAN_GOOGLE_DAYS`) | Julian |
 | 2026-11-11 | 1 shape | Lane split checked: no file owned by both lanes; merge order lane B then lane A; C-00 must land on `claude/002-mijn-omgeving` before either lane worktree is cut | Claude |
 | 2026-11-11 | 2 build | C-00 scaffold committed: shared-contract names in code, safe `safeNext` (base `http://localhost`, not `x.invalid`, so `legal.test.ts` does not read it as a recipient), `vidalo_business` cookie row, legal version 12 November 2026 + lock, `setLanguage`/`deleteMyData` moved. Typecheck, 1258 core + 24 worker tests, `e2e:mock`, `signed-in` + `auth-redirect` specs (12) green. Lanes are cut from this commit | Claude |
+| 2026-11-12 | 3 build | Lane B then lane A merged into `claude/002-mijn-omgeving`; typecheck, tests, e2e:mock, verify:pg, RLS block with control, a11y spec whole (27/27) and perf:owner (all p95 < 30 ms) green after F-M1; see 04-build.md "After the merge" | Claude |
 
 ## Skipped phases
 | Phase | Why skipping is safe here |
