@@ -27,7 +27,8 @@ export interface PurgeDeps {
   deleteCustomHostname(host: string): Promise<void>;
   /** Supabase Admin: delete the login. */
   deleteLogin(userId: string): Promise<void>;
-  sendDeletedMail(to: { email: string; language: "nl" | "en"; businessName: string }): Promise<void>;
+  /** googleRevoked: a Google connection existed and was revoked at Google (V-COMP-10); the mail says so only then. */
+  sendDeletedMail(to: { email: string; language: "nl" | "en"; businessName: string; googleRevoked: boolean }): Promise<void>;
   /** Our own fallback facts host for this business (publisher/host.ts isOwnFactsHost), never sent to Cloudflare. */
   isOwnFactsHost?(host: string, b: BusinessRecord): boolean;
   /** The address the confirmation goes to when it is not the business's owner address (the requester's login). */
@@ -70,7 +71,8 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   const businessName = b.name;
 
   // Google: revoked at Google; a failure is logged and the token goes with the row.
-  await disconnectGoogle(db, b.id, deps.revokeGoogle, "purge");
+  const google = await disconnectGoogle(db, b.id, deps.revokeGoogle, "purge");
+  const googleRevoked = google.disconnected > 0 && !google.revokeFailed;
 
   // The custom facts host, only when this business is its verified holder and it is not ours (F-019).
   if (b.factsHost) {
@@ -111,7 +113,7 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   let mailed = false;
   if (mailTo) {
     try {
-      await deps.sendDeletedMail({ email: mailTo, language, businessName });
+      await deps.sendDeletedMail({ email: mailTo, language, businessName, googleRevoked });
       mailed = true;
     } catch {
       log.warn("account.deleted_mail_failed", {});

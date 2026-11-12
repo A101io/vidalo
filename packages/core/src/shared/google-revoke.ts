@@ -33,8 +33,9 @@ export async function revokeGoogleToken(token: string, fetchImpl: typeof fetch =
  * (the job retries), except on purge, where the token goes with the row anyway and the failure is
  * only logged. Returns how many channels were removed.
  */
-export async function disconnectGoogle(db: Db, businessId: string, revoke: (token: string) => Promise<void>, reason: "owner" | "churn" | "purge" | "scan_done"): Promise<{ disconnected: number }> {
+export async function disconnectGoogle(db: Db, businessId: string, revoke: (token: string) => Promise<void>, reason: "owner" | "churn" | "purge" | "scan_done"): Promise<{ disconnected: number; revokeFailed?: number }> {
   let disconnected = 0;
+  let revokeFailed = 0;
   for (const c of await db.listChannels(businessId)) {
     if (c.type !== "gbp") continue;
     const token = typeof c.meta?.refreshToken === "string" && c.meta.refreshToken ? c.meta.refreshToken : typeof c.meta?.accessToken === "string" ? c.meta.accessToken : null;
@@ -45,11 +46,12 @@ export async function disconnectGoogle(db: Db, businessId: string, revoke: (toke
         const status = err instanceof Error ? (/\d{3}/.exec(err.message)?.[0] ?? null) : null;
         log.warn("google.revoke_failed", { status, reason });
         if (reason !== "purge") throw err;
+        revokeFailed++;
       }
     }
     await db.deleteChannel(c.id);
     disconnected++;
   }
   if (disconnected) log.info("google.disconnected", { reason });
-  return { disconnected };
+  return revokeFailed ? { disconnected, revokeFailed } : { disconnected };
 }

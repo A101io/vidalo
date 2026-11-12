@@ -3050,9 +3050,9 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
-    accountDeleted: (name: string) => ({
+    accountDeleted: (name: string, googleRevoked: boolean) => ({
       subject: `Everything of ${name} is deleted`,
-      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, your facts page and its address, and the connection with Google, which we also revoked at Google. If no other business belongs to your sign-in, your sign-in is deleted too.
+      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, and your facts page and its address.${googleRevoked ? " We also revoked the connection with Google at Google." : ""} If no other business belongs to your sign-in, your sign-in is deleted too.
 
 What stays: your invoices, for 7 years at Stripe, because the law requires it. What was already corrected at Google, directories or other websites stays there.
 

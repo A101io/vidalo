@@ -224,3 +224,22 @@ it("V-COMP-06: a deleted login's Supabase audit record is deleted too; a kept lo
   await purgeBusiness(deps(db).d, two.id, "no_subscription");
   expect(deleted).toEqual([user]);
 });
+
+describe("V-COMP-10: the deletion mail claims the Google revoke only when it happened", () => {
+  it("revoked → googleRevoked true and the clause; revoke failed or no connection → false and no clause", async () => {
+    const { deletedEmail } = await import("../src/reporter/account-mails");
+    const db = new MemDb();
+    const seen: boolean[] = [];
+    const ok = await scanOwner(db);
+    await purgeBusiness({ ...deps(db).d, sendDeletedMail: async (to) => void seen.push(to.googleRevoked) }, ok.b.id, "no_subscription");
+    const failed = await scanOwner(db);
+    await purgeBusiness({ ...deps(db).d, revokeGoogle: async () => { throw new Error("google revoke failed: 503"); }, sendDeletedMail: async (to) => void seen.push(to.googleRevoked) }, failed.b.id, "no_subscription");
+    const none = await db.upsertBusiness({ name: "Geen Google", place: "Haarlem", plan: "setup", status: "trial", ownerEmail: "x@y.nl" });
+    await purgeBusiness({ ...deps(db).d, sendDeletedMail: async (to) => void seen.push(to.googleRevoked) }, none.id, "no_subscription");
+    expect(seen).toEqual([true, false, false]);
+    for (const lang of ["nl", "en"] as const) {
+      expect(deletedEmail(lang, "B", true).text).toMatch(/ingetrokken|revoked/);
+      expect(deletedEmail(lang, "B", false).text).not.toMatch(/ingetrokken|revoked/);
+    }
+  });
+});
