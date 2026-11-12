@@ -10,6 +10,7 @@ import { getDb } from "../shared/db.js";
 import { textToHtml, type Mail } from "./templates.js";
 import { baseUrl } from "./links.js";
 import { sendMail, type MailResult } from "./mail.js";
+import { CHURN_DELETE_DAYS } from "../shared/deletion.js";
 
 export type SubscriptionMailKind = "cancel_confirmed" | "cancel_undone" | "pause_confirmed" | "pause_ending" | "pause_ended";
 type Lang = "nl" | "en";
@@ -33,28 +34,31 @@ export function subscriptionEmail(kind: SubscriptionMailKind, d: SubscriptionMai
   const url = billingUrl(d.lang);
   const date = d.at ? longDate(d.at, d.lang) : "";
   const t = d.lang === "en" ? EN : NL;
-  const { subject, body } = t[kind](d.name, date, url);
+  // Feature 002: a cancelled Monthly is deleted 120 days after its end (migration 0019, CHURN_DELETE_DAYS).
+  const deleteDate = d.at ? longDate(new Date(Date.parse(d.at) + CHURN_DELETE_DAYS * 86_400_000).toISOString(), d.lang) : "";
+  const { subject, body } = t[kind](d.name, date, url, deleteDate);
   const text = `${t.hi}\n\n${body}\n\n${t.questions}\n\n${t.bye}\n`;
   return { subject, text, html: textToHtml(text, d.lang) };
 }
 
-type Builder = (name: string, date: string, url: string) => { subject: string; body: string };
+type Builder = (name: string, date: string, url: string, deleteDate: string) => { subject: string; body: string };
 type Words = Record<SubscriptionMailKind, Builder> & { hi: string; questions: string; bye: string };
 
 const NL: Words = {
   hi: "Hoi,",
   questions: "Vragen? Antwoord op deze mail of mail support@vidalo.io.",
   bye: "Groet,\nVidalo",
-  cancel_confirmed: (name, date, url) => ({
+  cancel_confirmed: (name, date, url, deleteDate) => ({
     subject: `Je abonnement voor ${name} is opgezegd`,
     body: `We hebben je opzegging ontvangen. Je abonnement op Vidalo Monthly voor ${name} stopt op ${date}. Tot die dag loopt alles door en betaal je niets extra. Daarna schrijven we niets meer af.
 
 Wat er op ${date} gebeurt
 Ons werk stopt: we controleren niet meer wat AI over je bedrijf zegt en we werken je gegevens niet meer bij.
 Je feitenpagina verwijst vanaf dan door naar je eigen website.
+De koppeling met Google verbreken we: we trekken de toegang bij Google in.
 Wat al is aangepast bij Google, gidsen en andere websites, blijft daar staan.
-Je facturen blijven te downloaden in je account.
-90 dagen later doen we nog één gratis controle. Daarna bewaren we alleen wat de wet voor facturen vraagt.
+Je rapporten en je facturen blijven tot ${deleteDate} te downloaden in je account.
+90 dagen later doen we nog één gratis controle. Op ${deleteDate} verwijderen we je gegevens; 14 dagen vooraf krijg je een herinnering per e-mail. Alleen je facturen bewaren we 7 jaar, bij Stripe, omdat de wet dat vraagt.
 
 Toch doorgaan? Dat kan tot ${date}, met één klik op ${url}`,
   }),
@@ -91,16 +95,17 @@ const EN: Words = {
   hi: "Hi,",
   questions: "Questions? Reply to this email or write to support@vidalo.io.",
   bye: "Best,\nVidalo",
-  cancel_confirmed: (name, date, url) => ({
+  cancel_confirmed: (name, date, url, deleteDate) => ({
     subject: `Your subscription for ${name} is cancelled`,
     body: `We have received your cancellation. Your Vidalo Monthly subscription for ${name} ends on ${date}. Until then everything carries on and you pay nothing extra. After that we charge nothing more.
 
 What happens on ${date}
 Our work stops: we no longer check what AI says about your business and no longer update your details.
 Your facts page then redirects to your own website.
+We end the connection with Google: we revoke the access at Google.
 What was already corrected at Google, directories and other websites stays there.
-Your invoices stay available to download in your account.
-90 days later we run one more free check. After that we keep only what the law requires for invoices.
+Your reports and your invoices stay available to download in your account until ${deleteDate}.
+90 days later we run one more free check. On ${deleteDate} we delete your data; you get a reminder 14 days before by email. Only your invoices we keep for 7 years, at Stripe, because the law requires it.
 
 Changed your mind? Until ${date} it takes one click at ${url}`,
   }),
