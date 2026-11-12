@@ -276,3 +276,21 @@ describe.each(backends)("%s: deletion and retention (0019)", (_n, makeDb) => {
     expect((await db.listScanRetention(500)).map((x) => x.id)).not.toContain(monthly.id);
   });
 });
+
+describe.each(backends)("%s: V-COMP-02 Scan retention pages through every business", (_n, makeDb) => {
+  it("201 Scan businesses come back in pages of 200, each once", async () => {
+    const db = await makeDb();
+    const ids = new Set<string>();
+    for (let i = 0; i < 201; i++) ids.add((await db.upsertBusiness({ name: `Scan pagina ${i} ${randomUUID().slice(0, 4)}`, place: "Haarlem", plan: "setup", status: "trial" })).id);
+    const seen: string[] = [];
+    let after: string | undefined;
+    for (;;) {
+      const page = await db.listScanRetention(200, after);
+      seen.push(...page.map((b) => b.id));
+      if (page.length < 200) break;
+      after = page[page.length - 1]!.id;
+    }
+    expect(seen.length).toBe(201);
+    expect(new Set(seen)).toEqual(ids);
+  });
+});

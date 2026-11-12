@@ -799,8 +799,12 @@ export class MemDb implements Db {
     return late.size;
   }
 
-  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
-    return [...this.businesses.values()].filter((b) => b.plan === "setup" && b.status === "trial").slice(0, limit).map((b) => ({ ...b }));
+  async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {
+    return [...this.businesses.values()]
+      .filter((b) => b.plan === "setup" && b.status === "trial" && (after === undefined || b.id > after))
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .slice(0, limit)
+      .map((b) => ({ ...b }));
   }
 
   async setScanRetention(businessId: string, at: string | null): Promise<void> {

@@ -304,7 +304,14 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
   for (const b of await listBusinessesByStatus(["churned"])) {
     if ((await db.listChannels(b.id)).some((c) => c.type === "gbp")) await queueGoogle(b.id, "churn");
   }
-  const scans = await db.listScanRetention(200);
+  // Every Vidalo Scan business, page by page (V-COMP-02).
+  const scans = [];
+  for (let after: string | undefined; ; ) {
+    const page = await db.listScanRetention(200, after);
+    scans.push(...page);
+    if (page.length < 200) break;
+    after = page[page.length - 1]!.id;
+  }
   for (const b of scans) {
     const channels = await db.listChannels(b.id);
     const gbp = channels.filter((c) => c.type === "gbp");

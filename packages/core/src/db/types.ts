@@ -373,8 +373,8 @@ export interface Db {
    * still exists which is unfinished after a day or gave up (V-COMP-04). Each business counted once.
    */
   countOverdueDeletions(now: Date): Promise<number>;
-  /** Vidalo Scan businesses (plan setup, status trial). */
-  listScanRetention(limit: number): Promise<BusinessRecord[]>;
+  /** Vidalo Scan businesses (plan setup, status trial), ordered by id; `after` continues after the last page (V-COMP-02). */
+  listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]>;
   /** A Scan business's retention date (reason retention), or null; a later date re-arms the reminder. */
   setScanRetention(businessId: string, at: string | null): Promise<void>;
   /** True when a job of this kind for this business has not run yet (the cron queues one purge per business). */

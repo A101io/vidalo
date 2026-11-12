@@ -928,8 +928,11 @@ export class PgDb implements Db {
     return Number(rows[0]?.n ?? 0);
   }
 
-  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
-    const rows = await this.sql`select * from business where plan = 'setup' and status = 'trial' order by created_at limit ${limit}`;
+  async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {
+    const rows =
+      after === undefined
+        ? await this.sql`select * from business where plan = 'setup' and status = 'trial' order by id limit ${limit}`
+        : await this.sql`select * from business where plan = 'setup' and status = 'trial' and id > ${after} order by id limit ${limit}`;
     return rows.map(mapBusiness);
   }
 

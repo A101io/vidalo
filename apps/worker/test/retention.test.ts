@@ -249,3 +249,12 @@ describe("V-COMP-03, V-COMP-05: the dry run never starves an owner's deletion an
     expect((await retention(day(215.01))).purgeQueued).toBe(1);
   });
 });
+
+describe("V-COMP-02: every Vidalo Scan gets its date, not only the first 200", () => {
+  it("201 Scan businesses: one tick dates them all", async () => {
+    for (let i = 0; i < 201; i++) await db.upsertBusiness({ name: `S${i}`, place: "Haarlem", plan: "setup", status: "trial" });
+    await retention(day(1));
+    const undated = [...db.businesses.values()].filter((b) => b.plan === "setup" && b.status === "trial" && !b.deleteAt);
+    expect(undated).toHaveLength(0);
+  });
+});
