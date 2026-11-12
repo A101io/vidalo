@@ -814,7 +814,7 @@ export class PgDb implements Db {
         values (${row.sessionId}, ${row.userId}, ${row.at}, ${row.at}, ${row.browser}, ${row.os})
         on conflict (session_id) do nothing`;
       await tx`update business set last_active_at = ${row.at} where owner_user_id = ${row.userId}`;
-      await tx`delete from auth_session where user_id = ${row.userId} and ended_at is not null and session_id not in (
+      await tx`delete from auth_session where user_id = ${row.userId} and session_id not in (
         select session_id from auth_session where user_id = ${row.userId} order by signed_in_at desc limit 10)`;
     });
   }
@@ -845,6 +845,21 @@ export class PgDb implements Db {
     if (!UUID.test(userId)) return [];
     const rows = await this.sql`select * from auth_session where user_id = ${userId} order by signed_in_at desc limit ${limit}`;
     return rows.map(mapSignIn);
+  }
+
+  async ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean> {
+    const ids = exceptIds.filter((id) => UUID.test(id));
+    const rows = await this.sql`select 1 from business where lower(owner_email) = ${email.trim().toLowerCase()}
+      and not (id = any(${ids}::uuid[])) limit 1`;
+    return rows.length > 0;
+  }
+
+  async deleteAuthAuditLog(userId: string): Promise<number> {
+    if (!UUID.test(userId)) return 0;
+    const [t] = await this.sql`select to_regclass('auth.audit_log_entries') is not null as present`;
+    if (!t?.present) return 0;
+    const rows = await this.sql`delete from auth.audit_log_entries where payload->>'actor_id' = ${userId} returning 1`;
+    return rows.length;
   }
 
   async deleteSignIns(userId: string): Promise<void> {
@@ -897,10 +912,12 @@ export class PgDb implements Db {
     return mapBusiness(rows[0]);
   }
 
-  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
+  async listDueDeletions(now: Date, limit: number, opts: { retention?: boolean } = {}): Promise<BusinessRecord[]> {
+    const retention = opts.retention !== false;
     const rows = await this.sql`select * from business where delete_at <= ${now}
       and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention'))
-      order by delete_at limit ${limit}`;
+      and (delete_reason = 'owner' or (${retention} and deletion_reminded_at <= ${new Date(now.getTime() - 14 * 86_400_000)}))
+      order by (delete_reason = 'owner') desc, delete_at limit ${limit}`;
     return rows.map(mapBusiness);
   }
 
@@ -910,18 +927,27 @@ export class PgDb implements Db {
     return rows.map(mapBusiness);
   }
 
-  async claimDeletionReminder(businessId: string): Promise<boolean> {
-    const rows = await this.sql`update business set deletion_reminded_at = now() where id = ${businessId} and deletion_reminded_at is null returning id`;
+  async claimDeletionReminder(businessId: string, at: Date = new Date()): Promise<boolean> {
+    const rows = await this.sql`update business set deletion_reminded_at = ${at} where id = ${businessId} and deletion_reminded_at is null returning id`;
     return rows.length === 1;
   }
 
   async countOverdueDeletions(now: Date): Promise<number> {
-    const rows = await this.sql`select count(*)::int as n from business where delete_at < ${new Date(now.getTime() - 86_400_000)}`;
+    const dayAgo = new Date(now.getTime() - 86_400_000);
+    const rows = await this.sql`select count(*)::int as n from (
+        select id::text from business where delete_at < ${dayAgo}
+        union
+        select j.payload->>'businessId' from job j join business b on b.id::text = j.payload->>'businessId'
+          where j.kind = 'purge' and ((j.done_at is null and j.created_at < ${dayAgo}) or (j.done_at is not null and j.error is not null))
+      ) late`;
     return Number(rows[0]?.n ?? 0);
   }
 
-  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
-    const rows = await this.sql`select * from business where plan = 'setup' and status = 'trial' order by created_at limit ${limit}`;
+  async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {
+    const rows =
+      after === undefined
+        ? await this.sql`select * from business where plan = 'setup' and status = 'trial' order by id limit ${limit}`
+        : await this.sql`select * from business where plan = 'setup' and status = 'trial' and id > ${after} order by id limit ${limit}`;
     return rows.map(mapBusiness);
   }
 

@@ -276,15 +276,19 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
   let purgeQueued = 0;
   let googleQueued = 0;
 
+  // While the purge is not armed, no retention deletion happens, so no reminder announces one (V-COMP-05).
+  const dryRun = process.env.VIDALO_PURGE !== "1";
+
   // 1. Reminders: retention deletions only (an owner chose their own date and sees it, F-007).
-  for (const b of await db.listDeletionReminders(now, 50)) {
-    if (!(await db.claimDeletionReminder(b.id))) continue;
+  for (const b of dryRun ? [] : await db.listDeletionReminders(now, 50)) {
+    if (!(await db.claimDeletionReminder(b.id, now))) continue;
     await db.enqueueJob("email", { template: "deletion_reminder", businessId: b.id });
     reminded++;
   }
 
-  // 2. Dates that have come: one purge job per business.
-  for (const b of await db.listDueDeletions(now, 20)) {
+  // 2. Dates that have come: one purge job per business. An owner's own first; in the dry run only those,
+  //    so held retention rows never fill the page (V-COMP-03).
+  for (const b of await db.listDueDeletions(now, 20, { retention: !dryRun })) {
     if (await db.hasUnrunJob("purge", b.id)) continue;
     await db.enqueueJob("purge", { businessId: b.id, guard: "due" });
     purgeQueued++;
@@ -300,7 +304,14 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
   for (const b of await listBusinessesByStatus(["churned"])) {
     if ((await db.listChannels(b.id)).some((c) => c.type === "gbp")) await queueGoogle(b.id, "churn");
   }
-  const scans = await db.listScanRetention(200);
+  // Every Vidalo Scan business, page by page (V-COMP-02).
+  const scans = [];
+  for (let after: string | undefined; ; ) {
+    const page = await db.listScanRetention(200, after);
+    scans.push(...page);
+    if (page.length < 200) break;
+    after = page[page.length - 1]!.id;
+  }
   for (const b of scans) {
     const channels = await db.listChannels(b.id);
     const gbp = channels.filter((c) => c.type === "gbp");
@@ -324,15 +335,16 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
   // 4. The sign-in link limit keeps a day at most.
   await db.pruneAuthThrottle(new Date(now.getTime() - 86_400_000));
 
-  // 5. Deletions past their date: in every tick, and once per Amsterdam day as its own line.
+  // 5. Deletions past their date: in every tick, and once per Amsterdam day as its own line. In the dry run
+  //    these are the retention deletions that would run once armed (the count the delivery-lead reads first).
   const overdue = await db.countOverdueDeletions(now);
+  if (dryRun && overdue) log.info("retention.would_purge", { count: overdue });
   const day = amsterdamParts(now);
   const dayStart = amsterdamToUtc(day.y, day.m, day.d, 0, 0);
   if ((await db.countEventsSince("retention.overdue", dayStart)) === 0) {
     await db.logEvent(null, "retention.overdue", { count: overdue });
     log.info("retention.overdue", { count: overdue });
   }
-  const dryRun = process.env.VIDALO_PURGE !== "1";
   if (reminded || purgeQueued || googleQueued) log.info("retention.queued", { reminded, purgeQueued, googleQueued, dryRun });
   return { reminded, purgeQueued, googleQueued, overdue, dryRun };
 }

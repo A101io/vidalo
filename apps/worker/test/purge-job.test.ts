@@ -74,3 +74,73 @@ describe("google_disconnect job", () => {
     expect((await db.listChannels(gone.id)).length).toBe(0);
   });
 });
+
+describe("V-COMP-01: deleting the login fails closed outside mock mode", () => {
+  const saved = { mock: process.env.VIDALO_MOCK, url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  afterEach(() => {
+    process.env.VIDALO_MOCK = saved.mock;
+    if (saved.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = saved.url;
+    if (saved.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = saved.key;
+  });
+  it("without the Admin key the login is not counted as deleted", async () => {
+    const { deleteLogin } = await import("../src/jobs/purge");
+    delete process.env.VIDALO_MOCK;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    await expect(deleteLogin("00000000-0000-4000-8000-000000000001")).rejects.toThrow(/SUPABASE/);
+    const db = new MemDb();
+    setDb(db);
+    const user = "00000000-0000-4000-8000-0000000000aa";
+    const b = await db.upsertBusiness({ name: "Scan", place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user });
+    const { workerPurgeDeps } = await import("../src/jobs/purge");
+    const { purgeBusiness } = await import("@vidalo/core/shared");
+    const out = await purgeBusiness({ ...workerPurgeDeps(), stripeLive: async () => false, sendDeletedMail: async () => {} }, b.id, "no_subscription");
+    expect(out).toMatchObject({ done: true, loginsDeleted: 0 });
+  });
+  it("in mock mode it is recorded and passes", async () => {
+    const { deleteLogin } = await import("../src/jobs/purge");
+    process.env.VIDALO_MOCK = "1";
+    delete process.env.SUPABASE_URL;
+    await expect(deleteLogin("00000000-0000-4000-8000-000000000001")).resolves.toBeUndefined();
+  });
+});
+
+describe("V-COMP-04: a failing purge job shows in the overdue count and is logged when it gives up", () => {
+  it("a fallback job that keeps failing → overdue 1 the next day, account.delete_failed when retired", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const saved = { mock: process.env.VIDALO_MOCK, key: process.env.STRIPE_SECRET_KEY };
+    delete process.env.VIDALO_MOCK; // Stripe cannot be asked: the job throws and retries
+    delete process.env.STRIPE_SECRET_KEY;
+    const lines: string[] = [];
+    const orig = console.error;
+    const origLog = console.log;
+    console.error = (l: string) => void lines.push(String(l));
+    console.log = (l: string) => void lines.push(String(l));
+    try {
+      const b = await db.upsertBusiness({ name: "Vast", place: "Haarlem", plan: "setup", status: "trial", stripeCustomerId: "cus_vast" });
+      const job = await db.enqueueJob("purge", { businessId: b.id, guard: "no_subscription" });
+      const { processJob } = await import("../src/loop");
+      expect(await db.countOverdueDeletions(new Date())).toBe(0);
+      for (let i = 0; i < job.maxAttempts; i++) {
+        db.jobs.get(job.id)!.runAt = new Date(0).toISOString();
+        const claimed = (await db.claimJob(["purge"]))!;
+        await processJob(claimed);
+      }
+      expect(db.jobs.get(job.id)!.doneAt).not.toBeNull();
+      expect(await db.getBusiness(b.id)).not.toBeNull();
+      expect(await db.countOverdueDeletions(new Date(Date.now() + 86_400_000 + 1000))).toBe(1);
+      const failed = lines.filter((l) => l.includes('"account.delete_failed"'));
+      expect(failed).toHaveLength(1);
+      expect(failed[0]).toContain(b.id);
+      expect(failed[0]).not.toContain("@");
+    } finally {
+      console.error = orig;
+      console.log = origLog;
+      process.env.VIDALO_MOCK = saved.mock;
+      if (saved.key !== undefined) process.env.STRIPE_SECRET_KEY = saved.key;
+    }
+  });
+});

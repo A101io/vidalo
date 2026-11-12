@@ -74,7 +74,7 @@ describe.each(backends)("%s: sign-ins (0018)", (_n, makeDb) => {
     expect((await db.getSignIn(c))!.endedAt).toBeNull();
   });
 
-  it("lists newest first, at most the limit; keeps the 10 newest ended rows and every open one", async () => {
+  it("lists newest first, at most the limit; keeps only the 10 newest rows, open ones included (V-COMP-11)", async () => {
     const base = Date.parse("2026-10-01T08:00:00.000Z");
     const ids: string[] = [];
     for (let i = 0; i < 13; i++) {
@@ -91,10 +91,10 @@ describe.each(backends)("%s: sign-ins (0018)", (_n, makeDb) => {
     await db.recordSignIn({ sessionId: randomUUID(), userId: user, browser: "chrome", os: "macos", at: new Date(base + 20 * 60 * MIN) });
     const all = await db.listSignIns(user, 50);
     expect(all.map((r) => r.signedInAt)).toEqual([...all.map((r) => r.signedInAt)].sort().reverse());
-    expect(await db.getSignIn(ids[0]!)).not.toBeNull();
-    expect(await db.getSignIn(ids[1]!)).not.toBeNull();
-    // 14 rows, 10 newest kept + the two open old ones; ended rows beyond the 10 newest are gone.
-    expect(all).toHaveLength(12);
+    // 14 rows: the 10 newest stay; older ones go, the two open old ones too (that browser signs in again).
+    expect(await db.getSignIn(ids[0]!)).toBeNull();
+    expect(await db.getSignIn(ids[1]!)).toBeNull();
+    expect(all).toHaveLength(10);
     expect(await db.getSignIn(ids[2]!)).toBeNull();
     expect(await db.getSignIn(ids[3]!)).toBeNull();
     expect(await db.listSignIns(user, 10)).toHaveLength(10);
@@ -199,7 +199,18 @@ describe.each(backends)("%s: deletion and retention (0019)", (_n, makeDb) => {
     expect(Math.abs(Date.parse(churned.deleteAt!) - (Date.parse(churned.churnedAt!) + 120 * DAY))).toBeLessThan(5000);
     expect(await db.purgeBusiness(b.id, "due", days(119))).toBe(false);
     expect((await db.listDueDeletions(days(119), 50)).map((x) => x.id)).not.toContain(b.id);
+    // A retention row is due only 14 days after its reminder (V-COMP-05), and never in the dry run (V-COMP-03).
+    expect((await db.listDueDeletions(days(121), 50)).map((x) => x.id)).not.toContain(b.id);
+    expect(await db.claimDeletionReminder(b.id, days(106))).toBe(true);
+    expect((await db.listDueDeletions(days(119.5), 50)).map((x) => x.id)).not.toContain(b.id);
     expect((await db.listDueDeletions(days(121), 50)).map((x) => x.id)).toContain(b.id);
+    expect((await db.listDueDeletions(days(121), 50, { retention: false })).map((x) => x.id)).not.toContain(b.id);
+    // An owner's own date comes first, also in the dry run.
+    const o = await biz("Owner first", { plan: "monitor", status: "active", cancelAt: days(5).toISOString() });
+    await db.setDeletion(o.id, { at: days(5).toISOString(), reason: "owner" });
+    await db.upsertBusiness({ id: o.id, slug: o.slug, name: o.name, place: o.place, status: "churned" });
+    expect((await db.listDueDeletions(days(121), 50))[0]!.id).toBe(o.id);
+    expect((await db.listDueDeletions(days(121), 50, { retention: false })).map((x) => x.id)).toEqual([o.id]);
     expect(await db.purgeBusiness(control.id, "due", days(121))).toBe(false);
     expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(true);
     expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(false);
@@ -263,5 +274,61 @@ describe.each(backends)("%s: deletion and retention (0019)", (_n, makeDb) => {
     expect((await db.getBusiness(monthly.id))!.deleteAt).toBeNull();
     expect((await db.listScanRetention(500)).map((x) => x.id)).toContain(scan.id);
     expect((await db.listScanRetention(500)).map((x) => x.id)).not.toContain(monthly.id);
+  });
+});
+
+describe.each(backends)("%s: V-COMP-02 Scan retention pages through every business", (_n, makeDb) => {
+  it("201 Scan businesses come back in pages of 200, each once", async () => {
+    const db = await makeDb();
+    const ids = new Set<string>();
+    for (let i = 0; i < 201; i++) ids.add((await db.upsertBusiness({ name: `Scan pagina ${i} ${randomUUID().slice(0, 4)}`, place: "Haarlem", plan: "setup", status: "trial" })).id);
+    const seen: string[] = [];
+    let after: string | undefined;
+    for (;;) {
+      const page = await db.listScanRetention(200, after);
+      seen.push(...page.map((b) => b.id));
+      if (page.length < 200) break;
+      after = page[page.length - 1]!.id;
+    }
+    expect(seen.length).toBe(201);
+    expect(new Set(seen)).toEqual(ids);
+  });
+});
+
+describe.skipIf(!PG_URL)("PgDb: V-COMP-06 Supabase's own sign-in record goes with the login", () => {
+  it("deletes the user's auth.audit_log_entries and nobody else's; without the table it does nothing", async () => {
+    const db = createDb(PG_URL!);
+    const sql = postgres(PG_URL!, { max: 1, onnotice: () => {} });
+    try {
+      await sql`drop table if exists auth.audit_log_entries`;
+      expect(await db.deleteAuthAuditLog(randomUUID())).toBe(0);
+      await sql`create table auth.audit_log_entries (id uuid primary key default gen_random_uuid(), payload json, ip_address varchar(64), created_at timestamptz default now())`;
+      const user = randomUUID();
+      const other = randomUUID();
+      for (const actor of [user, user, other]) await sql`insert into auth.audit_log_entries (payload, ip_address) values (${sql.json({ actor_id: actor, action: "login" })}, '203.0.113.7')`;
+      expect(await db.deleteAuthAuditLog(user)).toBe(2);
+      const left = await sql`select payload->>'actor_id' as a from auth.audit_log_entries`;
+      expect(left.map((r) => r.a)).toEqual([other]);
+    } finally {
+      await sql`drop table if exists auth.audit_log_entries`;
+      await sql.end();
+      await db.close();
+    }
+  });
+});
+
+it("MemDb: deleteAuthAuditLog has nothing to delete", async () => {
+  expect(await withMockDb().deleteAuthAuditLog(randomUUID())).toBe(0);
+});
+
+describe.each(backends)("%s: V-SEC-06 an address is taken when any business outside mine has it", (_n, makeDb) => {
+  it("finds the other login's business even when one of mine has the same address", async () => {
+    const db = await makeDb();
+    const email = `bezet-${randomUUID().slice(0, 6)}@example.nl`;
+    const mine = await db.upsertBusiness({ name: `Mijn ${randomUUID().slice(0, 4)}`, place: "Haarlem", ownerEmail: email });
+    expect(await db.ownerEmailTakenOutside(email, [mine.id])).toBe(false);
+    await db.upsertBusiness({ name: `Andermans ${randomUUID().slice(0, 4)}`, place: "Haarlem", ownerEmail: email.toUpperCase() });
+    expect(await db.ownerEmailTakenOutside(email, [mine.id])).toBe(true);
+    expect(await db.ownerEmailTakenOutside(`vrij-${email}`, [mine.id])).toBe(false);
   });
 });

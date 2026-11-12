@@ -728,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 13 November 2026",
+    updated: "Version of 12 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -857,6 +857,7 @@ export const en: CopyShape = {
             "If within thirty days of your payment we cannot start Vidalo Scan because the proof of management in article 5 does not succeed, you may terminate the Agreement. We then refund what you paid for the Plan.",
             "You can pause Vidalo Monthly for 1, 2 or 3 months under ‘Subscription’. During that time we do not check or fix anything and you pay nothing; your Facts page stays online. You receive a confirmation by email and a reminder a week before the end. On the end date the subscription continues automatically at the regular price. You can resume earlier or cancel during the pause. You cannot pause while a payment is outstanding.",
             "When your subscription ends, we stop checking and fixing, and your Facts page redirects to your own website. What has already been fixed at other parties stays there. What we do with your data afterwards is stated in our privacy policy.",
+            "With Vidalo Scan your Facts page stays online as long as your account exists: until you delete everything yourself, or until we delete your data 24 months after your last sign-in or your last payment. You get a reminder by email 14 days before; if you sign in, that date moves on.",
             "You can also cancel by email to support@vidalo.io. You then receive the same confirmation.",
           ],
         },
@@ -1007,6 +1008,7 @@ export const en: CopyShape = {
           p: [
             [
               "Data: your email address, a number for your account, your language and which emails you want to receive, and of your last 10 sign-ins: when, and with what kind of browser and device (such as ‘Safari on an iPhone’). We do not keep your IP address for this. To limit misuse of sign-in links we turn your email address and your IP address into a code and keep it for at most one day.",
+              "Supabase, which handles signing in for us, also records your IP address and your browser each time you sign in, to keep signing in secure. We keep that as long as your account exists; if you delete everything, we delete it too.",
               "Basis: the performance of the agreement with you (article 6(1)(b) GDPR); for the list of sign-ins and the codes against misuse: our legitimate interest in a secure account (article 6(1)(f) GDPR).",
               "Retention: as long as your account exists. A sign-in on a device ends after 30 days without use and at the latest 90 days after signing in. You delete your account yourself, see ‘Your rights’.",
             ],
@@ -2694,7 +2696,7 @@ export const en: CopyShape = {
     logout: "Log out",
     myData: {
       h: "Your data",
-      body: "Download everything Vidalo keeps about your business, or have it deleted.",
+      body: "Download everything Vidalo keeps about your business and your sign-in, or have it deleted. Your invoices are in the customer portal, under ‘Subscription’.",
       download: "Download your data (JSON)",
       deleteBody: "We delete your business, your details, your checks, your reports and your login. Invoices stay with Stripe for 7 years, because the law requires it. Changes we made on other sites stay there. This cannot be undone.",
       confirm: "Yes, delete everything about my business",
@@ -3050,9 +3052,9 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
-    accountDeleted: (name: string) => ({
+    accountDeleted: (name: string, googleRevoked: boolean) => ({
       subject: `Everything of ${name} is deleted`,
-      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, your facts page and its address, and the connection with Google, which we also revoked at Google. If no other business belongs to your sign-in, your sign-in is deleted too.
+      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, and your facts page and its address.${googleRevoked ? " We also revoked the connection with Google at Google." : ""} If no other business belongs to your sign-in, your sign-in is deleted too.
 
 What stays: your invoices, for 7 years at Stripe, because the law requires it. What was already corrected at Google, directories or other websites stays there.
 

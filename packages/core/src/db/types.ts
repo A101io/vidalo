@@ -329,8 +329,8 @@ export interface Db {
   // --- sign-ins (feature 002, migration 0018) ---
   /**
    * Records a sign-in. Insert by sessionId; a second call for the same id changes nothing (it never
-   * clears ended_at or moves signed_in_at). Then deletes the user's ended rows beyond the 10 newest
-   * (an open sign-in is never deleted).
+   * clears ended_at or moves signed_in_at). Then deletes the user's rows beyond the 10 newest, open ones
+   * included (V-COMP-11: the list and the privacy text promise at most 10).
    */
   recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void>;
   getSignIn(sessionId: string): Promise<SignInRow | null>;
@@ -341,6 +341,13 @@ export interface Db {
   /** Newest first. */
   listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
   deleteSignIns(userId: string): Promise<void>;
+  /** True when a business outside `exceptIds` has this owner address (case-insensitive): the address change's "bezet" (V-SEC-06). */
+  ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean>;
+  /**
+   * Supabase's own audit record of a deleted login (auth.audit_log_entries holds the IP address and browser of
+   * each sign-in, V-COMP-06). Returns how many rows went; 0 when the table is absent (MemDb, verify:pg).
+   */
+  deleteAuthAuditLog(userId: string): Promise<number>;
 
   // --- sign-in link limit (feature 002, migration 0018) ---
   /** Inserts one row per key now, and returns per key how many rows exist since `since`, this one included. One round trip. */
@@ -358,16 +365,23 @@ export interface Db {
   // --- deletion and retention (feature 002, migration 0019, ADR-0005) ---
   /** The owner's deletion date (reason owner), or null to call it off (a churned business falls back to churn + 120 days). Refused when the business pays without a cancel. */
   setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord>;
-  /** delete_at has passed and the "due" rule allows it. */
-  listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]>;
+  /**
+   * delete_at has passed and the "due" rule allows it; an owner's own deletions first. A retention row is
+   * listed only 14 days after its reminder went out (the promise in the privacy text), and not at all with
+   * `{ retention: false }` (the dry run, V-COMP-03).
+   */
+  listDueDeletions(now: Date, limit: number, opts?: { retention?: boolean }): Promise<BusinessRecord[]>;
   /** Retention deletions within 14 days whose reminder has not gone out. */
   listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]>;
   /** Marks the reminder as sent; true only the first time. */
-  claimDeletionReminder(businessId: string): Promise<boolean>;
-  /** Businesses whose deletion date is more than a day past. */
+  claimDeletionReminder(businessId: string, at?: Date): Promise<boolean>;
+  /**
+   * Businesses whose deletion is late: a deletion date more than a day past, or a purge job for a business that
+   * still exists which is unfinished after a day or gave up (V-COMP-04). Each business counted once.
+   */
   countOverdueDeletions(now: Date): Promise<number>;
-  /** Vidalo Scan businesses (plan setup, status trial). */
-  listScanRetention(limit: number): Promise<BusinessRecord[]>;
+  /** Vidalo Scan businesses (plan setup, status trial), ordered by id; `after` continues after the last page (V-COMP-02). */
+  listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]>;
   /** A Scan business's retention date (reason retention), or null; a later date re-arms the reminder. */
   setScanRetention(businessId: string, at: string | null): Promise<void>;
   /** True when a job of this kind for this business has not run yet (the cron queues one purge per business). */

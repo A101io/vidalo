@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { NO_STORE } from "@/lib/auth-cookies";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
@@ -17,7 +18,7 @@ const SCOPES = ["https://www.googleapis.com/auth/business.manage"];
  * business. `?business=<id>` lets someone who is not (yet) the recorded owner
  * claim a business from its report; otherwise the session's own business.
  */
-export async function GET(req: Request) {
+async function handle(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const session = await getSession();
   const claimed = url.searchParams.get("business");
@@ -46,4 +47,11 @@ export async function GET(req: Request) {
   auth.searchParams.set("prompt", "consent");
   auth.searchParams.set("state", state);
   return NextResponse.redirect(auth.toString());
+}
+
+/** It reads the session: no answer of it may be stored by a cache (V-SEC-03). */
+export async function GET(req: Request) {
+  const res = await handle(req);
+  res.headers.set("cache-control", NO_STORE);
+  return res;
 }

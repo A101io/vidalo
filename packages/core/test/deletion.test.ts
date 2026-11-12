@@ -69,3 +69,30 @@ it("MemDb mirrors that CHECK", async () => {
   const monthly = await db.upsertBusiness({ name: "M", place: "Haarlem", plan: "monitor", status: "active" });
   await expect(db.setDeletion(monthly.id, { at: "2026-12-01T00:00:00.000Z", reason: "owner" })).rejects.toThrow(/business_delete_only_when_ending/);
 });
+
+/** V-SEC-01: a dated Vidalo Scan that buys Vidalo Monthly loses its retention date; the webhook succeeds. */
+describe.each([["MemDb", false], ["PgDb", true]] as const)("%s: Scan → Monthly through the Stripe webhook", (_n, usePg) => {
+  const run = usePg && !PG_URL ? it.skip : it;
+  for (const plan of ["monitor_addon", "monitor"] as const) {
+    run(`a ${plan} checkout on a dated Scan is activated and the date goes`, async () => {
+      const { setDb } = await import("../src/shared");
+      const { handleStripeEvent } = await import("../src/billing");
+      const db: Db = usePg ? createDb(PG_URL!) : new MemDb();
+      setDb(db);
+      try {
+        const b = await db.upsertBusiness({ name: `Scan koopt ${plan} ${Date.now()}`, place: "Haarlem", plan: "setup", status: "trial", stripeCustomerId: "cus_sec01" });
+        await db.setScanRetention(b.id, "2028-11-11T10:00:00.000Z");
+        expect((await db.getBusiness(b.id))!.deleteReason).toBe("retention");
+        const out = await handleStripeEvent({ id: `evt_sec01_${plan}_${Date.now()}`, type: "checkout.session.completed", data: { object: { id: `cs_sec01_${Date.now()}`, payment_status: "paid", customer: "cus_sec01", subscription: "sub_sec01", metadata: { businessId: b.id, plan }, customer_details: { email: "scan@example.nl" } } } });
+        expect(out).toBe("activated");
+        const after = (await db.getBusiness(b.id))!;
+        expect(after.plan).toBe("monitor");
+        expect(after.deleteAt).toBeNull();
+        expect(after.deleteReason).toBeNull();
+      } finally {
+        setDb(null);
+        if (usePg) await db.close();
+      }
+    });
+  }
+});

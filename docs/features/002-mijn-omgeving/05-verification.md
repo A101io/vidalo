@@ -157,3 +157,43 @@ goes to lane A (F-A6, confirmed).
   dated row.** Security has already added the plan-transition rule to its standing list.
 - **V-COMP-01, -02, -03** come from fixed batch limits and a fail-open dependency. Compliance and
   security have already added both to their standing lists.
+
+## 9. Waiting on Julian: three legal sentences (lane A drafts, 12 Nov 2026)
+
+**Outcome (12 Nov 2026):** Julian said "proceed with the legal part". Sentences 1 and 2 are in
+`copy.legal` (NL, EN) with the version date set to 12 November 2026 and `legal:lock` run (the
+legal test refuses a wording change under the old date). Sentence 3 is not added: the project is
+on the Supabase free plan (F-022), which takes no automatic backups; Julian confirmed on 12 Nov 2026
+that it stays on free. On a later move to Pro it goes in.
+The version date is set again on deploy day (V-COMP-15).
+
+Drafted by lane A, **not in the code**: `copy.legal` and `legal.lock.json` are unchanged by them,
+and `legal:lock` was not run for them (no test forced it). Each needs Julian's yes ("ja" / a
+change) before it goes into `packages/core/src/copy/index.ts` and `en.ts`. Then lane A adds them,
+the version date is set on deploy day (V-COMP-15) and `legal:lock` runs once for all of them.
+
+**1. Terms, "Looptijd, opzeggen en pauzeren": how long a Vidalo Scan facts page stays online (V-COMP-08, COMP-25).**
+Matches the code (`SCAN_RETENTION_MONTHS = 24`, cron step 3a, reminder 14 days before).
+
+- NL: "Bij Vidalo Scan blijft je feitenpagina online zolang je account bestaat: tot je zelf alles verwijdert, of tot we je gegevens verwijderen 24 maanden na je laatste keer inloggen of je laatste betaling. 14 dagen daarvoor krijg je een herinnering per e-mail; log je in, dan schuift die datum op."
+- EN: "With Vidalo Scan your facts page stays online as long as your account exists: until you delete everything yourself, or until we delete your data 24 months after your last sign-in or your last payment. You get a reminder by email 14 days before; if you sign in, that date moves on."
+- Note for Julian: terms 2.7 asks for 30 days' notice of a change to existing customers. Production has no Vidalo Scan customers today (go-live A1), so no notice mail is needed if this ships before the first one.
+
+**2. Privacy, "Je account en inloggen": Supabase's own record of each sign-in (V-COMP-06).**
+Matches the code since 45a7d87 (the purge deletes `auth.audit_log_entries` of a deleted login).
+Whether the worker's database role may delete from that table on the hosted project is not
+verified (§7 "Supabase audit logs", read only).
+
+- NL: "Supabase, dat het inloggen voor ons regelt, legt bij elke keer inloggen ook je IP-adres en je browser vast, om het inloggen te beveiligen. Dat bewaren we zolang je account bestaat; verwijder je alles, dan verwijderen we het mee."
+- EN: "Supabase, which handles signing in for us, also records your IP address and your browser each time you sign in, to keep signing in secure. We keep that as long as your account exists; if you delete everything, we delete it too."
+
+**3. Privacy, "Een betaald plan", end of "Hoe lang": backups (V-COMP-09, §4.1 P3 bracket).**
+Source read 12 Nov 2026 (https://supabase.com/docs/guides/platform/backups, recorded in
+`docs/processors.md`): Free plan no automatic backups; Pro keeps daily backups 7 days. Which
+variant is true depends on the plan at launch (F-022, go-live D2):
+
+- On Pro (7 days), NL: "Uit de back-ups van onze database verdwijnen ze uiterlijk 7 dagen daarna." EN: "They disappear from our database backups at the latest 7 days after that."
+- On Free: no sentence needed (no automatic backups exist); compliance's bracket is then left out, as now.
+
+Resend (sent mail and logs, 30 days on every non-Enterprise plan, https://resend.com/pricing) is
+recorded in `docs/processors.md`; compliance did not ask for a privacy sentence on it.

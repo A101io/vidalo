@@ -56,7 +56,7 @@ describe("disconnectGoogle", () => {
     };
     await expect(disconnectGoogle(db, a.id, fail, "owner")).rejects.toThrow();
     expect((await db.listChannels(a.id)).some((c) => c.type === "gbp")).toBe(true);
-    expect(await disconnectGoogle(db, a.id, fail, "purge")).toEqual({ disconnected: 1 });
+    expect(await disconnectGoogle(db, a.id, fail, "purge")).toEqual({ disconnected: 1, revokeFailed: 1 });
     expect((await db.listChannels(a.id)).some((c) => c.type === "gbp")).toBe(false);
   });
   it("no connection: nothing to do", async () => {

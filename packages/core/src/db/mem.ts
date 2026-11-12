@@ -58,7 +58,8 @@ function retentionTrigger(old: BusinessRecord | null, b: BusinessRecord): void {
     b.deletionRemindedAt = null;
   }
   const scanRetention = b.plan === "setup" && b.status === "trial" && b.deleteReason === "retention";
-  const changed = !old || old.status !== b.status || old.cancelAt !== b.cancelAt;
+  // A change of plan counts too: a dated Scan that buys Monthly loses its retention date (V-SEC-01).
+  const changed = !old || old.status !== b.status || old.cancelAt !== b.cancelAt || old.plan !== b.plan;
   if (changed && (b.status === "trial" || b.status === "active" || b.status === "paused") && !b.cancelAt && !scanRetention) {
     b.deleteAt = null;
     b.deleteReason = null;
@@ -684,7 +685,8 @@ export class MemDb implements Db {
         .slice(0, 10)
         .map((r) => r.sessionId),
     );
-    for (const r of [...this.signIns.values()]) if (r.userId === row.userId && r.endedAt && !keep.has(r.sessionId)) this.signIns.delete(r.sessionId);
+    // Only the 10 newest stay, open ones included (V-COMP-11): an older open sign-in is gone, so that browser signs in again.
+    for (const r of [...this.signIns.values()]) if (r.userId === row.userId && !keep.has(r.sessionId)) this.signIns.delete(r.sessionId);
   }
 
   async getSignIn(sessionId: string): Promise<SignInRow | null> {
@@ -715,6 +717,15 @@ export class MemDb implements Db {
       .sort((a, b) => b.signedInAt.localeCompare(a.signedInAt))
       .slice(0, limit)
       .map((r) => ({ ...r }));
+  }
+
+  async ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean> {
+    const e = email.trim().toLowerCase();
+    return [...this.businesses.values()].some((b) => b.ownerEmail?.toLowerCase() === e && !exceptIds.includes(b.id));
+  }
+
+  async deleteAuthAuditLog(_userId: string): Promise<number> {
+    return 0;
   }
 
   async deleteSignIns(userId: string): Promise<void> {
@@ -762,8 +773,14 @@ export class MemDb implements Db {
     return { ...next };
   }
 
-  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
-    return [...this.businesses.values()].filter((b) => purgeAllowed(b, "due", now)).slice(0, limit).map((b) => ({ ...b }));
+  async listDueDeletions(now: Date, limit: number, opts: { retention?: boolean } = {}): Promise<BusinessRecord[]> {
+    const remindedBefore = now.getTime() - 14 * DAY_MS;
+    return [...this.businesses.values()]
+      .filter((b) => purgeAllowed(b, "due", now))
+      .filter((b) => b.deleteReason === "owner" || (opts.retention !== false && b.deletionRemindedAt !== null && Date.parse(b.deletionRemindedAt) <= remindedBefore))
+      .sort((a, b) => (a.deleteReason === "owner" ? 0 : 1) - (b.deleteReason === "owner" ? 0 : 1) || Date.parse(a.deleteAt!) - Date.parse(b.deleteAt!))
+      .slice(0, limit)
+      .map((b) => ({ ...b }));
   }
 
   async listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]> {
@@ -773,19 +790,31 @@ export class MemDb implements Db {
       .map((b) => ({ ...b }));
   }
 
-  async claimDeletionReminder(businessId: string): Promise<boolean> {
+  async claimDeletionReminder(businessId: string, at: Date = new Date()): Promise<boolean> {
     const b = this.businesses.get(businessId);
     if (!b || b.deletionRemindedAt) return false;
-    b.deletionRemindedAt = nowIso();
+    b.deletionRemindedAt = at.toISOString();
     return true;
   }
 
   async countOverdueDeletions(now: Date): Promise<number> {
-    return [...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).length;
+    const late = new Set([...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).map((b) => b.id));
+    for (const j of this.jobs.values()) {
+      const id = j.payload.businessId;
+      if (j.kind !== "purge" || typeof id !== "string" || !this.businesses.has(id)) continue;
+      const stuck = !j.doneAt && Date.parse(j.createdAt) < now.getTime() - DAY_MS;
+      const gaveUp = !!j.doneAt && !!j.error;
+      if (stuck || gaveUp) late.add(id);
+    }
+    return late.size;
   }
 
-  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
-    return [...this.businesses.values()].filter((b) => b.plan === "setup" && b.status === "trial").slice(0, limit).map((b) => ({ ...b }));
+  async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {
+    return [...this.businesses.values()]
+      .filter((b) => b.plan === "setup" && b.status === "trial" && (after === undefined || b.id > after))
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .slice(0, limit)
+      .map((b) => ({ ...b }));
   }
 
   async setScanRetention(businessId: string, at: string | null): Promise<void> {

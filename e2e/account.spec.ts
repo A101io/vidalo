@@ -172,3 +172,17 @@ test("A-06: after the end, /app/abonnement says what stopped, until when, and th
   await expect(end).toContainText("14 dagen vooraf krijg je een herinnering");
   await expect(end).toContainText("De koppeling met Google is verbroken");
 });
+
+test("V-SEC-03: route handlers that read the session are never cached", async ({ page, baseURL }) => {
+  await signInAs(page, DEMO);
+  const id = await demoBusinessId(page);
+  const answers = [
+    await page.request.get(`/api/google/start?business=${id}`, { maxRedirects: 0 }),
+    await page.request.get(`/api/google/callback?state=x&code=y`, { maxRedirects: 0 }),
+    await page.request.post("/api/billing/portal", { headers: { origin: new URL(baseURL!).origin }, form: { business: id }, maxRedirects: 0 }),
+  ];
+  for (const r of answers) {
+    expect(r.headers()["cache-control"] ?? "", r.url()).toMatch(/private/);
+    expect(r.headers()["cache-control"] ?? "", r.url()).toMatch(/no-store/);
+  }
+});

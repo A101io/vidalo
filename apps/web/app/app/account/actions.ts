@@ -33,9 +33,8 @@ export async function changeEmail(formData: FormData) {
   if (email === session.email.toLowerCase()) redirect(back("zelfde"));
   const db = await ready();
   // Taken when the address is the owner address of any business this login is not a member of (SEC-38).
-  const mine = new Set((await listMyBusinesses(session)).map((b) => b.id));
-  const other = await db.getBusinessByOwner({ email });
-  if (other && !mine.has(other.id)) redirect(back("bezet"));
+  const mine = (await listMyBusinesses(session)).map((b) => b.id);
+  if (await db.ownerEmailTakenOutside(email, mine)) redirect(back("bezet"));
 
   const supabase = await createServerSupabase();
   if (supabase) {

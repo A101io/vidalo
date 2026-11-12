@@ -28,11 +28,31 @@ export async function stripeLive(customerId: string): Promise<boolean> {
   return (body.data ?? []).some((s) => s.status !== "canceled" && s.status !== "incomplete_expired");
 }
 
+/** V-SEC-04: expire the customer's open Checkout Sessions (fetch only, Workers). */
+export async function expireOpenCheckouts(customerId: string): Promise<number> {
+  const key = env("STRIPE_SECRET_KEY");
+  if (!key) {
+    if (mock()) return 0;
+    throw new Error("STRIPE_SECRET_KEY is not set: cannot expire open checkouts");
+  }
+  const auth = { authorization: `Bearer ${key}` };
+  const res = await fetch(`https://api.stripe.com/v1/checkout/sessions?customer=${encodeURIComponent(customerId)}&status=open&limit=100`, { headers: auth, signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`stripe ${res.status}`);
+  const open = ((await res.json()) as { data?: { id: string }[] }).data ?? [];
+  for (const s of open) {
+    const r = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(s.id)}/expire`, { method: "POST", headers: auth, signal: AbortSignal.timeout(15_000) });
+    if (!r.ok && r.status !== 400) throw new Error(`stripe ${r.status}`); // 400: completed or expired meanwhile
+  }
+  return open.length;
+}
+
 /** Supabase Admin API; the user id is a uuid from our own database. */
 export async function deleteLogin(userId: string): Promise<void> {
   const url = env("SUPABASE_URL");
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) {
+    // Fail closed (V-COMP-01): outside mock mode a login that cannot be deleted is never reported as deleted.
+    if (!mock()) throw new Error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: cannot delete the login");
     log.info("account.login_delete_mock", {});
     return;
   }
@@ -48,6 +68,7 @@ export function workerPurgeDeps(now = new Date()): PurgeDeps {
     now,
     dryRunRetention: process.env.VIDALO_PURGE !== "1",
     stripeLive,
+    expireOpenCheckouts,
     revokeGoogle: revoke,
     deleteCustomHostname,
     deleteLogin,

@@ -35,10 +35,23 @@ async function webPurgeDeps(session: Session): Promise<PurgeDeps> {
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
       return subs.data.some((s) => s.status !== "canceled" && s.status !== "incomplete_expired");
     },
+    expireOpenCheckouts: async (customerId) => {
+      if (!stripe) {
+        if (env.mock) return 0;
+        throw new Error("no Stripe key: cannot expire open checkouts");
+      }
+      const open = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 100 });
+      for (const s of open.data) await stripe.checkout.sessions.expire(s.id);
+      return open.data.length;
+    },
     revokeGoogle: async (token) => (env.hasGoogle ? revokeGoogleToken(token) : void log.info("google.revoke_mock", {})),
     deleteCustomHostname,
     deleteLogin: async (userId) => {
-      if (!admin) return void log.info("account.login_delete_mock", {});
+      if (!admin) {
+        // Fail closed (V-COMP-01): only mock mode goes without the Admin key.
+        if (!env.mock) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set: cannot delete the login");
+        return void log.info("account.login_delete_mock", {});
+      }
       const { error } = await admin.auth.admin.deleteUser(userId);
       if (error && error.status !== 404) throw new Error(`supabase admin ${error.status ?? "error"}`);
     },

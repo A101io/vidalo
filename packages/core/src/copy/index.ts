@@ -751,7 +751,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 13 november 2026",
+    updated: "Versie van 12 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -880,6 +880,7 @@ export const copy = {
             "Kunnen we binnen dertig dagen na je betaling niet aan Vidalo Scan beginnen, omdat het bewijs van beheer uit artikel 5 niet lukt, dan mag je de Overeenkomst ontbinden. We betalen je dan terug wat je voor het Plan betaalde.",
             "Je kunt Vidalo Monthly onder ‘Abonnement’ 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je Feitenpagina blijft online. Je krijgt een bevestiging per e-mail en een week voor het einde een herinnering. Op de einddatum loopt het abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen. Pauzeren kan niet zolang een betaling openstaat.",
             "Eindigt je abonnement, dan stoppen we met controleren en herstellen, en verwijst je Feitenpagina door naar je eigen website. Wat bij andere partijen al hersteld is, blijft daar staan. Wat we daarna met je gegevens doen, staat in ons privacybeleid.",
+            "Bij Vidalo Scan blijft je Feitenpagina online zolang je account bestaat: tot je zelf alles verwijdert, of tot we je gegevens verwijderen 24 maanden na je laatste keer inloggen of je laatste betaling. 14 dagen daarvoor krijg je een herinnering per e-mail; log je in, dan schuift die datum op.",
             "Opzeggen kan ook per e-mail naar support@vidalo.io. Je krijgt dan dezelfde bevestiging.",
           ],
         },
@@ -1030,6 +1031,7 @@ export const copy = {
           p: [
             [
               "Gegevens: je e-mailadres, een nummer voor je account, je taal en welke e-mails je wilt ontvangen, en van je laatste 10 keer inloggen: wanneer, en met welk soort browser en apparaat (zoals ‘Safari op een iPhone’). Je IP-adres bewaren we daarvoor niet. Om misbruik van inloglinks te beperken maken we van je e-mailadres en van je IP-adres een code en bewaren we die hoogstens een dag.",
+              "Supabase, dat het inloggen voor ons regelt, legt bij elke keer inloggen ook je IP-adres en je browser vast, om het inloggen te beveiligen. Dat bewaren we zolang je account bestaat; verwijder je alles, dan verwijderen we het mee.",
               "Grondslag: de uitvoering van de overeenkomst met jou (artikel 6 lid 1 onder b AVG); voor de lijst met keren inloggen en de codes tegen misbruik: ons gerechtvaardigd belang bij een veilig account (artikel 6 lid 1 onder f AVG).",
               "Hoe lang: zolang je account bestaat. Een inlog op een apparaat vervalt na 30 dagen zonder gebruik en uiterlijk 90 dagen na het inloggen. Je verwijdert je account zelf, zie ‘Je rechten’.",
             ],
@@ -2771,7 +2773,7 @@ export const copy = {
     /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
     myData: {
       h: "Je gegevens",
-      body: "Download alles wat Vidalo over je bedrijf bewaart, of laat het verwijderen.",
+      body: "Download alles wat Vidalo over je bedrijf en je inlog bewaart, of laat het verwijderen. Je facturen staan in het klantportaal, onder ‘Abonnement’.",
       download: "Download je gegevens (JSON)",
       deleteBody: "We verwijderen je bedrijf, je gegevens, je controles, je rapporten en je inlog. Facturen blijven 7 jaar bij Stripe, omdat de wet dat vraagt. Wat we bij andere sites hebben aangepast, blijft daar staan. Dit kun je niet terugdraaien.",
       confirm: "Ja, verwijder alles van mijn bedrijf",
@@ -3144,9 +3146,9 @@ export const copy = {
     hi: "Hoi,",
     regards: "Groet,\nVidalo",
     /** Feature 002 (A-05): after "Verwijder alles" has deleted everything. Service mail. */
-    accountDeleted: (name: string) => ({
+    accountDeleted: (name: string, googleRevoked: boolean) => ({
       subject: `Alles van ${name} is verwijderd`,
-      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan, en de koppeling met Google, die we ook bij Google hebben ingetrokken. Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd.
+      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, en je feitenpagina en het adres ervan.${googleRevoked ? " De koppeling met Google hebben we ook bij Google ingetrokken." : ""} Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd.
 
 Wat blijft: je facturen, 7 jaar bij Stripe, omdat de wet dat vraagt. Wat al bij Google, gidsen of andere websites is hersteld, blijft daar staan.
 
