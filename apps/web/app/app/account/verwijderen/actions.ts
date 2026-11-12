@@ -35,6 +35,15 @@ async function webPurgeDeps(session: Session): Promise<PurgeDeps> {
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
       return subs.data.some((s) => s.status !== "canceled" && s.status !== "incomplete_expired");
     },
+    expireOpenCheckouts: async (customerId) => {
+      if (!stripe) {
+        if (env.mock) return 0;
+        throw new Error("no Stripe key: cannot expire open checkouts");
+      }
+      const open = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 100 });
+      for (const s of open.data) await stripe.checkout.sessions.expire(s.id);
+      return open.data.length;
+    },
     revokeGoogle: async (token) => (env.hasGoogle ? revokeGoogleToken(token) : void log.info("google.revoke_mock", {})),
     deleteCustomHostname,
     deleteLogin: async (userId) => {

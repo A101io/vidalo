@@ -11,6 +11,7 @@ function deps(db: MemDb, over: Partial<PurgeDeps> = {}) {
     now: new Date(),
     dryRunRetention: true,
     stripeLive: async () => (calls.push("stripe"), false),
+    expireOpenCheckouts: async () => 0,
     revokeGoogle: async () => void calls.push("google"),
     deleteCustomHostname: async (h) => void calls.push(`cloudflare:${h}`),
     deleteLogin: async (u) => void calls.push(`login:${u}`),
@@ -173,5 +174,40 @@ describe("deleteCustomHostname (SEC-48)", () => {
     const { deleteCustomHostname } = await import("../src/publisher/host");
     for (const h of ["vidalo.io", "www.vidalo.io", "x-feiten.vidalo.io", "vidalo.ai", "www.vidalo.ai", "*", "a/b", "*.klant.nl"]) await expect(deleteCustomHostname(h), h).rejects.toThrow(/refusing/);
     await expect(deleteCustomHostname("feiten.klant.nl")).resolves.toBeUndefined();
+  });
+});
+
+describe("V-SEC-04: an open Stripe checkout cannot complete after the deletion", () => {
+  it("open Checkout Sessions of the customer are expired before the delete; a failure deletes nothing", async () => {
+    const db = new MemDb();
+    const { b } = await scanOwner(db);
+    const calls: string[] = [];
+    const open = new Set(["cs_open_1"]);
+    const base = deps(db).d;
+    const d: PurgeDeps = {
+      ...base,
+      stripeLive: async () => (calls.push("stripe"), false),
+      expireOpenCheckouts: async () => 0,
+      expireOpenCheckouts: async (customerId) => {
+        calls.push(`expire:${customerId}`);
+        const n = open.size;
+        open.clear();
+        return n;
+      },
+      deleteLogin: async () => void calls.push("login"),
+    };
+    expect((await purgeBusiness(d, b.id, "no_subscription")).done).toBe(true);
+    expect(open.size).toBe(0);
+    expect(calls.indexOf("expire:cus_1")).toBeGreaterThan(calls.indexOf("stripe"));
+    expect(calls.indexOf("expire:cus_1")).toBeLessThan(calls.indexOf("login"));
+    const other = await scanOwner(db);
+    const failing: PurgeDeps = {
+      ...base,
+      expireOpenCheckouts: async () => {
+        throw new Error("stripe 503");
+      },
+    };
+    await expect(purgeBusiness(failing, other.b.id, "no_subscription")).rejects.toThrow();
+    expect(await db.getBusiness(other.b.id)).not.toBeNull();
   });
 });

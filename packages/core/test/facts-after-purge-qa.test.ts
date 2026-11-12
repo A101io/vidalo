@@ -38,6 +38,7 @@ describe("AC-5(d): a deleted business's facts host", () => {
       now: new Date(),
       dryRunRetention: true,
       stripeLive: async () => false,
+      expireOpenCheckouts: async () => 0,
       revokeGoogle: async () => {},
       deleteCustomHostname: async () => {},
       deleteLogin: async () => {},

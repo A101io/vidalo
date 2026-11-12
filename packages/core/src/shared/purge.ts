@@ -19,6 +19,8 @@ export interface PurgeDeps {
   dryRunRetention: boolean;
   /** True when Stripe lists any subscription of this customer that is not canceled/incomplete_expired (F-021). Throws when Stripe cannot be asked. */
   stripeLive(customerId: string): Promise<boolean>;
+  /** V-SEC-04: expires the customer's open Checkout Sessions, so none completes after the deletion. Returns how many. Throws when Stripe cannot be asked. */
+  expireOpenCheckouts(customerId: string): Promise<number>;
   /** Revoke at Google; invalid_token counts as done. */
   revokeGoogle(token: string): Promise<void>;
   /** The custom facts host's Cloudflare hostname and Worker route. */
@@ -53,6 +55,11 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   if (guard === "due" && b.deleteReason === "retention" && deps.dryRunRetention) {
     log.info("retention.would_purge", { businessId });
     return { done: false, reason: "dry_run" };
+  }
+  // A checkout still open (an add-on, a report's "Koop") could complete after the row is gone and bill nobody's business (V-SEC-04).
+  if (b.stripeCustomerId) {
+    const expired = await deps.expireOpenCheckouts(b.stripeCustomerId);
+    if (expired) log.info("purge.checkouts_expired", { businessId, count: expired });
   }
   // What is needed after the row is gone, read now.
   // Membership through lane B's owner-area module; if it cannot answer, the recorded owner (F-A5).
