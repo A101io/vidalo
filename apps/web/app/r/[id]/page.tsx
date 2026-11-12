@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { ScanReport } from "@vidalo/core/types";
 import { getCopy, getI18n } from "@/lib/i18n";
-import { getSession, getOwnedBusiness } from "@/lib/session";
+import { getSession } from "@/lib/session";
+import { listMyBusinesses } from "@/lib/active-business";
+import { reportVisible } from "@vidalo/core/shared";
+import type { BusinessRecord } from "@vidalo/core/db";
 import { followPreferredLang } from "@/lib/preferred-lang";
 import type { CopyShape } from "@vidalo/core/copy";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -11,7 +14,8 @@ import { StipHero, Stip } from "@/components/Stip";
 import { AnswerCard } from "@/components/AnswerCard";
 import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
-import { FREE_REPORT_DAYS, getScanReport, latestScanReport } from "@/lib/core";
+import { getScanReport, latestScanReport } from "@/lib/core";
+import { ASKED_ENGINES, moreQuestionsView, questionSets } from "@vidalo/core/scanner";
 import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
@@ -24,7 +28,9 @@ export const dynamic = "force-dynamic";
 
 /** copy.landing.footer.reportNote and the privacy text promise this number. */
 
-async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean } | null> {
+type QuestionSets = Awaited<ReturnType<typeof questionSets>>;
+
+async function load(id: string, copy: CopyShape, viewerBusinessIds: readonly string[]): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean; sets?: QuestionSets } | null> {
   if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };
   if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true, bySlug: false };
   if (id === DEMO_IDS.online) return { report: demoOnlineReport(), opts: { domain: DEMO_ONLINE_DOMAIN }, demo: true, bySlug: false };
@@ -35,29 +41,37 @@ async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; 
   const report = byRun ?? (await latestScanReport(id));
   if (!report) return null;
   const bySlug = !byRun;
-  // A free report is reachable for 30 days, as the footer and the privacy
-  // text say (docs/content-check.md). Paid customers' reports stay with the
-  // account. Expired: the same "niet gevonden" page as an unknown link.
-  if (report.kind === "free" && Date.now() - new Date(report.checkedAt).getTime() > FREE_REPORT_DAYS * 86_400_000) return null;
+  // A free report is reachable for 30 days, as the footer and the privacy text say (docs/content-check.md), for
+  // anyone with the link; after that only a member of its business can still open it (AC-1, core report-access.ts).
+  // Paid customers' reports stay with the account. Hidden: the same "niet gevonden" page as an unknown link.
+  if (!reportVisible({ kind: report.kind, checkedAt: report.checkedAt, businessId: report.business.id }, viewerBusinessIds, new Date())) return null;
   const db = await ready();
   const business = await db.getBusiness(report.business.id);
   const facts = await db.latestFacts(report.business.id);
-  return { report, opts: { domain: business?.domain ?? null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug };
+  // The domain comes from the Google listing and can be a directory (nlcompanies.org); name it only once the owner is proven.
+  // A free report shows what a full check would ask on top (the business's real question set, not an estimate).
+  const sets = report.kind === "free" && business && facts ? await questionSets(db, business, facts) : undefined;
+  return { report, opts: { domain: business?.ownerVerifiedAt ? business.domain : null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug, sets };
 }
 
-/** A slug link opens only for the owner of that business. */
-async function ownerOf(report: ScanReport): Promise<boolean> {
+/** The businesses of the signed-in viewer (empty when signed out): the only source of "is this the owner's report". */
+async function viewerBusinesses(): Promise<BusinessRecord[]> {
   const viewer = await getSession();
-  const owned = viewer ? await getOwnedBusiness(viewer) : null;
-  return owned?.id === report.business.id;
+  return viewer ? await listMyBusinesses(viewer) : [];
+}
+
+/** A slug link opens only for a member of that business. */
+function ownerOf(report: ScanReport, mine: readonly BusinessRecord[]): boolean {
+  return mine.some((b) => b.id === report.business.id);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const copy = await getCopy();
-  const loaded = await load(id, copy);
+  const mine = await viewerBusinesses();
+  const loaded = await load(id, copy, mine.map((b) => b.id));
   if (!loaded) return { title: copy.result.notFound };
-  if (loaded.bySlug && !(await ownerOf(loaded.report))) return { title: copy.result.notFound, robots: { index: false } };
+  if (loaded.bySlug && !ownerOf(loaded.report, mine)) return { title: copy.result.notFound, robots: { index: false } };
   return { title: copy.email.subjects.report(loaded.report.business.name), robots: { index: false } };
 }
 
@@ -65,16 +79,17 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const { id } = await params;
   const sp = await searchParams;
   const { copy, href } = await getI18n();
-  const loaded = await load(id, copy);
+  const mine = await viewerBusinesses();
+  const loaded = await load(id, copy, mine.map((b) => b.id));
   if (!loaded) notFound();
   // Someone else's slug link: sign in first; after signing in only the owner gets through.
-  if (loaded.bySlug && !(await ownerOf(loaded.report))) redirect(href(`/inloggen?next=${encodeURIComponent(href(`/r/${id}`))}`));
+  if (loaded.bySlug && !ownerOf(loaded.report, mine)) redirect(href(`/inloggen?next=${encodeURIComponent(href(`/r/${id}`))}`));
   const { report, opts, demo } = loaded;
   // The owner reads their own report in the language saved on the account; visitors get the URL's language.
-  const viewer = demo ? null : await getSession();
-  const owned = viewer ? await getOwnedBusiness(viewer) : null;
-  if (owned && owned.id === report.business.id) await followPreferredLang(owned);
+  const owned = demo ? null : (mine.find((b) => b.id === report.business.id) ?? null);
+  if (owned) await followPreferredLang(owned);
   const v = buildReportView(report, copy, opts);
+  const more = loaded.sets ? moreQuestionsView(loaded.sets, ASKED_ENGINES, copy) : null;
   const R = copy.result;
   const grey = v.state === "grijs";
   const business = demo ? null : await (await ready()).getBusiness(report.business.id);
@@ -219,6 +234,47 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
           </details>
         </section>
 
+        {/* What a full check asks on top: a green table is a sample, not "all is well" (11 Nov 2026) */}
+        {more && (
+          <section aria-labelledby="more-h" className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
+            <div className="flex flex-col gap-3.5 lg:col-span-6">
+              <h2 id="more-h" className="h2-sm">
+                {more.h2}
+              </h2>
+              <p className="max-w-[52ch] text-[16px] leading-[1.55] text-ink-2">{more.body}</p>
+              <p className="max-w-[52ch] text-[16px] font-semibold leading-[1.55] text-ink">{R.more.urgency}</p>
+              <a href="#plan" className="btn-sm self-start print:hidden">
+                {more.cta}
+              </a>
+            </div>
+            <div className="flex flex-col gap-4 lg:col-span-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-[13px] font-semibold text-muted">{R.more.notAsked}</span>
+                <ul className="flex flex-wrap gap-2">
+                  {more.topics.map((t) => (
+                    <li key={t} className="rounded-full border-[1.5px] border-line px-3 py-1 text-[14px] text-ink-2">
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {more.examples.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-muted">{R.more.examples}</span>
+                  <ul className="flex flex-col gap-2">
+                    {more.examples.map((q) => (
+                      <li key={q} className="row-grey justify-start text-[15px]">
+                        <Stip tone="grijs" />
+                        <span>{q}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Who AI names instead */}
         {v.named.length > 0 && (
           <section className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-12">
@@ -277,7 +333,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
         )}
 
         {/* Plan + CTA */}
-        <section data-motion="rise" className="panel grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:gap-10">
+        <section id="plan" data-motion="rise" className="panel grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:gap-10">
           <div className="flex flex-col gap-3.5 lg:col-span-7">
             <h2 className="h2-sm">{v.plan.h2}</h2>
             <ol data-motion="timeline" className="flex flex-col gap-2 text-[16px] leading-[1.5] text-ink-2">
@@ -325,7 +381,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
         {/* Email + self */}
         <section data-motion="stagger" className="grid grid-cols-1 gap-8 md:grid-cols-2 print:hidden">
-          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} />
+          <EmailCapture scanRunId={report.scanRunId} businessId={report.business.id} sent={sp.mail === "ok" || mailsHaveAddress} invalid={sp.mail === "fout"} cta={more?.cta} problem={sp.mail === "druk" ? "busy" : sp.mail === "genoeg" ? "enough" : undefined} />
           <div className="flex flex-col gap-2.5">
             <h3 className="text-[16px] font-bold">{v.self.h3}</h3>
             <details id="zelf">

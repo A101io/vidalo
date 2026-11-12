@@ -26,6 +26,7 @@ export default async function PausePage({ searchParams }: { searchParams: Promis
         <p>{P.restart}</p>
       </div>
       <form action={pauseAction} className="card space-y-4 p-5 sm:p-6">
+            <input type="hidden" name="business" value={business.id} />
         <fieldset className="space-y-3">
           <legend className="field-label">{P.label}</legend>
           {PAUSE_MONTHS.map((m, i) => (

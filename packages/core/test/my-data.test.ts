@@ -4,16 +4,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { MemDb } from "../src/db";
 import { setDb } from "../src/shared";
-import { canDeleteMyData, exportMyData, ownAddressesOnly } from "../src/shared/my-data";
+import { exportMyData, ownAddressesOnly } from "../src/shared/my-data";
 import { REPORT_EMAIL_EVENT, sendFollowUp } from "../src/reporter";
-
-describe("deleting my data", () => {
-  it("only once no subscription runs", () => {
-    expect(canDeleteMyData("scanned")).toBe(true);
-    expect(canDeleteMyData("churned")).toBe(true);
-    for (const s of ["trial", "active", "paused"] as const) expect(canDeleteMyData(s)).toBe(false);
-  });
-});
 
 // Review CMP-03 / SEC-03: anyone can ask for a business's free report, so the
 // owner's download must not hand them the addresses of the people who asked.

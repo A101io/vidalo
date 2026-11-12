@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
 /**
- * Feature 002 (docs/features/002-scan-confirm): guarantees of the confirmation link
+ * Feature 003 (docs/features/003-scan-confirm): guarantees of the confirmation link
  * that the page-level test in free-check.spec.ts cannot see. Mock engines, so
  * /scan/mail?link= carries the token the mail would carry.
  */

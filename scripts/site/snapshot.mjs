@@ -38,8 +38,9 @@ const repo = path.resolve(here, "../..");
 const base = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
 const out = path.resolve(process.argv[3] ?? "out/site");
 
-const DEMO = { userId: "mock-eigenaar@bakkerijdevries.nl", email: "eigenaar@bakkerijdevries.nl" };
-const cookies = new Map([["vidalo_mock_session", encodeURIComponent(JSON.stringify(DEMO))]]);
+const DEMO_EMAIL = "eigenaar@bakkerijdevries.nl";
+/** Filled by signIn(): since feature 002 a mock session needs its own sign-in row, so it cannot be written by hand. */
+const cookies = new Map();
 const cookieHeader = () => [...cookies].map(([k, v]) => `${k}=${v}`).join("; ");
 
 const SKIP = ["/api/", "/auth/", "/_next/"];
@@ -95,6 +96,21 @@ async function get(pathname) {
   throw new Error(`too many redirects from ${pathname}`);
 }
 
+/**
+ * Signs in as the demo owner through the mock sign-in form on /inloggen (a server action), as a
+ * visitor would, and keeps the session cookie it sets.
+ */
+async function signIn() {
+  const html = (await get("/inloggen")).html;
+  const action = /name="(\$ACTION_ID_[^"]+)"/.exec(html)?.[1];
+  if (!action) throw new Error("no sign-in form on /inloggen");
+  const form = new FormData();
+  for (const [k, v] of Object.entries({ [action]: "", email: DEMO_EMAIL, next: "/app", business: "", session_id: "" })) form.append(k, v);
+  const res = await fetch(new URL("/inloggen", base), { method: "POST", body: form, headers: { origin: new URL(base).origin, cookie: cookieHeader() }, redirect: "manual" });
+  remember(res);
+  if (!cookies.has("vidalo_mock_session")) throw new Error(`mock sign-in set no session (status ${res.status})`);
+}
+
 const pages = new Map(); // file → html
 
 async function crawl(start) {
@@ -146,6 +162,7 @@ function rewrite(html) {
 async function main() {
   await rm(out, { recursive: true, force: true });
   await mkdir(path.join(out, "assets"), { recursive: true });
+  await signIn();
 
   // 1. The Google step as an unproven owner sees it, then prove ownership (mock Google).
   const before = await get("/app/google?eerst=1");

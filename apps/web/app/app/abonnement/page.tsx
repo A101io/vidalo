@@ -2,6 +2,7 @@ import { getI18n } from "@/lib/i18n";
 import { isVerifiedOwner } from "@vidalo/core/shared";
 import { Stip } from "@/components/Stip";
 import { requireOwner } from "@/lib/owner";
+import { callOffDeletion } from "../account/verwijderen/actions";
 import { ready } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { dateShort } from "@/lib/format";
@@ -59,6 +60,26 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           {processing ? B.processing : B.pausedNote}
         </p>
       )}
+      {business.status === "churned" && (
+        <section className="card space-y-2 p-5 text-[15px] sm:p-6" data-end-state aria-labelledby="end-state-h">
+          <h2 id="end-state-h" className="font-semibold">
+            {copy.accountSecurity.endState.h}
+          </h2>
+          <p className="text-ink-2">{copy.accountSecurity.endState.stopped}</p>
+          {business.deleteAt && <p className="text-ink-2">{copy.accountSecurity.endState.until(longDate(business.deleteAt, lang), business.deleteReason === "retention")}</p>}
+          <p className="text-ink-2">{copy.accountSecurity.endState.google}</p>
+        </section>
+      )}
+      {business.deleteReason === "owner" && business.deleteAt && business.status !== "churned" && (
+        <form action={callOffDeletion} className="card space-y-2 p-5 text-[15px]" data-deletion-scheduled>
+          <input type="hidden" name="business" value={business.id} />
+          <p className="font-semibold">{copy.accountSecurity.deletion.scheduled(longDate(business.deleteAt, lang))}</p>
+          <p className="text-ink-2">{copy.accountSecurity.deletion.keepNote}</p>
+          <button type="submit" className="btn-sm">
+            {copy.accountSecurity.deletion.keep}
+          </button>
+        </form>
+      )}
       <section className="card divide-y-[1.5px] divide-line">
         <div className="flex flex-wrap items-center justify-between gap-3 p-5">
           <span className="text-[14px] text-muted">{B.planLabel}</span>
@@ -83,6 +104,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               <p className="mt-1 max-w-[52ch] text-[15px] text-ink-2">{M.cancelledNote(longDate(business.cancelAt, lang))}</p>
             </div>
             <form action={undoCancelAction}>
+            <input type="hidden" name="business" value={business.id} />
               <button type="submit" className="btn-sm">
                 {M.undo}
               </button>
@@ -96,6 +118,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               <p className="mt-1 max-w-[52ch] text-[15px] text-ink-2">{M.pausedNote(longDate(business.pauseUntil, lang))}</p>
             </div>
             <form action={resumeAction}>
+            <input type="hidden" name="business" value={business.id} />
               <button type="submit" className="btn-sm">
                 {M.resume}
               </button>
@@ -145,6 +168,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             <p className="mt-1 max-w-[52ch] text-[15px] text-muted">{B.portalNote}</p>
           </div>
           <form action="/api/billing/portal" method="post">
+            <input type="hidden" name="business" value={business.id} />
             <button type="submit" className="btn-sm">
               {copy.dashboard.openPortal}
             </button>

@@ -125,6 +125,7 @@ export default async function DomainPage({ searchParams }: { searchParams: Promi
               <>
                 {sp.dns === "nee" && <p className="mt-4 text-[15px] text-muted">{D.notYet}</p>}
                 <form action="/api/domain/verify" method="post" className="mt-4">
+                  <input type="hidden" name="business" value={business.id} />
                   <input type="hidden" name="host" value={host} />
                   <button type="submit" className="btn-primary h-[52px]">
                     {D.checkButton}

@@ -5,6 +5,8 @@
 import type { Engine, Finding, ProfileSummary, Sample, ScanReport } from "../types.js";
 import { ENGINES, competitionCountsOf, isOnlineProfile, isUncheckedGrey, uncheckedAnswersOf } from "../types.js";
 import { effectiveProfile } from "../scanner/understand.js";
+import { ASKED_ENGINES } from "../scanner/index.js";
+import { moreQuestionsView, questionSets } from "../scanner/question-sets.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb } from "../shared/db.js";
 import { REPORT_EMAIL_EVENT, requesterFromEvents } from "../shared/free-check.js";
@@ -36,6 +38,7 @@ export * from "./mail.js";
 export * from "./templates.js";
 export * from "./links.js";
 export * from "./subscription-mails.js";
+export * from "./account-mails.js";
 export * from "./launch.js";
 export * from "./reconfirm.js";
 
@@ -220,6 +223,9 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
   const nf = await notFoundStats(scanRunId);
   // The report's own count of answered questions: the unchecked count below is a part of exactly this number.
   const totalAnswers = nf?.totalAnswers ?? (samples.length || prompts.length * run.engines.length);
+  // A free check: what a full check asks on top, like the report page (11 Nov 2026).
+  const facts = run.kind === "free" ? await db.latestFacts(business.id) : null;
+  const moreQuestions = facts ? moreQuestionsView(await questionSets(db, business, facts), ASKED_ENGINES, copyFor(langOf(business))) : null;
   const m = baselineSummaryEmail({
     lang: langOf(business),
     business,
@@ -241,6 +247,7 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
     competition: nf?.competition,
     findings,
     engines: run.engines,
+    moreQuestions,
     // A paying owner's button goes to the account; before that, to the report page, with the offer.
     paying: business.status === "trial" || business.status === "active",
     offer: { setupEur: PRICE_SETUP, monitorEur: PRICE_MONITOR },

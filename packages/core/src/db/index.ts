@@ -20,6 +20,7 @@ import type { Db } from "./types";
 export * from "./types";
 export { MemDb } from "./mem";
 export { PgDb } from "./pg";
+export * from "./owner-area";
 
 /** True when the process should avoid all external infrastructure. */
 export function isMockMode(): boolean {

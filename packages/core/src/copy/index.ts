@@ -8,6 +8,8 @@
  */
 
 import { en } from "./en.js";
+import { ownerAreaNl } from "./owner-area.js";
+import { accountSecurityNl } from "./account-security.js";
 
 /** "ChatGPT, Copilot en Gemini" */
 function joinNl(items: string[]): string {
@@ -749,7 +751,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 12 november 2026",
+    updated: "Versie van 14 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -878,6 +880,7 @@ export const copy = {
             "Kunnen we binnen dertig dagen na je betaling niet aan Vidalo Scan beginnen, omdat het bewijs van beheer uit artikel 5 niet lukt, dan mag je de Overeenkomst ontbinden. We betalen je dan terug wat je voor het Plan betaalde.",
             "Je kunt Vidalo Monthly onder ‘Abonnement’ 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je Feitenpagina blijft online. Je krijgt een bevestiging per e-mail en een week voor het einde een herinnering. Op de einddatum loopt het abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen. Pauzeren kan niet zolang een betaling openstaat.",
             "Eindigt je abonnement, dan stoppen we met controleren en herstellen, en verwijst je Feitenpagina door naar je eigen website. Wat bij andere partijen al hersteld is, blijft daar staan. Wat we daarna met je gegevens doen, staat in ons privacybeleid.",
+            "Bij Vidalo Scan blijft je Feitenpagina online zolang je account bestaat: tot je zelf alles verwijdert, of tot we je gegevens verwijderen 24 maanden na je laatste keer inloggen of je laatste betaling. 14 dagen daarvoor krijg je een herinnering per e-mail; log je in, dan schuift die datum op.",
             "Opzeggen kan ook per e-mail naar support@vidalo.io. Je krijgt dan dezelfde bevestiging.",
           ],
         },
@@ -1008,7 +1011,7 @@ export const copy = {
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf (ook een website die je zelf opgeeft) en de bronnen die AI-assistenten noemen.",
               "Wat we ermee doen: om te zien wat het bedrijf aanbiedt en voor wie, sturen we OpenAI de gegevens van Google en de tekst van de homepage van het bedrijf, waaruit we eerst e-mailadressen en telefoonnummers weghalen; daarvan maakt OpenAI een korte beschrijving. Die beschrijving bewaren we bij het bedrijf en in het rapport staat ze als hoe wij het bedrijf lezen. In het rapport staat ook welke andere bedrijven AI-assistenten noemden en hoe vaak.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
-              "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan gelden de termijnen bij ‘Een betaald plan’.",
+              "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan blijven de rapporten van je bedrijf voor jou te zien in je account en gelden de termijnen bij ‘Een betaald plan’.",
             ],
             "Heeft iemand anders jouw bedrijf gecontroleerd, dan gebruiken we alleen openbare zakelijke gegevens. Wil je dat niet, mail ons; dan verwijderen we die controle.",
           ],
@@ -1028,9 +1031,10 @@ export const copy = {
           h: "Je account en inloggen",
           p: [
             [
-              "Gegevens: je e-mailadres, een nummer voor je account, wanneer je inlogde, je taal en welke e-mails je wilt ontvangen.",
-              "Grondslag: de uitvoering van de overeenkomst met jou (artikel 6 lid 1 onder b AVG).",
-              "Hoe lang: zolang je account bestaat. Je verwijdert je account zelf, zie ‘Je rechten’.",
+              "Gegevens: je e-mailadres, een nummer voor je account, je taal en welke e-mails je wilt ontvangen, en van je laatste 10 keer inloggen: wanneer, en met welk soort browser en apparaat (zoals ‘Safari op een iPhone’). Je IP-adres bewaren we daarvoor niet. Om misbruik van inloglinks te beperken maken we van je e-mailadres en van je IP-adres een code en bewaren we die hoogstens een dag.",
+              "Supabase, dat het inloggen voor ons regelt, legt bij elke keer inloggen ook je IP-adres en je browser vast, om het inloggen te beveiligen. Dat bewaren we zolang je account bestaat; verwijder je alles, dan verwijderen we het mee.",
+              "Grondslag: de uitvoering van de overeenkomst met jou (artikel 6 lid 1 onder b AVG); voor de lijst met keren inloggen en de codes tegen misbruik: ons gerechtvaardigd belang bij een veilig account (artikel 6 lid 1 onder f AVG).",
+              "Hoe lang: zolang je account bestaat. Hoort er na 30 dagen geen bedrijf bij je inlog, dan verwijderen we de inlog. Een inlog op een apparaat vervalt na 30 dagen zonder gebruik en uiterlijk 90 dagen na het inloggen. Je verwijdert je account zelf, zie ‘Je rechten’.",
             ],
           ],
         },
@@ -1042,7 +1046,7 @@ export const copy = {
               "Met Google: we krijgen van Google een nummer voor je account en welke bedrijfsprofielen je beheert. Klopt het, dan bewaren we wanneer het bewijs is geleverd en de toegangssleutel die Google ons geeft, zodat we je bedrijfsprofiel kunnen bijwerken. Je wachtwoord zien we nooit.",
               "Met een code per telefoon: we bellen of sms'en een code naar het telefoonnummer dat Google Maps voor het bedrijf vermeldt; dat nummer typ je niet zelf. Dat gaat via Twilio, dat het nummer, de code en de gegevens van de oproep of het bericht verwerkt. Wij bewaren alleen een deels afgeschermd nummer (zoals 020 ••• ••67), of de code klopte, wanneer, en wie het vroeg.",
               "Grondslag: de uitvoering van de overeenkomst met jou.",
-              "Hoe lang: zolang je account bestaat, of tot je de koppeling met Google verbreekt.",
+              "Hoe lang: het bewijs zelf (wanneer en hoe) zolang je account bestaat. De toegangssleutel van Google trekken we bij Google in en verwijderen we zodra je de koppeling verbreekt onder ‘Google’ in je account, zodra je abonnement op Vidalo Monthly eindigt, bij Vidalo Scan 60 dagen na de eerste volledige controle als er dan niets meer openstaat, en als je alles verwijdert.",
             ],
             "Voegen we een andere manier toe om het bewijs te leveren, dan vullen we dit privacybeleid aan voordat we die gebruiken.",
           ],
@@ -1056,7 +1060,7 @@ export const copy = {
               "Klopt onze beschrijving van je bedrijf niet, dan pas je die aan bij je gegevens in je account, zodra je hebt aangetoond dat je het bedrijf beheert. De controles in je plan gebruiken dan jouw versie; een automatische controle overschrijft die niet.",
               "Namen van andere bedrijven die AI-assistenten noemen, kunnen we in een controle in je plan ook gebruiken in een vraag aan AI-assistenten, zoals ‘Wat is een goed alternatief voor [naam]?’.",
               "Grondslag: de uitvoering van de overeenkomst met jou. Voor de namen van andere bedrijven: ons gerechtvaardigd belang, en dat van jou, om te zien wie AI noemt als iemand een alternatief zoekt (artikel 6 lid 1 onder f AVG).",
-              "Hoe lang: zolang je klant bent. Na het einde van je abonnement bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle en verwijderen we binnen 30 dagen daarna je gegevens. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar. Wat bij een andere partij is hersteld, blijft daar staan.",
+              "Hoe lang: zolang je klant bent. Eindigt je abonnement op Vidalo Monthly, dan verbreken we direct de koppeling met Google en bewaren we je gegevens nog 90 dagen. Dan doen we nog één gratis controle. 14 dagen voordat we je gegevens verwijderen krijg je een herinnering per e-mail, en uiterlijk 30 dagen na die controle verwijderen we ze. Heb je alleen Vidalo Scan, dan verwijderen we je gegevens 24 maanden na je laatste keer inloggen of je laatste betaling; 14 dagen vooraf krijg je een herinnering. Verwijderen betekent: de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan, en je inlog als er geen ander bedrijf aan hangt. Alleen wat de wet voor onze administratie vraagt, bewaren we 7 jaar: je facturen, bij Stripe. Wat bij een andere partij is hersteld, blijft daar staan.",
             ],
           ],
         },
@@ -1162,14 +1166,14 @@ export const copy = {
         {
           h: "Beveiliging",
           p: [
-            "We beveiligen gegevens met passende technische en organisatorische maatregelen: versleutelde verbindingen, inloggen zonder wachtwoord, toegang per account tot alleen je eigen gegevens, zo weinig mogelijk mensen met toegang, en controles tegen misbruik. Merken we een datalek dat risico voor je oplevert, dan laten we het je en de Autoriteit Persoonsgegevens weten zoals de wet voorschrijft.",
+            "We beveiligen gegevens met passende technische en organisatorische maatregelen: versleutelde verbindingen, inloggen zonder wachtwoord, een inlog die vanzelf vervalt, toegang per account tot alleen je eigen gegevens, zo weinig mogelijk mensen met toegang, en controles tegen misbruik. Merken we een datalek dat risico voor je oplevert, dan laten we het je en de Autoriteit Persoonsgegevens weten zoals de wet voorschrijft.",
           ],
         },
         {
           h: "Je rechten",
           p: [
             "Je hebt het recht om je gegevens in te zien, te laten verbeteren of te laten verwijderen, de verwerking te laten beperken, je gegevens in een gangbaar bestandsformaat te krijgen, en een toestemming in te trekken. Intrekken werkt voor de toekomst.",
-            "Veel kun je zelf, onder ‘Account’ in je account: bij ‘Je gegevens’ download je alles wat we over je bedrijf bewaren, en verwijder je alles zodra je abonnement is afgelopen. Je kiest daar ook welke e-mails je wilt krijgen.",
+            "Veel kun je zelf, onder ‘Account’ in je account. Bij ‘Je gegevens’ download je alles wat we over je bedrijf en je inlog bewaren, zonder toegangssleutels, en verwijder je alles. Heb je een lopend abonnement op Vidalo Monthly, dan zeggen we het op tegen de einddatum en verwijderen we alles op die datum; het bedrag voor de lopende maand krijg je niet terug, en tot die datum kun je het verwijderen terugdraaien. Wil je dat we eerder verwijderen, mail dan support@vidalo.io. Na het verwijderen krijg je een bevestiging per e-mail. Onder ‘Google’ verbreek je de koppeling met Google. Je kiest onder ‘Account’ ook welke e-mails je wilt krijgen.",
             "Voor de rest mail je support@vidalo.io. We reageren binnen een maand. Soms vragen we je eerst te laten zien dat het verzoek van jou komt.",
             "Gegevens geven is niet wettelijk verplicht. Zonder e-mailadres kunnen we geen controle starten en je geen rapport sturen, en zonder betaal- en bedrijfsgegevens kunnen we een plan niet leveren.",
           ],
@@ -1207,11 +1211,12 @@ export const copy = {
             head: ["Naam", "Waarvoor", "Hoe lang"],
             rows: [
               ["vidalo_consent", "Onthoudt dat je de cookiemelding hebt gezien en welke keuze je maakte.", "12 maanden"],
-              ["sb-…-auth-token", "Houdt je ingelogd in je account (via Supabase, inloggen zonder wachtwoord).", "Tot je uitlogt, hoogstens 400 dagen"],
-              ["sb-…-auth-token-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 400 dagen"],
+              ["sb-…-auth-token", "Houdt je ingelogd in je account (via Supabase, inloggen zonder wachtwoord).", "Tot je uitlogt; na 30 dagen zonder gebruik of 90 dagen na het inloggen log je opnieuw in"],
+              ["sb-…-auth-token-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 90 dagen"],
               ["vidalo_google_state", "Tijdens het koppelen van je Google-account: beschermt die stap tegen misbruik.", "10 minuten"],
               ["vidalo_preview", "Alleen zolang de site nog niet open is: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
               ["vidalo_check", "Tijdens de gratis controle: neemt je e-mailadres mee van het formulier naar de pagina waar je je bedrijf kiest, zodat het niet in de link hoeft te staan.", "15 minuten, of eerder zodra de controle start"],
+              ["vidalo_business", "Als er meer dan één bedrijf bij je account hoort: onthoudt welk bedrijf je in je account koos.", "90 dagen"],
             ],
           },
         },
@@ -1578,7 +1583,8 @@ export const copy = {
       stepSources: (sources: string) => `${sources}: we vragen om correctie of laten zien wat je moet aanpassen, met bewijs.`,
       stepSourcesNone: "Je gegevens één keer vastleggen en een feitenpagina publiceren die AI kan lezen.",
       stepFacts: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.`,
-      stepRecheck: (days: number, questions: number) => `Na ${days} dagen dezelfde ${questions} vragen opnieuw. Je ziet voor en na.`,
+      /** Rechecks ask only the questions that went wrong, per source after 1 to 4 weeks (fixer/paths.ts recheckDays 7–30). */
+      stepRecheck: "Na elke herstelstap stellen we de vragen die fout gingen opnieuw, meestal na 1 tot 4 weken. Je ziet voor en na.",
       stepsGreen: [
         "Je gegevens één keer vastleggen, zodat elke bron hetzelfde zegt.",
         "Een feitenpagina op je eigen domein, met datum, en voor Google, Bing, Apple en de gidsen wat je daar moet aanpassen.",
@@ -1587,7 +1593,7 @@ export const copy = {
       stepsGrey: {
         facts: "Je gegevens één keer vastleggen: adres, telefoon, openingstijden, wat je doet en niet doet. Vijf minuten.",
         publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen, en precies wat je bij Google, Bing, Apple en de gidsen moet invullen.`,
-        recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wanneer de AI je gaat noemen.`,
+        recheck: "Na 3 weken de vragen waarop je niet genoemd werd opnieuw. Met Vidalo Monthly daarna elke maand alle vragen. Je ziet wanneer de AI je gaat noemen.",
       },
       noteGrey: "Of en wanneer een AI je noemt bepalen wij niet. Of het je kán vinden wel. Antwoorden zonder zoekfunctie veranderen pas bij een nieuwe modelversie.",
       monitor: "Vidalo Scan + Monthly · €149 + €49/mnd",
@@ -1607,11 +1613,26 @@ export const copy = {
         stepsGrey: {
           facts: "Je gegevens één keer vastleggen: wat je doet, voor wie, je website en wat je wel en niet doet. Vijf minuten.",
           publish: (domain: string | null) => `Een feitenpagina${domain ? ` op ${domain}` : " op je eigen domein"} die AI kan lezen.`,
-          recheck: (questions: number) => `Na 3 weken dezelfde ${questions} vragen opnieuw. Met Vidalo Monthly daarna elke maand. Je ziet wat er veranderd is.`,
+          recheck: "Na 3 weken de vragen waarop je niet genoemd werd opnieuw. Met Vidalo Monthly daarna elke maand alle vragen. Je ziet wat er veranderd is.",
         },
         exclVat: "1 bedrijf · Excl. btw · geen opzegtermijn · herstel bij derden duurt meestal 2 tot 4 weken",
         exclVatGrey: "1 bedrijf · Excl. btw · geen opzegtermijn",
       },
+    },
+    /**
+     * Free report: what a full check asks that this one did not (scanner/question-sets.ts), so a green table does
+     * not read as "all is well" (Julian, 11 Nov 2026). Counts and topics come from the business's real question set.
+     */
+    more: {
+      h2: (asked: number, total: number) => `De gratis controle stelde ${asked} van de ${total} vragen`,
+      /** about: questions about the business (the hero's count); recs: recommendation questions ("Wie AI wel noemt"). */
+      body: (about: number, recs: number, engines: string) =>
+        `Je zag ${[about > 0 ? `${about === 1 ? "1 vraag" : `${about} vragen`} over je zaak` : "", recs > 0 ? `${recs === 1 ? "1 vraag" : `${recs} vragen`} over wie AI aanraadt` : ""].filter(Boolean).join(" en ")}. Voor elk vak hebben we een vaste set vragen zoals klanten die aan AI stellen: over je zaak zelf, en wie de beste in je vak is. Een volledige controle stelt ze allemaal aan ${engines}, elke vraag 5 tot 10 keer per AI-systeem, Google AI één keer.`,
+      notAsked: "Nog niet gevraagd",
+      recommendations: (n: number) => (n === 1 ? "1 vraag over wie AI aanraadt in je vak" : `${n} vragen over wie AI aanraadt in je vak`),
+      examples: "Bijvoorbeeld",
+      urgency: "Een fout antwoord op zo'n vraag kan een klant naar een ander sturen, zonder dat jij het merkt.",
+      cta: (total: number) => `Laat alle ${total} vragen controleren`,
     },
     email: {
       h3: "Stuur dit rapport naar mij",
@@ -1619,7 +1640,11 @@ export const copy = {
       placeholder: "naam@bedrijf.nl",
       button: "Verstuur",
       sent: "We sturen het rapport naar je e-mailadres.",
+      /** Once the report has an address (since 9 Nov 2026 every free check does). */
+      h3Sent: "Het rapport staat in je mail",
       invalid: "Vul een geldig e-mailadres in.",
+      busy: "Even te veel tegelijk. Probeer het over een paar minuten opnieuw.",
+      enough: "Dit rapport is al naar 3 adressen gestuurd. Stuur de link zelf door.",
     },
     self: {
       h3: "Zelf rechtzetten?",
@@ -2180,8 +2205,19 @@ export const copy = {
       otherKind: "beschreven als een ander soort bedrijf",
       sameKind: "beschreven als hetzelfde soort bedrijf",
     },
-    /** One "do it yourself" step: source, engine, what it said, what is true, the fix. */
-    selfStep: (source: string, engine: string, verdict: string, said: string, truth: string, fix: string) => `${source}: ${engine} ${verdict} “${said}”, het is ${truth}. ${fix}`.trim(),
+    /** One "do it yourself" step: source, engine, what it said (null: not named), what is true, what the owner does. */
+    selfStep: (source: string, engine: string, said: string | null, truth: string, fix: string) =>
+      (said === null ? `${source}: ${engine} noemt je niet. ${fix}` : `${source}: ${engine} zegt “${said}”, het is ${truth}. ${fix}`).trim(),
+    /** What the owner does at each kind of source, on the free report's "Zelf rechtzetten?" (11 Nov 2026: it showed what Vidalo does). */
+    selfFix: {
+      owned_facts_page: "Zet het juiste gegeven op je feitenpagina.",
+      owned_website: "Pas het aan op je eigen website, op elke pagina waar het staat.",
+      directory_api: "Claim je vermelding bij deze gids en pas het daar aan.",
+      directory_form: "Vraag deze gids via hun correctieformulier om het aan te passen.",
+      third_party: "Mail deze website het juiste gegeven en vraag om een correctie. Het adres staat meestal onder Contact.",
+      other_entity: "Zet op je website en je Google-profiel dat je een ander bedrijf bent dan de zaak met dezelfde naam.",
+      none: "Hier is geen bron om aan te passen. Het antwoord komt uit het geheugen van het model en verandert pas bij een nieuwe versie.",
+    },
   },
   instableLine: "Dit antwoord klopte af en toe niet. Te zelden om te herstellen; we houden het in de gaten.",
   /** Recommendation questions: the business was not named where its facts say it belongs. */
@@ -2753,7 +2789,7 @@ export const copy = {
     /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
     myData: {
       h: "Je gegevens",
-      body: "Download alles wat Vidalo over je bedrijf bewaart, of laat het verwijderen.",
+      body: "Download alles wat Vidalo over je bedrijf en je inlog bewaart, of laat het verwijderen. Je facturen staan in het klantportaal, onder ‘Abonnement’.",
       download: "Download je gegevens (JSON)",
       deleteBody: "We verwijderen je bedrijf, je gegevens, je controles, je rapporten en je inlog. Facturen blijven 7 jaar bij Stripe, omdat de wet dat vraagt. Wat we bij andere sites hebben aangepast, blijft daar staan. Dit kun je niet terugdraaien.",
       confirm: "Ja, verwijder alles van mijn bedrijf",
@@ -3135,6 +3171,36 @@ export const copy = {
       why: "We vragen deze bevestiging om kwaadaardige bots buiten de deur te houden: zo kan niemand controles starten op naam van een ander. De link werkt 24 uur en één keer.",
       notYou: "Heb je dit niet gevraagd? Dan hoef je niets te doen. We starten niets en sturen je hierover niets meer.",
     },
+    /** Feature 002 (A-05): after "Verwijder alles" has deleted everything. Service mail. */
+    accountDeleted: (name: string, googleRevoked: boolean, loginDeleted = true) => ({
+      subject: `Alles van ${name} is verwijderd`,
+      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, en je feitenpagina en het adres ervan.${googleRevoked ? " De koppeling met Google hebben we ook bij Google ingetrokken." : ""} ${loginDeleted ? "Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd." : "Je inlog verwijderen we zo snel mogelijk."}
+
+Wat blijft: je facturen, 7 jaar bij Stripe, omdat de wet dat vraagt. Wat al bij Google, gidsen of andere websites is hersteld, blijft daar staan.
+
+Je hoeft niets meer te doen.`,
+    }),
+    /** Feature 002 (A-06): 14 days before a retention deletion. Service mail: informational only, no offer. */
+    deletionReminder: (name: string, date: string, url: string, scan: boolean) => ({
+      subject: `Op ${date} verwijderen we de gegevens van ${name}`,
+      body: `${scan ? `Je hebt een tijd niet ingelogd bij Vidalo voor ${name}.` : `Het abonnement voor ${name} is afgelopen.`} Zoals in onze privacyverklaring staat, verwijderen we op ${date} de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan.
+
+Wil je iets bewaren? Tot ${date} kun je je rapporten en je gegevens downloaden onder 'Account': ${url}
+
+${scan ? "Wil je dat we je gegevens bewaren? Log dan voor die datum in; dan schuift de datum op." : "Wil je weer verder met Vidalo? Log in en kies een plan; dan blijven je gegevens bewaard."} Wil je dat we eerder verwijderen, mail dan support@vidalo.io.`,
+    }),
+    /** Feature 002 (A-05, F-013): "Verwijder alles" during a running Vidalo Monthly. Sent at once. Service mail. */
+    deletionScheduled: (name: string, date: string, url: string) => ({
+      subject: `Je abonnement voor ${name} stopt op ${date}, dan verwijderen we alles`,
+      body: `Je vroeg ons alles van ${name} te verwijderen. Je abonnement op Vidalo Monthly liep nog, dus we hebben het opgezegd tegen ${date}. Tot die dag loopt alles door. Het bedrag voor de lopende maand krijg je niet terug.
+
+Wat er op ${date} gebeurt
+We verwijderen alles van ${name}: de gegevens van je bedrijf, de rapporten, je feitenpagina en het adres ervan, en de koppeling met Google. Je feitenpagina gaat dan offline. Er volgt geen gratis controle meer.
+
+Wil je iets bewaren? Download vóór ${date} je rapporten en je gegevens onder 'Account', en je facturen in het klantportaal. Daarna kan dat niet meer in je account. Je facturen blijven 7 jaar bij Stripe.
+
+Toch bewaren? Dat kan tot ${date} met één klik: ${url}`,
+    }),
     and: "en",
     stip: (colour: string) => `Stip: ${colour}.`,
     unsubscribe: { lead: "Geen mails meer hierover?", link: "Afmelden" },
@@ -3392,6 +3458,8 @@ export const copy = {
       button: "Bekijk je gegevens",
     },
   },
+  ownerArea: ownerAreaNl,
+  accountSecurity: accountSecurityNl,
 } as const;
 
 export type Copy = typeof copy;

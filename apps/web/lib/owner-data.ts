@@ -6,7 +6,7 @@
  * themselves. loadDashboard (lib/reads.ts) stays the RLS path for the rest.
  */
 import type { Channel, Claim, Engine, Finding, Fix, Prompt, Sample, ScanReport, ScanRun } from "@vidalo/core/types";
-import type { BusinessRecord, EventRow } from "@vidalo/core/db";
+import { overviewExtras, type BusinessRecord, type EventRow } from "@vidalo/core/db";
 import { affectedPrompts, fixPathForFinding } from "@vidalo/core/fixer";
 import { pendingDiffOf } from "@vidalo/core/publisher";
 import { getScanReport, ready } from "./core";
@@ -41,13 +41,8 @@ export async function loadOverview(business: BusinessRecord): Promise<OverviewDa
   const lastRun = done[0] ?? null;
   const previousRun = done[1] ?? null;
   const report = lastRun ? await getScanReport(lastRun.id) : null;
-  const open = data.findings.filter((f) => f.status !== "resolved");
-  const fixes = new Map<string, Fix>();
-  for (const f of open) {
-    const fix = (await db.listFixes(f.id)).find((x) => x.resolvedAt === null);
-    if (fix) fixes.set(f.id, fix);
-  }
-  const events = await db.listEvents(business.id, 200);
+  // One query for the open fix of every finding, one for the log (OVERVIEW_LIMITS.events = 200): no query per row.
+  const { fixes, events } = await overviewExtras(db, business.id);
   const gbpChannel = data.channels.find((c) => c.type === "gbp") ?? null;
   const pending = gbpChannel ? pendingDiffOf(gbpChannel).length : 0;
   return {

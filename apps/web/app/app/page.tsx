@@ -143,6 +143,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       </SmallButton>
                     )}
                     <form action={markFixed} className="m-0">
+                      <input type="hidden" name="business" value={business.id} />
                       <input type="hidden" name="finding" value={f.id} />
                       <button type="submit" className="text-[15px] font-bold text-blue hover:underline">
                         {d.you.markFixed}
@@ -287,6 +288,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </div>
               {business.anniversaryDay && <p className="m-0 text-[14px] text-muted">{d.nextCheckNote(business.anniversaryDay, rechecks.join(", "))}</p>}
               <form action={checkNow} className="m-0 flex">
+                <input type="hidden" name="business" value={business.id} />
                 <button type="submit" className="btn-primary h-[52px] w-full">
                   {d.checkNow}
                 </button>

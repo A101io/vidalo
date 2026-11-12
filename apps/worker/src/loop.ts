@@ -58,6 +58,10 @@ export async function processJob(job: Job): Promise<boolean> {
     const exhausted = failed.doneAt !== null;
     log.error("job.failed", { ...base, ms: Date.now() - started, error, exhausted, nextRunAt: exhausted ? null : failed.runAt });
     if (exhausted) {
+      // A deletion that gave up stays in the daily overdue count; this line says which (SEC-45, V-COMP-04).
+      if (job.kind === "purge") log.error("account.delete_failed", { businessId: job.payload.businessId ?? null });
+      // A login that cannot be deleted: no user id in the line (SEC-56); the job row holds it for support.
+      if (job.kind === "login_delete") log.error("account.delete_failed", { kind: "login_delete", jobId: job.id });
       await db.logEvent((job.payload.businessId as string | undefined) ?? null, "job.exhausted", { jobId: job.id, kind: job.kind, error });
     }
   }

@@ -16,11 +16,13 @@ import {
   placePhone,
   sendPhoneCode,
   type PhoneChannel,
+  disconnectGoogle as endGoogleConnection,
+  revokeGoogleToken,
 } from "@vidalo/core/shared";
 import { ready } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getI18n } from "@/lib/i18n";
-import { requireOwner } from "@/lib/owner";
+import { businessFromForm, requireOwnerOf } from "@/lib/owner";
 
 const back = async (q: string) => redirect((await getI18n()).href(`/app/google?${q}`));
 /** Only an explicit mock build (VIDALO_MOCK=1) may go without Twilio. */
@@ -36,7 +38,7 @@ async function businessPhone(placeId: string | null): Promise<string | null> {
 
 /** "Bel me" / "Stuur een sms": a code to the number Google lists for the business. */
 export async function sendOwnerPhoneCode(formData: FormData) {
-  const { business, session } = await requireOwner("/app/google");
+  const { business, session } = await requireOwnerOf(businessFromForm(formData), "/app/google");
   if (isVerifiedOwner(business, session.userId)) return back("gekoppeld=1");
   const db = await ready();
   if (phoneSendBlocked(await db.listEvents(business.id, 200))) return back("telefoon=fout&reden=too_many_sends");
@@ -53,7 +55,7 @@ export async function sendOwnerPhoneCode(formData: FormData) {
 
 /** The code read back: proves ownership the same way the Google sign-in does (api/google/callback). */
 export async function checkOwnerPhoneCode(formData: FormData) {
-  const { business, session } = await requireOwner("/app/google");
+  const { business, session } = await requireOwnerOf(businessFromForm(formData), "/app/google");
   if (isVerifiedOwner(business, session.userId)) return back("gekoppeld=1");
   const db = await ready();
   if (phoneCheckBlocked(await db.listEvents(business.id, 200))) return back("telefoon=fout&reden=too_many_tries");
@@ -79,4 +81,25 @@ export async function checkOwnerPhoneCode(formData: FormData) {
   if (business.status === "trial" || business.status === "active") await db.enqueueJob("setup", { businessId: business.id });
   revalidatePath("/app");
   return back("gekoppeld=1");
+}
+
+/**
+ * "Koppeling met Google verbreken" (feature 002, AC-5e): the token is revoked at Google, then the
+ * Business Profile channel is deleted. The ownership proof stays. Without Google keys (mock) the
+ * revoke is recorded as an event instead of called.
+ */
+export async function disconnectGoogle(formData: FormData) {
+  const { business } = await requireOwnerOf(businessFromForm(formData), "/app/google");
+  const db = await ready();
+  // Revoked at Google unless in mock mode (the endpoint needs no client id; R1, V2-SEC-01).
+  const revoke = env.mock ? async () => void (await db.logEvent(business.id, "google.revoke_mock", {})) : (t: string) => revokeGoogleToken(t);
+  let disconnected = 0;
+  try {
+    ({ disconnected } = await endGoogleConnection(db, business.id, revoke, "owner"));
+  } catch {
+    return back("ontkoppeld=fout");
+  }
+  if (disconnected) await db.logEvent(business.id, "google.disconnected", { reason: "owner" });
+  revalidatePath("/app/google");
+  return back(disconnected ? "ontkoppeld=1" : "ontkoppeld=geen");
 }

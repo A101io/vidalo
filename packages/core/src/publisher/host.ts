@@ -16,6 +16,7 @@
  * whole flow runs in VIDALO_MOCK=1 without keys. In mock mode DNS lookups are
  * skipped and report success (set VIDALO_MOCK_DNS_OK=0 to force a real lookup).
  */
+import { CANONICAL_HOST } from "../shared/canonical.js";
 import { resolveCname } from "node:dns/promises";
 import type { Business } from "../types.js";
 import { OWN_BUSINESS } from "../shared/own.js";
@@ -221,7 +222,13 @@ export async function customHostnameStatus(hostname: string): Promise<CustomHost
 }
 
 export async function deleteCustomHostname(hostname: string): Promise<void> {
+  // Never one of our own names, never a pattern (feature 002, SEC-48): only an owner's own facts host.
+  const h = hostname.toLowerCase();
+  if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(h) || isOurName(h) || h === CANONICAL_HOST || h.endsWith(`.${CANONICAL_HOST}`)) throw new Error(`refusing to delete the hostname ${hostname}`);
   if (!cfConfig()) {
+    // Fail closed outside mock mode (R1, V2-SEC-01): the web has no Cloudflare keys, so its purge stops here and the
+    // worker's purge job, which has them, removes the host. Never reported as removed when it was not.
+    if (process.env.VIDALO_MOCK !== "1") throw new Error("CLOUDFLARE_API_TOKEN or CLOUDFLARE_ZONE_ID is not set: cannot remove the custom hostname");
     console.log(JSON.stringify({ msg: "cloudflare.custom_hostname.delete.skip", hostname }));
     return;
   }

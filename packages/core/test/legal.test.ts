@@ -126,6 +126,8 @@ describe("legal texts: recipients", () => {
     "api.kvk.nl": v("KvK"),
     "challenges.cloudflare.com": v("Cloudflare"),
     "api.cloudflare.com": v("Cloudflare"),
+    // The worker asks Stripe whether a subscription still bills before a purge (feature 002, F-021).
+    "api.stripe.com": v("Stripe"),
     "wa.me": v("WhatsApp"),
     "googletagmanager.com": v("Google Analytics"),
     "connect.facebook.net": { processors: "Meta (pixel)", nl: "Meta (Facebook, Instagram)", en: "Meta (Facebook, Instagram)" },

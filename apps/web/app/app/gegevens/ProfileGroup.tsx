@@ -15,7 +15,7 @@ function when(iso: string, lang: Lang): string {
  * owner's correction. Its own form beside the facts form, so the view keeps one primary button (the facts form's);
  * the save here is the secondary button. Every value is rendered as React text.
  */
-export function ProfileGroup({ profile, lang, saved, error }: { profile: BusinessProfile | null; lang: Lang; saved: boolean; error: string | undefined }) {
+export function ProfileGroup({ profile, businessId, lang, saved, error }: { profile: BusinessProfile | null; businessId: string; lang: Lang; saved: boolean; error: string | undefined }) {
   const K = copyFor(lang).facts.profile;
   const err = parseProfileError(error);
   const msg = (field: "mode" | "offer" | "audience" | "category"): string | null => {
@@ -47,6 +47,7 @@ export function ProfileGroup({ profile, lang, saved, error }: { profile: Busines
       </div>
       <p className="mt-3 text-[14px] text-muted">{source}</p>
       <form action={saveProfile} noValidate className="mt-4 space-y-4">
+        <input type="hidden" name="business" value={businessId} />
         <fieldset aria-describedby={modeMsg ? "profile-err-mode" : undefined}>
           <legend className="field-label">{K.modeLegend}</legend>
           <div className="space-y-2">

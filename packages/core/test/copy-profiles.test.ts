@@ -29,7 +29,7 @@ const PROFILE_KEYS: Record<string, (c: C, lang: "nl" | "en") => string[]> = {
   "result.hero online headings (FE-02)": (c) => [c.result.hero.h1Online("X", "rood"), c.result.hero.h1Online("X", "groen"), c.result.hero.h1GreyOnline("X"), c.result.hero.h1UncheckedOnline("X")],
   "result.plan.online (FE-02)": (c) => {
     const o = c.result.plan.online;
-    return [o.stepFacts(null), o.stepFacts("x.nl"), ...o.stepsGreen, o.stepsGrey.facts, o.stepsGrey.publish(null), o.stepsGrey.recheck(6), o.exclVat, o.exclVatGrey];
+    return [o.stepFacts(null), o.stepFacts("x.nl"), ...o.stepsGreen, o.stepsGrey.facts, o.stepsGrey.publish(null), o.stepsGrey.recheck, o.exclVat, o.exclVatGrey];
   },
   "report.identity kind lines (FE-02)": (c) => [c.report.question.identityKind("X"), c.report.value.otherKind, c.report.value.sameKind],
   "mails.online (BE-08)": (c) => {

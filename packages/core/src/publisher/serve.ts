@@ -4,6 +4,10 @@
  * Serves `/`, `/llms.txt`, `/sitemap.xml`, `/robots.txt` and the IndexNow key
  * file for whichever host the request came in on. Looks the business up by
  * facts host, renders the latest verified facts, caches 10 minutes per host.
+ * A cached page is served only after the business is read again by its id (one
+ * indexed read): a deleted business answers 404 at once, a changed status (churn)
+ * is resolved again (feature 002, AC-5(d), V-QA-03). Downstream caches keep a page
+ * at most a minute.
  * Works in node:http (see apps/worker) and could be mounted on a Cloudflare Worker.
  */
 import type { Facts } from "../types.js";
@@ -35,6 +39,8 @@ export interface ServeOptions {
   resolve?: (host: string) => Promise<{ business: BusinessRecord; facts: Facts; googleSiteVerification?: string | null } | null>;
   /** Where churned businesses redirect (default: their own website). */
   now?: () => Date;
+  /** Re-reads a cached business by id; null = gone. Default: the db (only with the default resolve). */
+  reread?: (businessId: string) => Promise<BusinessRecord | null>;
 }
 
 /**
@@ -61,12 +67,16 @@ function hostOf(req: Request): string {
   return h.split(":")[0]!.toLowerCase();
 }
 
+/** How long a browser or CDN may keep a facts page: a deletion or an end shows within a minute downstream. */
+const PUBLIC_CACHE = "public, max-age=60";
+
 function text(body: string, type: string, extra: Record<string, string> = {}, status = 200): Response {
-  return new Response(body, { status, headers: { "content-type": type, "cache-control": "public, max-age=600", ...extra } });
+  return new Response(body, { status, headers: { "content-type": type, "cache-control": PUBLIC_CACHE, ...extra } });
 }
 
 export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => Promise<Response> {
   const resolve = opts.resolve ?? defaultResolve;
+  const reread = opts.reread ?? (opts.resolve ? null : (id: string) => getDb().getBusiness(id));
   const now = opts.now ?? (() => new Date());
 
   return async function handle(req: Request): Promise<Response> {
@@ -90,6 +100,13 @@ export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => P
     if (path === "/healthz") return text("ok", "text/plain; charset=utf-8", { "cache-control": "no-store" });
 
     let entry = cache.get(host);
+    if (entry && reread) {
+      const current = await reread(entry.business.id);
+      if (!current || current.status !== entry.business.status || current.factsHost?.toLowerCase() !== entry.business.factsHost?.toLowerCase()) {
+        cache.delete(host);
+        entry = undefined;
+      }
+    }
     if (!entry || now().getTime() - entry.cachedAt > CACHE_TTL_MS) {
       const found = await resolve(host);
       if (!found) {
@@ -112,7 +129,7 @@ export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => P
     const lastMod = entry.lastModified.toUTCString();
     const ims = req.headers.get("if-modified-since");
     if (ims && !Number.isNaN(Date.parse(ims)) && Date.parse(ims) >= Math.floor(entry.lastModified.getTime() / 1000) * 1000) {
-      return new Response(null, { status: 304, headers: { "last-modified": lastMod, "cache-control": "public, max-age=600" } });
+      return new Response(null, { status: 304, headers: { "last-modified": lastMod, "cache-control": PUBLIC_CACHE } });
     }
     const headers = { "last-modified": lastMod, "x-facts-version": String(entry.facts.version) };
 
