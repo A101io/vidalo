@@ -287,7 +287,7 @@ New this round, all must be true before `vidalo-web`/`vidalo-worker` go to produ
 | **R1** V2-SEC-01 | With `VIDALO_MOCK` unset and the manifest's env per Worker: a worker purge calls Google's revoke endpoint (or fails and says so in the mail); a web purge of a verified custom host without Cloudflare keys deletes nothing and queues the worker job. Tests green, control red | **Fixed in 60848bc** (lane A, 12 Nov): lane A fixes; delivery-lead verifies at ship-check  |
 | **R2** V2-COMP-01 | A failing `deleteLogin` leaves a `login_delete` job, an overdue count of 1 the next day, and a mail without "dan is ook je inlog verwijderd" | **Fixed in af86e6d** (lane A, 12 Nov): lane A; delivery-lead verifies  |
 | **R3** V2-COMP-02 | After a purge on PgDb no `auth.audit_log_entries` row carries the user id as actor or trait | **Fixed in af86e6d** (lane A, 12 Nov): lane A; delivery-lead verifies. The hosted DELETE permission on that table is still the §7 read  |
-| **R4** V-COMP-07 | The Vidalo Control Room cell shows `retention.overdue` and is observed red on a forced count | delivery-lead |
+| **R4** V-COMP-07 | The Vidalo Control Room cell shows `retention.overdue` and is observed red on a forced count | **Met 12 Nov** (delivery-lead): `A101/_OS/control-room/overdue.py` writes the count into Vidalo's P5 cell; forced 1 → rendered `cell blocked` with the needs-you dot, forced 0 → back to `written`; evidence keeps no fake reading. Not wired: the nightly read in `_OS/routines/a101-fix.md` step 4 (edit refused by the permission layer; text handed to Julian). No real reading until the first production deploy |
 
 Still standing from round 1 §7, unchanged: `STRIPE_SECRET_KEY` on `vidalo-worker`;
 `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on both Workers; `VIDALO_AUTH_SECRET` on `vidalo-web`;
@@ -341,3 +341,12 @@ date on deploy day if not 12 Nov (V-COMP-15); the production deploy itself, Juli
   compliance to add to `docs/process/checklists/compliance.md` at its next pass.
 - **V2-QA-01/02**: a fix's test must be shown red with only that fix removed. QA did this in
   round 2; it goes in every lane's definition of done.
+
+
+## R2.9 Ship-check of the release gates (delivery-lead, 12 Nov 2026)
+
+On `claude/002-mijn-omgeving` after lane A's `60848bc` (R1) and `af86e6d` (R2, R3), fast-forwarded:
+typecheck green; core 1405 passed / 23 skipped, worker 49; `e2e:mock`; `verify:pg` 111; `e2e:auth` 15/15.
+Control: with the 15 source files of `60848bc`..`af86e6d` put back to `8d1c1cf` and the new tests kept, 6 gate tests fail
+(core: R1 Cloudflare step, R2 retried login, R3 audit row on PgDb; worker: R1 Google revoke, R2 `login_delete` job x2);
+restored, 52/52 and 14/14 green. R4 as above. Gates R1–R4: met. The round-1 §7 hand steps remain Julian's.
