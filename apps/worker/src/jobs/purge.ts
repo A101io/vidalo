@@ -33,6 +33,8 @@ export async function deleteLogin(userId: string): Promise<void> {
   const url = env("SUPABASE_URL");
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) {
+    // Fail closed (V-COMP-01): outside mock mode a login that cannot be deleted is never reported as deleted.
+    if (!mock()) throw new Error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: cannot delete the login");
     log.info("account.login_delete_mock", {});
     return;
   }

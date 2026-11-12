@@ -74,3 +74,35 @@ describe("google_disconnect job", () => {
     expect((await db.listChannels(gone.id)).length).toBe(0);
   });
 });
+
+describe("V-COMP-01: deleting the login fails closed outside mock mode", () => {
+  const saved = { mock: process.env.VIDALO_MOCK, url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  afterEach(() => {
+    process.env.VIDALO_MOCK = saved.mock;
+    if (saved.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = saved.url;
+    if (saved.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = saved.key;
+  });
+  it("without the Admin key the login is not counted as deleted", async () => {
+    const { deleteLogin } = await import("../src/jobs/purge");
+    delete process.env.VIDALO_MOCK;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    await expect(deleteLogin("00000000-0000-4000-8000-000000000001")).rejects.toThrow(/SUPABASE/);
+    const db = new MemDb();
+    setDb(db);
+    const user = "00000000-0000-4000-8000-0000000000aa";
+    const b = await db.upsertBusiness({ name: "Scan", place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user });
+    const { workerPurgeDeps } = await import("../src/jobs/purge");
+    const { purgeBusiness } = await import("@vidalo/core/shared");
+    const out = await purgeBusiness({ ...workerPurgeDeps(), stripeLive: async () => false, sendDeletedMail: async () => {} }, b.id, "no_subscription");
+    expect(out).toMatchObject({ done: true, loginsDeleted: 0 });
+  });
+  it("in mock mode it is recorded and passes", async () => {
+    const { deleteLogin } = await import("../src/jobs/purge");
+    process.env.VIDALO_MOCK = "1";
+    delete process.env.SUPABASE_URL;
+    await expect(deleteLogin("00000000-0000-4000-8000-000000000001")).resolves.toBeUndefined();
+  });
+});
