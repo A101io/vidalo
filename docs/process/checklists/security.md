@@ -61,3 +61,9 @@ exploit path, not opinions about structure.
 - A response that carries a refreshed auth `Set-Cookie` is `Cache-Control: private, no-store`; middleware runs on static pages too, and one cached response hands a session to the next visitor (002 F-018).
 - A delete of an outside resource (custom hostname, route, OAuth grant) by name happens only when this record provably holds that resource; a name the user typed is not proof (002 F-019).
 - A purge or deletion guard that protects paying customers asks the payment provider, not only our own status column, which can drift from it (002 F-021).
+
+## Learned (Vidalo, 12 Nov 2026, 002 verify)
+- A CHECK constraint or trigger that depends on `plan` or `status` is tested **through the payment webhook** for every plan transition, on a row that already carries the new columns' values (a dated Vidalo Scan upgraded to Monthly). A CHECK re-runs on every UPDATE of the row, so a write that never touches the new columns can still fail, and a failing webhook means a customer billed for a service the app never starts (002 V-SEC-01).
+- A value and its proof are written together: changing a facts host, an address or a domain clears the timestamp that proved the old one. A partial upsert that keeps unset columns turns "verified" into a property of whatever value is written next (002 V-SEC-05).
+- A delete-everything path closes what is still open at the payment provider (open Checkout Sessions, pending invoices), not only live subscriptions: a checkout completed after the delete bills a customer with no account left (002 V-SEC-04).
+- A dependency that is missing outside mock mode fails closed and is counted; "no key → log mock, return success" turns an erasure into a report of one (002 V-COMP-01).

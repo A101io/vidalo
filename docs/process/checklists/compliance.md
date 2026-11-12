@@ -101,3 +101,10 @@ Tone, layout and feature value. Compliance blocks on law, and files P1s on the r
 - A second route to the same contractual act (a cancel triggered by "delete everything") owes the same confirmation as the main route, worded true for that route (002, F-013).
 - A cookie constant added in a scaffold ticket brings its cookie-table row, version date and `legal:lock` in that same ticket; `legal.test.ts` reads every exported `…COOKIE…` constant (002, F-011).
 - A one-off plan needs its own retention end and token end: "zolang je klant bent" never ends for a customer who never churns (002, F-012, F-015).
+
+## Learned (Vidalo, 12 Nov 2026, 002 phase 4)
+- A batch job that selects "due" rows with a fixed limit must not let rows it will skip (dry run, external guard) occupy the batch; otherwise a person's own deletion starves behind them (002, V-COMP-03). Every retention selector pages or selects only rows that need work (V-COMP-02).
+- A deletion dependency (identity provider admin, payment check) fails closed outside mock mode and is in the worker's secret list; a "mock" fallback that returns success in production turns an erasure into a false statement (002, V-COMP-01).
+- An owner's immediate deletion that falls back to a job is counted by the same overdue alarm as dated deletions (002, V-COMP-04).
+- The auth provider's own session and audit tables (IP, user agent, e-mail in audit payloads) are copies too: name them in the privacy text and remove or roll them off on deletion (002, V-COMP-06).
+- An erasure reaches every copy that serves a public surface, caches included: an in-isolate page cache and a `public, max-age` header kept a deleted business's facts page online for 10 minutes after the purge (002, V-QA-03). The design traces each "after deletion X answers not found" through every file and cache on its path, and none of those files may sit in a "not touched by either lane" list.

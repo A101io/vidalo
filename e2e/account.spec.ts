@@ -70,7 +70,7 @@ test("A-04: Koppeling met Google verbreken removes the connection and keeps the 
   const verifiedLine = await page.locator("section").first().innerText();
   await button.click();
   await page.waitForURL(/ontkoppeld=1/);
-  await expect(page.getByRole("status")).toContainText("De koppeling met Google is verbroken.");
+  await expect(page.getByRole("status").filter({ hasText: "De koppeling met Google is verbroken." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Koppeling verbreken" })).toHaveCount(0);
   // Ownership proof stays (the first card still says verified).
   expect(await page.locator("section").first().innerText()).toContain(verifiedLine.split("\n")[1] ?? verifiedLine);

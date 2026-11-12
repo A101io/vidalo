@@ -79,11 +79,18 @@ function verify(token: string): Record<string, unknown> | null {
   }
 }
 
+/**
+ * The login that owns the mock demo business (apps/web/lib/demo.ts, demo-owner-area.ts: ownerUserId "mock-user-1").
+ * Since lane B's membership (SEC-11: an address links only unowned businesses) a random id for this address owns
+ * nothing, and every owner page sent it to /inloggen?fout=geen (QA, phase 4, V-QA-01).
+ */
+const FIXED_USER_IDS: Record<string, string> = { "eigenaar@bakkerijdevries.nl": "mock-user-1" };
+
 function userFor(email: string): User {
   const key = email.toLowerCase();
   let u = users.get(key);
   if (!u) {
-    u = { id: randomUUID(), email: key, created_at: new Date().toISOString() };
+    u = { id: FIXED_USER_IDS[key] ?? randomUUID(), email: key, created_at: new Date().toISOString() };
     users.set(key, u);
   }
   return u;
