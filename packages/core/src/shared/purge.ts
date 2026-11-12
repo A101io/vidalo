@@ -9,6 +9,8 @@ import { listMemberBusinesses, listMemberUserIds } from "../db/owner-area.js";
 import { disconnectGoogle } from "./google-revoke.js";
 import { log } from "./log.js";
 import { purgeAllowed } from "./deletion.js";
+import { clearServeCache } from "../publisher/serve.js";
+import { defaultFactsHost } from "../publisher/render.js";
 
 export interface PurgeDeps {
   db: Db;
@@ -72,6 +74,8 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   }
 
   if (!(await db.purgeBusiness(b.id, guard, now))) return { done: false, reason: "guard" };
+  // This isolate's facts-page cache forgets it now; other isolates re-read the business on their next hit (V-QA-03).
+  for (const host of [b.factsHost, defaultFactsHost(b)]) if (host) clearServeCache(host);
 
   let loginsDeleted = 0;
   for (const userId of members) {

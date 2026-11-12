@@ -49,7 +49,7 @@ describe("AC-5(d): a deleted business's facts host", () => {
     return handler;
   }
 
-  it.fails("V-QA-03 open: answers not found right after the deletion, also when it served the page a moment before", async () => {
+  it("V-QA-03: answers not found right after the deletion, also when it served the page a moment before", async () => {
     const handler = await seedAndServe(() => new Date());
     for (const path of ["/", "/llms.txt", "/feiten.json"]) {
       const after = await handler(new Request(`https://${HOST}${path}`));
@@ -62,5 +62,22 @@ describe("AC-5(d): a deleted business's facts host", () => {
     const handler = await seedAndServe(() => new Date(t));
     t += 11 * 60_000;
     expect((await handler(new Request(`https://${HOST}/`))).status).toBe(404);
+  });
+});
+
+describe("V-QA-03: a cached page follows the business", () => {
+  it("a churn is redirected at once, not after the cache", async () => {
+    const db = new MemDb();
+    setDb(db);
+    clearServeCache();
+    const b = await db.upsertBusiness({ name: "Bakkerij Eind", place: "Haarlem", plan: "monitor", status: "active", factsHost: HOST, factsHostVerifiedAt: "2026-10-01T10:00:00.000Z", domain: "bakkerijeind.nl" });
+    await db.insertFacts(b.id, { ...facts, businessId: b.id, name: "Bakkerij Eind", website: "bakkerijeind.nl" }, { verifiedAt: "2026-10-01T10:00:00.000Z" });
+    const handler = createFactsHandler();
+    const first = await handler(new Request(`https://${HOST}/`));
+    expect(first.status).toBe(200);
+    expect(first.headers.get("cache-control")).toBe("public, max-age=60");
+    await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status: "churned" });
+    const after = await handler(new Request(`https://${HOST}/`));
+    expect(after.status).toBe(302);
   });
 });
