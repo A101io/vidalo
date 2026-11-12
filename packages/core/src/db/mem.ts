@@ -58,7 +58,8 @@ function retentionTrigger(old: BusinessRecord | null, b: BusinessRecord): void {
     b.deletionRemindedAt = null;
   }
   const scanRetention = b.plan === "setup" && b.status === "trial" && b.deleteReason === "retention";
-  const changed = !old || old.status !== b.status || old.cancelAt !== b.cancelAt;
+  // A change of plan counts too: a dated Scan that buys Monthly loses its retention date (V-SEC-01).
+  const changed = !old || old.status !== b.status || old.cancelAt !== b.cancelAt || old.plan !== b.plan;
   if (changed && (b.status === "trial" || b.status === "active" || b.status === "paused") && !b.cancelAt && !scanRetention) {
     b.deleteAt = null;
     b.deleteReason = null;

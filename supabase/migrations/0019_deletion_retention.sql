@@ -46,7 +46,8 @@ begin
   -- 3. Running again without a cancel (undo, webhook echo, new subscription, Scan → Monthly):
   --    no deletion. A Vidalo Scan's own retention date stays. Only on a change of status or
   --    cancel_at: a date written straight onto a paying business is refused by the CHECK instead.
-  if (tg_op = 'INSERT' or old.status is distinct from new.status or old.cancel_at is distinct from new.cancel_at)
+  if (tg_op = 'INSERT' or old.status is distinct from new.status or old.cancel_at is distinct from new.cancel_at
+      or old.plan is distinct from new.plan)  -- a Scan buying Monthly (V-SEC-01)
      and new.status in ('trial', 'active', 'paused') and new.cancel_at is null
      and not (new.plan = 'setup' and new.status = 'trial' and new.delete_reason = 'retention') then
     new.delete_at := null;
