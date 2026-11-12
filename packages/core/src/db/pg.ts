@@ -814,7 +814,7 @@ export class PgDb implements Db {
         values (${row.sessionId}, ${row.userId}, ${row.at}, ${row.at}, ${row.browser}, ${row.os})
         on conflict (session_id) do nothing`;
       await tx`update business set last_active_at = ${row.at} where owner_user_id = ${row.userId}`;
-      await tx`delete from auth_session where user_id = ${row.userId} and ended_at is not null and session_id not in (
+      await tx`delete from auth_session where user_id = ${row.userId} and session_id not in (
         select session_id from auth_session where user_id = ${row.userId} order by signed_in_at desc limit 10)`;
     });
   }

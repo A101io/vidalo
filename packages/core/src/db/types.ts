@@ -329,8 +329,8 @@ export interface Db {
   // --- sign-ins (feature 002, migration 0018) ---
   /**
    * Records a sign-in. Insert by sessionId; a second call for the same id changes nothing (it never
-   * clears ended_at or moves signed_in_at). Then deletes the user's ended rows beyond the 10 newest
-   * (an open sign-in is never deleted).
+   * clears ended_at or moves signed_in_at). Then deletes the user's rows beyond the 10 newest, open ones
+   * included (V-COMP-11: the list and the privacy text promise at most 10).
    */
   recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void>;
   getSignIn(sessionId: string): Promise<SignInRow | null>;

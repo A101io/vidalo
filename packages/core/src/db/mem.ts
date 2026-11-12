@@ -685,7 +685,8 @@ export class MemDb implements Db {
         .slice(0, 10)
         .map((r) => r.sessionId),
     );
-    for (const r of [...this.signIns.values()]) if (r.userId === row.userId && r.endedAt && !keep.has(r.sessionId)) this.signIns.delete(r.sessionId);
+    // Only the 10 newest stay, open ones included (V-COMP-11): an older open sign-in is gone, so that browser signs in again.
+    for (const r of [...this.signIns.values()]) if (r.userId === row.userId && !keep.has(r.sessionId)) this.signIns.delete(r.sessionId);
   }
 
   async getSignIn(sessionId: string): Promise<SignInRow | null> {

@@ -74,7 +74,7 @@ describe.each(backends)("%s: sign-ins (0018)", (_n, makeDb) => {
     expect((await db.getSignIn(c))!.endedAt).toBeNull();
   });
 
-  it("lists newest first, at most the limit; keeps the 10 newest ended rows and every open one", async () => {
+  it("lists newest first, at most the limit; keeps only the 10 newest rows, open ones included (V-COMP-11)", async () => {
     const base = Date.parse("2026-10-01T08:00:00.000Z");
     const ids: string[] = [];
     for (let i = 0; i < 13; i++) {
@@ -91,10 +91,10 @@ describe.each(backends)("%s: sign-ins (0018)", (_n, makeDb) => {
     await db.recordSignIn({ sessionId: randomUUID(), userId: user, browser: "chrome", os: "macos", at: new Date(base + 20 * 60 * MIN) });
     const all = await db.listSignIns(user, 50);
     expect(all.map((r) => r.signedInAt)).toEqual([...all.map((r) => r.signedInAt)].sort().reverse());
-    expect(await db.getSignIn(ids[0]!)).not.toBeNull();
-    expect(await db.getSignIn(ids[1]!)).not.toBeNull();
-    // 14 rows, 10 newest kept + the two open old ones; ended rows beyond the 10 newest are gone.
-    expect(all).toHaveLength(12);
+    // 14 rows: the 10 newest stay; older ones go, the two open old ones too (that browser signs in again).
+    expect(await db.getSignIn(ids[0]!)).toBeNull();
+    expect(await db.getSignIn(ids[1]!)).toBeNull();
+    expect(all).toHaveLength(10);
     expect(await db.getSignIn(ids[2]!)).toBeNull();
     expect(await db.getSignIn(ids[3]!)).toBeNull();
     expect(await db.listSignIns(user, 10)).toHaveLength(10);
