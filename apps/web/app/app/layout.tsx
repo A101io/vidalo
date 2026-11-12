@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, getRoute } from "@/lib/i18n";
 import { Wordmark } from "@/components/SiteHeader";
+import { Suspense } from "react";
 import { requireOwner } from "@/lib/owner";
+import { listMyBusinesses } from "@/lib/active-business";
+import { BusinessSwitcher } from "@/components/BusinessSwitcher";
+import { SwitchStatus } from "@/components/SwitchStatus";
 import { followPreferredLang } from "@/lib/preferred-lang";
 import { loadLastConfirmedFacts } from "@/lib/reads";
 import { dateShort } from "@/lib/format";
@@ -15,12 +19,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   await followPreferredLang(business);
   const { copy, href } = await getI18n();
   const d = copy.dashboard;
+  // Several businesses on one login: a switcher (works without script); one: today's text.
+  const mine = await listMyBusinesses(session);
+  const route = await getRoute();
   // "Klopt dit nog?": a year after the last confirmation, on every /app page until the owner answers.
   const yearly = reconfirmation(await loadLastConfirmedFacts(business.id));
   const R = copy.reconfirm;
   const links = [
     { href: "/app", label: d.h1 },
     { href: "/app/voortgang", label: copy.progress.nav },
+    { href: "/app/rapporten", label: copy.ownerArea.archive.nav },
     { href: "/app/gegevens", label: d.setupSteps.facts },
     { href: "/app/domein", label: d.setupSteps.domain },
     { href: "/app/google", label: d.setupSteps.google },
@@ -31,11 +39,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <header className="site-header site-header--ruled">
         <div className="wrap flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4 sm:py-5">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-4 gap-y-2">
             <Wordmark href="/app" />
-            <span className="hidden text-[14px] text-muted sm:inline">
-              {business.name}, {business.place}
-            </span>
+            {mine.length > 1 ? (
+              <BusinessSwitcher businesses={mine} activeId={business.id} next={route} label={copy.ownerArea.switcher.label} submit={copy.ownerArea.switcher.submit} />
+            ) : (
+              <span className="hidden text-[14px] text-muted sm:inline">
+                {business.name}, {business.place}
+              </span>
+            )}
           </div>
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] font-semibold">
             {links.map((l) => (
@@ -62,6 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-4">
               <form action={reconfirmFacts}>
+                <input type="hidden" name="business" value={business.id} />
                 <button type="submit" className="btn-sm">
                   {R.confirm}
                 </button>
@@ -72,6 +85,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           </section>
         )}
+        <Suspense fallback={<p role="status" aria-live="polite" className="sr-only" />}>
+          <SwitchStatus sentence={copy.ownerArea.switcher.current(business.name, business.place)} />
+        </Suspense>
         {children}
       </main>
     </>

@@ -52,8 +52,8 @@ export default async function FactsPage({ searchParams }: { searchParams: Promis
         {sp.fout === "1" && <p className="mt-3 text-[14px] text-rood">{copy.errors.generic}</p>}
         {disputed && <p className="mt-3 rounded-xl bg-panel px-4 py-3 text-[15px]">{F.disputedNotice(copy.factKey[disputed.factKey])}</p>}
       </header>
-      <ProfileGroup profile={effectiveProfile(business)} lang={lang} saved={sp.profiel === "1"} error={sp.profielfout} />
-      <FactsForm facts={initial} lang={lang} country={business.country} countries={countryOptions(lang)} kindDefault={businessNoun({ ...initial, kind: null }, business.sector)} />
+      <ProfileGroup profile={effectiveProfile(business)} businessId={business.id} lang={lang} saved={sp.profiel === "1"} error={sp.profielfout} />
+      <FactsForm facts={initial} businessId={business.id} lang={lang} country={business.country} countries={countryOptions(lang)} kindDefault={businessNoun({ ...initial, kind: null }, business.sector)} />
     </div>
   );
 }

@@ -22,7 +22,10 @@ async function signIn(page: Page) {
 }
 
 async function setLang(page: Page, lang: "nl" | "en") {
-  await page.goto(`/api/lang?to=${lang}&next=${encodeURIComponent("/app/gegevens")}`);
+  // The route saves the language only on a business the login is a member of: name the open one (the hidden field of the facts form).
+  await page.goto("/app/gegevens");
+  const business = await page.locator("main form input[name='business']").first().getAttribute("value");
+  await page.goto(`/api/lang?to=${lang}&business=${business}&next=${encodeURIComponent("/app/gegevens")}`);
   await page.waitForURL(lang === "en" ? /\/en\/app\/gegevens/ : /\/app\/gegevens/);
   await dismissNotice(page);
 }

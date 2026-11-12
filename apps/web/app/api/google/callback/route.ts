@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { NO_STORE } from "@/lib/auth-cookies";
 import { cookies } from "next/headers";
 import { matchProfileLocation, type ProfileLocation } from "@vidalo/core/shared";
 import { env } from "@/lib/env";
@@ -42,7 +43,7 @@ interface TokenResponse {
  * we record this person as the owner (replacing any unproven claim), store the
  * tokens and start setup for a paying business. A failed match stores nothing.
  */
-export async function GET(req: Request) {
+async function handle(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const session = await getSession();
   const jar = await cookies();
@@ -125,4 +126,11 @@ export async function GET(req: Request) {
     await db.enqueueJob("sync", { businessId: business.id, channelIds: [channel.id] });
   }
   return NextResponse.redirect(`${env.baseUrl}/app/google?gekoppeld=1`);
+}
+
+/** It reads the session: no answer of it may be stored by a cache (V-SEC-03). */
+export async function GET(req: Request) {
+  const res = await handle(req);
+  res.headers.set("cache-control", NO_STORE);
+  return res;
 }

@@ -1,33 +1,20 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
-import { requireOwner, requireVerifiedOwner } from "@/lib/owner";
-import { LANGS, localizeHref, type Lang } from "@/lib/lang-paths";
+import { businessFromForm, requireOwnerOf, requireVerifiedOwnerOf } from "@/lib/owner";
 import { disputeFinding, markFixedByOwner } from "@vidalo/core/fixer";
 import { decideChannelDiff } from "@vidalo/core/publisher";
-import { MOCK_SESSION_COOKIE } from "@/lib/session";
-import { createAdminSupabase, createServerSupabase } from "@/lib/supabase";
-import { canDeleteMyData, ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
+import { ondemandRefusal, ONDEMAND_EVENT } from "@vidalo/core/shared";
 
-/** The language row on the account page: save it, then show the account in that language. */
-export async function setLanguage(formData: FormData) {
-  const { business } = await requireOwner("/app/account");
-  const to = String(formData.get("language") ?? "") as Lang;
-  if (!LANGS.includes(to)) redirect((await getI18n()).href("/app/account"));
-  if (business.language !== to) {
-    const db = await ready();
-    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, language: to });
-    await db.logEvent(business.id, "account.language_set", { language: to });
-  }
-  revalidatePath("/app/account");
-  redirect(localizeHref("/app/account?taal=opgeslagen", to));
-}
+// Every action below names its business in the form (<input type="hidden" name="business">, F-020): it is read with
+// businessFromForm and passed to requireOwnerOf / requireVerifiedOwnerOf FIRST, before anything is read or written. No
+// business, a business of another login and an unknown id all end at /app with nothing changed. The cookie is never
+// consulted, so a switch in another tab cannot send a form rendered for one business to another.
 
-/** The finding named in a form, if it belongs to the signed-in owner's business. */
+/** The finding named in a form, if it belongs to the business the form named. */
 async function ownFinding(formData: FormData, businessId: string) {
   const db = await ready();
   const id = String(formData.get("finding") ?? "");
@@ -37,7 +24,7 @@ async function ownFinding(formData: FormData, businessId: string) {
 
 /** "Ik heb dit aangepast" on a finding: the recheck runs now instead of on the planned date. */
 export async function markFixed(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const finding = await ownFinding(formData, business.id);
   const { href } = await getI18n();
   if (!finding) redirect(href("/app"));
@@ -49,7 +36,7 @@ export async function markFixed(formData: FormData) {
 
 /** "Dit klopt wél" on a finding: recorded, then the facts form opens on that fact so the owner corrects it. */
 export async function dispute(formData: FormData) {
-  const { business } = await requireOwner();
+  const { business } = await requireOwnerOf(businessFromForm(formData));
   const finding = await ownFinding(formData, business.id);
   const { href } = await getI18n();
   if (!finding) redirect(href("/app"));
@@ -58,7 +45,7 @@ export async function dispute(formData: FormData) {
   redirect(href(`/app/gegevens?betwist=${finding.id}#${finding.factKey}`));
 }
 
-/** The channel named in a form, if it belongs to the signed-in owner's business. */
+/** The channel named in a form, if it belongs to the business the form named. */
 async function ownChannel(formData: FormData, businessId: string) {
   const db = await ready();
   const id = String(formData.get("channel") ?? "");
@@ -67,7 +54,7 @@ async function ownChannel(formData: FormData, businessId: string) {
 
 /** "Doorvoeren op Google": the held change is approved and a sync of that channel applies it. */
 export async function approveChannelDiff(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const channel = await ownChannel(formData, business.id);
   const { href } = await getI18n();
   if (!channel) redirect(href("/app"));
@@ -79,7 +66,7 @@ export async function approveChannelDiff(formData: FormData) {
 
 /** "Niet doorvoeren": the held change is declined; the profile stays as it is. */
 export async function declineChannelDiff(formData: FormData) {
-  const { business } = await requireVerifiedOwner();
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const channel = await ownChannel(formData, business.id);
   const { href } = await getI18n();
   if (!channel) redirect(href("/app"));
@@ -90,8 +77,8 @@ export async function declineChannelDiff(formData: FormData) {
 }
 
 /** "Controleer nu": enqueue an on-demand scan for the owner's business. */
-export async function checkNow() {
-  const { business } = await requireVerifiedOwner();
+export async function checkNow(formData: FormData) {
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(formData));
   const db = await ready();
   const { href } = await getI18n();
   // The last check that ran, or one asked for and not started yet; the worker checks the runs again.
@@ -103,26 +90,4 @@ export async function checkNow() {
   await db.logEvent(business.id, ONDEMAND_EVENT, {});
   revalidatePath("/app");
   redirect(href("/app?controle=ingepland"));
-}
-
-/**
- * "Verwijder alles" on the account page (AVG art. 17, core/shared/my-data.ts):
- * the business and everything under it, then the login, then the session.
- * Waits until no subscription runs.
- */
-export async function deleteMyData(formData: FormData) {
-  const { business, session } = await requireOwner("/app/account");
-  const { href } = await getI18n();
-  if (String(formData.get("confirm") ?? "") !== "ja") redirect(href("/app/account#gegevens"));
-  if (!canDeleteMyData(business.status)) redirect(href("/app/account?gegevens=abonnement#gegevens"));
-  const db = await ready();
-  await db.deleteBusiness(business.id);
-  // No business id and no address: only that a deletion happened.
-  await db.logEvent(null, "account.deleted", {});
-  const admin = await createAdminSupabase();
-  if (admin && !session.userId.startsWith("mock-")) await admin.auth.admin.deleteUser(session.userId);
-  const supabase = await createServerSupabase();
-  if (supabase) await supabase.auth.signOut();
-  (await cookies()).delete(MOCK_SESSION_COOKIE);
-  redirect(href("/inloggen?verwijderd=1"));
 }

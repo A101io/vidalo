@@ -13,6 +13,7 @@ import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
 import { competitionCountsOf, isNeutralProfile, isUncheckedGrey } from "@vidalo/core/types";
 import { checkedAsParts } from "@vidalo/core/shared";
+import { reportCounts } from "@vidalo/core/progress";
 import { hostOf } from "./format";
 
 export type ReportState = "rood" | "groen" | "grijs";
@@ -87,9 +88,11 @@ export interface ReportView {
   sourcesBody: string;
   plan: { h2: string; steps: PlanStep[]; note?: string; monitor: string; setup: string; excl: string };
   self: { h3: string; body: string; steps: string[] };
-  /** The count in "Alle N antwoorden bekijken": the answers the lines below it are drawn from. */
+  /** The count in "Alle N antwoorden bekijken": the number of lines below it. */
   allCount: number;
 }
+
+type LineKind = "correct" | "wrong" | "notFound" | "other" | "unchecked";
 
 const severityRank: Record<Severity, number> = { afhaker: 0, misleider: 1, verwarring: 2 };
 
@@ -278,17 +281,16 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const online = report.profile?.mode === "online";
   const groups = groupQuestions(report, copy, online);
   const rows = groups.map((g) => rowFor(g, copy));
-  const wrongQuestions = rows.filter((r) => r.tone === "rood").length;
-  const notFoundQuestions = rows.filter((r) => r.tone === "grijs").length;
+  // The counts of the heading come from core (progress.ts reportCounts), the same function the archive stores.
+  const counts = reportCounts(report);
+  const wrongQuestions = counts.wrong;
+  const notFoundQuestions = counts.notFound;
   const activeEngines = report.engines.filter((e) => !e.skipped);
   // What was really asked (reports since 11 Nov 2026): every question, also the ones without a fact to check them
   // against, and how often each engine answered it. Older reports fall back to the rows and an average.
   const askedAbout = (report.asked ?? []).filter((a) => a.kind === "about");
-  const askedKeys = new Set(askedAbout.map((a) => keyOf(a.factKey, a.subject)));
-  const checkedKeys = new Set(askedAbout.filter((a) => a.checked).map((a) => keyOf(a.factKey, a.subject)));
-  const questions = askedKeys.size ? Math.max(askedKeys.size, rows.length) : rows.length;
-  // A question without a fact that still produced a finding (not found, another business) is on the table, not unchecked.
-  const unchecked = [...askedKeys].filter((k) => !checkedKeys.has(k) && !groups.some((g) => g.key === k && g.findings.length > 0)).length;
+  const questions = counts.questions;
+  const unchecked = counts.unchecked;
   const legacyPerQuestion = report.findings[0]?.sampleCount ?? (rows.length && activeEngines.length ? Math.max(1, Math.round(report.totalAnswers / (rows.length * activeEngines.length))) : 3);
   // The most common number of answers per question: a paid check asks 5 times and goes on to 10 only where an answer was wrong.
   const timesPer = activeEngines.map((e) => {
@@ -313,7 +315,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
   const hero = uncheckedGrey
     ? { number: questions, label: R.hero.uncheckedLabel(questions) }
     : state === "grijs"
-      ? { number: rows.filter((r) => r.tone === "groen").length, label: R.hero.answeredLabel(questions) }
+      ? { number: counts.correct, label: R.hero.answeredLabel(questions) }
       : state === "groen"
         ? { number: questions, label: R.hero.okLabel(questions) }
         : { number: wrongQuestions, label: R.hero.wrongLabel(questions) };
@@ -327,11 +329,6 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     : state === "grijs"
       ? R.hero.introGrey(enginesText, questions, times, report.notFoundAnswers, report.totalAnswers, otherEntityTotal)
       : R.hero.intro(enginesText, questions, times, wrongQuestions, notFoundQuestions, unchecked);
-
-  const engineLines = report.engines.map((e) => {
-    const other = otherByEngine.get(e.engine) ?? 0;
-    return { name: ENGINE_LABEL[e.engine], text: e.skipped ? R.hero.engineSkipped : R.hero.engineCounts(e.correct, Math.max(0, e.wrong - other), e.notFound, other, e.unchecked ?? 0) };
-  });
 
   const cards = pickCards(report.findings, report, grey && !uncheckedGrey, copy, online);
 
@@ -365,8 +362,9 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
       total: cell(f.engine).total,
       n: f.frequency,
       tone: (f.verdict === "not_found" ? "grijs" : "rood") as ReportRowData["tone"],
+      kind: (f.verdict === "not_found" ? "notFound" : f.sourceType === "other_entity" ? "other" : "wrong") as LineKind,
     }));
-    const fromCorrect = [...perEngine.entries()].flatMap(([e, c]) => [...c.correct.entries()].map(([value, n]) => ({ question: g.question, engine: ENGINE_LABEL[e], value, times: R.table.times(n, c.total), total: c.total, n, tone: "groen" as const })));
+    const fromCorrect = [...perEngine.entries()].flatMap(([e, c]) => [...c.correct.entries()].map(([value, n]) => ({ question: g.question, engine: ENGINE_LABEL[e], value, times: R.table.times(n, c.total), total: c.total, n, tone: "groen" as const, kind: "correct" as LineKind })));
     return [...fromFindings, ...fromCorrect];
   });
   // Every answer asked is on the list (reports since 11 Nov 2026): per question and AI system what was said,
@@ -383,15 +381,37 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     if (!a.checked) {
       for (const u of a.unknown ?? []) {
         if (used + u.n > a.samples) break;
-        all.push({ question, engine, value: `${humanValue(a.factKey, u.value, a.subject, copy)} (${R.table.unchecked})`, times: R.table.times(u.n, a.samples), total: a.samples, n: u.n, tone: "grijs" });
+        all.push({ question, engine, value: `${humanValue(a.factKey, u.value, a.subject, copy)} (${R.table.unchecked})`, times: R.table.times(u.n, a.samples), total: a.samples, n: u.n, tone: "grijs", kind: "unchecked" });
         used += u.n;
       }
     }
-    if (a.samples > used) all.push({ question, engine, value: R.table.noAnswer, times: R.table.times(a.samples - used, a.samples), total: a.samples, n: a.samples - used, tone: "grijs" });
+    if (a.samples > used) all.push({ question, engine, value: R.table.noAnswer, times: R.table.times(a.samples - used, a.samples), total: a.samples, n: a.samples - used, tone: "grijs", kind: "notFound" });
     covered.set(k, Math.max(used, a.samples));
   }
-  // The heading counts the answers behind these lines.
-  const allCount = report.asked?.length ? all.reduce((s, l) => s + l.n, 0) : report.totalAnswers;
+  // Per AI system the questions, not the answers: each question counts once (11 Nov 2026: "ChatGPT 6 klopt · 3 fout"
+  // under "3 vragen" counted samples). A finding (wrong, other business) counts like the table and the hero count it,
+  // even at 1 of 3; otherwise the verdict most answers carried, a tie counting as the worse one.
+  const worse: LineKind[] = ["wrong", "other", "notFound", "unchecked", "correct"];
+  const engineLines = report.engines.map((e) => {
+    const name = ENGINE_LABEL[e.engine];
+    if (e.skipped) return { name, text: R.hero.engineSkipped };
+    const perQuestion = new Map<string, Map<LineKind, number>>();
+    for (const l of all) {
+      if (l.engine !== name) continue;
+      const m = perQuestion.get(l.question) ?? new Map<LineKind, number>();
+      m.set(l.kind, (m.get(l.kind) ?? 0) + l.n);
+      perQuestion.set(l.question, m);
+    }
+    const count: Record<LineKind, number> = { correct: 0, wrong: 0, notFound: 0, other: 0, unchecked: 0 };
+    for (const m of perQuestion.values()) {
+      const finding = (["wrong", "other"] as const).find((k) => (m.get(k) ?? 0) > 0);
+      const top = Math.max(...m.values());
+      count[finding ?? worse.find((k) => m.get(k) === top)!] += 1;
+    }
+    return { name, text: R.hero.engineCounts(count.correct, count.wrong, count.notFound, count.other, count.unchecked) };
+  });
+  // The heading counts the lines below it (one per question and AI system), not the samples behind them (11 Nov 2026).
+  const allCount = all.length;
 
   const instable = report.instable.map((f) => ({
     question: f.evidenceKind === "recommendation" ? recQuestion(report, f.factKey, f.subject, copy) : questionFor(f.factKey, f.subject, report.business.name, report.business.place, copy, online),
@@ -452,12 +472,12 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
             ? [
                 { tone: "grijs" as const, text: O.stepsGrey.facts },
                 { tone: "oranje" as const, text: O.stepsGrey.publish(opts.domain ?? null) },
-                { tone: "groen" as const, text: O.stepsGrey.recheck(questions) },
+                { tone: "groen" as const, text: O.stepsGrey.recheck },
               ]
             : [
                 { tone: "grijs" as const, text: R.plan.stepsGrey.facts },
                 { tone: "oranje" as const, text: R.plan.stepsGrey.publish(opts.domain ?? null) },
-                { tone: "groen" as const, text: R.plan.stepsGrey.recheck(questions) },
+                { tone: "groen" as const, text: R.plan.stepsGrey.recheck },
               ],
           note: R.plan.noteGrey,
           monitor: R.plan.monitorGrey,
@@ -477,7 +497,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
             steps: [
               { tone: firstTone, text: hosts.length ? R.plan.stepSources(hosts.join(", ")) : R.plan.stepSourcesNone },
               { tone: "oranje" as const, text: online ? O.stepFacts(opts.domain ?? null) : R.plan.stepFacts(opts.domain ?? null) },
-              { tone: "groen" as const, text: R.plan.stepRecheck(14, questions) },
+              { tone: "groen" as const, text: R.plan.stepRecheck },
             ],
             monitor: R.plan.monitor,
             setup: R.plan.setup,
@@ -488,7 +508,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
           .filter((f) => f.verdict !== "not_found")
           .map((f) => {
             const src = sourceLabel(f, copy);
-            return copy.report.selfStep(src.label, ENGINE_LABEL[f.engine], copy.findingVerdict.wrong.toLowerCase(), f.evidenceKind === "recommendation" ? R.table.notNamed : wrongText(f, copy), correctText(f, copy), f.verdict === "wrong" ? copy.fixPath[f.sourceType] : "");
+            return copy.report.selfStep(src.label, ENGINE_LABEL[f.engine], f.evidenceKind === "recommendation" ? null : wrongText(f, copy), correctText(f, copy), f.verdict === "wrong" ? copy.report.selfFix[f.sourceType] : "");
           });
   // No wrong answer (green, or grey): the general steps, so "Bekijk de stappen" never opens on nothing (11 Nov 2026).
   const general = state === "grijs" || wrongSteps.length === 0;
@@ -522,3 +542,4 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     allCount,
   };
 }
+

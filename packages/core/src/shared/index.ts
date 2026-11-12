@@ -24,3 +24,14 @@ export * from "./gate.js";
 export * from "./country.js";
 export * from "./profile-correction.js";
 export * from "./checked-as.js";
+// Feature 002 (C-00): lane A
+export * from "./safe-next.js";
+export * from "./same-origin.js";
+export * from "./session-life.js";
+export * from "./auth-throttle.js";
+export * from "./purge.js";
+export * from "./google-revoke.js";
+export * from "./export-stream.js";
+export * from "./deletion.js";
+// Feature 002 (C-00): lane B
+export * from "./report-access.js";

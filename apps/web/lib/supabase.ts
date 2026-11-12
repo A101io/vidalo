@@ -1,21 +1,26 @@
 import { cookies } from "next/headers";
 import { env } from "./env";
+import { authCookieOptions, forceAuthOptions } from "./auth-cookies";
 
 type ServerClient = import("@supabase/supabase-js").SupabaseClient;
 
-/** Supabase client bound to the request cookies (RLS as the signed-in user), or null when not configured. */
+/**
+ * Supabase client bound to the request cookies (RLS as the signed-in user), or null when not configured.
+ * Every cookie it writes carries authCookieOptions (HttpOnly, SameSite=Lax, Secure on https, 90 days).
+ */
 export async function createServerSupabase(): Promise<ServerClient | null> {
   if (!env.hasSupabase) return null;
   const { createServerClient } = await import("@supabase/ssr");
   const cookieStore = await cookies();
   return createServerClient(env.supabaseUrl!, env.supabaseAnonKey!, {
+    cookieOptions: authCookieOptions(),
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (list: { name: string; value: string; options?: Record<string, unknown> }[]) => {
         try {
-          for (const { name, value, options } of list) cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2]);
+          for (const { name, value, options } of list) cookieStore.set(name, value, forceAuthOptions(options));
         } catch {
-          // Called from a server component: cookies are refreshed by middleware instead.
+          // Called from a server component: the middleware already refreshed the session for this request.
         }
       },
     },

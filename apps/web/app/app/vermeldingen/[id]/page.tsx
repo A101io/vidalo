@@ -4,7 +4,9 @@ import type { Channel, Facts, Stip as StipColour } from "@vidalo/core/types";
 import { diffDecision, type ChannelDiffEntry } from "@vidalo/core/publisher";
 import { formatPhoneNl } from "@vidalo/core/scanner";
 import { Dot, MarkOk, MarkWrong, QuietLink, Section } from "@/components/OwnerUi";
-import { requireOwner } from "@/lib/owner";
+import { requireOwnerOf } from "@/lib/owner";
+import { channelBusinessId } from "@vidalo/core/db";
+import { ready } from "@/lib/core";
 import { loadChannel } from "@/lib/owner-data";
 import { loadDashboard } from "@/lib/reads";
 import { dateShort, dateTime } from "@/lib/format";
@@ -72,7 +74,10 @@ function Profile({ title, aside, name, place, lines, side, empty }: { title: str
 export default async function ChannelPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ besluit?: string }> }) {
   const { id } = await params;
   const sp = await searchParams;
-  const { business } = await requireOwner(`/app/vermeldingen/${id}`);
+  // The business is the channel's own, and only a member of it gets in (another login's channel → /app, SEC-13).
+  const owner = await channelBusinessId(await ready(), id);
+  if (!owner) notFound();
+  const { business } = await requireOwnerOf(owner, `/app/vermeldingen/${id}`);
   const detail = await loadChannel(id, business);
   if (!detail) notFound();
   const { copy, href } = await getI18n();
@@ -132,12 +137,14 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
           <p className="m-0 max-w-[640px] text-ink-2">{C.approveIntro}</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <form action={approveChannelDiff} className="m-0 flex">
+              <input type="hidden" name="business" value={business.id} />
               <input type="hidden" name="channel" value={channel.id} />
               <button type="submit" className="btn-primary h-[52px] w-full sm:w-auto">
                 {C.approve}
               </button>
             </form>
             <form action={declineChannelDiff} className="m-0 flex">
+              <input type="hidden" name="business" value={business.id} />
               <input type="hidden" name="channel" value={channel.id} />
               <button type="submit" className="btn-outline h-[52px] w-full sm:w-auto">
                 {C.decline}

@@ -11,6 +11,7 @@
 import type { Business, Engine, EngineStip, Finding, InstableFinding, ProfileSummary, RecommendationSummary, Severity, Stip, Visibility } from "../types.js";
 import { ENGINE_LABEL } from "../types.js";
 import { copy, copyFor, type Lang } from "../copy/index.js";
+import type { MoreQuestionsView } from "../scanner/question-sets.js";
 import { criteriumFor, severityOf } from "../criteria.js";
 import { findingWordsNl, hostOfUrl } from "../shared/facts-nl.js";
 import { findingWords } from "../shared/facts-en.js";
@@ -390,6 +391,8 @@ export interface BaselineData {
   online?: boolean;
   profile?: ProfileSummary | null;
   competition?: { named: number; answers: number; questions: number } | null;
+  /** A free check: the questions a full check asks on top (scanner/question-sets.ts moreQuestionsView). */
+  moreQuestions?: MoreQuestionsView | null;
   lang?: Lang;
 }
 
@@ -423,6 +426,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
   const more = d.findings.length - cards.length;
   // A local business sees who AI named instead (names). An online business sees counts only: no name of another business is mailed.
   const named = online ? null : namedCard(d.recommendations, lang);
+  const mq = d.paying ? null : (d.moreQuestions ?? null);
   const K = C.result.competition;
   const checkedAs = online ? checkedAsParts(d.profile, C.result.checkedAs) : null;
   const per = (d.engineStips ?? []).map((e) => `${engineName(e.engine)}: ${C.stip[e.stip].toLowerCase()}`);
@@ -462,7 +466,14 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
       ...(more > 0 ? [{ kind: "p" as const, text: B.more(more, full.where) }] : []),
       ...(named ? [{ kind: "cards" as const, title: C.result.named.h2, items: [named] }] : []),
       ...(online && d.competition ? [{ kind: "cards" as const, title: K.h2, items: [{ title: K.summary(d.competition.named, d.competition.answers), lines: [] }] }, { kind: "note" as const, text: K.note }] : []),
-      { kind: "cta", label: full.label, url: full.url, note: d.paying ? undefined : d.offer ? M.offer(d.offer.setupEur, d.offer.monitorEur) : undefined },
+      ...(mq
+        ? [
+            { kind: "cards" as const, title: mq.h2, items: [{ title: `${C.result.more.notAsked}: ${mq.topics.join(", ")}`, lines: [`${C.result.more.examples}:`, ...mq.examples.map((q) => `"${q}"`)] }] },
+            { kind: "p" as const, text: `${mq.body} ${C.result.more.urgency}` },
+          ]
+        : []),
+      // With the questions block the button names the full check and opens the report at its plan.
+      { kind: "cta", label: mq ? mq.cta : full.label, url: mq ? `${full.url}#plan` : full.url, note: d.paying ? undefined : d.offer ? M.offer(d.offer.setupEur, d.offer.monitorEur) : undefined },
       d.paying
         ? {
             kind: "steps",

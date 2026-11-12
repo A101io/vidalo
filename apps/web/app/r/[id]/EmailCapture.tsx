@@ -1,14 +1,26 @@
 import { getI18n } from "@/lib/i18n";
 
-/** "Stuur dit rapport naar mij": one field with a black Verstuur button. Plain POST. */
-export async function EmailCapture({ scanRunId, businessId, sent, invalid }: { scanRunId: string; businessId: string; sent: boolean; invalid: boolean }) {
+/**
+ * "Stuur dit rapport naar mij": one field with a black Verstuur button. Plain POST.
+ * Once mailed it says so and points at the full check (#plan): the block had no action left (11 Nov 2026).
+ * Not a "send to someone else" field: a forwarded address would become the requester and get the
+ * follow-up mails (compliance, Tw 11.7), and the privacy text does not cover a third party's address.
+ */
+export async function EmailCapture({ scanRunId, businessId, sent, invalid, problem, cta }: { scanRunId: string; businessId: string; sent: boolean; invalid: boolean; problem?: "busy" | "enough"; cta?: string }) {
   const { copy } = await getI18n();
   const e = copy.result.email;
   return (
     <div className="flex flex-col gap-2.5">
-      <h3 className="text-[16px] font-bold">{e.h3}</h3>
+      <h3 className="text-[16px] font-bold">{sent ? e.h3Sent : e.h3}</h3>
       {sent ? (
-        <p className="text-[15px] text-ink-2">{e.sent}</p>
+        <>
+          <p className="text-[15px] text-ink-2">{e.sent}</p>
+          {cta && (
+            <a href="#plan" className="btn-sm self-start print:hidden">
+              {cta}
+            </a>
+          )}
+        </>
       ) : (
         <form action="/api/report-email" method="post">
           <input type="hidden" name="scan" value={scanRunId} />
@@ -23,6 +35,7 @@ export async function EmailCapture({ scanRunId, businessId, sent, invalid }: { s
             </button>
           </div>
           {invalid && <p className="mt-2 text-[14px] text-rood">{e.invalid}</p>}
+          {problem && <p className="mt-2 text-[14px] text-rood">{e[problem]}</p>}
         </form>
       )}
     </div>

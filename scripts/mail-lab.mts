@@ -86,6 +86,10 @@ const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
   directory_correction: { label: "Correction to a directory", to: "third_party" },
   correction_request: { label: "Correction request to a source", to: "third_party" },
   correction_followup: { label: "Follow-up to that source", to: "third_party" },
+  // Feature 002 (lane A): deleting an account.
+  deletion_scheduled: { label: "\"Verwijder alles\" during a running Monthly (sent at once)", to: "owner" },
+  deletion_reminder: { label: "Reminder 14 days before a retention deletion", to: "owner" },
+  account_deleted: { label: "Everything is deleted", to: "owner" },
 };
 
 async function drain(now?: () => Date): Promise<string[]> {
@@ -212,6 +216,11 @@ async function journeys(lang: Lang) {
       return { to: J.paid.owner, ...m, html: textToHtml(m.text, lang), lang };
     },
   };
+  // Feature 002: the three account mails through their real senders, for this journey's owner.
+  const end = new Date(Date.now() + 30 * DAY).toISOString();
+  await reporter.sendDeletionScheduledMail(business, end);
+  await reporter.sendDeletionReminder({ ...business, deleteAt: end, deleteReason: "retention" });
+  await reporter.sendDeletedMail({ email: J.paid.owner, language: lang, businessName: business.name, googleRevoked: true, loginDeleted: true });
   for (const [kind, make] of Object.entries(direct)) {
     if (reached.has(kind) || !first) continue;
     const m = make();
