@@ -320,3 +320,15 @@ describe.skipIf(!PG_URL)("PgDb: V-COMP-06 Supabase's own sign-in record goes wit
 it("MemDb: deleteAuthAuditLog has nothing to delete", async () => {
   expect(await withMockDb().deleteAuthAuditLog(randomUUID())).toBe(0);
 });
+
+describe.each(backends)("%s: V-SEC-06 an address is taken when any business outside mine has it", (_n, makeDb) => {
+  it("finds the other login's business even when one of mine has the same address", async () => {
+    const db = await makeDb();
+    const email = `bezet-${randomUUID().slice(0, 6)}@example.nl`;
+    const mine = await db.upsertBusiness({ name: `Mijn ${randomUUID().slice(0, 4)}`, place: "Haarlem", ownerEmail: email });
+    expect(await db.ownerEmailTakenOutside(email, [mine.id])).toBe(false);
+    await db.upsertBusiness({ name: `Andermans ${randomUUID().slice(0, 4)}`, place: "Haarlem", ownerEmail: email.toUpperCase() });
+    expect(await db.ownerEmailTakenOutside(email, [mine.id])).toBe(true);
+    expect(await db.ownerEmailTakenOutside(`vrij-${email}`, [mine.id])).toBe(false);
+  });
+});

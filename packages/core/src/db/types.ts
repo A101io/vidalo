@@ -341,6 +341,8 @@ export interface Db {
   /** Newest first. */
   listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
   deleteSignIns(userId: string): Promise<void>;
+  /** True when a business outside `exceptIds` has this owner address (case-insensitive): the address change's "bezet" (V-SEC-06). */
+  ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean>;
   /**
    * Supabase's own audit record of a deleted login (auth.audit_log_entries holds the IP address and browser of
    * each sign-in, V-COMP-06). Returns how many rows went; 0 when the table is absent (MemDb, verify:pg).

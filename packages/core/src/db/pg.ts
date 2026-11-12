@@ -847,6 +847,13 @@ export class PgDb implements Db {
     return rows.map(mapSignIn);
   }
 
+  async ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean> {
+    const ids = exceptIds.filter((id) => UUID.test(id));
+    const rows = await this.sql`select 1 from business where lower(owner_email) = ${email.trim().toLowerCase()}
+      and not (id = any(${ids}::uuid[])) limit 1`;
+    return rows.length > 0;
+  }
+
   async deleteAuthAuditLog(userId: string): Promise<number> {
     if (!UUID.test(userId)) return 0;
     const [t] = await this.sql`select to_regclass('auth.audit_log_entries') is not null as present`;

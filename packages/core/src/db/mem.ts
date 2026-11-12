@@ -719,6 +719,11 @@ export class MemDb implements Db {
       .map((r) => ({ ...r }));
   }
 
+  async ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean> {
+    const e = email.trim().toLowerCase();
+    return [...this.businesses.values()].some((b) => b.ownerEmail?.toLowerCase() === e && !exceptIds.includes(b.id));
+  }
+
   async deleteAuthAuditLog(_userId: string): Promise<number> {
     return 0;
   }
