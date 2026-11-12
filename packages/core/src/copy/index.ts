@@ -751,7 +751,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 12 november 2026",
+    updated: "Versie van 13 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -1033,7 +1033,7 @@ export const copy = {
               "Gegevens: je e-mailadres, een nummer voor je account, je taal en welke e-mails je wilt ontvangen, en van je laatste 10 keer inloggen: wanneer, en met welk soort browser en apparaat (zoals ‘Safari op een iPhone’). Je IP-adres bewaren we daarvoor niet. Om misbruik van inloglinks te beperken maken we van je e-mailadres en van je IP-adres een code en bewaren we die hoogstens een dag.",
               "Supabase, dat het inloggen voor ons regelt, legt bij elke keer inloggen ook je IP-adres en je browser vast, om het inloggen te beveiligen. Dat bewaren we zolang je account bestaat; verwijder je alles, dan verwijderen we het mee.",
               "Grondslag: de uitvoering van de overeenkomst met jou (artikel 6 lid 1 onder b AVG); voor de lijst met keren inloggen en de codes tegen misbruik: ons gerechtvaardigd belang bij een veilig account (artikel 6 lid 1 onder f AVG).",
-              "Hoe lang: zolang je account bestaat. Een inlog op een apparaat vervalt na 30 dagen zonder gebruik en uiterlijk 90 dagen na het inloggen. Je verwijdert je account zelf, zie ‘Je rechten’.",
+              "Hoe lang: zolang je account bestaat. Hoort er na 30 dagen geen bedrijf bij je inlog, dan verwijderen we de inlog. Een inlog op een apparaat vervalt na 30 dagen zonder gebruik en uiterlijk 90 dagen na het inloggen. Je verwijdert je account zelf, zie ‘Je rechten’.",
             ],
           ],
         },

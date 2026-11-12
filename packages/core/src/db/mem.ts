@@ -34,7 +34,7 @@ import type {
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 import type { PurgeGuard } from "./types";
-import { purgeAllowed } from "../shared/deletion";
+import { LOGIN_WITHOUT_BUSINESS_DAYS, purgeAllowed } from "../shared/deletion";
 
 const nowIso = () => new Date().toISOString();
 
@@ -101,6 +101,8 @@ export class MemDb implements Db {
   signIns = new Map<string, SignInRow>();
   /** auth_throttle (migration 0018). */
   authThrottle: { keyHash: string; at: string }[] = [];
+  /** Supabase's auth.users, the columns V2-COMP-03 reads; by user id. Tests fill it. */
+  authUsers = new Map<string, { createdAt: string; lastSignInAt: string | null }>();
   private jobSeq = 1;
   private eventSeq = 1;
 
@@ -124,6 +126,7 @@ export class MemDb implements Db {
     this.questionRefs.clear();
     this.signIns.clear();
     this.authThrottle = [];
+    this.authUsers.clear();
   }
 
   // --- business ---
@@ -812,7 +815,24 @@ export class MemDb implements Db {
       const gaveUp = !!j.doneAt && !!j.error;
       if (stuck || gaveUp) late.add(id);
     }
+    const loginDue = new Date(now.getTime() - (LOGIN_WITHOUT_BUSINESS_DAYS + 1) * DAY_MS);
+    for (const id of this.loginsWithoutBusiness(loginDue)) late.add(`login:${id}`);
     return late.size;
+  }
+
+  async listLoginsWithoutBusiness(activeBefore: Date, limit: number): Promise<string[]> {
+    const queued = new Set([...this.jobs.values()].filter((j) => !j.doneAt && j.kind === "login_delete").map((j) => j.payload.userId));
+    return this.loginsWithoutBusiness(activeBefore)
+      .filter((id) => !queued.has(id))
+      .sort()
+      .slice(0, limit);
+  }
+
+  private loginsWithoutBusiness(activeBefore: Date): string[] {
+    const owners = new Set([...this.businesses.values()].map((b) => b.ownerUserId).filter(Boolean));
+    return [...this.authUsers]
+      .filter(([id, u]) => !owners.has(id) && Math.max(Date.parse(u.createdAt), u.lastSignInAt ? Date.parse(u.lastSignInAt) : 0) < activeBefore.getTime())
+      .map(([id]) => id);
   }
 
   async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {

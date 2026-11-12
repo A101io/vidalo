@@ -9,6 +9,7 @@ import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, F
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
+import { LOGIN_WITHOUT_BUSINESS_DAYS } from "../shared/deletion";
 import type {
   BusinessRecord,
   LibraryRow,
@@ -936,6 +937,11 @@ export class PgDb implements Db {
 
   async countOverdueDeletions(now: Date): Promise<number> {
     const dayAgo = new Date(now.getTime() - 86_400_000);
+    const loginDue = new Date(now.getTime() - (LOGIN_WITHOUT_BUSINESS_DAYS + 1) * 86_400_000);
+    // V2-COMP-03: a login with no business more than a day past its date (held while VIDALO_PURGE is unset).
+    const logins = (await this.hasAuthUsers())
+      ? this.sql`union select 'login:' || u.id::text from auth.users u where ${this.withoutBusiness(loginDue)}`
+      : this.sql``;
     const rows = await this.sql`select count(*)::int as n from (
         select id::text from business where delete_at < ${dayAgo}
         union
@@ -944,8 +950,30 @@ export class PgDb implements Db {
         union
         select 'login:' || (payload->>'userId') from job
           where kind = 'login_delete' and ((done_at is null and created_at < ${dayAgo}) or (done_at is not null and error is not null))
+        ${logins}
       ) late`;
     return Number(rows[0]?.n ?? 0);
+  }
+
+  async listLoginsWithoutBusiness(activeBefore: Date, limit: number): Promise<string[]> {
+    if (!(await this.hasAuthUsers())) return [];
+    const rows = await this.sql<{ id: string }[]>`select u.id::text as id from auth.users u
+      where ${this.withoutBusiness(activeBefore)}
+        and not exists (select 1 from job j where j.kind = 'login_delete' and j.done_at is null and j.payload->>'userId' = u.id::text)
+      order by u.id limit ${limit}`;
+    return rows.map((r) => r.id);
+  }
+
+  private async hasAuthUsers(): Promise<boolean> {
+    const [t] = await this.sql`select to_regclass('auth.users') is not null as present`;
+    return !!t?.present;
+  }
+
+  /** auth.users u: no business as member or owner, created and last signed in before `activeBefore` (a null date never qualifies). */
+  private withoutBusiness(activeBefore: Date) {
+    return this.sql`greatest(u.created_at, coalesce(u.last_sign_in_at, u.created_at)) < ${activeBefore}
+      and not exists (select 1 from business_member m where m.user_id = u.id)
+      and not exists (select 1 from business b where b.owner_user_id = u.id)`;
   }
 
   async listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]> {

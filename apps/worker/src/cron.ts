@@ -16,7 +16,7 @@ import { pollFactsHost } from "@vidalo/core/publisher";
 import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
 import { duePauseMail } from "@vidalo/core/billing";
 import { reportRequester, sendSubscriptionMail } from "@vidalo/core/reporter";
-import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT, SCAN_GOOGLE_DAYS, SCAN_RETENTION_MONTHS, scanRetentionDate } from "@vidalo/core/shared";
+import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT, SCAN_GOOGLE_DAYS, SCAN_RETENTION_MONTHS, scanRetentionDate, LOGIN_WITHOUT_BUSINESS_DAYS } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
@@ -267,14 +267,15 @@ export async function ownerSubscriptionChanges(now = new Date()): Promise<{ remi
  * purge job when a date has come (VIDALO_PURGE decides in the job whether a retention purge runs),
  * Google connections that must end (churn backstop; Vidalo Scan 60 days after its first full check
  * when nothing is open), the Vidalo Scan retention date from the last activity, the sign-in link
- * limit's old rows, and the count of deletions past their date (logged once per Amsterdam day).
- * Logs carry counts and business ids only.
+ * limit's old rows, logins that never got a business (V2-COMP-03), and the count of deletions past
+ * their date (logged once per Amsterdam day). Logs carry counts and business ids only.
  */
-export async function retention(now = new Date()): Promise<{ reminded: number; purgeQueued: number; googleQueued: number; overdue: number; dryRun: boolean }> {
+export async function retention(now = new Date()): Promise<{ reminded: number; purgeQueued: number; googleQueued: number; loginsQueued: number; overdue: number; dryRun: boolean }> {
   const db = getDb();
   let reminded = 0;
   let purgeQueued = 0;
   let googleQueued = 0;
+  let loginsQueued = 0;
 
   // While the purge is not armed, no retention deletion happens, so no reminder announces one (V-COMP-05).
   const dryRun = process.env.VIDALO_PURGE !== "1";
@@ -335,6 +336,16 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
   // 4. The sign-in link limit keeps a day at most.
   await db.pruneAuthThrottle(new Date(now.getTime() - 86_400_000));
 
+  // 4a. A login with no business, LOGIN_WITHOUT_BUSINESS_DAYS after the later of its creation and last sign-in
+  //     (V2-COMP-03, Julian 12 Nov 2026): 002's login_delete job deletes it, retries it and keeps it counted as
+  //     overdue until it is gone. Held while the purge is not armed; the overdue count then shows it.
+  const idleLogins = await db.listLoginsWithoutBusiness(new Date(now.getTime() - LOGIN_WITHOUT_BUSINESS_DAYS * 86_400_000), 200);
+  if (dryRun && idleLogins.length) log.info("retention.would_delete_logins", { count: idleLogins.length });
+  for (const userId of dryRun ? [] : idleLogins) {
+    await db.enqueueJob("login_delete", { userId });
+    loginsQueued++;
+  }
+
   // 5. Deletions past their date: in every tick, and once per Amsterdam day as its own line. In the dry run
   //    these are the retention deletions that would run once armed (the count the delivery-lead reads first).
   const overdue = await db.countOverdueDeletions(now);
@@ -345,8 +356,8 @@ export async function retention(now = new Date()): Promise<{ reminded: number; p
     await db.logEvent(null, "retention.overdue", { count: overdue });
     log.info("retention.overdue", { count: overdue });
   }
-  if (reminded || purgeQueued || googleQueued) log.info("retention.queued", { reminded, purgeQueued, googleQueued, dryRun });
-  return { reminded, purgeQueued, googleQueued, overdue, dryRun };
+  if (reminded || purgeQueued || googleQueued || loginsQueued) log.info("retention.queued", { reminded, purgeQueued, googleQueued, loginsQueued, dryRun });
+  return { reminded, purgeQueued, googleQueued, loginsQueued, overdue, dryRun };
 }
 
 export async function cronTick(now = new Date()): Promise<void> {

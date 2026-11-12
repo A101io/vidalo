@@ -728,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 12 November 2026",
+    updated: "Version of 13 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -1010,7 +1010,7 @@ export const en: CopyShape = {
               "Data: your email address, a number for your account, your language and which emails you want to receive, and of your last 10 sign-ins: when, and with what kind of browser and device (such as ‘Safari on an iPhone’). We do not keep your IP address for this. To limit misuse of sign-in links we turn your email address and your IP address into a code and keep it for at most one day.",
               "Supabase, which handles signing in for us, also records your IP address and your browser each time you sign in, to keep signing in secure. We keep that as long as your account exists; if you delete everything, we delete it too.",
               "Basis: the performance of the agreement with you (article 6(1)(b) GDPR); for the list of sign-ins and the codes against misuse: our legitimate interest in a secure account (article 6(1)(f) GDPR).",
-              "Retention: as long as your account exists. A sign-in on a device ends after 30 days without use and at the latest 90 days after signing in. You delete your account yourself, see ‘Your rights’.",
+              "Retention: as long as your account exists. If no business belongs to your login after 30 days, we delete the login. A sign-in on a device ends after 30 days without use and at the latest 90 days after signing in. You delete your account yourself, see ‘Your rights’.",
             ],
           ],
         },

@@ -11,6 +11,8 @@ export const SCAN_RETENTION_MONTHS: number | null = 24;
 export const SCAN_GOOGLE_DAYS = 60;
 /** A churned business is deleted this many days after churn: 90 kept, one free check, deletion within 30 days after it. */
 export const CHURN_DELETE_DAYS = 120;
+/** A login with no business is deleted this many days after the later of its creation and its last sign-in (V2-COMP-03, Julian 12 Nov 2026). */
+export const LOGIN_WITHOUT_BUSINESS_DAYS = 30;
 /** The reminder before a retention deletion. */
 export const DELETION_REMINDER_DAYS = 14;
 
