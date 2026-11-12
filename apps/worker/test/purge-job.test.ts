@@ -144,3 +144,36 @@ describe("V-COMP-04: a failing purge job shows in the overdue count and is logge
     }
   });
 });
+
+describe("R1 (V2-SEC-01): with the production env per Worker, the worker revokes at Google", () => {
+  const saved = { mock: process.env.VIDALO_MOCK, gid: process.env.GOOGLE_OAUTH_CLIENT_ID, fetch: globalThis.fetch };
+  afterEach(() => {
+    process.env.VIDALO_MOCK = saved.mock;
+    if (saved.gid === undefined) delete process.env.GOOGLE_OAUTH_CLIENT_ID;
+    else process.env.GOOGLE_OAUTH_CLIENT_ID = saved.gid;
+    globalThis.fetch = saved.fetch;
+  });
+  it("google_disconnect without GOOGLE_OAUTH_CLIENT_ID (web-only in the manifest) and VIDALO_MOCK unset calls Google's revoke endpoint", async () => {
+    delete process.env.VIDALO_MOCK;
+    delete process.env.GOOGLE_OAUTH_CLIENT_ID;
+    const called: string[] = [];
+    globalThis.fetch = (async (url: string) => (called.push(String(url)), new Response("{}", { status: 200 }))) as unknown as typeof fetch;
+    const db = new MemDb();
+    setDb(db);
+    const b = await db.upsertBusiness({ name: "Churned G", place: "Haarlem", plan: "monitor", status: "churned" });
+    await db.upsertChannel({ businessId: b.id, type: "gbp", name: "Google", externalId: null, url: null, meta: { refreshToken: "rt-r1" } });
+    expect(await handlerFor("google_disconnect")!({ businessId: b.id, reason: "churn" }, job("google_disconnect", {}))).toEqual({ disconnected: 1 });
+    expect(called).toEqual(["https://oauth2.googleapis.com/revoke"]);
+  });
+  it("in mock mode it is still only recorded", async () => {
+    process.env.VIDALO_MOCK = "1";
+    const called: string[] = [];
+    globalThis.fetch = (async (url: string) => (called.push(String(url)), new Response("{}"))) as unknown as typeof fetch;
+    const db = new MemDb();
+    setDb(db);
+    const b = await db.upsertBusiness({ name: "Churned M", place: "Haarlem", plan: "monitor", status: "churned" });
+    await db.upsertChannel({ businessId: b.id, type: "gbp", name: "Google", externalId: null, url: null, meta: { refreshToken: "rt-m" } });
+    await handlerFor("google_disconnect")!({ businessId: b.id, reason: "churn" }, job("google_disconnect", {}));
+    expect(called).toEqual([]);
+  });
+});

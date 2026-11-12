@@ -173,7 +173,14 @@ describe("deleteCustomHostname (SEC-48)", () => {
   it("refuses our own names and anything that is not a hostname, before any call", async () => {
     const { deleteCustomHostname } = await import("../src/publisher/host");
     for (const h of ["vidalo.io", "www.vidalo.io", "x-feiten.vidalo.io", "vidalo.ai", "www.vidalo.ai", "*", "a/b", "*.klant.nl"]) await expect(deleteCustomHostname(h), h).rejects.toThrow(/refusing/);
-    await expect(deleteCustomHostname("feiten.klant.nl")).resolves.toBeUndefined();
+    const mock = process.env.VIDALO_MOCK;
+    process.env.VIDALO_MOCK = "1";
+    try {
+      await expect(deleteCustomHostname("feiten.klant.nl")).resolves.toBeUndefined();
+    } finally {
+      if (mock === undefined) delete process.env.VIDALO_MOCK;
+      else process.env.VIDALO_MOCK = mock;
+    }
   });
 });
 
@@ -240,6 +247,41 @@ describe("V-COMP-10: the deletion mail claims the Google revoke only when it hap
     for (const lang of ["nl", "en"] as const) {
       expect(deletedEmail(lang, "B", true).text).toMatch(/ingetrokken|revoked/);
       expect(deletedEmail(lang, "B", false).text).not.toMatch(/ingetrokken|revoked/);
+    }
+  });
+});
+
+describe("R1 (V2-SEC-01): no Cloudflare keys outside mock mode means the host step fails, before anything is deleted", () => {
+  const saved = { mock: process.env.VIDALO_MOCK, token: process.env.CLOUDFLARE_API_TOKEN, zone: process.env.CLOUDFLARE_ZONE_ID };
+  const restore = () => {
+    for (const [k, v] of [["VIDALO_MOCK", saved.mock], ["CLOUDFLARE_API_TOKEN", saved.token], ["CLOUDFLARE_ZONE_ID", saved.zone]] as const) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  };
+  it("deleteCustomHostname throws without keys and VIDALO_MOCK unset; the web purge of a verified host deletes nothing", async () => {
+    const { deleteCustomHostname } = await import("../src/publisher/host");
+    delete process.env.VIDALO_MOCK;
+    delete process.env.CLOUDFLARE_API_TOKEN;
+    delete process.env.CLOUDFLARE_ZONE_ID;
+    try {
+      await expect(deleteCustomHostname("feiten.klant.nl")).rejects.toThrow(/CLOUDFLARE/);
+      const db = new MemDb();
+      const { b } = await scanOwner(db, { factsHost: "feiten.klant.nl", factsHostVerifiedAt: new Date().toISOString() });
+      await expect(purgeBusiness({ ...deps(db).d, deleteCustomHostname }, b.id, "no_subscription")).rejects.toThrow();
+      expect(await db.getBusiness(b.id)).not.toBeNull();
+    } finally {
+      restore();
+    }
+  });
+  it("in mock mode it is recorded and passes", async () => {
+    const { deleteCustomHostname } = await import("../src/publisher/host");
+    process.env.VIDALO_MOCK = "1";
+    delete process.env.CLOUDFLARE_API_TOKEN;
+    try {
+      await expect(deleteCustomHostname("feiten.klant.nl")).resolves.toBeUndefined();
+    } finally {
+      restore();
     }
   });
 });

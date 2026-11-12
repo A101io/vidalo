@@ -91,7 +91,8 @@ export async function checkOwnerPhoneCode(formData: FormData) {
 export async function disconnectGoogle(formData: FormData) {
   const { business } = await requireOwnerOf(businessFromForm(formData), "/app/google");
   const db = await ready();
-  const revoke = env.hasGoogle ? (t: string) => revokeGoogleToken(t) : async () => void (await db.logEvent(business.id, "google.revoke_mock", {}));
+  // Revoked at Google unless in mock mode (the endpoint needs no client id; R1, V2-SEC-01).
+  const revoke = env.mock ? async () => void (await db.logEvent(business.id, "google.revoke_mock", {})) : (t: string) => revokeGoogleToken(t);
   let disconnected = 0;
   try {
     ({ disconnected } = await endGoogleConnection(db, business.id, revoke, "owner"));

@@ -60,7 +60,8 @@ export async function deleteLogin(userId: string): Promise<void> {
   if (!res.ok && res.status !== 404) throw new Error(`supabase admin ${res.status}`);
 }
 
-const revoke = (token: string) => (env("GOOGLE_OAUTH_CLIENT_ID") ? revokeGoogleToken(token) : Promise.resolve(void log.info("google.revoke_mock", {})));
+/** Revoked at Google unless in mock mode: the revoke endpoint needs no client id, which only the web has (R1, V2-SEC-01). */
+const revoke = (token: string) => (mock() ? Promise.resolve(void log.info("google.revoke_mock", {})) : revokeGoogleToken(token));
 
 export function workerPurgeDeps(now = new Date()): PurgeDeps {
   return {

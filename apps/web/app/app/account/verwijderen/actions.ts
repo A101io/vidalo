@@ -44,7 +44,8 @@ async function webPurgeDeps(session: Session): Promise<PurgeDeps> {
       for (const s of open.data) await stripe.checkout.sessions.expire(s.id);
       return open.data.length;
     },
-    revokeGoogle: async (token) => (env.hasGoogle ? revokeGoogleToken(token) : void log.info("google.revoke_mock", {})),
+    // Revoked at Google unless in mock mode (the endpoint needs no client id; R1, V2-SEC-01).
+    revokeGoogle: async (token) => (env.mock ? void log.info("google.revoke_mock", {}) : revokeGoogleToken(token)),
     deleteCustomHostname,
     deleteLogin: async (userId) => {
       if (!admin) {

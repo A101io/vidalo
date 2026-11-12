@@ -226,6 +226,9 @@ export async function deleteCustomHostname(hostname: string): Promise<void> {
   const h = hostname.toLowerCase();
   if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(h) || isOurName(h) || h === CANONICAL_HOST || h.endsWith(`.${CANONICAL_HOST}`)) throw new Error(`refusing to delete the hostname ${hostname}`);
   if (!cfConfig()) {
+    // Fail closed outside mock mode (R1, V2-SEC-01): the web has no Cloudflare keys, so its purge stops here and the
+    // worker's purge job, which has them, removes the host. Never reported as removed when it was not.
+    if (process.env.VIDALO_MOCK !== "1") throw new Error("CLOUDFLARE_API_TOKEN or CLOUDFLARE_ZONE_ID is not set: cannot remove the custom hostname");
     console.log(JSON.stringify({ msg: "cloudflare.custom_hostname.delete.skip", hostname }));
     return;
   }
