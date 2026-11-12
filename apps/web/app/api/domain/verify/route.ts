@@ -6,7 +6,7 @@ import { getSession } from "@/lib/session";
 import { listMyBusinesses } from "@/lib/active-business";
 import { markFactsHostVerified } from "@vidalo/core/db";
 import { cnameTarget } from "@/lib/factsPage";
-import { isVerifiedOwner } from "@vidalo/core/shared";
+import { isVerifiedOwner, log, refuseCrossSite } from "@vidalo/core/shared";
 import { factsHostTaken, isOurName } from "@vidalo/core/publisher";
 
 export const runtime = "nodejs";
@@ -17,6 +17,12 @@ export const runtime = "nodejs";
  * has proven ownership; no business, a business of another login and an unknown id all go back to /app/domein with nothing done.
  */
 export async function POST(req: Request) {
+  // A foreign page cannot make a signed-in owner verify (or lose) a host (V-SEC-02).
+  const refused = refuseCrossSite(req, env.baseUrl);
+  if (refused) {
+    log.info("auth.cross_site_refused", { route: "domain_verify" });
+    return refused;
+  }
   const session = await getSession();
   if (!session) return NextResponse.redirect(`${env.baseUrl}/inloggen?next=/app/domein`, 303);
   const form = await req.formData();
@@ -53,7 +59,9 @@ export async function POST(req: Request) {
     await db.enqueueJob("publish", { businessId: business.id });
     await db.logEvent(business.id, "domain.verified", { host });
   } else {
-    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, factsHost: host });
+    // A host that is not proven is stored as a note only: the verified date goes with it (V-SEC-05). Keeping the old date
+    // would make this business the verified holder of a host nobody proved, and the real owner's verify would answer "taken".
+    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, factsHost: host, factsHostVerifiedAt: null });
     await db.logEvent(business.id, "domain.check_failed", { host });
   }
   return NextResponse.redirect(`${env.baseUrl}/app/domein?dns=${ok ? "ok" : "nee"}`, 303);

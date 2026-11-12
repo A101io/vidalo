@@ -287,7 +287,7 @@ test.describe("every changing action names its business", () => {
     expect(leiden).not.toBe(rotterdam);
     const host = `haven-${Date.now() % 1000000}.example`;
     const post = async (form: Record<string, string>) => {
-      const res = await page.request.post("/api/domain/verify", { form: { host, simulate: "1", ...form }, maxRedirects: 0 });
+      const res = await page.request.post("/api/domain/verify", { form: { host, simulate: "1", ...form }, headers: { origin: baseURL! }, maxRedirects: 0 });
       return new URL(res.headers()["location"]!).pathname + new URL(res.headers()["location"]!).search;
     };
     expect(await post({}), "no business").toBe("/app");
@@ -335,5 +335,29 @@ test.describe("every changing action names its business", () => {
     // `next` cannot leave the site.
     const out = await page.request.get(`/api/lang?to=nl&next=${encodeURIComponent("//evil.example/x")}`, { maxRedirects: 0 });
     expect(new URL(out.headers()["location"]!).host).toBe(new URL(baseURL!).host);
+  });
+
+  test("domain verify: a failed check does not keep the verified date, so a foreign host never blocks its real owner (V-SEC-05)", async ({ page, browser, baseURL }) => {
+    test.slow();
+    await signInAs(page, EN_OWNER, `${P}/app`);
+    const rotterdam = await activeBusinessId(page, P);
+    await switchTo(page, NAMES.enLeiden);
+    const leiden = await activeBusinessId(page, P);
+    const own = `own-${Date.now() % 1000000}.example`;
+    const victim = `victim-${Date.now() % 1000000}.example`;
+    const post = async (form: Record<string, string>) => {
+      const res = await page.request.post("/api/domain/verify", { form, headers: { origin: baseURL! }, maxRedirects: 0 });
+      return new URL(res.headers()["location"]!).pathname + new URL(res.headers()["location"]!).search;
+    };
+    expect(await post({ business: rotterdam, host: own, simulate: "1" })).toBe("/app/domein?dns=ok");
+    // Rotterdam now names someone else's host with no DNS behind it: the check fails and it stops being a verified holder ...
+    expect(await post({ business: rotterdam, host: victim })).toBe("/app/domein?dns=nee");
+    // ... so the real owner's verify of that host is not "taken".
+    expect(await post({ business: leiden, host: victim, simulate: "1" })).toBe("/app/domein?dns=ok");
+    // A cross-site POST changes nothing: no Origin, no work.
+    const foreign = await page.request.post("/api/domain/verify", { form: { business: leiden, host: own, simulate: "1" }, headers: { origin: "https://evil.example" }, maxRedirects: 0 });
+    expect(foreign.status()).toBe(403);
+    const none = await page.request.post("/api/domain/verify", { form: { business: leiden, host: own, simulate: "1" }, maxRedirects: 0 });
+    expect(none.status()).toBe(403);
   });
 });

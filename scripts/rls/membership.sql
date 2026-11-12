@@ -39,7 +39,8 @@ begin
       insert into event (business_id, type) values (b, 'rls.test');
     end;
   end loop;
-  if (select count(*) from business_member) <> 3 then raise exception 'RLS-FAIL the trigger did not fill business_member (%)', (select count(*) from business_member); end if;
+  -- Only this block's own rows: the hosted project holds real businesses too (V-QA-05).
+  if (select count(*) from business_member where business_id in (b1, b2, b3)) <> 3 then raise exception 'RLS-FAIL the trigger did not fill business_member (%)', (select count(*) from business_member where business_id in (b1, b2, b3)); end if;
 
   -- What Supabase grants by default on tables 0016 does not touch (the local shim has no default privileges).
   -- business_member and channel keep exactly what the migration gave them.
