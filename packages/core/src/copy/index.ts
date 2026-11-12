@@ -3146,9 +3146,9 @@ export const copy = {
     hi: "Hoi,",
     regards: "Groet,\nVidalo",
     /** Feature 002 (A-05): after "Verwijder alles" has deleted everything. Service mail. */
-    accountDeleted: (name: string, googleRevoked: boolean) => ({
+    accountDeleted: (name: string, googleRevoked: boolean, loginDeleted = true) => ({
       subject: `Alles van ${name} is verwijderd`,
-      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, en je feitenpagina en het adres ervan.${googleRevoked ? " De koppeling met Google hebben we ook bij Google ingetrokken." : ""} Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd.
+      body: `We hebben alles van ${name} bij Vidalo verwijderd, zoals je vroeg: de gegevens van je bedrijf, de rapporten, en je feitenpagina en het adres ervan.${googleRevoked ? " De koppeling met Google hebben we ook bij Google ingetrokken." : ""} ${loginDeleted ? "Hoort er geen ander bedrijf bij je inlog, dan is ook je inlog verwijderd." : "Je inlog verwijderen we zo snel mogelijk."}
 
 Wat blijft: je facturen, 7 jaar bij Stripe, omdat de wet dat vraagt. Wat al bij Google, gidsen of andere websites is hersteld, blijft daar staan.
 

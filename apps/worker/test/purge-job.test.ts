@@ -177,3 +177,44 @@ describe("R1 (V2-SEC-01): with the production env per Worker, the worker revokes
     expect(called).toEqual([]);
   });
 });
+
+describe("R2 (V2-COMP-01): the login_delete job", () => {
+  it("deletes a login that has no business left; skips one that has; a payload needs the userId", async () => {
+    const db = new MemDb();
+    setDb(db);
+    process.env.VIDALO_MOCK = "1";
+    const gone = "00000000-0000-4000-8000-0000000000b1";
+    await db.recordSignIn({ sessionId: "00000000-0000-4000-8000-0000000000c1", userId: gone, browser: "chrome", os: "macos", at: new Date() });
+    expect(await handlerFor("login_delete")!({ userId: gone }, job("login_delete", {}))).toEqual({ deleted: true });
+    expect(await db.listSignIns(gone, 10)).toHaveLength(0);
+    const kept = "00000000-0000-4000-8000-0000000000b2";
+    await db.upsertBusiness({ name: "Nog een", place: "Haarlem", ownerUserId: kept });
+    expect(await handlerFor("login_delete")!({ userId: kept }, job("login_delete", {}))).toEqual({ skipped: "member" });
+    expect(validatePayload("login_delete", {})).toMatch(/userId/);
+  });
+  it("retired after its attempts: account.delete_failed and still overdue", async () => {
+    const db = new MemDb();
+    setDb(db);
+    delete process.env.VIDALO_MOCK; // no Admin key: deleteLogin throws
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const lines: string[] = [];
+    const [e, l] = [console.error, console.log];
+    console.error = (x: string) => void lines.push(String(x));
+    console.log = (x: string) => void lines.push(String(x));
+    try {
+      const j = await db.enqueueJob("login_delete", { userId: "00000000-0000-4000-8000-0000000000b3" });
+      const { processJob } = await import("../src/loop");
+      for (let i = 0; i < j.maxAttempts; i++) {
+        db.jobs.get(j.id)!.runAt = new Date(0).toISOString();
+        await processJob((await db.claimJob(["login_delete"]))!);
+      }
+      expect(db.jobs.get(j.id)!.doneAt).not.toBeNull();
+      expect(lines.filter((x) => x.includes('"account.delete_failed"'))).toHaveLength(1);
+      expect(await db.countOverdueDeletions(new Date())).toBe(1);
+    } finally {
+      console.error = e;
+      console.log = l;
+    }
+  });
+});

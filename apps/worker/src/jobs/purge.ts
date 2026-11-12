@@ -6,7 +6,8 @@
  *    re-reading the business (a resubscribe before the job ran keeps the connection, SEC-49).
  * Payloads carry only ids and a word; never an address, a token or a host.
  */
-import { getDb, purgeBusiness, disconnectGoogle, revokeGoogleToken, log, type PurgeDeps } from "@vidalo/core/shared";
+import { listMemberBusinesses } from "@vidalo/core/db";
+import { deleteAuditRows, getDb, purgeBusiness, disconnectGoogle, revokeGoogleToken, log, type PurgeDeps } from "@vidalo/core/shared";
 import { deleteCustomHostname, isOwnFactsHost } from "@vidalo/core/publisher";
 import { sendDeletedMail } from "@vidalo/core/reporter";
 import type { Handler } from "./types.js";
@@ -90,4 +91,14 @@ export const googleDisconnect: Handler<"google_disconnect"> = async ({ businessI
   if (reason === "churn" && b.status !== "churned") return { skipped: "not_churned" };
   if (reason === "scan_done" && !(b.plan === "setup" && b.status === "trial")) return { skipped: "not_scan" };
   return { ...(await disconnectGoogle(db, businessId, revoke, reason)) };
+};
+
+/** R2: retries the deletion of a login a purge could not delete; the loop's ceiling retires it and logs account.delete_failed. */
+export const loginDelete: Handler<"login_delete"> = async ({ userId }) => {
+  const db = getDb();
+  if ((await listMemberBusinesses(db, userId)).length > 0) return { skipped: "member" };
+  await db.deleteSignIns(userId);
+  await deleteLogin(userId); // throws without the Admin key outside mock mode: the job retries
+  await deleteAuditRows(db, userId);
+  return { deleted: true };
 };

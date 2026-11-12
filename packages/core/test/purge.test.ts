@@ -285,3 +285,35 @@ describe("R1 (V2-SEC-01): no Cloudflare keys outside mock mode means the host st
     }
   });
 });
+
+describe("R2 (V2-COMP-01): a login that could not be deleted is retried, counted and not claimed", () => {
+  it("throwing deleteLogin → login_delete job, mail without the done-sentence, overdue 1 the next day", async () => {
+    const { deletedEmail } = await import("../src/reporter/account-mails");
+    const db = new MemDb();
+    const { b, user } = await scanOwner(db);
+    const mails: { loginDeleted: boolean }[] = [];
+    const out = await purgeBusiness(
+      {
+        ...deps(db).d,
+        deleteLogin: async () => {
+          throw new Error("supabase admin 500");
+        },
+        sendDeletedMail: async (to) => void mails.push(to),
+      },
+      b.id,
+      "no_subscription",
+    );
+    expect(out).toMatchObject({ done: true, loginsDeleted: 0 });
+    expect(mails).toEqual([expect.objectContaining({ loginDeleted: false })]);
+    const jobs = [...db.jobs.values()].filter((j) => j.kind === "login_delete");
+    expect(jobs.map((j) => j.payload)).toEqual([{ userId: user }]);
+    expect(await db.countOverdueDeletions(new Date())).toBe(0);
+    expect(await db.countOverdueDeletions(new Date(Date.now() + 86_400_000 + 60_000))).toBe(1);
+    for (const lang of ["nl", "en"] as const) {
+      const pending = deletedEmail(lang, "B", false, false).text;
+      expect(pending).not.toMatch(/dan is ook je inlog verwijderd|your sign-in is deleted too/);
+      expect(pending).toMatch(/inlog verwijderen we zo snel mogelijk|delete your sign-in as soon as possible/);
+      expect(deletedEmail(lang, "B", false, true).text).toMatch(/dan is ook je inlog verwijderd|your sign-in is deleted too/);
+    }
+  });
+});

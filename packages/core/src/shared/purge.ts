@@ -28,7 +28,7 @@ export interface PurgeDeps {
   /** Supabase Admin: delete the login. */
   deleteLogin(userId: string): Promise<void>;
   /** googleRevoked: a Google connection existed and was revoked at Google (V-COMP-10); the mail says so only then. */
-  sendDeletedMail(to: { email: string; language: "nl" | "en"; businessName: string; googleRevoked: boolean }): Promise<void>;
+  sendDeletedMail(to: { email: string; language: "nl" | "en"; businessName: string; googleRevoked: boolean; loginDeleted: boolean }): Promise<void>;
   /** Our own fallback facts host for this business (publisher/host.ts isOwnFactsHost), never sent to Cloudflare. */
   isOwnFactsHost?(host: string, b: BusinessRecord): boolean;
   /** The address the confirmation goes to when it is not the business's owner address (the requester's login). */
@@ -87,6 +87,7 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   for (const host of [b.factsHost, defaultFactsHost(b)]) if (host) clearServeCache(host);
 
   let loginsDeleted = 0;
+  let loginPending = false;
   for (const userId of members) {
     // When membership cannot be read, the login is kept: deleting it is the one step that cannot wait for support.
     const left = await listMemberBusinesses(db, userId).catch(() => null);
@@ -95,25 +96,24 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
       continue;
     }
     await db.deleteSignIns(userId);
-    // Supabase's own record of each sign-in (IP address, browser) goes with the login (V-COMP-06).
-    try {
-      await db.deleteAuthAuditLog(userId);
-    } catch (err) {
-      log.warn("account.audit_log_delete_failed", { error: err instanceof Error ? err.name : "unknown" });
-    }
     if (!UUID.test(userId)) continue; // a mock login has no Supabase user
     try {
       await deps.deleteLogin(userId);
       loginsDeleted++;
+      await deleteAuditRows(db, userId);
     } catch (err) {
+      // The business is gone, so this purge cannot be retried: a job of its own retries the login (R2, V2-COMP-01),
+      // counted in the overdue line until it succeeds, and the mail does not say it is done.
       log.warn("account.login_delete_failed", { status: err instanceof Error ? (/\d{3}/.exec(err.message)?.[0] ?? null) : null });
+      await db.enqueueJob("login_delete", { userId });
+      loginPending = true;
     }
   }
 
   let mailed = false;
   if (mailTo) {
     try {
-      await deps.sendDeletedMail({ email: mailTo, language, businessName, googleRevoked });
+      await deps.sendDeletedMail({ email: mailTo, language, businessName, googleRevoked, loginDeleted: !loginPending });
       mailed = true;
     } catch {
       log.warn("account.deleted_mail_failed", {});
@@ -122,4 +122,16 @@ export async function purgeBusiness(deps: PurgeDeps, businessId: string, guard: 
   await db.logEvent(null, "account.deleted", { guard, loginsDeleted });
   log.info("account.deleted", { guard, loginsDeleted });
   return { done: true, loginsDeleted, mailed };
+}
+
+/**
+ * Supabase's own record of the login (V-COMP-06, R3): each sign-in (IP address, browser) and the user_deleted row
+ * the deletion itself writes, so it runs after deleteLogin. A failure is logged; the rows stay for support to remove.
+ */
+export async function deleteAuditRows(db: Db, userId: string): Promise<void> {
+  try {
+    await db.deleteAuthAuditLog(userId);
+  } catch (err) {
+    log.warn("account.audit_log_delete_failed", { error: err instanceof Error ? err.name : "unknown" });
+  }
 }

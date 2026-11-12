@@ -516,6 +516,7 @@ export class MemDb implements Db {
     if (j) {
       j.doneAt = nowIso();
       j.lockedAt = null;
+      j.error = null; // a job that succeeded on a retry is not a failed job
     }
   }
 
@@ -800,6 +801,11 @@ export class MemDb implements Db {
   async countOverdueDeletions(now: Date): Promise<number> {
     const late = new Set([...this.businesses.values()].filter((b) => b.deleteAt && Date.parse(b.deleteAt) < now.getTime() - DAY_MS).map((b) => b.id));
     for (const j of this.jobs.values()) {
+      // A login that could not be deleted (R2): one per login, until its job succeeds.
+      if (j.kind === "login_delete" && typeof j.payload.userId === "string") {
+        if ((!j.doneAt && Date.parse(j.createdAt) < now.getTime() - DAY_MS) || (!!j.doneAt && !!j.error)) late.add(`login:${j.payload.userId}`);
+        continue;
+      }
       const id = j.payload.businessId;
       if (j.kind !== "purge" || typeof id !== "string" || !this.businesses.has(id)) continue;
       const stuck = !j.doneAt && Date.parse(j.createdAt) < now.getTime() - DAY_MS;

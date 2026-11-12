@@ -21,8 +21,8 @@ function wrap(lang: Lang, subject: string, body: string): Mail {
 
 const accountUrl = (lang: Lang) => `${baseUrl()}${lang === "en" ? "/en" : ""}/app/account#gegevens`;
 
-export function deletedEmail(lang: Lang, businessName: string, googleRevoked: boolean): Mail {
-  const t = copyFor(lang).mails.accountDeleted(businessName, googleRevoked);
+export function deletedEmail(lang: Lang, businessName: string, googleRevoked: boolean, loginDeleted = true): Mail {
+  const t = copyFor(lang).mails.accountDeleted(businessName, googleRevoked, loginDeleted);
   return wrap(lang, t.subject, t.body);
 }
 
@@ -32,8 +32,8 @@ export function deletionScheduledEmail(lang: Lang, businessName: string, at: str
 }
 
 /** After a purge: the business is gone, so nothing is logged on it; the address is never logged. */
-export async function sendDeletedMail(to: { email: string; language: Lang; businessName: string; googleRevoked: boolean }): Promise<void> {
-  const m = deletedEmail(to.language, to.businessName, to.googleRevoked);
+export async function sendDeletedMail(to: { email: string; language: Lang; businessName: string; googleRevoked: boolean; loginDeleted: boolean }): Promise<void> {
+  const m = deletedEmail(to.language, to.businessName, to.googleRevoked, to.loginDeleted);
   await sendMail({ to: to.email, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind: "account_deleted", lang: to.language } });
 }
 

@@ -220,7 +220,7 @@ async function journeys(lang: Lang) {
   const end = new Date(Date.now() + 30 * DAY).toISOString();
   await reporter.sendDeletionScheduledMail(business, end);
   await reporter.sendDeletionReminder({ ...business, deleteAt: end, deleteReason: "retention" });
-  await reporter.sendDeletedMail({ email: J.paid.owner, language: lang, businessName: business.name, googleRevoked: true });
+  await reporter.sendDeletedMail({ email: J.paid.owner, language: lang, businessName: business.name, googleRevoked: true, loginDeleted: true });
   for (const [kind, make] of Object.entries(direct)) {
     if (reached.has(kind) || !first) continue;
     const m = make();

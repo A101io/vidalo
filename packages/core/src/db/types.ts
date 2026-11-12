@@ -345,7 +345,8 @@ export interface Db {
   ownerEmailTakenOutside(email: string, exceptIds: string[]): Promise<boolean>;
   /**
    * Supabase's own audit record of a deleted login (auth.audit_log_entries holds the IP address and browser of
-   * each sign-in, V-COMP-06). Returns how many rows went; 0 when the table is absent (MemDb, verify:pg).
+   * each sign-in, V-COMP-06): rows with the user as actor or in traits (the deletion's own user_deleted row, R3).
+   * Run after the login is deleted. Returns how many rows went; 0 when the table is absent (MemDb, verify:pg).
    */
   deleteAuthAuditLog(userId: string): Promise<number>;
 
@@ -377,7 +378,8 @@ export interface Db {
   claimDeletionReminder(businessId: string, at?: Date): Promise<boolean>;
   /**
    * Businesses whose deletion is late: a deletion date more than a day past, or a purge job for a business that
-   * still exists which is unfinished after a day or gave up (V-COMP-04). Each business counted once.
+   * still exists which is unfinished after a day or gave up (V-COMP-04), or a `login_delete` job unfinished after a
+   * day or given up (R2). Each business and each login counted once.
    */
   countOverdueDeletions(now: Date): Promise<number>;
   /** Vidalo Scan businesses (plan setup, status trial), ordered by id; `after` continues after the last page (V-COMP-02). */

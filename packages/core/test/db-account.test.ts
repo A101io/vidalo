@@ -332,3 +332,43 @@ describe.each(backends)("%s: V-SEC-06 an address is taken when any business outs
     expect(await db.ownerEmailTakenOutside(`vrij-${email}`, [mine.id])).toBe(false);
   });
 });
+
+describe.skipIf(!PG_URL)("PgDb: R3 (V2-COMP-02) no audit row carries a purged login, the deletion's own row included", () => {
+  it("after the purge no auth.audit_log_entries row has the user id as actor or in traits", async () => {
+    const { purgeBusiness } = await import("../src/shared/purge");
+    const db = createDb(PG_URL!);
+    const sql = postgres(PG_URL!, { max: 1, onnotice: () => {} });
+    try {
+      await sql`drop table if exists auth.audit_log_entries`;
+      await sql`create table auth.audit_log_entries (id uuid primary key default gen_random_uuid(), payload json, ip_address varchar(64), created_at timestamptz default now())`;
+      const user = randomUUID();
+      const control = randomUUID();
+      await sql`insert into auth.audit_log_entries (payload) values (${sql.json({ actor_id: user, action: "login" })}), (${sql.json({ actor_id: control, action: "login" })})`;
+      const b = await db.upsertBusiness({ name: `R3 ${randomUUID().slice(0, 6)}`, place: "Haarlem", plan: "setup", status: "trial", ownerUserId: user, ownerEmail: "r3@example.nl" });
+      const out = await purgeBusiness(
+        {
+          db,
+          now: new Date(),
+          dryRunRetention: true,
+          stripeLive: async () => false,
+          expireOpenCheckouts: async () => 0,
+          revokeGoogle: async () => {},
+          deleteCustomHostname: async () => {},
+          // As Supabase Auth's adminUserDelete does: a user_deleted row with the admin as actor and the user in traits.
+          deleteLogin: async (id) => void (await sql`insert into auth.audit_log_entries (payload) values (${sql.json({ actor_id: "00000000-0000-0000-0000-000000000000", action: "user_deleted", traits: { user_id: id, user_email: "r3@example.nl", user_phone: "" } })})`),
+          sendDeletedMail: async () => {},
+        },
+        b.id,
+        "no_subscription",
+      );
+      expect(out).toMatchObject({ done: true, loginsDeleted: 1 });
+      const left = await sql`select payload::text as p from auth.audit_log_entries`;
+      expect(left.filter((r) => r.p.includes(user))).toEqual([]);
+      expect(left.some((r) => r.p.includes(control))).toBe(true);
+    } finally {
+      await sql`drop table if exists auth.audit_log_entries`;
+      await sql.end();
+      await db.close();
+    }
+  });
+});

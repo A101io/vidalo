@@ -631,7 +631,7 @@ export class PgDb implements Db {
   }
 
   async completeJob(id: number): Promise<void> {
-    await this.sql`update job set done_at = now(), locked_at = null where id = ${id}`;
+    await this.sql`update job set done_at = now(), locked_at = null, error = null where id = ${id}`;
   }
 
   async failJob(id: number, error: string): Promise<Job> {
@@ -858,7 +858,9 @@ export class PgDb implements Db {
     if (!UUID.test(userId)) return 0;
     const [t] = await this.sql`select to_regclass('auth.audit_log_entries') is not null as present`;
     if (!t?.present) return 0;
-    const rows = await this.sql`delete from auth.audit_log_entries where payload->>'actor_id' = ${userId} returning 1`;
+    // As actor (each sign-in) and in traits (Supabase's own user_deleted row, written by the deletion itself; R3).
+    const rows = await this.sql`delete from auth.audit_log_entries
+      where payload->>'actor_id' = ${userId} or payload->'traits'->>'user_id' = ${userId} returning 1`;
     return rows.length;
   }
 
@@ -939,6 +941,9 @@ export class PgDb implements Db {
         union
         select j.payload->>'businessId' from job j join business b on b.id::text = j.payload->>'businessId'
           where j.kind = 'purge' and ((j.done_at is null and j.created_at < ${dayAgo}) or (j.done_at is not null and j.error is not null))
+        union
+        select 'login:' || (payload->>'userId') from job
+          where kind = 'login_delete' and ((done_at is null and created_at < ${dayAgo}) or (done_at is not null and error is not null))
       ) late`;
     return Number(rows[0]?.n ?? 0);
   }
