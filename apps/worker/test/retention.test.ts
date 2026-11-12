@@ -84,6 +84,10 @@ describe("retention over 120 days", () => {
     await lifecycleTransitions(at(90));
     expect(unrun("scan").some((j) => j.payload.businessId === a.id && j.payload.kind === "free")).toBe(true);
 
+    // V-COMP-05: the dry run sends no reminder; the delivery-lead reads would_purge counts instead.
+    expect(remindersFor(a.id)).toHaveLength(0);
+    // Armed from here on: the reminder and the purge follow the published dates.
+    process.env.VIDALO_PURGE = "1";
     await tick(105);
     expect(remindersFor(a.id)).toHaveLength(0);
     await tick(106);
@@ -95,18 +99,18 @@ describe("retention over 120 days", () => {
 
     await tick(119);
     expect(purgesFor(a.id)).toHaveLength(0);
+    // Unarmed on the date: nothing queued, A stays (V-COMP-03).
+    delete process.env.VIDALO_PURGE;
+    expect(await tick(120)).toMatchObject({ purgeQueued: 0, dryRun: true });
+    expect(purgesFor(a.id)).toHaveLength(0);
+    process.env.VIDALO_PURGE = "1";
     const at120 = await tick(120);
-    expect(at120).toMatchObject({ purgeQueued: 1, dryRun: true });
+    expect(at120).toMatchObject({ purgeQueued: 1, dryRun: false });
     await tick(120);
     expect(purgesFor(a.id)).toHaveLength(1);
     expect(purgesFor(a.id)[0]!.payload).toEqual({ businessId: a.id, guard: "due" });
-
-    // VIDALO_PURGE unset: would_purge, A stays. (The job's own clock is the real one, so A's date is moved into the past for it.)
+    // The job's own clock is the real one, so A's date is moved into the past for it.
     db.businesses.get(a.id)!.deleteAt = new Date(Date.now() - 1000).toISOString();
-    await runJobs(["purge"]);
-    expect(await db.getBusiness(a.id)).not.toBeNull();
-    process.env.VIDALO_PURGE = "1";
-    await retention(at(121));
     await runJobs(["purge"]);
     expect(await db.getBusiness(a.id)).toBeNull();
     for (const x of controls) expect(await db.getBusiness(x.id)).not.toBeNull();
@@ -135,6 +139,7 @@ describe("Vidalo Scan (F-012, F-015)", () => {
     const start = Date.parse((await db.getBusiness(e.id))!.lastActiveAt!);
     await retention(day(1));
     const first = (await db.getBusiness(e.id))!.deleteAt!;
+    process.env.VIDALO_PURGE = "1"; // reminders go only when the purge is armed (V-COMP-05)
     const expected = new Date(start);
     expected.setUTCMonth(expected.getUTCMonth() + 24);
     expect(first).toBe(expected.toISOString());
@@ -148,10 +153,9 @@ describe("Vidalo Scan (F-012, F-015)", () => {
     const moved = (await db.getBusiness(e.id))!;
     expect(Date.parse(moved.deleteAt!)).toBeGreaterThan(Date.parse(first));
     expect(moved.deletionRemindedAt).toBeNull();
-    await retention(new Date(Date.parse(moved.deleteAt!) - 13 * DAY));
+    await retention(new Date(Date.parse(moved.deleteAt!) - 14 * DAY));
     expect(remindersFor(e.id)).toHaveLength(2);
-    // On the date, armed: purged.
-    process.env.VIDALO_PURGE = "1";
+    // On the date, armed: purged (the reminder went more than 14 days earlier on the real clock).
     expect((await retention(new Date(Date.parse(moved.deleteAt!) + 1000))).purgeQueued).toBe(1);
     db.businesses.get(e.id)!.deleteAt = new Date(Date.now() - 1000).toISOString();
     await runJobs(["purge"]);
@@ -206,5 +210,39 @@ describe("log lines", () => {
       const keys = Object.keys(j.payload).sort().join(",");
       expect(["businessId,guard", "businessId,reason", "businessId,template"]).toContain(keys);
     }
+  });
+});
+
+describe("V-COMP-03, V-COMP-05: the dry run never starves an owner's deletion and sends no reminder", () => {
+  it("25 overdue retention rows with VIDALO_PURGE unset and one owner row: the owner row is queued and deleted, no reminder goes", async () => {
+    delete process.env.VIDALO_PURGE;
+    for (let i = 0; i < 25; i++) {
+      const r = await monthly(`R${i}`);
+      await setBusinessStatus(r.id, "churned");
+    }
+    const end = day(10);
+    const owner = await monthly("Owner", { cancelAt: end.toISOString() });
+    await db.setDeletion(owner.id, { at: end.toISOString(), reason: "owner" });
+    await setBusinessStatus(owner.id, "churned");
+    const out = await retention(day(200));
+    expect(out.dryRun).toBe(true);
+    expect(out.reminded).toBe(0);
+    expect([...db.jobs.values()].filter((j) => j.kind === "email" && j.payload.template === "deletion_reminder")).toHaveLength(0);
+    expect(purgesFor(owner.id)).toHaveLength(1);
+    db.businesses.get(owner.id)!.deleteAt = new Date(Date.now() - 1000).toISOString();
+    await runJobs(["purge"]);
+    expect(await db.getBusiness(owner.id)).toBeNull();
+  });
+
+  it("armed later, a waiting retention row gets its reminder first and is deleted 14 days after it, not in the same tick", async () => {
+    const r = await monthly("Late");
+    await setBusinessStatus(r.id, "churned");
+    await retention(day(200)); // dry run: nothing
+    process.env.VIDALO_PURGE = "1";
+    const armed = await retention(day(201));
+    expect(armed.reminded).toBe(1);
+    expect(purgesFor(r.id)).toHaveLength(0);
+    expect((await retention(day(214))).purgeQueued).toBe(0);
+    expect((await retention(day(215.01))).purgeQueued).toBe(1);
   });
 });

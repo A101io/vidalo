@@ -897,10 +897,12 @@ export class PgDb implements Db {
     return mapBusiness(rows[0]);
   }
 
-  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
+  async listDueDeletions(now: Date, limit: number, opts: { retention?: boolean } = {}): Promise<BusinessRecord[]> {
+    const retention = opts.retention !== false;
     const rows = await this.sql`select * from business where delete_at <= ${now}
       and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention'))
-      order by delete_at limit ${limit}`;
+      and (delete_reason = 'owner' or (${retention} and deletion_reminded_at <= ${new Date(now.getTime() - 14 * 86_400_000)}))
+      order by (delete_reason = 'owner') desc, delete_at limit ${limit}`;
     return rows.map(mapBusiness);
   }
 
@@ -910,8 +912,8 @@ export class PgDb implements Db {
     return rows.map(mapBusiness);
   }
 
-  async claimDeletionReminder(businessId: string): Promise<boolean> {
-    const rows = await this.sql`update business set deletion_reminded_at = now() where id = ${businessId} and deletion_reminded_at is null returning id`;
+  async claimDeletionReminder(businessId: string, at: Date = new Date()): Promise<boolean> {
+    const rows = await this.sql`update business set deletion_reminded_at = ${at} where id = ${businessId} and deletion_reminded_at is null returning id`;
     return rows.length === 1;
   }
 

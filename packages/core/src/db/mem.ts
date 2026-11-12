@@ -763,8 +763,14 @@ export class MemDb implements Db {
     return { ...next };
   }
 
-  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
-    return [...this.businesses.values()].filter((b) => purgeAllowed(b, "due", now)).slice(0, limit).map((b) => ({ ...b }));
+  async listDueDeletions(now: Date, limit: number, opts: { retention?: boolean } = {}): Promise<BusinessRecord[]> {
+    const remindedBefore = now.getTime() - 14 * DAY_MS;
+    return [...this.businesses.values()]
+      .filter((b) => purgeAllowed(b, "due", now))
+      .filter((b) => b.deleteReason === "owner" || (opts.retention !== false && b.deletionRemindedAt !== null && Date.parse(b.deletionRemindedAt) <= remindedBefore))
+      .sort((a, b) => (a.deleteReason === "owner" ? 0 : 1) - (b.deleteReason === "owner" ? 0 : 1) || Date.parse(a.deleteAt!) - Date.parse(b.deleteAt!))
+      .slice(0, limit)
+      .map((b) => ({ ...b }));
   }
 
   async listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]> {
@@ -774,10 +780,10 @@ export class MemDb implements Db {
       .map((b) => ({ ...b }));
   }
 
-  async claimDeletionReminder(businessId: string): Promise<boolean> {
+  async claimDeletionReminder(businessId: string, at: Date = new Date()): Promise<boolean> {
     const b = this.businesses.get(businessId);
     if (!b || b.deletionRemindedAt) return false;
-    b.deletionRemindedAt = nowIso();
+    b.deletionRemindedAt = at.toISOString();
     return true;
   }
 

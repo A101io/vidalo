@@ -199,7 +199,18 @@ describe.each(backends)("%s: deletion and retention (0019)", (_n, makeDb) => {
     expect(Math.abs(Date.parse(churned.deleteAt!) - (Date.parse(churned.churnedAt!) + 120 * DAY))).toBeLessThan(5000);
     expect(await db.purgeBusiness(b.id, "due", days(119))).toBe(false);
     expect((await db.listDueDeletions(days(119), 50)).map((x) => x.id)).not.toContain(b.id);
+    // A retention row is due only 14 days after its reminder (V-COMP-05), and never in the dry run (V-COMP-03).
+    expect((await db.listDueDeletions(days(121), 50)).map((x) => x.id)).not.toContain(b.id);
+    expect(await db.claimDeletionReminder(b.id, days(106))).toBe(true);
+    expect((await db.listDueDeletions(days(119.5), 50)).map((x) => x.id)).not.toContain(b.id);
     expect((await db.listDueDeletions(days(121), 50)).map((x) => x.id)).toContain(b.id);
+    expect((await db.listDueDeletions(days(121), 50, { retention: false })).map((x) => x.id)).not.toContain(b.id);
+    // An owner's own date comes first, also in the dry run.
+    const o = await biz("Owner first", { plan: "monitor", status: "active", cancelAt: days(5).toISOString() });
+    await db.setDeletion(o.id, { at: days(5).toISOString(), reason: "owner" });
+    await db.upsertBusiness({ id: o.id, slug: o.slug, name: o.name, place: o.place, status: "churned" });
+    expect((await db.listDueDeletions(days(121), 50))[0]!.id).toBe(o.id);
+    expect((await db.listDueDeletions(days(121), 50, { retention: false })).map((x) => x.id)).toEqual([o.id]);
     expect(await db.purgeBusiness(control.id, "due", days(121))).toBe(false);
     expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(true);
     expect(await db.purgeBusiness(b.id, "due", days(121))).toBe(false);

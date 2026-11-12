@@ -358,12 +358,16 @@ export interface Db {
   // --- deletion and retention (feature 002, migration 0019, ADR-0005) ---
   /** The owner's deletion date (reason owner), or null to call it off (a churned business falls back to churn + 120 days). Refused when the business pays without a cancel. */
   setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord>;
-  /** delete_at has passed and the "due" rule allows it. */
-  listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]>;
+  /**
+   * delete_at has passed and the "due" rule allows it; an owner's own deletions first. A retention row is
+   * listed only 14 days after its reminder went out (the promise in the privacy text), and not at all with
+   * `{ retention: false }` (the dry run, V-COMP-03).
+   */
+  listDueDeletions(now: Date, limit: number, opts?: { retention?: boolean }): Promise<BusinessRecord[]>;
   /** Retention deletions within 14 days whose reminder has not gone out. */
   listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]>;
   /** Marks the reminder as sent; true only the first time. */
-  claimDeletionReminder(businessId: string): Promise<boolean>;
+  claimDeletionReminder(businessId: string, at?: Date): Promise<boolean>;
   /** Businesses whose deletion date is more than a day past. */
   countOverdueDeletions(now: Date): Promise<number>;
   /** Vidalo Scan businesses (plan setup, status trial). */
