@@ -5,7 +5,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | **4 verify CLOSED, round 2 of 2: SHIP with release gates R1–R4** (`05-verification.md` Round 2); next: lane A gate fixes (2 h 15), delivery-lead ship-check of R1–R4, then 5 ship. Nothing deploys until R1–R4 and the §7 gates hold |
+| Phase | **5 ship: merged to `main` 2026-11-12 (vidalo#123), NOT deployed; what is left is Julian's by hand (`05-verification.md` §7, the twelve steps in the PR body).** Earlier: **4 verify CLOSED, round 2 of 2: SHIP with release gates R1–R4** (`05-verification.md` Round 2); next: lane A gate fixes (2 h 15), delivery-lead ship-check of R1–R4, then 5 ship. Nothing deploys until R1–R4 and the §7 gates hold |
 | Started | 2026-11-11 |
 | Design reviewed | <path and version under `designs/inbox/`, or none> |
 | Design gate rounds used | 0 of 2 |
@@ -32,6 +32,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-12 | 4 verify | Round 2 (last): qa, security, compliance merged into `05-verification.md` Round 2. Verdict SHIP with release gates. No P0, no failing AC (AC-4(f), AC-6 Stripe run not verified: D1, D2). V2-SEC-02 merged into V2-COMP-01 at P1. Gates R1 V2-SEC-01, R2 V2-COMP-01, R3 V2-COMP-02 (lane A, 2 h 15) and R4 V-COMP-07 (delivery-lead, 30 min). V2-COMP-03 ruled P1, pre-existing on `main`, to Julian. P2s V2-COMP-04, V2-QA-03 (lane A), V-SEC-03 (lane B) ship past; V2-SEC-03 P3 deferred. V2-QA-01/02 fixed by QA's tests (uncommitted) | delivery-lead |
 | 2026-11-12 | 5 ship | PR A101io/vidalo#123 opened against main (not merged, not deployed). Control Room: rows B6, B7, C11, C12 added to the baseline, Vidalo cells B6, B7, C2, C9, C11, C12, P5, S3 written, questions Q-20261112-01..03 in needs-you.md, build.py run (page not republished), LEARNINGS line. Gates R1–R4 open | Claude |
 | 2026-11-12 | 5 ship | Release gates R1–R3 fixed by lane A (60848bc, af86e6d), merged into the PR branch; gate tests red on pre-fix source, green after; R4 met in the Control Room (overdue.py, forced red and back). All checks green incl. e2e:auth 15/15. PR #123 still open, not merged, not deployed | Claude |
+| 2026-11-12 | 5 ship | **PR A101io/vidalo#123 merged into `main` by Julian at 21:03 UTC** (54 commits, 196 files). Nothing deployed; migrations 0016–0019 not applied to the hosted project; `VIDALO_PURGE` not set. The twelve by-hand steps in the PR body and `05-verification.md` §7 stay his, then the production deploy. Recorded by the unattended think run of 13 Nov, which read the merge on GitHub | think run |
 
 ## Skipped phases
 | Phase | Why skipping is safe here |
