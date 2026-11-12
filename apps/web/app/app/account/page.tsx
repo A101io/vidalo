@@ -8,10 +8,12 @@ import { getScanReport } from "@/lib/core";
 import { isUncheckedGrey, uncheckedAnswersOf } from "@vidalo/core/types";
 import { dateShort, dateTime } from "@/lib/format";
 import { checkNow } from "../actions";
-import { deleteMyData } from "./verwijderen/actions";
+import { callOffDeletion } from "./verwijderen/actions";
+import { longDate } from "@vidalo/core/reporter";
 import { LANGS } from "@/lib/lang-paths";
 import { MAIL_PREF_KEYS } from "@vidalo/core/shared";
-import { changeEmail, saveMailPrefs, setLanguage } from "./actions";
+import { changeEmail, saveMailPrefs, setLanguage, signOutEverywhere } from "./actions";
+import { ready } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -31,12 +33,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
  * gegevens" (download, delete). Reading only, apart from the language and
  * the delete, the e-mail address and the mail choices; every other change has its own page (gegevens, domein, google, abonnement).
  */
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string; email?: string; mails?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ taal?: string; gegevens?: string; email?: string; mails?: string; stap?: string }> }) {
   const sp = await searchParams;
   const { business, session } = await requireOwner("/app/account");
   const data = await loadDashboard(business.id);
-  const { copy, href } = await getI18n();
+  const { copy, href, lang } = await getI18n();
   const A = copy.account;
+  const S = copy.accountSecurity;
+  const signIns = await (await ready()).listSignIns(session.userId, 10);
   const B = copy.billing;
   const facts = data.facts;
   const verified = isVerifiedOwner(business, session.userId);
@@ -61,7 +65,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <Row label={A.loginEmail}>{session.email}</Row>
           <Row label={A.changeEmail.label}>
             <form action={changeEmail} className="flex flex-wrap items-center gap-3">
-              <input type="email" name="email" required autoComplete="email" aria-label={A.changeEmail.label} className="field-sm w-auto min-w-[240px]" />
+              <input type="email" name="email" required autoComplete="email" aria-label={A.changeEmail.label} className="field-sm w-auto min-w-[240px]" autoFocus={sp.stap === "email"} data-step={sp.stap === "email" ? "open" : undefined} />
               <button type="submit" className="btn-sm">
                 {A.changeEmail.button}
               </button>
@@ -87,6 +91,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </Row>
           <Row label={A.language.label}>
             <form action={setLanguage} className="flex flex-wrap items-center gap-3">
+              <input type="hidden" name="business" value={business.id} />
               <select name="language" defaultValue={business.language} aria-label={A.language.label} className="field-sm w-auto">
                 {LANGS.map((l) => (
                   <option key={l} value={l}>
@@ -101,6 +106,39 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             </form>
             <p className="mt-2 text-[13px] text-muted">{A.language.body}</p>
           </Row>
+        </div>
+      </section>
+
+      {/* Where this login is signed in (feature 002, AC-3f) */}
+      <section aria-labelledby="sign-ins-h">
+        <h2 id="sign-ins-h" className="h3">
+          {S.signIns.h}
+        </h2>
+        <div className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
+          <p className="text-ink-2">{S.signIns.body}</p>
+          {signIns.length === 0 ? (
+            <p className="text-muted">{S.signIns.empty}</p>
+          ) : (
+            <ol className="divide-y-[1px] divide-line" data-sign-ins>
+              {signIns.map((r) => (
+                <li key={r.sessionId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
+                  <span>
+                    {S.signIns.line(S.signIns.browsers[r.browser], S.signIns.systems[r.os])}
+                    {r.sessionId === session.sessionId && <span className="text-muted"> · {S.signIns.thisDevice}</span>}
+                  </span>
+                  <span className="text-[14px] text-muted">
+                    {dateTime(r.signedInAt)} · {r.endedAt ? S.signIns.ended : S.signIns.open}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+          <form action={signOutEverywhere} className="border-t-[1px] border-line pt-4">
+            <p className="text-ink-2">{S.signOutEverywhere.body}</p>
+            <button type="submit" className="btn-sm mt-3">
+              {S.signOutEverywhere.button}
+            </button>
+          </form>
         </div>
       </section>
 
@@ -191,6 +229,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <p className="text-[15px] text-muted">{A.noReport}</p>
           )}
           <form action={checkNow}>
+            <input type="hidden" name="business" value={business.id} />
             <button type="submit" className="btn-primary h-[52px]">
               {A.checkNow}
             </button>
@@ -241,6 +280,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <section id="mails">
         <h2 className="h3">{A.mails.h}</h2>
         <form action={saveMailPrefs} className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
+          <input type="hidden" name="business" value={business.id} />
           <p>{A.mails.body}</p>
           <ul className="space-y-3">
             {MAIL_PREF_KEYS.map((k) =>
@@ -278,20 +318,31 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <h2 className="h3">{A.myData.h}</h2>
         <div className="card mt-3 space-y-4 px-5 py-4 text-[15px]">
           <p>{A.myData.body}</p>
-          <a href="/api/account/export" download className="btn-link">
+          <a href={`/api/account/export?business=${encodeURIComponent(business.id)}`} download className="btn-link">
             {A.myData.download}
           </a>
-          <form action={deleteMyData} className="space-y-3 border-t-[1px] border-line pt-4">
-            <p className="text-ink-2">{A.myData.deleteBody}</p>
-            {sp.gegevens === "abonnement" && <p className="text-[14px] text-rood">{A.myData.blocked}</p>}
-            <label className="flex items-start gap-2">
-              <input type="checkbox" name="confirm" value="ja" required className="mt-1" />
-              <span>{A.myData.confirm}</span>
-            </label>
-            <button type="submit" className="btn-sm">
-              {A.myData.deleteButton}
-            </button>
-          </form>
+          <div className="space-y-3 border-t-[1px] border-line pt-4">
+            <p role="status" aria-live="polite" className="text-[14px] empty:hidden">
+              {sp.gegevens && S.deletion.status[sp.gegevens] ? S.deletion.status[sp.gegevens] : ""}
+            </p>
+            {business.deleteReason === "owner" && business.deleteAt ? (
+              <form action={callOffDeletion} className="space-y-2">
+                <input type="hidden" name="business" value={business.id} />
+                <p className="font-semibold">{S.deletion.scheduled(longDate(business.deleteAt, lang))}</p>
+                <p className="text-[14px] text-ink-2">{S.deletion.keepNote}</p>
+                <button type="submit" className="btn-sm">
+                  {S.deletion.keep}
+                </button>
+              </form>
+            ) : (
+              <>
+                <p className="text-ink-2">{S.deletion.goes}</p>
+                <Link href={href("/app/account/verwijderen")} className="btn-sm">
+                  {S.deletion.link}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </section>
 

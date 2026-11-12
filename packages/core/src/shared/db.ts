@@ -98,6 +98,8 @@ export async function setBusinessStatus(businessId: string, status: BusinessStat
   if (!b) throw new Error(`business ${businessId} not found`);
   const updated = await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, status });
   if (b.status !== status) await db.logEvent(b.id, "business.status", { status, from: b.status, ...extra });
+  // The contract has ended: the Google connection goes at once (feature 002, Q14). The job re-reads the business.
+  if (status === "churned" && b.status !== "churned") await db.enqueueJob("google_disconnect", { businessId: b.id, reason: "churn" });
   return updated;
 }
 

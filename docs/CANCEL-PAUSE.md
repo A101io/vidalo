@@ -35,6 +35,23 @@ Vidalo sells only to businesses (B2B confirmation at checkout, terms for busines
 | Withdrawal button (14-day withdrawal right) | Directive (EU) 2023/2673, new art. 6:230oa BW, from 19 June 2026 | Applies to consumer contracts with a withdrawal right; Vidalo's contracts are B2B. If Vidalo ever sells to consumers, this is a separate button, not this flow |
 | Retention after the end matches the privacy statement | AVG art. 5(1)(e), privacy text "Hoe lang" | The cancel page and mail repeat it: data kept 90 days, one free check, then only invoices (fiscal retention 7 years) |
 
+## After the end, and deleting (feature 002, 12 Nov 2026)
+
+| Step | Where | What happens |
+|---|---|---|
+| End | status `churned` (Stripe `customer.subscription.deleted`, or the worker two days after `cancel_at`) | `setBusinessStatus` queues `google_disconnect` at once (the token is revoked at Google, the Business Profile channel deleted, the ownership proof kept). The trigger of migration 0019 sets `churned_at` and `delete_at` = churn + 120 days (reason `retention`) unless the owner chose an earlier date |
+| `/app/abonnement` | end state | What stopped, that reports stay readable until the date, the date, Google removed |
+| Day 90 | worker `lifecycleTransitions` | the one free check (unchanged) |
+| Day 106 | worker `retention` | one `deletion_reminder` mail (retention dates only; an owner's own date gets none) |
+| Day 120 | worker `retention` → `purge` job | deleted through `core/shared/purge.ts` after Stripe confirms nothing bills. Retention purges run only with `VIDALO_PURGE=1` (dry run `retention.would_purge` until then); an owner's own deletion always runs |
+| "Verwijder alles" during a running Monthly | `/app/account/verwijderen` | cancelled at period end (`cancelSubscription`), deleted that day, mail `deletion_scheduled` straight away (not `cancel_confirmed`: no 90-day check on this path). "Toch bewaren" calls the deletion off and keeps the cancel; "Toch doorgaan" (undoing the cancel) also calls the deletion off (trigger rule 3) |
+| Vidalo Scan | worker `retention` | deleted 24 months after the last sign-in or payment (`SCAN_RETENTION_MONTHS`), reminder 14 days before; Google connection ended 60 days after the first full check when no fix is open and no Business Profile change is held (`SCAN_GOOGLE_DAYS`) |
+
+Cancel, undo, pause and resume never need a fresh sign-in (COMP-02); deleting does (15 minutes).
+The sandbox run of cancel → undo → cancel → undo → pause → resume is `scripts/stripe-lifecycle-run.mts`
+(sandbox key only; it refuses live keys and the Sitty and Sonable accounts), recorded in
+`docs/features/002-mijn-omgeving/05-verification.md` by the delivery-lead.
+
 ## For counsel (De Boer), before launch
 
 1. The terms gain an article "Pauzeren" (NL + EN draft in `copy.legal.terms`) and "Opzeggen" now mentions the confirmation and the undo. Both are drafts like the rest of the terms.

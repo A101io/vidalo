@@ -5,6 +5,8 @@ import { env } from "@/lib/env";
 import { ready } from "@/lib/db";
 import { getSession, getOwnedBusiness } from "@/lib/session";
 import { GOOGLE_STATE_COOKIE } from "@/lib/google";
+import { listMyBusinesses } from "@/lib/active-business";
+import { isBusinessId } from "@vidalo/core/shared";
 
 const SCOPES = ["https://www.googleapis.com/auth/business.manage"];
 
@@ -24,7 +26,10 @@ export async function GET(req: Request) {
   if (!session) return NextResponse.redirect(`${env.baseUrl}${claimed ? `/eigenaar/bevestigen?business=${encodeURIComponent(claimed)}` : "/inloggen?next=/app/google"}`);
 
   const db = await ready();
-  const business = claimed ? await db.getBusiness(claimed) : await getOwnedBusiness(session);
+  // A business this login is a member of; otherwise the claim path for a business named in the
+  // link (Google's proof in the callback decides). Only an id, never a slug (F-020).
+  const mine = claimed ? (await listMyBusinesses(session)).find((b) => b.id === claimed) : undefined;
+  const business = claimed ? (mine ?? (isBusinessId(claimed) ? await db.getBusiness(claimed) : null)) : await getOwnedBusiness(session);
   if (!business) return NextResponse.redirect(`${env.baseUrl}/inloggen?fout=geen`);
 
   const state = randomBytes(16).toString("hex");

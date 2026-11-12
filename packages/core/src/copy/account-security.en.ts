@@ -1,4 +1,69 @@
 import type { CopyShape } from "./index.js";
 
 /** English copy for account security (feature 002, lane A). Same shape as ./account-security.ts. */
-export const accountSecurityEn: CopyShape["accountSecurity"] = {};
+export const accountSecurityEn: CopyShape["accountSecurity"] = {
+  confirmPage: {
+    title: "Sign in to Vidalo",
+    body: "Click the button to sign in. That way only you use this link, not a program that checks the links in your mail.",
+    button: "Sign in",
+  },
+  signIns: {
+    h: "Where you are signed in",
+    body: "Your last 10 sign-ins. A sign-in ends after 30 days without use, and at the latest 90 days after signing in.",
+    empty: "Nothing to show yet.",
+    thisDevice: "this device",
+    ended: "signed out",
+    open: "signed in",
+    line: (browser: string, system: string) => `${browser} on ${system}`,
+    browsers: { chrome: "Chrome", safari: "Safari", firefox: "Firefox", edge: "Edge", other: "Another browser" },
+    systems: { macos: "a Mac", windows: "Windows", ios: "an iPhone or iPad", android: "Android", linux: "Linux", other: "another system" },
+  },
+  signOutEverywhere: {
+    body: "Sign out on every device where you are signed in with this account, this one included.",
+    button: "Sign out everywhere",
+  },
+  google: {
+    h: "Disconnect Google",
+    body: "Vidalo then no longer keeps track of your Google Business Profile and no longer changes it. We revoke the access at Google and delete the key. That you proved you are the owner stays on record.",
+    button: "Disconnect",
+    done: "The connection with Google is ended.",
+    none: "There was no connection with Google to end.",
+    failed: "Google did not answer. Nothing changed; try again later.",
+  },
+  deletion: {
+    h: "Delete everything",
+    intro: (name: string) => `You are about to delete everything of ${name} at Vidalo.`,
+    goesH: "What we delete",
+    goes: "Your business's data, your checks and reports, your facts page and its address, and the connection with Google, which we also revoke at Google. If no other business belongs to your sign-in, we delete your sign-in too.",
+    staysH: "What stays",
+    stays: "Your invoices, for 7 years at Stripe, because the law requires it. What was already corrected at Google, directories or other websites stays there.",
+    moneyH: "Your money",
+    monthlyAt: (date: string) => `Your Vidalo Monthly subscription is still running. We cancel it as of ${date} and delete everything that day. The amount for the current month is not refunded. Until ${date} you can undo the deletion.`,
+    monthlyNext: "Your Vidalo Monthly subscription is still running. We cancel it as of the end of the current month and delete everything that day; you then see the date here and in your mail. The amount for the current month is not refunded. Until that day you can undo the deletion.",
+    scan: "The amount for Vidalo Scan is not refunded, because we have already started working for you. Could we not establish within 30 days that you are the owner? Then first ask for a refund at support@vidalo.io, and delete after that.",
+    invoices: "After deleting you can no longer download your invoices in your account. So download them first.",
+    invoicesButton: "Download invoices",
+    confirm: (name: string) => `Yes, delete everything of ${name}`,
+    button: "Delete everything",
+    back: "Back to your account",
+    link: "Delete everything",
+    scheduled: (date: string) => `Your data will be deleted on ${date}.`,
+    keep: "Keep it after all",
+    keepNote: "Your cancellation then stays; you undo it under ‘Subscription’. If you undo the cancellation, your data is kept too.",
+    status: {
+      gepland: "Your subscription is cancelled and your data will be deleted on the end date. We sent you a mail about it.",
+      bewaard: "Your data is kept.",
+      fout: "Cancelling did not work, so nothing is scheduled. Try again or write to support@vidalo.io.",
+      bezig: "We are deleting your data. You get a mail as soon as it is done.",
+    } as Record<string, string>,
+  },
+  endState: {
+    h: "Your subscription has ended",
+    stopped: "We no longer check what AI says about your business, we no longer fix errors and we no longer update your details at directories. Your facts page sends visitors to your own website.",
+    until: (date: string, reminder: boolean) => `Your reports stay visible in your account until ${date}. On ${date} we delete your data.${reminder ? " You get a reminder by e-mail 14 days before." : ""}`,
+    google: "The connection with Google is ended; we revoked the access at Google.",
+  },
+  reSignIn: "For this step, sign in again first. We send you a new sign-in link; it brings you back to where you were.",
+  expired: "You are signed out: you had not signed in for a while, or you signed out everywhere on another device. Sign in again below.",
+  signedOutEverywhere: "You are signed out on all your devices.",
+};

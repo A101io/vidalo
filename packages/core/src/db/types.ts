@@ -48,7 +48,19 @@ export interface BusinessRecord extends Business {
   profileAuto: BusinessProfile | null;
   /** The owner's correction; only setOwnerProfile writes it, an automatic profile never overwrites it. */
   profileOwner: BusinessProfile | null;
+  /** Feature 002 (migration 0019): a member's last sign-in or the last payment (Vidalo Scan retention clock). */
+  lastActiveAt: string | null;
+  /** Set by the trigger when the status becomes churned. */
+  churnedAt: string | null;
+  /** When this business is deleted; never null while churned. Only setDeletion, setScanRetention and the trigger write it. */
+  deleteAt: string | null;
+  deleteReason: "owner" | "retention" | null;
+  /** The 14-day reminder before a retention deletion went out. */
+  deletionRemindedAt: string | null;
 }
+
+/** Which rule a purge must pass (core/shared/purge.ts, ADR-0005). */
+export type PurgeGuard = "no_subscription" | "due";
 
 /** What Google's URL Inspection API last said about the facts page. */
 export interface GoogleInspection {
@@ -82,7 +94,8 @@ export interface GoogleIndexState {
 
 export type GoogleIndexUpsert = Partial<Omit<GoogleIndexState, "businessId" | "updatedAt">> & { businessId: string; host: string };
 
-export type BusinessUpsert = Partial<Omit<BusinessRecord, "createdAt">> & { name: string; place: string };
+/** The deletion fields are left out: only their own methods and the trigger write them. */
+export type BusinessUpsert = Partial<Omit<BusinessRecord, "createdAt" | "lastActiveAt" | "churnedAt" | "deleteAt" | "deleteReason" | "deletionRemindedAt">> & { name: string; place: string };
 
 export type JobKind = "scan" | "publish" | "sync" | "fix" | "recheck" | "report" | (string & {});
 
@@ -179,6 +192,21 @@ export interface ScanRunUpdate {
   finishedAt?: string | null;
   costCents?: number;
   error?: string | null;
+}
+
+/** Feature 002 (migration 0018): one sign-in of one browser, keyed by Supabase's session_id claim. No IP, no user-agent string. */
+export type BrowserFamily = "chrome" | "safari" | "firefox" | "edge" | "other";
+export type OsFamily = "macos" | "windows" | "ios" | "android" | "linux" | "other";
+export type SignInEnd = "signed_out" | "signed_out_everywhere" | "idle" | "max_age" | "replaced" | "deleted";
+export interface SignInRow {
+  sessionId: string;
+  userId: string;
+  signedInAt: string;
+  lastSeenAt: string;
+  endedAt: string | null;
+  endedReason: SignInEnd | null;
+  browser: BrowserFamily;
+  os: OsFamily;
 }
 
 export interface Db {
@@ -297,6 +325,55 @@ export interface Db {
   getGoogleIndex(businessId: string): Promise<GoogleIndexState | null>;
   /** Insert or merge: fields left out keep their value; pass null to clear one. */
   upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
+
+  // --- sign-ins (feature 002, migration 0018) ---
+  /**
+   * Records a sign-in. Insert by sessionId; a second call for the same id changes nothing (it never
+   * clears ended_at or moves signed_in_at). Then deletes the user's ended rows beyond the 10 newest
+   * (an open sign-in is never deleted).
+   */
+  recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void>;
+  getSignIn(sessionId: string): Promise<SignInRow | null>;
+  /** Moves last_seen_at to `at`, only when it is more than an hour older and the sign-in is open. */
+  touchSignIn(sessionId: string, at: Date): Promise<void>;
+  /** Ends one open sign-in (opts.sessionId) or every open sign-in of the user. Returns how many. */
+  endSignIns(userId: string, reason: SignInEnd, opts?: { sessionId?: string }): Promise<number>;
+  /** Newest first. */
+  listSignIns(userId: string, limit: number): Promise<SignInRow[]>;
+  deleteSignIns(userId: string): Promise<void>;
+
+  // --- sign-in link limit (feature 002, migration 0018) ---
+  /** Inserts one row per key now, and returns per key how many rows exist since `since`, this one included. One round trip. */
+  throttleAuth(keyHashes: string[], since: Date): Promise<number[]>;
+  /** Deletes rows older than `before`. Returns how many. */
+  pruneAuthThrottle(before: Date): Promise<number>;
+
+  // --- export paging and Google disconnect (feature 002, ADR-0006) ---
+  /** The samples of these scan runs, in one query (the export reads 6 runs a page). */
+  listSamplesForRuns(scanRunIds: string[]): Promise<Sample[]>;
+  /** A business's events, newest first, `limit` at a time; `beforeId` continues after the last page. */
+  listEventsPage(businessId: string, opts: { beforeId?: number; limit: number }): Promise<EventRow[]>;
+  deleteChannel(id: string): Promise<void>;
+
+  // --- deletion and retention (feature 002, migration 0019, ADR-0005) ---
+  /** The owner's deletion date (reason owner), or null to call it off (a churned business falls back to churn + 120 days). Refused when the business pays without a cancel. */
+  setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord>;
+  /** delete_at has passed and the "due" rule allows it. */
+  listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]>;
+  /** Retention deletions within 14 days whose reminder has not gone out. */
+  listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]>;
+  /** Marks the reminder as sent; true only the first time. */
+  claimDeletionReminder(businessId: string): Promise<boolean>;
+  /** Businesses whose deletion date is more than a day past. */
+  countOverdueDeletions(now: Date): Promise<number>;
+  /** Vidalo Scan businesses (plan setup, status trial). */
+  listScanRetention(limit: number): Promise<BusinessRecord[]>;
+  /** A Scan business's retention date (reason retention), or null; a later date re-arms the reminder. */
+  setScanRetention(businessId: string, at: string | null): Promise<void>;
+  /** True when a job of this kind for this business has not run yet (the cron queues one purge per business). */
+  hasUnrunJob(kind: JobKind, businessId: string): Promise<boolean>;
+  /** Deletes the business and its unrun jobs in one transaction, only when the guard's rule holds. False = refused or gone. */
+  purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean>;
 
   /** Close connections (no-op for MemDb). */
   close(): Promise<void>;

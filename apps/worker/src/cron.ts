@@ -16,7 +16,7 @@ import { pollFactsHost } from "@vidalo/core/publisher";
 import { inReconfirmMailWindow, lastConfirmed, reconfirmAlreadyAsked, reconfirmation, RECONFIRM_EVENT } from "@vidalo/core/facts-history";
 import { duePauseMail } from "@vidalo/core/billing";
 import { reportRequester, sendSubscriptionMail } from "@vidalo/core/reporter";
-import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT } from "@vidalo/core/shared";
+import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT, SCAN_GOOGLE_DAYS, SCAN_RETENTION_MONTHS, scanRetentionDate } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
 import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
@@ -262,6 +262,81 @@ export async function ownerSubscriptionChanges(now = new Date()): Promise<{ remi
   return { reminders, resumed, closed };
 }
 
+/**
+ * Retention (feature 002, ADR-0005, AC-6): the reminder 14 days before a retention deletion, a
+ * purge job when a date has come (VIDALO_PURGE decides in the job whether a retention purge runs),
+ * Google connections that must end (churn backstop; Vidalo Scan 60 days after its first full check
+ * when nothing is open), the Vidalo Scan retention date from the last activity, the sign-in link
+ * limit's old rows, and the count of deletions past their date (logged once per Amsterdam day).
+ * Logs carry counts and business ids only.
+ */
+export async function retention(now = new Date()): Promise<{ reminded: number; purgeQueued: number; googleQueued: number; overdue: number; dryRun: boolean }> {
+  const db = getDb();
+  let reminded = 0;
+  let purgeQueued = 0;
+  let googleQueued = 0;
+
+  // 1. Reminders: retention deletions only (an owner chose their own date and sees it, F-007).
+  for (const b of await db.listDeletionReminders(now, 50)) {
+    if (!(await db.claimDeletionReminder(b.id))) continue;
+    await db.enqueueJob("email", { template: "deletion_reminder", businessId: b.id });
+    reminded++;
+  }
+
+  // 2. Dates that have come: one purge job per business.
+  for (const b of await db.listDueDeletions(now, 20)) {
+    if (await db.hasUnrunJob("purge", b.id)) continue;
+    await db.enqueueJob("purge", { businessId: b.id, guard: "due" });
+    purgeQueued++;
+  }
+
+  // 3. Google: a churned business still holding a connection (backstop for the churn job), and a
+  //    Vidalo Scan whose work is done (F-015).
+  const queueGoogle = async (businessId: string, reason: "churn" | "scan_done") => {
+    if (await db.hasUnrunJob("google_disconnect", businessId)) return;
+    await db.enqueueJob("google_disconnect", { businessId, reason });
+    googleQueued++;
+  };
+  for (const b of await listBusinessesByStatus(["churned"])) {
+    if ((await db.listChannels(b.id)).some((c) => c.type === "gbp")) await queueGoogle(b.id, "churn");
+  }
+  const scans = await db.listScanRetention(200);
+  for (const b of scans) {
+    const channels = await db.listChannels(b.id);
+    const gbp = channels.filter((c) => c.type === "gbp");
+    if (!gbp.length || gbp.some((c) => c.meta?.pendingDiff)) continue;
+    const firstFull = (await db.listScanRuns(b.id, 200))
+      .filter((r) => (r.kind === "baseline" || r.kind === "monthly") && r.status === "done" && r.finishedAt)
+      .sort((x, y) => Date.parse(x.finishedAt!) - Date.parse(y.finishedAt!))[0];
+    if (!firstFull || daysSince(firstFull.finishedAt!, now) < SCAN_GOOGLE_DAYS) continue;
+    if ((await db.listFindings(b.id, ["fixing", "recheck"])).length) continue;
+    await queueGoogle(b.id, "scan_done");
+  }
+
+  // 3a. Vidalo Scan retention: SCAN_RETENTION_MONTHS after the last sign-in or payment (F-012).
+  if (SCAN_RETENTION_MONTHS !== null) {
+    for (const b of scans) {
+      const at = scanRetentionDate(b.lastActiveAt ?? b.createdAt);
+      if (at && at !== b.deleteAt) await db.setScanRetention(b.id, at);
+    }
+  }
+
+  // 4. The sign-in link limit keeps a day at most.
+  await db.pruneAuthThrottle(new Date(now.getTime() - 86_400_000));
+
+  // 5. Deletions past their date: in every tick, and once per Amsterdam day as its own line.
+  const overdue = await db.countOverdueDeletions(now);
+  const day = amsterdamParts(now);
+  const dayStart = amsterdamToUtc(day.y, day.m, day.d, 0, 0);
+  if ((await db.countEventsSince("retention.overdue", dayStart)) === 0) {
+    await db.logEvent(null, "retention.overdue", { count: overdue });
+    log.info("retention.overdue", { count: overdue });
+  }
+  const dryRun = process.env.VIDALO_PURGE !== "1";
+  if (reminded || purgeQueued || googleQueued) log.info("retention.queued", { reminded, purgeQueued, googleQueued, dryRun });
+  return { reminded, purgeQueued, googleQueued, overdue, dryRun };
+}
+
 export async function cronTick(now = new Date()): Promise<void> {
   const started = Date.now();
   const out: Record<string, unknown> = {};
@@ -275,6 +350,7 @@ export async function cronTick(now = new Date()): Promise<void> {
     ["indexChecks", () => enqueueIndexChecks(now)],
     ["reconfirm", () => enqueueReconfirmations(now)],
     ["ownerSubscription", () => ownerSubscriptionChanges(now)],
+    ["retention", () => retention(now)],
   ];
   for (const [name, fn] of steps) {
     try {

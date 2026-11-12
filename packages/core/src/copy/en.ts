@@ -728,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 12 November 2026",
+    updated: "Version of 13 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -986,7 +986,7 @@ export const en: CopyShape = {
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website (including a website you give us) and the sources AI assistants name.",
               "What we do with it: to see what the business offers and for whom, we send OpenAI the details from Google and the text of the business's homepage, from which we first remove email addresses and phone numbers; OpenAI turns that into a short description. We keep that description with the business, and the report shows it as how we read the business. The report also shows which other businesses AI assistants named and how often.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
-              "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, the periods under ‘A paid plan’ apply.",
+              "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, your business's reports stay visible to you in your account and the periods under ‘A paid plan’ apply.",
             ],
             "If someone else checked your business, we use only public business details. If you do not want that, email us and we will delete that check.",
           ],
@@ -1006,9 +1006,9 @@ export const en: CopyShape = {
           h: "Your account and signing in",
           p: [
             [
-              "Data: your email address, a number for your account, when you signed in, your language and which emails you want to receive.",
-              "Basis: the performance of the agreement with you (article 6(1)(b) GDPR).",
-              "Retention: as long as your account exists. You delete your account yourself, see ‘Your rights’.",
+              "Data: your email address, a number for your account, your language and which emails you want to receive, and of your last 10 sign-ins: when, and with what kind of browser and device (such as ‘Safari on an iPhone’). We do not keep your IP address for this. To limit misuse of sign-in links we turn your email address and your IP address into a code and keep it for at most one day.",
+              "Basis: the performance of the agreement with you (article 6(1)(b) GDPR); for the list of sign-ins and the codes against misuse: our legitimate interest in a secure account (article 6(1)(f) GDPR).",
+              "Retention: as long as your account exists. A sign-in on a device ends after 30 days without use and at the latest 90 days after signing in. You delete your account yourself, see ‘Your rights’.",
             ],
           ],
         },
@@ -1020,7 +1020,7 @@ export const en: CopyShape = {
               "With Google: Google gives us a number for your account and which business profiles you manage. If it matches, we keep when the proof was given and the access key Google gives us, so we can update your business profile. We never see your password.",
               "With a code by phone: we call or text a code to the phone number Google Maps lists for the business; you do not type that number yourself. This goes through Twilio, which processes the number, the code and the details of the call or message. We keep only a partly hidden number (such as 020 ••• ••67), whether the code was right, when, and who asked.",
               "Basis: the performance of the agreement with you.",
-              "Retention: as long as your account exists, or until you disconnect Google.",
+              "Retention: the proof itself (when and how) as long as your account exists. We revoke the Google access key at Google and delete it as soon as you disconnect Google under ‘Google’ in your account, as soon as your Vidalo Monthly subscription ends, for Vidalo Scan 60 days after the first full check if nothing is open by then, and when you delete everything.",
             ],
             "If we add another way to give the proof, we will add it to this privacy policy before we use it.",
           ],
@@ -1034,7 +1034,7 @@ export const en: CopyShape = {
               "If our description of your business is wrong, you correct it under your details in your account, once you have shown that you manage the business. The checks in your plan then use your version; an automatic check does not overwrite it.",
               "Names of other businesses that AI assistants name may also be used, in a check in your plan, in a question to AI assistants, such as ‘What is a good alternative to [name]?’.",
               "Basis: the performance of the agreement with you. For the names of other businesses: our legitimate interest, and yours, in seeing whom AI names when someone looks for an alternative (article 6(1)(f) GDPR).",
-              "Retention: as long as you are a customer. After your subscription ends we keep your data for another 90 days. We then do one more free check and delete your data within 30 days after that. Only what the law requires for our accounts we keep for 7 years. What has been fixed at another party stays there.",
+              "Retention: as long as you are a customer. When your Vidalo Monthly subscription ends, we end the connection with Google at once and keep your data for another 90 days. We then do one more free check. 14 days before we delete your data you get a reminder by email, and at the latest 30 days after that check we delete it. If you only have Vidalo Scan, we delete your data 24 months after your last sign-in or your last payment; you get a reminder 14 days before. Deleting means: your business's data, the reports, your facts page and its address, and your sign-in if no other business belongs to it. Only what the law requires for our accounts we keep for 7 years: your invoices, at Stripe. What has been fixed at another party stays there.",
             ],
           ],
         },
@@ -1140,14 +1140,14 @@ export const en: CopyShape = {
         {
           h: "Security",
           p: [
-            "We protect data with appropriate technical and organisational measures: encrypted connections, sign-in without a password, access per account to your own data only, as few people with access as possible, and checks against abuse. If we discover a data breach that poses a risk to you, we inform you and the Dutch Data Protection Authority as the law requires.",
+            "We protect data with appropriate technical and organisational measures: encrypted connections, sign-in without a password, a sign-in that ends by itself, access per account to your own data only, as few people with access as possible, and checks against abuse. If we discover a data breach that poses a risk to you, we inform you and the Dutch Data Protection Authority as the law requires.",
           ],
         },
         {
           h: "Your rights",
           p: [
             "You have the right to access your data, have it corrected or deleted, have its processing restricted, receive your data in a common file format, and withdraw a consent. Withdrawal works for the future.",
-            "Much of this you can do yourself, under ‘Account’ in your account: under ‘Your data’ you download everything we keep about your business, and delete everything once your subscription has ended. There you also choose which emails you want to receive.",
+            "Much of this you can do yourself, under ‘Account’ in your account. Under ‘Your data’ you download everything we keep about your business and your sign-in, without access keys, and you delete everything. If you have a running Vidalo Monthly subscription, we cancel it as of the end date and delete everything on that date; the amount for the current month is not refunded, and until that date you can undo the deletion. If you want us to delete earlier, write to support@vidalo.io. After deleting you get a confirmation by email. Under ‘Google’ you disconnect Google. Under ‘Account’ you also choose which emails you want to receive.",
             "For anything else, email support@vidalo.io. We respond within a month. Sometimes we first ask you to show that the request comes from you.",
             "Providing data is not a legal requirement. Without an email address we cannot start a check or send you a report, and without payment and business details we cannot deliver a plan.",
           ],
@@ -1185,8 +1185,8 @@ export const en: CopyShape = {
             head: ["Name", "Purpose", "Duration"],
             rows: [
               ["vidalo_consent", "Remembers that you saw the cookie notice and what you chose.", "12 months"],
-              ["sb-…-auth-token", "Keeps you signed in to your account (via Supabase, sign-in without a password).", "Until you sign out, at most 400 days"],
-              ["sb-…-auth-token-code-verifier", "While signing in: links the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 400 days"],
+              ["sb-…-auth-token", "Keeps you signed in to your account (via Supabase, sign-in without a password).", "Until you sign out; after 30 days without use, or 90 days after signing in, you sign in again"],
+              ["sb-…-auth-token-code-verifier", "While signing in: links the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 90 days"],
               ["vidalo_google_state", "While connecting your Google account: protects that step against misuse.", "10 minutes"],
               ["vidalo_preview", "Only while the site is not yet open: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
               ["vidalo_check", "During the free check: carries your email address from the form to the page where you pick your business, so it need not be in the link.", "15 minutes, or sooner once the check starts"],
@@ -3050,6 +3050,33 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
+    accountDeleted: (name: string) => ({
+      subject: `Everything of ${name} is deleted`,
+      body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, your facts page and its address, and the connection with Google, which we also revoked at Google. If no other business belongs to your sign-in, your sign-in is deleted too.
+
+What stays: your invoices, for 7 years at Stripe, because the law requires it. What was already corrected at Google, directories or other websites stays there.
+
+There is nothing more you need to do.`,
+    }),
+    deletionReminder: (name: string, date: string, url: string, scan: boolean) => ({
+      subject: `On ${date} we delete the data of ${name}`,
+      body: `${scan ? `You have not signed in to Vidalo for ${name} for a while.` : `The subscription for ${name} has ended.`} As our privacy statement says, on ${date} we delete your business's data, the reports, your facts page and its address.
+
+Want to keep something? Until ${date} you can download your reports and your data under 'Account': ${url}
+
+${scan ? "Want us to keep your data? Sign in before that date; the date then moves on." : "Want to continue with Vidalo? Sign in and choose a plan; your data is then kept."} Want us to delete earlier, write to support@vidalo.io.`,
+    }),
+    deletionScheduled: (name: string, date: string, url: string) => ({
+      subject: `Your subscription for ${name} ends on ${date}, then we delete everything`,
+      body: `You asked us to delete everything of ${name}. Your Vidalo Monthly subscription was still running, so we cancelled it as of ${date}. Until that day everything continues. The amount for the current month is not refunded.
+
+What happens on ${date}
+We delete everything of ${name}: your business's data, the reports, your facts page and its address, and the connection with Google. Your facts page then goes offline. There is no further free check.
+
+Want to keep something? Before ${date}, download your reports and your data under 'Account', and your invoices in the customer portal. After that this is no longer possible in your account. Your invoices stay at Stripe for 7 years.
+
+Keep everything after all? You can until ${date}, with one click: ${url}`,
+    }),
     and: "and",
     stip: (colour: string) => `Dot: ${colour}.`,
     unsubscribe: { lead: "No more emails about this?", link: "Unsubscribe" },

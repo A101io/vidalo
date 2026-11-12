@@ -4,14 +4,13 @@ import { getI18n } from "@/lib/i18n";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { env } from "@/lib/env";
-import { getSession, getOwnedBusiness } from "@/lib/session";
+import { endedSignInReason, getSession, getOwnedBusiness } from "@/lib/session";
 import { ready } from "@/lib/db";
 import { reportsRequestedBy } from "@/lib/core";
 import { dateShort } from "@/lib/format";
 import { claimBusiness, sendMagicLink } from "./actions";
-import { safeNext } from "@/lib/auth-confirm";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
-import { isBusinessId } from "@vidalo/core/shared";
+import { isBusinessId, safeNext } from "@vidalo/core/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +25,16 @@ export const dynamic = "force-dynamic";
  *    22 Oct 2026 this showed the e-mail form with a red "geen bedrijf" error,
  *    and a new link could not fix it.
  */
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string; uitgelogd?: string; opnieuw?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   const a = copy.auth;
   const next = safeNext(sp.next ?? null);
   const session = await getSession();
+  const S = copy.accountSecurity;
 
-  if (session) {
+  const again = sp.opnieuw === "1";
+  if (session && !again) {
     const owned = await getOwnedBusiness(session);
     // Only a business id, never a slug. The button only offers; claimBusiness checks the payment.
     const wanted = sp.business && isBusinessId(sp.business) ? await (await ready()).getBusiness(sp.business) : null;
@@ -97,10 +98,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     );
   }
 
+  // This browser's sign-in ended by itself (unused, too old, or signed out everywhere elsewhere): say why once.
+  const ended = !sp.sent && !sp.fout && !sp.uitgelogd && !sp.verwijderd ? await endedSignInReason() : null;
+  const expired = sp.fout === "verlopen" || ended === "idle" || ended === "max_age" || ended === "signed_out_everywhere";
   return (
     <Shell>
       <h1 className="h2">{a.h1}</h1>
-      {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
+      <p role="status" aria-live="polite" className="mt-3 text-[15px] empty:hidden">
+        {sp.verwijderd === "1" ? copy.account.myData.deleted : sp.uitgelogd === "overal" ? S.signedOutEverywhere : again && !sp.sent ? S.reSignIn : expired ? S.expired : ""}
+      </p>
       {sp.sent === "1" ? (
         <p className="lead mt-4">{a.sent}</p>
       ) : (
@@ -113,7 +119,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <label htmlFor="email" className="field-label">
               {a.label}
             </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} />
+            <input id="email" name="email" type="email" required autoComplete="email" className="field" placeholder={copy.result.email.placeholder} defaultValue={again && session ? session.email : undefined} />
             {sp.fout === "geen" && <p className="mt-2 text-[14px] text-rood">{a.noBusiness}</p>}
             {sp.fout === "1" && <p className="mt-2 text-[14px] text-rood">{copy.errors.generic}</p>}
             {sp.fout === "wacht" && <p className="mt-2 text-[14px] text-rood">{a.rateLimited}</p>}

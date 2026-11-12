@@ -29,6 +29,11 @@ import type {
   ScanRunCreate,
   ScanRunUpdate,
   WaitlistInput,
+  PurgeGuard,
+  BrowserFamily,
+  OsFamily,
+  SignInEnd,
+  SignInRow,
 } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
@@ -82,6 +87,11 @@ function mapBusiness(row: Row): BusinessRecord {
     mailPrefs: normalizeMailPrefs(r.mailPrefs),
     profileAuto: (r.profileAuto as BusinessProfile | null) ?? null,
     profileOwner: (r.profileOwner as BusinessProfile | null) ?? null,
+    lastActiveAt: (r.lastActiveAt as string | null) ?? null,
+    churnedAt: (r.churnedAt as string | null) ?? null,
+    deleteAt: (r.deleteAt as string | null) ?? null,
+    deleteReason: (r.deleteReason as BusinessRecord["deleteReason"]) ?? null,
+    deletionRemindedAt: (r.deletionRemindedAt as string | null) ?? null,
     createdAt: r.createdAt as string,
   };
 }
@@ -237,6 +247,22 @@ function mapGoogleIndex(row: Row): GoogleIndexState {
     updatedAt: String(r.updatedAt),
   };
 }
+
+const mapSignIn = (row: Row): SignInRow => {
+  const r = iso(row);
+  return {
+    sessionId: r.sessionId as string,
+    userId: r.userId as string,
+    signedInAt: r.signedInAt as string,
+    lastSeenAt: r.lastSeenAt as string,
+    endedAt: (r.endedAt as string | null) ?? null,
+    endedReason: (r.endedReason as SignInEnd | null) ?? null,
+    browser: r.browser as BrowserFamily,
+    os: r.os as OsFamily,
+  };
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class PgDb implements Db {
   readonly kind = "pg" as const;
@@ -779,6 +805,154 @@ export class PgDb implements Db {
       on conflict (business_id) do update set ${this.sql(update)}
       returning *`;
     return mapGoogleIndex(rows[0]!);
+  }
+
+  // --- sign-ins (feature 002, migration 0018) ---
+  async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
+    await this.sql.begin(async (tx) => {
+      await tx`insert into auth_session (session_id, user_id, signed_in_at, last_seen_at, browser, os)
+        values (${row.sessionId}, ${row.userId}, ${row.at}, ${row.at}, ${row.browser}, ${row.os})
+        on conflict (session_id) do nothing`;
+      await tx`update business set last_active_at = ${row.at} where owner_user_id = ${row.userId}`;
+      await tx`delete from auth_session where user_id = ${row.userId} and ended_at is not null and session_id not in (
+        select session_id from auth_session where user_id = ${row.userId} order by signed_in_at desc limit 10)`;
+    });
+  }
+
+  async getSignIn(sessionId: string): Promise<SignInRow | null> {
+    if (!UUID.test(sessionId)) return null;
+    const rows = await this.sql`select * from auth_session where session_id = ${sessionId}`;
+    return rows[0] ? mapSignIn(rows[0]) : null;
+  }
+
+  async touchSignIn(sessionId: string, at: Date): Promise<void> {
+    if (!UUID.test(sessionId)) return;
+    await this.sql`update auth_session set last_seen_at = ${at}
+      where session_id = ${sessionId} and ended_at is null and last_seen_at < ${new Date(at.getTime() - 3_600_000)}`;
+  }
+
+  async endSignIns(userId: string, reason: SignInEnd, opts: { sessionId?: string } = {}): Promise<number> {
+    if (!UUID.test(userId) || (opts.sessionId !== undefined && !UUID.test(opts.sessionId))) return 0;
+    const rows = opts.sessionId
+      ? await this.sql`update auth_session set ended_at = greatest(now(), signed_in_at), ended_reason = ${reason}
+          where user_id = ${userId} and session_id = ${opts.sessionId} and ended_at is null returning session_id`
+      : await this.sql`update auth_session set ended_at = greatest(now(), signed_in_at), ended_reason = ${reason}
+          where user_id = ${userId} and ended_at is null returning session_id`;
+    return rows.length;
+  }
+
+  async listSignIns(userId: string, limit: number): Promise<SignInRow[]> {
+    if (!UUID.test(userId)) return [];
+    const rows = await this.sql`select * from auth_session where user_id = ${userId} order by signed_in_at desc limit ${limit}`;
+    return rows.map(mapSignIn);
+  }
+
+  async deleteSignIns(userId: string): Promise<void> {
+    if (!UUID.test(userId)) return;
+    await this.sql`delete from auth_session where user_id = ${userId}`;
+  }
+
+  async throttleAuth(keyHashes: string[], since: Date): Promise<number[]> {
+    if (!keyHashes.length) return [];
+    const rows = await this.sql`
+      with ins as (insert into auth_throttle (key_hash) select unnest(${keyHashes}::text[]) returning key_hash)
+      select k.key_hash, (select count(*) from auth_throttle t where t.key_hash = k.key_hash and t.at >= ${since})::int
+        + (select count(*) from ins where ins.key_hash = k.key_hash)::int as n
+      from unnest(${keyHashes}::text[]) as k(key_hash)`;
+    const by = new Map(rows.map((r) => [r.keyHash as string, Number(r.n)]));
+    return keyHashes.map((k) => by.get(k) ?? 0);
+  }
+
+  async pruneAuthThrottle(before: Date): Promise<number> {
+    const rows = await this.sql`delete from auth_throttle where at < ${before} returning 1`;
+    return rows.length;
+  }
+
+  async listSamplesForRuns(scanRunIds: string[]): Promise<Sample[]> {
+    const ids = scanRunIds.filter((id) => UUID.test(id));
+    if (!ids.length) return [];
+    const rows = await this.sql`select * from sample where scan_run_id = any(${ids}::uuid[]) order by captured_at, id`;
+    return rows.map(mapSample);
+  }
+
+  async listEventsPage(businessId: string, opts: { beforeId?: number; limit: number }): Promise<EventRow[]> {
+    const rows =
+      opts.beforeId === undefined
+        ? await this.sql`select * from event where business_id = ${businessId} order by id desc limit ${opts.limit}`
+        : await this.sql`select * from event where business_id = ${businessId} and id < ${opts.beforeId} order by id desc limit ${opts.limit}`;
+    return rows.map(mapEvent);
+  }
+
+  async deleteChannel(id: string): Promise<void> {
+    if (!UUID.test(id)) return;
+    await this.sql`delete from channel where id = ${id}`;
+  }
+
+  // --- deletion and retention (feature 002, migration 0019) ---
+  async setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord> {
+    const rows = input
+      ? await this.sql`update business set delete_at = ${new Date(input.at)}, delete_reason = 'owner', deletion_reminded_at = null where id = ${businessId} returning *`
+      : await this.sql`update business set delete_at = null, delete_reason = null, deletion_reminded_at = null where id = ${businessId} returning *`;
+    if (!rows[0]) throw new Error(`business ${businessId} not found`);
+    return mapBusiness(rows[0]);
+  }
+
+  async listDueDeletions(now: Date, limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where delete_at <= ${now}
+      and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention'))
+      order by delete_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async listDeletionReminders(now: Date, limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where delete_reason = 'retention' and deletion_reminded_at is null
+      and delete_at - interval '14 days' <= ${now} order by delete_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async claimDeletionReminder(businessId: string): Promise<boolean> {
+    const rows = await this.sql`update business set deletion_reminded_at = now() where id = ${businessId} and deletion_reminded_at is null returning id`;
+    return rows.length === 1;
+  }
+
+  async countOverdueDeletions(now: Date): Promise<number> {
+    const rows = await this.sql`select count(*)::int as n from business where delete_at < ${new Date(now.getTime() - 86_400_000)}`;
+    return Number(rows[0]?.n ?? 0);
+  }
+
+  async listScanRetention(limit: number): Promise<BusinessRecord[]> {
+    const rows = await this.sql`select * from business where plan = 'setup' and status = 'trial' order by created_at limit ${limit}`;
+    return rows.map(mapBusiness);
+  }
+
+  async setScanRetention(businessId: string, at: string | null): Promise<void> {
+    if (at === null) {
+      await this.sql`update business set delete_at = null, delete_reason = null, deletion_reminded_at = null
+        where id = ${businessId} and plan = 'setup' and status = 'trial'`;
+      return;
+    }
+    await this.sql`update business set delete_at = ${new Date(at)}, delete_reason = 'retention',
+        deletion_reminded_at = case when delete_at is null or delete_at < ${new Date(at)} then null else deletion_reminded_at end
+      where id = ${businessId} and plan = 'setup' and status = 'trial'`;
+  }
+
+  async hasUnrunJob(kind: JobKind, businessId: string): Promise<boolean> {
+    const rows = await this.sql`select 1 from job where done_at is null and kind = ${kind} and payload->>'businessId' = ${businessId} limit 1`;
+    return rows.length > 0;
+  }
+
+  async purgeBusiness(id: string, guard: PurgeGuard, now: Date): Promise<boolean> {
+    if (!UUID.test(id)) return false;
+    return this.sql.begin(async (tx) => {
+      const gone =
+        guard === "due"
+          ? await tx`delete from business where id = ${id} and delete_at <= ${now}
+              and (status in ('scanned', 'churned') or (plan = 'setup' and status = 'trial' and delete_reason = 'retention')) returning id`
+          : await tx`delete from business where id = ${id} and not (plan = 'monitor' and status in ('trial', 'active', 'paused')) returning id`;
+      if (!gone.length) return false;
+      await tx`delete from job where done_at is null and payload->>'businessId' = ${id}`;
+      return true;
+    });
   }
 
   async close(): Promise<void> {

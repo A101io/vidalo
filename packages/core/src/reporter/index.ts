@@ -38,6 +38,7 @@ export * from "./mail.js";
 export * from "./templates.js";
 export * from "./links.js";
 export * from "./subscription-mails.js";
+export * from "./account-mails.js";
 export * from "./launch.js";
 export * from "./reconfirm.js";
 

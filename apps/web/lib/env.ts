@@ -52,6 +52,17 @@ export const env = {
   get allowMockAuth(): boolean {
     return read("VIDALO_MOCK") === "1" || process.env.NODE_ENV !== "production";
   },
+  /**
+   * The key for the sign-in link limit (core/shared/auth-throttle.ts, ADR-0004). Required once
+   * Supabase is configured: without it every address and IP would share one guessable key space.
+   * Only local runs without Supabase fall back to a fixed value.
+   */
+  get authSecret(): string {
+    const v = read("VIDALO_AUTH_SECRET");
+    if (v) return v;
+    if (this.hasSupabase) throw new Error("VIDALO_AUTH_SECRET is not set");
+    return "vidalo-local";
+  },
   get hasSupabase(): boolean {
     return Boolean(this.supabaseUrl && this.supabaseAnonKey);
   },
