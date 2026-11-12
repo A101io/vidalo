@@ -139,12 +139,13 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export function FactsForm({ facts, lang, country, countries, kindDefault }: { facts: Facts; lang: Lang; country: string; countries: { code: string; name: string }[]; /** The word the questions use when the owner gives none (prompts/nouns.ts). */ kindDefault: string | null }) {
+export function FactsForm({ facts, businessId, lang, country, countries, kindDefault }: { facts: Facts; /** The business this form was rendered for: posted back so a switch in another tab cannot redirect the save (F-020). */ businessId: string; lang: Lang; country: string; countries: { code: string; name: string }[]; /** The word the questions use when the owner gives none (prompts/nouns.ts). */ kindDefault: string | null }) {
   const copy = copyFor(lang);
   const F = copy.facts;
   const f = F.fields;
   return (
     <form action={saveFacts} className="space-y-4">
+      <input type="hidden" name="business" value={businessId} />
       <Group title={F.groups.basics}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

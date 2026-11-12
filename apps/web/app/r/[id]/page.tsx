@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { ScanReport } from "@vidalo/core/types";
 import { getCopy, getI18n } from "@/lib/i18n";
-import { getSession, getOwnedBusiness } from "@/lib/session";
+import { getSession } from "@/lib/session";
+import { listMyBusinesses } from "@/lib/active-business";
+import { reportVisible } from "@vidalo/core/shared";
+import type { BusinessRecord } from "@vidalo/core/db";
 import { followPreferredLang } from "@/lib/preferred-lang";
 import type { CopyShape } from "@vidalo/core/copy";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -11,7 +14,7 @@ import { StipHero, Stip } from "@/components/Stip";
 import { AnswerCard } from "@/components/AnswerCard";
 import { ReportHeaderRow, ReportRow } from "@/components/ReportRow";
 import { SourceRow } from "@/components/SourceRow";
-import { FREE_REPORT_DAYS, getScanReport, latestScanReport } from "@/lib/core";
+import { getScanReport, latestScanReport } from "@/lib/core";
 import { ASKED_ENGINES, moreQuestionsView, questionSets } from "@vidalo/core/scanner";
 import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
@@ -27,7 +30,7 @@ export const dynamic = "force-dynamic";
 
 type QuestionSets = Awaited<ReturnType<typeof questionSets>>;
 
-async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean; sets?: QuestionSets } | null> {
+async function load(id: string, copy: CopyShape, viewerBusinessIds: readonly string[]): Promise<{ report: ScanReport; opts: BuildViewOptions; demo: boolean; bySlug: boolean; sets?: QuestionSets } | null> {
   if (id === DEMO_IDS.red) return { report: demoReport(), opts: { domain: DEMO_DOMAIN }, demo: true, bySlug: false };
   if (id === DEMO_IDS.grey) return { report: demoGreyReport(), opts: { domain: DEMO_GREY_DOMAIN, sources: demoGreySources(copy) }, demo: true, bySlug: false };
   if (id === DEMO_IDS.online) return { report: demoOnlineReport(), opts: { domain: DEMO_ONLINE_DOMAIN }, demo: true, bySlug: false };
@@ -38,10 +41,10 @@ async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; 
   const report = byRun ?? (await latestScanReport(id));
   if (!report) return null;
   const bySlug = !byRun;
-  // A free report is reachable for 30 days, as the footer and the privacy
-  // text say (docs/content-check.md). Paid customers' reports stay with the
-  // account. Expired: the same "niet gevonden" page as an unknown link.
-  if (report.kind === "free" && Date.now() - new Date(report.checkedAt).getTime() > FREE_REPORT_DAYS * 86_400_000) return null;
+  // A free report is reachable for 30 days, as the footer and the privacy text say (docs/content-check.md), for
+  // anyone with the link; after that only a member of its business can still open it (AC-1, core report-access.ts).
+  // Paid customers' reports stay with the account. Hidden: the same "niet gevonden" page as an unknown link.
+  if (!reportVisible({ kind: report.kind, checkedAt: report.checkedAt, businessId: report.business.id }, viewerBusinessIds, new Date())) return null;
   const db = await ready();
   const business = await db.getBusiness(report.business.id);
   const facts = await db.latestFacts(report.business.id);
@@ -51,19 +54,24 @@ async function load(id: string, copy: CopyShape): Promise<{ report: ScanReport; 
   return { report, opts: { domain: business?.ownerVerifiedAt ? business.domain : null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug, sets };
 }
 
-/** A slug link opens only for the owner of that business. */
-async function ownerOf(report: ScanReport): Promise<boolean> {
+/** The businesses of the signed-in viewer (empty when signed out): the only source of "is this the owner's report". */
+async function viewerBusinesses(): Promise<BusinessRecord[]> {
   const viewer = await getSession();
-  const owned = viewer ? await getOwnedBusiness(viewer) : null;
-  return owned?.id === report.business.id;
+  return viewer ? await listMyBusinesses(viewer) : [];
+}
+
+/** A slug link opens only for a member of that business. */
+function ownerOf(report: ScanReport, mine: readonly BusinessRecord[]): boolean {
+  return mine.some((b) => b.id === report.business.id);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const copy = await getCopy();
-  const loaded = await load(id, copy);
+  const mine = await viewerBusinesses();
+  const loaded = await load(id, copy, mine.map((b) => b.id));
   if (!loaded) return { title: copy.result.notFound };
-  if (loaded.bySlug && !(await ownerOf(loaded.report))) return { title: copy.result.notFound, robots: { index: false } };
+  if (loaded.bySlug && !ownerOf(loaded.report, mine)) return { title: copy.result.notFound, robots: { index: false } };
   return { title: copy.email.subjects.report(loaded.report.business.name), robots: { index: false } };
 }
 
@@ -71,15 +79,15 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   const { id } = await params;
   const sp = await searchParams;
   const { copy, href } = await getI18n();
-  const loaded = await load(id, copy);
+  const mine = await viewerBusinesses();
+  const loaded = await load(id, copy, mine.map((b) => b.id));
   if (!loaded) notFound();
   // Someone else's slug link: sign in first; after signing in only the owner gets through.
-  if (loaded.bySlug && !(await ownerOf(loaded.report))) redirect(href(`/inloggen?next=${encodeURIComponent(href(`/r/${id}`))}`));
+  if (loaded.bySlug && !ownerOf(loaded.report, mine)) redirect(href(`/inloggen?next=${encodeURIComponent(href(`/r/${id}`))}`));
   const { report, opts, demo } = loaded;
   // The owner reads their own report in the language saved on the account; visitors get the URL's language.
-  const viewer = demo ? null : await getSession();
-  const owned = viewer ? await getOwnedBusiness(viewer) : null;
-  if (owned && owned.id === report.business.id) await followPreferredLang(owned);
+  const owned = demo ? null : (mine.find((b) => b.id === report.business.id) ?? null);
+  if (owned) await followPreferredLang(owned);
   const v = buildReportView(report, copy, opts);
   const more = loaded.sets ? moreQuestionsView(loaded.sets, ASKED_ENGINES, copy) : null;
   const R = copy.result;

@@ -1,52 +1,85 @@
 /**
  * Membership reads for the owner area (feature 002, lane B). Functions over a Db, not methods
- * on it: they branch on PgDb (own SQL) or MemDb (derived from db.businesses).
- * C-00 stub: membership is business.owner_user_id; B-01 moves Pg to business_member.
+ * on it: they branch on PgDb (own SQL through db.sql) or MemDb (derived from db.businesses).
+ *
+ * Membership is the table business_member (migration 0016), written only by the trigger that
+ * follows business.owner_user_id (ADR-0001). MemDb has no table: it derives membership from
+ * ownerUserId, so the two cannot disagree.
  */
-import { MemDb } from "./mem";
-import { PgDb } from "./pg";
-import type { BusinessRecord, Db } from "./types";
+import type { MemDb } from "./mem";
+import type { PgDb } from "./pg";
+import type { BusinessRecord, Db, EventRow } from "./types";
+import type { Channel, Facts, Finding, Fix, ScanKind, ScanReport, ScanRun, Stip } from "../types";
+import { reportCounts, type ScanSnapshot } from "../progress";
+
+// Not `instanceof`: `next dev` and OpenNext bundle core once per route, so the Db a request holds can come from
+// another copy of these classes (see apps/web/lib/core.ts). `kind` is the same in every copy.
+function isPg(db: Db): db is PgDb {
+  return db.kind === "pg";
+}
+function isMem(db: Db): db is MemDb {
+  return db.kind === "mem";
+}
 
 function unsupported(): never {
   throw new Error("owner-area: needs a MemDb or a PgDb");
 }
 
-/** Every business this login is a member of, newest first. */
+/** Newest first; MemDb has no insertion clock beyond the Map order, which breaks ties. */
+function newestFirst(list: BusinessRecord[]): BusinessRecord[] {
+  return list
+    .map((b, i) => ({ b, i }))
+    .sort((x, y) => (y.b.createdAt ?? "").localeCompare(x.b.createdAt ?? "") || y.i - x.i)
+    .map((x) => x.b);
+}
+
+/** Every business this login is a member of, newest first. Never another login's. */
 export async function listMemberBusinesses(db: Db, userId: string): Promise<BusinessRecord[]> {
-  if (db instanceof PgDb) {
-    const rows = await db.sql<{ id: string }[]>`select id from business where owner_user_id = ${userId} order by created_at desc`;
+  if (isPg(db)) {
+    const rows = await db.sql<{ id: string }[]>`
+      select b.id from business_member m join business b on b.id = m.business_id
+      where m.user_id = ${userId} order by b.created_at desc, b.id desc`;
     const found = await Promise.all(rows.map((r) => db.getBusiness(r.id)));
     return found.filter((b): b is BusinessRecord => b !== null);
   }
-  if (db instanceof MemDb) return [...db.businesses.values()].filter((b) => b.ownerUserId === userId).reverse().map((b) => ({ ...b }));
+  if (isMem(db)) return newestFirst([...db.businesses.values()].filter((b) => b.ownerUserId === userId).map((b) => ({ ...b })));
   return unsupported();
 }
 
 /** The logins that are members of this business. */
 export async function listMemberUserIds(db: Db, businessId: string): Promise<string[]> {
-  if (db instanceof PgDb) {
-    const rows = await db.sql<{ owner_user_id: string }[]>`select owner_user_id from business where id = ${businessId} and owner_user_id is not null`;
-    return rows.map((r) => r.owner_user_id);
+  if (isPg(db)) {
+    const rows = await db.sql<{ userId: string }[]>`select user_id from business_member where business_id = ${businessId}`;
+    return rows.map((r) => r.userId); // postgres.camel: user_id arrives as userId
   }
-  if (db instanceof MemDb) {
+  if (isMem(db)) {
     const owner = db.businesses.get(businessId)?.ownerUserId;
     return owner ? [owner] : [];
   }
   return unsupported();
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** True when this login is a member of the business. A malformed id is simply "no" (no cast error, no 500). */
 export async function isMember(db: Db, userId: string, businessId: string): Promise<boolean> {
+  // MemDb ids need not be uuids (mock users are "mock-user-1"); Postgres would throw on the cast.
+  if (isPg(db) && !(UUID.test(businessId) && UUID.test(userId))) return false;
   return (await listMemberUserIds(db, businessId)).includes(userId);
 }
 
-/** Sets owner_user_id on every business with lower(owner_email) = email and owner_user_id null. Returns how many. */
+/**
+ * Sets owner_user_id on every business with lower(owner_email) = email and owner_user_id null.
+ * Returns how many. Only unowned rows: a business another login owns is never relinked (SEC-11).
+ * `email` must be the verified address of the session, never one from a form.
+ */
 export async function linkBusinessesByEmail(db: Db, userId: string, email: string): Promise<number> {
   const e = email.toLowerCase();
-  if (db instanceof PgDb) {
+  if (isPg(db)) {
     const rows = await db.sql`update business set owner_user_id = ${userId} where lower(owner_email) = ${e} and owner_user_id is null returning id`;
     return rows.length;
   }
-  if (db instanceof MemDb) {
+  if (isMem(db)) {
     let n = 0;
     for (const b of db.businesses.values()) {
       if (b.ownerUserId || b.ownerEmail?.toLowerCase() !== e) continue;
@@ -56,4 +89,263 @@ export async function linkBusinessesByEmail(db: Db, userId: string, email: strin
     return n;
   }
   return unsupported();
+}
+
+// ---------------------------------------------------------------------------
+// Report archive and run summaries (migration 0017, ADR-0007)
+// ---------------------------------------------------------------------------
+
+/** What a finished check keeps for lists: the dot, the counts the report heading shows, and the progress snapshot. */
+export interface RunSummary {
+  v: 1;
+  /** The colour of the dot, in the repo's words ("rood" | "oranje" | "groen" | "grijs"). */
+  stip: Stip;
+  /** Questions asked, as the report heading counts them. */
+  answered: number;
+  /** Of those, the questions every AI system answered right. */
+  correct: number;
+  snapshot: ScanSnapshot;
+}
+
+export interface ArchiveRow {
+  id: string;
+  kind: ScanKind;
+  status: ScanRun["status"];
+  createdAt: string;
+  summary: RunSummary | null;
+}
+
+export function summarizeRun(report: ScanReport, snapshot: ScanSnapshot): RunSummary {
+  const c = reportCounts(report);
+  return { v: 1, stip: report.stip, answered: c.questions, correct: c.correct, snapshot };
+}
+
+// MemDb keeps summaries on the instance itself (a Symbol.for key), not in a module-level WeakMap: `next dev` and
+// OpenNext load this module once per route, and a map per copy would hide a summary saved by another route.
+const MEM_SUMMARIES = Symbol.for("vidalo.runSummaries");
+function memSummaries(db: MemDb): Map<string, RunSummary> {
+  const holder = db as unknown as Record<symbol, Map<string, RunSummary> | undefined>;
+  return (holder[MEM_SUMMARIES] ??= new Map());
+}
+
+export async function saveRunSummary(db: Db, scanRunId: string, summary: RunSummary): Promise<void> {
+  if (isPg(db)) {
+    await db.sql`update scan_run set summary = ${db.sql.json(summary as never)} where id = ${scanRunId}`;
+    return;
+  }
+  if (isMem(db)) {
+    if (db.scanRuns.has(scanRunId)) memSummaries(db).set(scanRunId, structuredClone(summary));
+    return;
+  }
+  return unsupported();
+}
+
+const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,6})?Z$/;
+
+function encodeCursor(at: string, id: string): string {
+  return Buffer.from(`${at}|${id}`, "utf8").toString("base64url");
+}
+
+/** Strict: anything that is not exactly `<iso>|<uuid>` is no cursor (the first page, never a 500). */
+function decodeCursor(raw: string | undefined): { at: string; id: string } | null {
+  if (!raw || raw.length > 200 || !/^[A-Za-z0-9_-]+$/.test(raw)) return null;
+  const [at, id, ...rest] = Buffer.from(raw, "base64url").toString("utf8").split("|");
+  // ISO shape and a real date (2026-13-45 matches the shape); the cursor is bound as text below, so microseconds survive.
+  if (rest.length || !at || !id || !ISO.test(at) || Number.isNaN(Date.parse(at)) || !UUID.test(id)) return null;
+  return { at, id };
+}
+
+/**
+ * Finished and unfinished checks of one business, newest first, rechecks left out; `limit` rows and a cursor
+ * for the next page (null at the end). Bound to `businessId` in SQL: a cursor made from another business's run
+ * only moves the position, it never widens the business.
+ */
+export async function listReportArchive(db: Db, businessId: string, opts: { limit: number; before?: string }): Promise<{ rows: ArchiveRow[]; next: string | null }> {
+  const limit = Math.max(1, Math.min(100, Math.floor(opts.limit)));
+  const cursor = decodeCursor(opts.before);
+  let all: (ArchiveRow & { cursorAt: string })[];
+  if (isPg(db)) {
+    if (!UUID.test(businessId)) return { rows: [], next: null };
+    const after = cursor ? db.sql`and (created_at, id) < (${cursor.at}::text::timestamptz, ${cursor.id}::uuid)` : db.sql``;
+    const rows = await db.sql<{ id: string; kind: ScanKind; status: ScanRun["status"]; createdAt: Date; cursorAt: string; summary: RunSummary | null }[]>`
+      select id, kind, status, created_at, summary,
+             to_char(created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at
+      from scan_run
+      where business_id = ${businessId} and kind <> 'recheck' ${after}
+      order by created_at desc, id desc limit ${limit + 1}`;
+    all = rows.map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.createdAt.toISOString(), cursorAt: r.cursorAt, summary: r.summary }));
+  } else if (isMem(db)) {
+    const sums = memSummaries(db);
+    all = [...db.scanRuns.values()]
+      .filter((r) => r.businessId === businessId && r.kind !== "recheck")
+      .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, cursorAt: r.startedAt, summary: sums.get(r.id) ?? null }))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+      .filter((r) => !cursor || r.createdAt < cursor.at || (r.createdAt === cursor.at && r.id < cursor.id));
+    all = all.slice(0, limit + 1);
+  } else return unsupported();
+  const page = all.slice(0, limit);
+  const last = page[page.length - 1];
+  return {
+    rows: page.map(({ cursorAt: _c, ...row }) => row),
+    next: all.length > limit && last ? encodeCursor(last.cursorAt, last.id) : null,
+  };
+}
+
+/** Finished, non-recheck checks that have a summary, newest first (the progress view and the dashboard read these). */
+export async function runSummaries(db: Db, businessId: string, limit: number): Promise<ArchiveRow[]> {
+  const n = Math.max(1, Math.min(200, Math.floor(limit)));
+  if (isPg(db)) {
+    if (!UUID.test(businessId)) return [];
+    const rows = await db.sql<{ id: string; kind: ScanKind; status: ScanRun["status"]; createdAt: Date; summary: RunSummary }[]>`
+      select id, kind, status, created_at, summary from scan_run
+      where business_id = ${businessId} and status = 'done' and kind <> 'recheck' and summary is not null
+      order by created_at desc, id desc limit ${n}`;
+    return rows.map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.createdAt.toISOString(), summary: r.summary }));
+  }
+  if (isMem(db)) {
+    const sums = memSummaries(db);
+    return [...db.scanRuns.values()]
+      .filter((r) => r.businessId === businessId && r.status === "done" && r.kind !== "recheck" && sums.has(r.id))
+      .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, summary: structuredClone(sums.get(r.id)!) }))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+      .slice(0, n);
+  }
+  return unsupported();
+}
+
+/**
+ * Ids of finished, non-recheck checks for the backfill, by id (keyset: pass the last id back as `afterId`).
+ * Without `all`, only those that have no summary yet.
+ */
+export async function listRunsToSummarize(db: Db, opts: { limit: number; afterId?: string; all?: boolean; businessId?: string }): Promise<string[]> {
+  const limit = Math.max(1, Math.min(500, Math.floor(opts.limit)));
+  if (isPg(db)) {
+    const after = opts.afterId && UUID.test(opts.afterId) ? db.sql`and id > ${opts.afterId}::uuid` : db.sql``;
+    const only = opts.all ? db.sql`` : db.sql`and summary is null`;
+    const biz = opts.businessId && UUID.test(opts.businessId) ? db.sql`and business_id = ${opts.businessId}::uuid` : db.sql``;
+    const rows = await db.sql<{ id: string }[]>`select id from scan_run where status = 'done' and kind <> 'recheck' ${only} ${after} ${biz} order by id limit ${limit}`;
+    return rows.map((r) => r.id);
+  }
+  if (isMem(db)) {
+    const sums = memSummaries(db);
+    return [...db.scanRuns.values()]
+      .filter((r) => r.status === "done" && r.kind !== "recheck" && (opts.all || !sums.has(r.id)) && (!opts.businessId || r.businessId === opts.businessId) && (!opts.afterId || r.id > opts.afterId))
+      .map((r) => r.id)
+      .sort()
+      .slice(0, limit);
+  }
+  return unsupported();
+}
+
+// ---------------------------------------------------------------------------
+// Bounded reads for the owner pages (AC-7, B-03)
+// ---------------------------------------------------------------------------
+
+/**
+ * What /app (and the other owner pages that show a list) read at most. Each limit is named by the page that shows it:
+ *  - findingsPerStatus: /app "Wat nu" and the grouped errors show open findings; /app/voortgang's repair counts and the
+ *    dot rows read resolved ones. Open and resolved are capped apart, newest first, so a long history cannot hide the open ones.
+ *  - events: /app's log ("Wat er gebeurde") shows the latest 200 events.
+ *  - runs: /app reads the latest 12 checks (last and previous full check, the dots).
+ */
+export const OVERVIEW_LIMITS = { findingsPerStatus: 500, events: 200, runs: 12 } as const;
+
+/**
+ * Keeps the newest `perStatus` findings of each group (open/fixing/etc. vs resolved), in the order they came.
+ * Db.listFindings has no SQL limit (db/types.ts is not lane B's), so the cap is applied to the one query's rows:
+ * the work of the page is bounded, and the number of round trips never depends on history.
+ */
+export function capFindings<T extends { id: string; status: string; firstSeenAt: string }>(list: T[], perStatus: number = OVERVIEW_LIMITS.findingsPerStatus): T[] {
+  const keep = new Set<string>();
+  for (const resolved of [false, true]) {
+    list
+      .filter((f) => (f.status === "resolved") === resolved)
+      .sort((a, b) => b.firstSeenAt.localeCompare(a.firstSeenAt))
+      .slice(0, perStatus)
+      .forEach((f) => keep.add(f.id));
+  }
+  return list.filter((f) => keep.has(f.id));
+}
+
+/** The open (unresolved) fix of each finding of a business, by finding id: one query, not one per finding. */
+export async function openFixesByFinding(db: Db, businessId: string): Promise<Map<string, Fix>> {
+  const out = new Map<string, Fix>();
+  if (isPg(db)) {
+    if (!UUID.test(businessId)) return out;
+    const rows = await db.sql<Record<string, unknown>[]>`
+      select fix.* from fix join finding on finding.id = fix.finding_id
+      where finding.business_id = ${businessId} and fix.resolved_at is null
+      order by fix.finding_id, fix.scheduled_at`;
+    const at = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
+    for (const r of rows) {
+      const findingId = r.findingId as string;
+      if (out.has(findingId)) continue;
+      out.set(findingId, { id: r.id as string, findingId, action: r.action as Fix["action"], target: r.target as string, scheduledAt: at(r.scheduledAt)!, sentAt: at(r.sentAt), recheckAt: at(r.recheckAt), resolvedAt: null, evidence: (r.evidence ?? {}) as Fix["evidence"] });
+    }
+    return out;
+  }
+  if (isMem(db)) {
+    const own = new Set([...db.findings.values()].filter((f) => f.businessId === businessId).map((f) => f.id));
+    for (const f of db.fixes.values()) if (own.has(f.findingId) && f.resolvedAt === null && !out.has(f.findingId)) out.set(f.findingId, { ...f });
+    return out;
+  }
+  return unsupported();
+}
+
+/** What loadDashboard reads from the database (the service path): bounded, a fixed number of queries. */
+export async function dashboardRows(db: Db, businessId: string): Promise<{ facts: Facts | null; findings: Finding[]; channels: Channel[]; scanRuns: ScanRun[] }> {
+  const [facts, findings, channels, scanRuns] = await Promise.all([db.latestFacts(businessId), db.listFindings(businessId), db.listChannels(businessId), db.listScanRuns(businessId, OVERVIEW_LIMITS.runs)]);
+  return { facts, findings: capFindings(findings), channels, scanRuns };
+}
+
+/** What /app reads on top of the dashboard: the log and the open fix of each open finding. */
+export async function overviewExtras(db: Db, businessId: string): Promise<{ fixes: Map<string, Fix>; events: EventRow[] }> {
+  const [fixes, events] = await Promise.all([openFixesByFinding(db, businessId), db.listEvents(businessId, OVERVIEW_LIMITS.events)]);
+  return { fixes, events };
+}
+
+// ---------------------------------------------------------------------------
+// Id-addressed rows and the verified facts host (B-05)
+// ---------------------------------------------------------------------------
+
+/** The business a finding belongs to, or null (unknown or malformed id: never a cast error). Pages call requireOwnerOf on it. */
+export async function findingBusinessId(db: Db, findingId: string): Promise<string | null> {
+  if (isPg(db)) {
+    if (!UUID.test(findingId)) return null;
+    const rows = await db.sql<{ businessId: string }[]>`select business_id from finding where id = ${findingId}::uuid`;
+    return rows[0]?.businessId ?? null;
+  }
+  if (isMem(db)) return db.findings.get(findingId)?.businessId ?? null;
+  return unsupported();
+}
+
+/** The business a channel belongs to, or null. */
+export async function channelBusinessId(db: Db, channelId: string): Promise<string | null> {
+  if (isPg(db)) {
+    if (!UUID.test(channelId)) return null;
+    const rows = await db.sql<{ businessId: string }[]>`select business_id from channel where id = ${channelId}::uuid`;
+    return rows[0]?.businessId ?? null;
+  }
+  if (isMem(db)) return db.channels.get(channelId)?.businessId ?? null;
+  return unsupported();
+}
+
+/**
+ * Marks `host` as this business's verified facts host. One business at most holds a verified host (migration 0016,
+ * business_facts_host_verified_uniq): a host another business verified first, or lost in a race, answers "taken"
+ * instead of an error. MemDb checks the same rule itself.
+ */
+export async function markFactsHostVerified(db: Db, business: Pick<BusinessRecord, "id" | "slug" | "name" | "place">, host: string): Promise<"ok" | "taken"> {
+  const h = host.toLowerCase();
+  if (isMem(db)) {
+    for (const b of db.businesses.values()) if (b.id !== business.id && b.factsHostVerifiedAt && b.factsHost?.toLowerCase() === h) return "taken";
+  }
+  try {
+    await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, factsHost: host, factsHostVerifiedAt: new Date().toISOString() });
+    return "ok";
+  } catch (err) {
+    const e = err as { code?: string; constraint_name?: string; message?: string };
+    if (e?.code === "23505" && (e.constraint_name === "business_facts_host_verified_uniq" || /business_facts_host_verified_uniq/.test(String(e.message)))) return "taken";
+    throw err;
+  }
 }

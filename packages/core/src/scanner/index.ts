@@ -9,8 +9,9 @@
  */
 import { withCountry } from "../shared/country";
 import { ENGINES, visibilityFor, type BusinessProfile, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type ProfileSummary, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
-import { type Db, type FindingInput } from "../db";
+import { listRunsToSummarize, saveRunSummary, summarizeRun, type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
+import { errorMessage, log } from "../shared/log.js";
 import { applies, businessNoun, familyOf, generatePrompts, promptsForFullScan, selectFreeScanPrompts, selectQuestions, type QuestionLibrary } from "../prompts";
 import { loadLibrary, recordScanUse, useRows } from "../prompts/library";
 import { attributeAll, type AttributionContext } from "./attribute";
@@ -392,6 +393,16 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
     opts.onProgress?.({ type: "phase", phase: "done" });
 
     const report = assembleReport({ business, facts, prompts, scanRun: { ...scanRun, costCents }, engines, samples, result, findings, unavailable, profile });
+    // The run's summary for the archive, the progress view and the dashboard (ADR-0007). Never fails the scan:
+    // a check without a summary only shows no counts until scripts/backfill-run-summaries.mts has seen it.
+    if (opts.kind !== "recheck") {
+      try {
+        const snapshot = await buildSnapshot(scanRun.id, db);
+        if (snapshot) await saveRunSummary(db, scanRun.id, summarizeRun(report, snapshot));
+      } catch (err) {
+        log.warn("scan.summary_failed", { scanRunId: scanRun.id, error: errorMessage(err) });
+      }
+    }
     // A bank question where the business is mostly not named becomes a fixed question.
     if (opts.kind === "monthly" || opts.kind === "baseline") {
       const promote = promotionCandidates(report.recommendations ?? []);
@@ -528,4 +539,33 @@ export async function buildReport(scanRunId: string, dbOverride?: Db): Promise<S
   const findings = await db.listFindingsByScanRun(scanRunId);
   const unavailable = new Set(scanRun.engines.filter((e) => !samples.some((s) => s.engine === e)));
   return assembleReport({ business, facts, prompts, scanRun, engines: scanRun.engines, samples, result, findings, unavailable, profile: scanRun.profile ?? null });
+}
+
+/**
+ * Fills run summaries for finished checks that have none (checks from before migration 0017), in batches by id.
+ * `all` rewrites existing ones too (after a dating or counting change). One failing check is counted and skipped,
+ * never retried in the same run. Used by scripts/backfill-run-summaries.mts and the mock seed.
+ */
+export async function backfillRunSummaries(db: Db, opts: { batch?: number; all?: boolean; businessId?: string; onBatch?: (saved: number, failed: number) => void } = {}): Promise<{ saved: number; failed: number }> {
+  let saved = 0;
+  let failed = 0;
+  let afterId: string | undefined;
+  for (;;) {
+    const ids = await listRunsToSummarize(db, { limit: opts.batch ?? 50, afterId, all: opts.all, businessId: opts.businessId });
+    if (!ids.length) break;
+    for (const id of ids) {
+      try {
+        const [snapshot, report] = await Promise.all([buildSnapshot(id, db), buildReport(id, db)]);
+        if (!snapshot) throw new Error("no snapshot");
+        await saveRunSummary(db, id, summarizeRun(report, snapshot));
+        saved++;
+      } catch (err) {
+        failed++;
+        log.warn("scan.summary_failed", { scanRunId: id, error: errorMessage(err) });
+      }
+    }
+    afterId = ids[ids.length - 1];
+    opts.onBatch?.(saved, failed);
+  }
+  return { saved, failed };
 }

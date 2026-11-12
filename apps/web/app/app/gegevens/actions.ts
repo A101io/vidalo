@@ -6,7 +6,7 @@ import type { Facts, Hours, PriceItem, SectorSlug } from "@vidalo/core/types";
 import { SECTOR_SLUGS } from "@vidalo/core/types";
 import { ready } from "@/lib/db";
 import { getI18n } from "@/lib/i18n";
-import { requireVerifiedOwner } from "@/lib/owner";
+import { businessFromForm, requireVerifiedOwnerOf } from "@/lib/owner";
 import { lastConfirmed } from "@vidalo/core/facts-history";
 import { isCountryCode, correctProfile } from "@vidalo/core/shared";
 
@@ -62,7 +62,8 @@ function parseFacts(form: FormData, businessId: string): Omit<Facts, "businessId
 
 /** Confirm facts: new version, provisional=false, verified_at=now; then publish + sync jobs. */
 export async function saveFacts(form: FormData) {
-  const { business } = await requireVerifiedOwner("/app/gegevens");
+  // The business is the one the form was rendered for (hidden `business`), checked for membership first (F-020).
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(form), "/app/gegevens");
   const db = await ready();
   const data = parseFacts(form, business.id);
   if (!data.name || !data.place) redirect((await getI18n()).href("/app/gegevens?fout=1"));
@@ -100,8 +101,9 @@ export async function saveFacts(form: FormData) {
  * yearly rule counts from it). Republished for the new date; nothing to sync,
  * nothing changed.
  */
-export async function reconfirmFacts() {
-  const { business } = await requireVerifiedOwner("/app/gegevens/versies");
+export async function reconfirmFacts(form: FormData) {
+  // Verified, as before (the ticket allows a plain owner here; the stricter check costs nobody who could confirm facts before).
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(form), "/app/gegevens/versies");
   const db = await ready();
   const confirmed = lastConfirmed(await db.listFacts(business.id));
   if (!confirmed) redirect((await getI18n()).href("/app/gegevens"));
@@ -115,11 +117,11 @@ export async function reconfirmFacts() {
 
 /**
  * "Zo lezen wij je bedrijf": the owner's correction of mode, offer, audience and category (FE-03).
- * The business is the session's; no business id is read from the form. An error comes back as
+ * The business is the one the form names (hidden `business`), checked for membership first. An error comes back as
  * `?profielfout=<field>:<reason>`, which the page maps to its own copy (never echoed).
  */
 export async function saveProfile(form: FormData) {
-  const { business } = await requireVerifiedOwner("/app/gegevens");
+  const { business } = await requireVerifiedOwnerOf(businessFromForm(form), "/app/gegevens");
   const db = await ready();
   const text = (k: string) => String(form.get(k) ?? "");
   const result = await correctProfile(db, business, { mode: text("profileMode"), offer: text("profileOffer"), audience: text("profileAudience"), category: text("profileCategory") });
