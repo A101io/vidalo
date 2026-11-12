@@ -2694,7 +2694,7 @@ export const en: CopyShape = {
     logout: "Log out",
     myData: {
       h: "Your data",
-      body: "Download everything Vidalo keeps about your business, or have it deleted.",
+      body: "Download everything Vidalo keeps about your business and your sign-in, or have it deleted. Your invoices are in the customer portal, under ‘Subscription’.",
       download: "Download your data (JSON)",
       deleteBody: "We delete your business, your details, your checks, your reports and your login. Invoices stay with Stripe for 7 years, because the law requires it. Changes we made on other sites stay there. This cannot be undone.",
       confirm: "Yes, delete everything about my business",

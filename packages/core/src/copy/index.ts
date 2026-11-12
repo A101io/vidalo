@@ -2771,7 +2771,7 @@ export const copy = {
     /** "Je gegevens": download (AVG art. 15/20) and delete (art. 17); core/shared/my-data.ts. */
     myData: {
       h: "Je gegevens",
-      body: "Download alles wat Vidalo over je bedrijf bewaart, of laat het verwijderen.",
+      body: "Download alles wat Vidalo over je bedrijf en je inlog bewaart, of laat het verwijderen. Je facturen staan in het klantportaal, onder ‘Abonnement’.",
       download: "Download je gegevens (JSON)",
       deleteBody: "We verwijderen je bedrijf, je gegevens, je controles, je rapporten en je inlog. Facturen blijven 7 jaar bij Stripe, omdat de wet dat vraagt. Wat we bij andere sites hebben aangepast, blijft daar staan. Dit kun je niet terugdraaien.",
       confirm: "Ja, verwijder alles van mijn bedrijf",
