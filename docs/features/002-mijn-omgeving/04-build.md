@@ -577,6 +577,46 @@ Checked against a mock dev server: exit 0, 64 pages, `app.html` and `app-account
 demo bakery, not the sign-in form. Not checked: the GitHub Actions run itself (`site.yml`, which
 uses `next start`).
 
+### Verify round 1 fixes, lane A list of `05-verification.md` §4 (2026-11-12)
+
+Branch fast-forwarded to `dd7a889` (both lanes merged) first. Each fix has a test that was red
+before it; red runs are in the session, the tests are named in `findings.md`.
+
+| # | ID | Commit | What |
+|---|---|---|---|
+| 1 | V-QA-03 (P0) | 2ee0cd5 | `publisher/serve.ts`: a cache hit re-reads the business by id (gone → 404, status or facts host changed → resolved again, so churn redirects at once); the purge clears the business's facts host and fallback host; pages `public, max-age=60`. `facts-after-purge-qa.test.ts` back to `it`, plus a churn case |
+| 2 | V-SEC-01 | 55f0515 | 0019 rule 3 also on `old.plan is distinct from new.plan`, MemDb mirror; `handleStripeEvent` tests (monitor_addon, monitor) on MemDb and PgDb, red with the CHECK violation before |
+| 3–4 | V-COMP-01, V-SEC-07 | cf2d829 | `deleteLogin` fails closed outside mock (worker, web); `STRIPE_SECRET_KEY` → worker; `VIDALO_AUTH_SECRET` in the manifest and `secrets-and-keys.md` |
+| 5 | V-COMP-03 + V-COMP-05 | 70515fa | owner rows first; dry run lists only owner rows and sends no reminder, logs `retention.would_purge { count }`; a retention row is due 14 days after its reminder (so arming reminds first); `claimDeletionReminder(id, at)` takes the cron's clock. Three A-06 tests updated to the new rule (reminders only when armed) |
+| 6 | V-COMP-04 | 9e0874d | overdue count includes stuck or retired purge jobs of businesses that still exist; `account.delete_failed { businessId }` on retirement |
+| 7 | V-COMP-02 | 76f98e6 | `listScanRetention(limit, after)`; the cron pages through all |
+| 8 | V-SEC-04 | a99b277 | `PurgeDeps.expireOpenCheckouts` (required), before the delete |
+| 9 | V-COMP-06 | 45a7d87 | `Db.deleteAuthAuditLog` in the purge (0 when `auth.audit_log_entries` is absent). Privacy sentence: draft only |
+| 10 | V-COMP-09 | df7d74b | Supabase backups and Resend retention read and recorded in `processors.md`. Privacy sentence: draft only |
+| 11 | V-COMP-08 | df7d74b | terms sentence: draft only |
+| 12 | V-SEC-03 | 4496526 | portal, Google start and callback answer `private, no-store` |
+| 13 | V-COMP-10 | 63fef30 | the deletion mail mentions the Google revoke only when it happened |
+| 14 | V-COMP-12 | ec56dd3 | `cancel_confirmed` names the Google end, the deletion date and the reminder |
+| 15 | V-COMP-11 | b202801 | at most the 10 newest sign-ins, open ones included |
+| 16 | V-SEC-06 | cd09c06 | `ownerEmailTakenOutside` for "bezet" |
+| 17 | V-COMP-13 | 2c22173 | `myData.body` names the sign-in and the customer portal |
+| 18 | V-COMP-15 | — | deploy day, not this round |
+
+The three legal sentences (V-COMP-06, -08, -09) are in `05-verification.md` §9 with NL and EN
+text, waiting for Julian. `copy.legal` and `legal.lock.json` are unchanged this round; no test
+forced a lock. One commit (V-COMP-04) was first made with a worker test still red and amended
+before anything else was committed on top. Not done: V-SEC-03's `lib/supabase.ts` header part
+(route handlers cannot set response headers through `next/headers`) and lane B's route handlers;
+whether the worker's database role may delete from `auth.audit_log_entries` on the hosted project.
+
+**Runs after the last fix (2c22173).** `pnpm -r typecheck` green; `pnpm -r test` green (core 1399
++ 22 skipped, worker 45); `pnpm e2e:mock` OK; `verify:pg` OK (106 db tests); `pnpm e2e:auth`
+15/15; the whole mock Playwright suite on a production build (`E2E_SERVER=start`, desktop) 165
+passed, 1 failed: F-024 (`profile-correction.spec.ts`, lane B's item 2), as on QA's baseline. On
+the dev server QA's `owner-keyboard-qa.spec.ts` fails all 22 pages ("focused without a visible
+ring") and `free-check` timed out once; both pass on the production build, which is how QA runs
+them (the spec says `E2E_SERVER=start`).
+
 ## After the merge (delivery-lead, 2026-11-12)
 
 `claude/002-mijn-omgeving`: C-00 `4cd414c`, lane B merged first (`73506af`), then lane A (`3ac2ac7`; only `04-build.md` and `findings.md` conflicted, both sides kept). Every run used `DATABASE_URL=` empty or a private local Postgres 18 on port 54433; nothing touched the hosted project, Stripe or Cloudflare.
