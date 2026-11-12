@@ -284,9 +284,9 @@ New this round, all must be true before `vidalo-web`/`vidalo-worker` go to produ
 
 | Gate | What must be true | Who |
 |---|---|---|
-| **R1** V2-SEC-01 | With `VIDALO_MOCK` unset and the manifest's env per Worker: a worker purge calls Google's revoke endpoint (or fails and says so in the mail); a web purge of a verified custom host without Cloudflare keys deletes nothing and queues the worker job. Tests green, control red | lane A fixes; delivery-lead verifies at ship-check |
-| **R2** V2-COMP-01 | A failing `deleteLogin` leaves a `login_delete` job, an overdue count of 1 the next day, and a mail without "dan is ook je inlog verwijderd" | lane A; delivery-lead verifies |
-| **R3** V2-COMP-02 | After a purge on PgDb no `auth.audit_log_entries` row carries the user id as actor or trait | lane A; delivery-lead verifies. The hosted DELETE permission on that table is still the §7 read |
+| **R1** V2-SEC-01 | With `VIDALO_MOCK` unset and the manifest's env per Worker: a worker purge calls Google's revoke endpoint (or fails and says so in the mail); a web purge of a verified custom host without Cloudflare keys deletes nothing and queues the worker job. Tests green, control red | **Fixed in 60848bc** (lane A, 12 Nov): lane A fixes; delivery-lead verifies at ship-check  |
+| **R2** V2-COMP-01 | A failing `deleteLogin` leaves a `login_delete` job, an overdue count of 1 the next day, and a mail without "dan is ook je inlog verwijderd" | **Fixed in af86e6d** (lane A, 12 Nov): lane A; delivery-lead verifies  |
+| **R3** V2-COMP-02 | After a purge on PgDb no `auth.audit_log_entries` row carries the user id as actor or trait | **Fixed in af86e6d** (lane A, 12 Nov): lane A; delivery-lead verifies. The hosted DELETE permission on that table is still the §7 read  |
 | **R4** V-COMP-07 | The Vidalo Control Room cell shows `retention.overdue` and is observed red on a forced count | delivery-lead |
 
 Still standing from round 1 §7, unchanged: `STRIPE_SECRET_KEY` on `vidalo-worker`;
