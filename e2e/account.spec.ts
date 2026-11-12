@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { dismissNotice, startCheckViaApi } from "./helpers";
 
 /**
  * Feature 002, lane A, mock mode: the owner's download (A-04), Google disconnect (A-04) and,
@@ -45,8 +45,7 @@ test("A-04: the download is the member's own business, streamed, without access 
 
 test("A-04: another, an unknown or a malformed business id gets the same 404; signed out gets 401", async ({ page, browser }) => {
   // Another business: a fresh free check (nobody's member).
-  const res = await page.request.post("/api/scan", { form: { q: "Kapsalon Vreemd", place: "Haarlem", email: "e2e@example.nl" }, maxRedirects: 0 });
-  await page.goto(res.headers()["location"]!);
+  await page.goto(await startCheckViaApi(page, { q: "Kapsalon Vreemd", place: "Haarlem", email: "e2e@example.nl" }));
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   const foreign = (await page.locator("form[action='/api/checkout'] input[name='business']").first().getAttribute("value"))!;
   await signInAs(page, DEMO);

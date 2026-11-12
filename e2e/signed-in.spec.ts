@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { dismissNotice, startCheckViaApi } from "./helpers";
 
 /**
  * /inloggen for a visitor who is already signed in (mock auth): no e-mail form
@@ -20,14 +20,7 @@ async function freshBusinessId(page: Page, name: string): Promise<string> {
   // Through the API, not the landing form: on a cold dev server a hot reload can
   // empty the form between fill and submit, and the free check is not what
   // these tests are about (free-check.spec.ts covers it).
-  const res = await page.request.post("/api/scan", { form: { q: name, place: "Haarlem", email: "e2e@example.nl" }, maxRedirects: 0 });
-  // The check waits for the confirmation link (mock engines: /scan/mail?link=<token>).
-  const mail = new URL(res.headers()["location"]!);
-  expect(mail.pathname).toBe("/scan/mail");
-  const started = await page.request.post("/api/scan/bevestigen", { form: { t: mail.searchParams.get("link")! }, maxRedirects: 0 });
-  const waiting = started.headers()["location"]!;
-  expect(waiting).toMatch(/\/scan\/[^/?#]+$/);
-  await page.goto(waiting);
+  await page.goto(await startCheckViaApi(page, { q: name, place: "Haarlem", email: "e2e@example.nl" }));
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   return (await page.locator("form[action='/api/checkout'] input[name='business']").first().getAttribute("value"))!;
 }
