@@ -379,9 +379,16 @@ export interface Db {
   /**
    * Businesses whose deletion is late: a deletion date more than a day past, or a purge job for a business that
    * still exists which is unfinished after a day or gave up (V-COMP-04), or a `login_delete` job unfinished after a
-   * day or given up (R2). Each business and each login counted once.
+   * day or given up (R2), or a login with no business more than a day past its LOGIN_WITHOUT_BUSINESS_DAYS
+   * (V2-COMP-03). Each business and each login counted once.
    */
   countOverdueDeletions(now: Date): Promise<number>;
+  /**
+   * V2-COMP-03: Supabase logins (auth.users) with no business, neither as member nor as owner_user_id, whose
+   * creation and last sign-in are both before `activeBefore`, and with no unrun `login_delete` job. Ordered by id.
+   * Empty when auth.users is absent (verify:pg without it).
+   */
+  listLoginsWithoutBusiness(activeBefore: Date, limit: number): Promise<string[]>;
   /** Vidalo Scan businesses (plan setup, status trial), ordered by id; `after` continues after the last page (V-COMP-02). */
   listScanRetention(limit: number, after?: string): Promise<BusinessRecord[]>;
   /** A Scan business's retention date (reason retention), or null; a later date re-arms the reminder. */

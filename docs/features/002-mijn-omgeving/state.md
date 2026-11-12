@@ -10,8 +10,8 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | Design reviewed | <path and version under `designs/inbox/`, or none> |
 | Design gate rounds used | 0 of 2 |
 | Verify rounds used | **2 of 2** (no third round; P1 fixes are checked at ship-check) |
-| Open P0s | none. Open P1s: V2-SEC-01 (R1), V2-COMP-01 incl. V2-SEC-02 (R2), V2-COMP-02 (R3), V-COMP-07 (R4) are release gates before the production deploy; V2-COMP-03 waits on Julian (memo below), not a gate |
-| Waiting on Julian | V2-COMP-03 decision (memo below); D1 dashboard, D2 sandbox run, `VIDALO_PURGE` arming, worker/web secrets, hosted migrations and the deploy (`05-verification.md` §7 and R2.5) |
+| Open P0s | none. Open P1s: V2-SEC-01 (R1), V2-COMP-01 incl. V2-SEC-02 (R2), V2-COMP-02 (R3), V-COMP-07 (R4) are release gates before the production deploy; V2-COMP-03 decided by Julian 12 Nov ("Ja, na 002"), built as its own PR on top of #123, not a gate |
+| Waiting on Julian | V2-COMP-03 PR review (lands after #123); D1 dashboard, D2 sandbox run, `VIDALO_PURGE` arming, worker/web secrets, hosted migrations and the deploy (`05-verification.md` §7 and R2.5) |
 
 ## Phase log
 | Date | Phase | What happened | Who |
@@ -36,6 +36,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 ## Skipped phases
 | Phase | Why skipping is safe here |
 |---|---|
+| 2026-11-12 | 4 verify | V2-COMP-03 decided by Julian ("Inlogs zonder bedrijf na 30 dagen verwijderen, met de nieuwe privacyzin?" → "Ja, na 002"). Built on `claude/orphan-logins-9c2f75`, base `claude/002-mijn-omgeving`: retention step 4a queues `login_delete` for a login with no business 30 days after its later of creation and last sign-in (only with `VIDALO_PURGE=1`, overdue count otherwise), privacy sentence NL + EN, version 13 November 2026. Typecheck, tests, `e2e:mock`, `verify:pg` green | Claude |
 
 ## Decisions needed
 **Retention for Vidalo Scan customers (F-012, F-015)** — DECIDED 2026-11-11 by Julian: 24 months and 60 days, as the default.
@@ -54,7 +55,7 @@ Default:       lane A writes them as drafted in the fix round; they wait for you
 ```
 
 ```
-DECISION NEEDED — 002 Mijn omgeving: logins that never get a business (V2-COMP-03)
+DECIDED 12 Nov 2026 by Julian, "Ja, na 002" — 002 Mijn omgeving: logins that never get a business (V2-COMP-03); built as its own change on top of 002 (branch claude/orphan-logins-9c2f75)
 Disagreement:  a login made on /inloggen that never gets a business is kept for ever, and its owner cannot delete it (true on main today)
 Position A:    compliance wants a daily step deleting such logins 30 days after creation or last sign-in, plus the privacy sentence "Hoort er na 30 dagen geen bedrijf bij je inlog, dan verwijderen we de inlog." (NL, EN), because the privacy text promises self-deletion (AVG 5(1)(e)). Cost: 2 h + your yes
 Position B:    delivery-lead: ship 002 without it, as main behaves today, and keep it open as a P1. Cost: 0 now; a storage-limitation gap that predates 002 stays open
