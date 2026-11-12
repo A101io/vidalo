@@ -160,6 +160,12 @@ goes to lane A (F-A6, confirmed).
 
 ## 9. Waiting on Julian: three legal sentences (lane A drafts, 12 Nov 2026)
 
+**Outcome (12 Nov 2026):** Julian said "proceed with the legal part". Sentences 1 and 2 are in
+`copy.legal` (NL, EN) with the version date set to 12 November 2026 and `legal:lock` run (the
+legal test refuses a wording change under the old date). Sentence 3 is not added: the project is
+on the Supabase free plan (F-022), which takes no automatic backups; on a move to Pro it goes in.
+The version date is set again on deploy day (V-COMP-15).
+
 Drafted by lane A, **not in the code**: `copy.legal` and `legal.lock.json` are unchanged by them,
 and `legal:lock` was not run for them (no test forced it). Each needs Julian's yes ("ja" / a
 change) before it goes into `packages/core/src/copy/index.ts` and `en.ts`. Then lane A adds them,
