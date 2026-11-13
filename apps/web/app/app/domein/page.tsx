@@ -61,6 +61,24 @@ function SiteFix({ issue, S, factsUrl }: { issue: SiteIssue; S: SiteCopy; factsU
           <p className="mt-2">{F.phoneFix}</p>
         </>
       );
+    case "assistants_refused": {
+      const who = joinNames(issue.engines, S.and);
+      return (
+        <>
+          <h4 className="font-bold">{F.refusedTitle(who)}</h4>
+          <p className="mt-1">{F.refusedBody(who)}</p>
+          <p className="mt-2">{F.refusedFix(issue.fetchers.join(", "))}</p>
+        </>
+      );
+    }
+    case "phone_not_in_page":
+      return (
+        <>
+          <h4 className="font-bold">{F.phoneTextTitle}</h4>
+          <p className="mt-1">{F.phoneTextBody(issue.phone)}</p>
+          <p className="mt-2">{F.phoneTextFix}</p>
+        </>
+      );
     case "no_business_data":
       return (
         <>

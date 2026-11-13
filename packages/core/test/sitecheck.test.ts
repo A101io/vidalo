@@ -7,6 +7,10 @@ import {
   issueKey,
   metaNoindex,
   parseRobots,
+  phoneInPage,
+  ANSWER_FETCHERS,
+  MAX_PAGE_BYTES,
+  SITECHECK_USER_AGENT,
   robotsAllows,
   runSiteCheck,
   sitecheckEmail,
@@ -14,9 +18,11 @@ import {
 } from "../src/publisher/sitecheck";
 import { facts } from "./worker-fixtures";
 
-/** A fake site: path → [status, body, headers]. Anything else is a 404. */
-function site(pages: Record<string, [number, string, Record<string, string>?]>): FetchLike {
-  return async (url) => {
+/** A fake site: path → [status, body, headers]. Anything else is a 404. `refuse` turns away requests whose user-agent contains one of the names. */
+function site(pages: Record<string, [number, string, Record<string, string>?]>, refuse: { names: string[]; status?: number; headers?: Record<string, string>; body?: string } | null = null): FetchLike {
+  return async (url, init) => {
+    const ua = new Headers(init?.headers).get("user-agent") ?? "";
+    if (refuse && refuse.names.some((n) => ua.includes(n))) return new Response(refuse.body ?? "Forbidden", { status: refuse.status ?? 403, headers: refuse.headers ?? {} });
     const page = pages[new URL(url).pathname];
     if (!page) return new Response("", { status: 404 });
     return new Response(page[1], { status: page[0], headers: page[2] ?? {} });
@@ -24,7 +30,8 @@ function site(pages: Record<string, [number, string, Record<string, string>?]>):
 }
 
 const ld = (obj: unknown) => `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
-const bakery = ld({ "@context": "https://schema.org", "@type": "Bakery", name: "Bakkerij Jansen", telephone: "023 123 45 67", address: { "@type": "PostalAddress", streetAddress: "Grote Markt 12" } });
+const footer = `<footer><p>Bel ons: <a href="tel:+31231234567">023 - 123 45 67</a></p></footer>`;
+const bakery = footer + ld({ "@context": "https://schema.org", "@type": "Bakery", name: "Bakkerij Jansen", telephone: "023 123 45 67", address: { "@type": "PostalAddress", streetAddress: "Grote Markt 12" } });
 
 describe("robots.txt", () => {
   it("lets a group naming the robot win over *", () => {
@@ -90,9 +97,39 @@ describe("checkSite", () => {
     expect(a.issues).toEqual([
       { kind: "noindex", via: "header", pageUrl: "https://x.nl/" },
       { kind: "phone_mismatch", found: "+31 23 999 88 77", expected: "023-1234567", pageUrl: "https://x.nl/" },
+      { kind: "phone_not_in_page", phone: "023-1234567", pageUrl: "https://x.nl/" },
     ]);
-    const b = await checkSite("x.nl", facts, { fetch: site({ "/": [200, "<html>geen gegevens</html>"] }) });
+    const b = await checkSite("x.nl", facts, { fetch: site({ "/": [200, `<html>geen gegevens${footer}</html>`] }) });
     expect(b.issues).toEqual([{ kind: "no_business_data", pageUrl: "https://x.nl/" }]);
+  });
+
+  it("finds the phone in the page text in any common notation, never only in a script", () => {
+    const n = "+31231234567";
+    for (const html of ["<p>023-1234567</p>", "<p>Tel. <b>023</b>&nbsp;123 45 67</p>", "<p>+31 (0)23 123 45 67</p>", "<p>0031 23 1234567</p>", '<a href="tel:+31231234567">Bel ons</a>', "<span>(023) 123.45.67</span>, 2011 AB Haarlem"]) {
+      expect(phoneInPage(html, n), html).toBe(true);
+    }
+    expect(phoneInPage("<p>023 \u2013 123 45 67</p>", n)).toBe(true);
+    for (const html of ["<p>023-7654321</p>", bakery.replace(footer, ""), '<script>window.phone="023 123 45 67"</script>', '<div id="app"></div><noscript>023 123 45 67</noscript>']) {
+      expect(phoneInPage(html, n), html).toBe(false);
+    }
+  });
+
+  it("flags the assistants a firewall turns away, only when our own request got in", async () => {
+    const pages = { "/": [200, bakery] as [number, string] };
+    const a = await checkSite("x.nl", facts, { fetch: site(pages, { names: ["ChatGPT-User", "Claude-User"] }) });
+    expect(a.issues).toEqual([{ kind: "assistants_refused", fetchers: ["ChatGPT-User", "Claude-User"], engines: ["chatgpt", "claude"], pageUrl: "https://x.nl/" }]);
+    const challenge = await checkSite("x.nl", facts, { fetch: site(pages, { names: ["Perplexity-User"], status: 403, headers: { "cf-mitigated": "challenge" } }) });
+    expect(challenge.issues).toEqual([{ kind: "assistants_refused", fetchers: ["Perplexity-User"], engines: ["perplexity"], pageUrl: "https://x.nl/" }]);
+    const page200 = await checkSite("x.nl", facts, { fetch: site(pages, { names: ["ChatGPT-User"], status: 200, body: '<html><title>Just a moment...</title><script src="/cdn-cgi/challenge-platform/h/b/orchestrate/x.js"></script></html>' }) });
+    expect(page200.issues.map((i) => i.kind)).toEqual(["assistants_refused"]);
+    // A site that turns everyone away gives no assistant issue: we cannot tell it apart from our own request being blocked.
+    const all = await checkSite("x.nl", facts, { fetch: site(pages, { names: ["Vidalo", "ChatGPT-User", "Claude-User", "Perplexity-User"] }) });
+    expect(all.issues).toEqual([]);
+    // A rate limit may answer our own requests in a row: not a refusal.
+    expect((await checkSite("x.nl", facts, { fetch: site(pages, { names: ["Claude-User"], status: 429 }) })).issues).toEqual([]);
+    // A 404 or 500 for an assistant is not a refusal.
+    const err = await checkSite("x.nl", facts, { fetch: site(pages, { names: ["Claude-User"], status: 500 }) });
+    expect(err.issues).toEqual([]);
   });
 
   it("never fetches localhost, IP literals or bare names", async () => {
@@ -118,13 +155,35 @@ describe("checkSite", () => {
   });
 });
 
+describe("hostile homepage", () => {
+  it("stays fast on a megabyte of unclosed tags", () => {
+    for (const html of ["<".repeat(1_000_000), "<script ".repeat(125_000), "<style>".repeat(140_000) + "023"]) {
+      const t = performance.now();
+      phoneInPage(html, "+31231234567");
+      expect(performance.now() - t).toBeLessThan(1000);
+    }
+  });
+
+  it("reads at most MAX_PAGE_BYTES of a page", async () => {
+    const big = "x".repeat(MAX_PAGE_BYTES + 500_000) + footer;
+    const r = await checkSite("x.nl", facts, { fetch: site({ "/": [200, big] }) });
+    expect(r.issues.map((i) => i.kind)).toContain("phone_not_in_page");
+  });
+
+  it("names Vidalo in every assistant user-agent", () => {
+    for (const f of ANSWER_FETCHERS) expect(f.userAgent).toContain(SITECHECK_USER_AGENT);
+  });
+});
+
 describe("sitecheckEmail", () => {
   it("gives the owner the exact change, in plain Dutch", async () => {
     const r = await checkSite("bakkerijjansen.nl", facts, {
       fetch: site({ "/robots.txt": [200, "User-agent: OAI-SearchBot\nDisallow: /\n"], "/": [200, "<html></html>"] }),
     });
     const m = sitecheckEmail({ name: "Bakkerij Jansen" }, r, { factsPageUrl: "https://feiten.bakkerijjansen.nl/", dashboardUrl: "https://vidalo.io/app" });
-    expect(m.subject).toBe("2 aanpassingen op je website voor Bakkerij Jansen");
+    expect(m.subject).toBe("3 aanpassingen op je website voor Bakkerij Jansen");
+    expect(m.text).toContain("je telefoonnummer in de tekst van je homepage");
+    expect(m.text).toContain("023-1234567");
     expect(m.text).toContain("ChatGPT mag je website niet lezen");
     expect(m.text).toContain("https://bakkerijjansen.nl/robots.txt");
     expect(m.text).toContain("User-agent: OAI-SearchBot\nAllow: /");
@@ -176,12 +235,16 @@ describe("runSiteCheck", () => {
     const worse = site({ "/robots.txt": [200, "User-agent: Bingbot\nDisallow: /\n"], "/": [200, bakery, { "x-robots-tag": "noindex" }] });
     expect(await runSiteCheck(b.id, { fetch: worse })).toMatchObject({ newIssues: ["noindex"], notified: true });
     expect(emails()).toHaveLength(2);
+
+    const refusing = site({ "/robots.txt": [200, "User-agent: Bingbot\nDisallow: /\n"], "/": [200, bakery, { "x-robots-tag": "noindex" }] }, { names: ["ChatGPT-User"] });
+    expect(await runSiteCheck(b.id, { fetch: refusing })).toMatchObject({ newIssues: ["assistants_refused:ChatGPT-User"], notified: true });
+    expect(emails()).toHaveLength(3);
   });
 
   it("does not mail for advice alone, and skips a business without a website", async () => {
     const b = await seed();
     const bare = await runSiteCheck(b.id, { fetch: site({ "/": [200, "<html></html>"] }) });
-    expect(bare.result?.issues.map(issueKey)).toEqual(["no_business_data"]);
+    expect(bare.result?.issues.map(issueKey)).toEqual(["no_business_data", "phone_not_in_page"]);
     expect(bare.notified).toBe(false);
     expect(emails()).toHaveLength(0);
 
