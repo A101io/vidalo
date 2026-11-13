@@ -36,7 +36,11 @@ export function turnstileMode(o: { secret?: string; siteKey?: string; production
 /** Asks Cloudflare whether the token is good. Any failure (no token, network, bad answer) is a no. */
 export async function verifyTurnstile(token: unknown, o: { secret: string; ip?: string | null; fetchFn?: typeof fetch }): Promise<boolean> {
   const t = typeof token === "string" ? token.trim() : "";
-  if (!t || t.length > 2048) return false;
+  if (!t || t.length > 2048) {
+    // No token: the form was sent before the widget had one (or without the widget). Logged so it is not mistaken for a refusal.
+    log.warn(t ? "turnstile.token_too_long" : "turnstile.no_token", { length: t.length });
+    return false;
+  }
   const body = new URLSearchParams({ secret: o.secret, response: t });
   if (o.ip) body.set("remoteip", o.ip);
   try {
