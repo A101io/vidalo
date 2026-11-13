@@ -76,6 +76,31 @@ export async function dismissNotice(page: Page) {
   await page.waitForLoadState("networkidle");
 }
 
+/**
+ * After a free-check post: the check starts only from the link in the confirmation mail
+ * (core/shared/scan-confirm.ts). With mock engines /scan/mail shows that link; follow it and press start.
+ */
+export async function confirmCheck(page: Page) {
+  await page.waitForURL(/\/(en\/)?scan\/mail\?/);
+  await page.getByTestId("confirm-link").click();
+  await page.waitForURL(/\/(en\/)?scan\/bevestigen\?t=/);
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+}
+
+/**
+ * A free check through the API (no form): the post, then the confirmation link's button
+ * (mock engines: /scan/mail?link=<token>). Returns the waiting room's URL.
+ */
+export async function startCheckViaApi(page: Page, form: Record<string, string>): Promise<string> {
+  const res = await page.request.post("/api/scan", { form, maxRedirects: 0 });
+  const mail = new URL(res.headers()["location"]!);
+  expect(mail.pathname).toBe("/scan/mail");
+  const started = await page.request.post("/api/scan/bevestigen", { form: { t: mail.searchParams.get("link")! }, maxRedirects: 0 });
+  const waiting = started.headers()["location"]!;
+  expect(waiting).toMatch(/\/scan\/[^/?#]+$/);
+  return waiting;
+}
+
 export async function expectNoErrors(errors: string[]) {
   expect(errors, errors.join("\n")).toEqual([]);
 }

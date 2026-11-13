@@ -808,6 +808,23 @@ export class PgDb implements Db {
     return mapGoogleIndex(rows[0]!);
   }
 
+  async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    // The transaction only holds the lock (released at commit or rollback); fn's queries use other pool connections.
+    // A waiter must not sit on a pool connection: with every connection waiting, the holder could not run fn (a deadlock
+    // seen in test/scan-confirm-race.test.ts). So try, give the connection back, and try again.
+    const NOT_MINE = Symbol("not mine");
+    const deadline = Date.now() + 20_000;
+    for (let wait = 10; ; wait = Math.min(wait * 2, 200)) {
+      const out = await this.sql.begin(async (tx) => {
+        const [row] = await tx`select pg_try_advisory_xact_lock(hashtext(${key})) as ok`;
+        return row?.ok ? [await fn()] : [NOT_MINE];
+      });
+      if (out[0] !== NOT_MINE) return out[0] as T;
+      if (Date.now() > deadline) throw new Error(`withLock(${key}): not acquired in 20 s`);
+      await new Promise((r) => setTimeout(r, wait + Math.floor(Math.random() * wait)));
+    }
+  }
+
   // --- sign-ins (feature 002, migration 0018) ---
   async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
     await this.sql.begin(async (tx) => {

@@ -675,6 +675,23 @@ export class MemDb implements Db {
     return structuredClone(row);
   }
 
+  private locks = new Map<string, Promise<unknown>>();
+
+  async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const before = this.locks.get(key) ?? Promise.resolve();
+    const run = before.then(fn, fn);
+    const tail = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.locks.set(key, tail);
+    try {
+      return await run;
+    } finally {
+      if (this.locks.get(key) === tail) this.locks.delete(key);
+    }
+  }
+
   // --- sign-ins (feature 002, migration 0018) ---
   async recordSignIn(row: { sessionId: string; userId: string; browser: BrowserFamily; os: OsFamily; at: Date }): Promise<void> {
     for (const b of this.businesses.values()) if (b.ownerUserId === row.userId) b.lastActiveAt = row.at.toISOString();

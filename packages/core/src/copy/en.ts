@@ -41,7 +41,7 @@ export const en: CopyShape = {
     placeLabel: "Town",
     placePlaceholder: "Town",
     button: "Check for free",
-    note: "Two minutes. The report lands in your inbox.",
+    note: "You first confirm your email address, then it takes two minutes. The report lands in your inbox.",
     emailLabel: "Email address",
     emailPlaceholder: "name@business.com",
     emailInvalid: "Enter a valid email address, such as name@business.com.",
@@ -728,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 13 November 2026",
+    updated: "Version of 14 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -984,6 +984,7 @@ export const en: CopyShape = {
             "When you request a free check, we look up the business, first work out what it offers and for whom, and then ask AI assistants questions about it.",
             [
               "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; a short description of what the business offers and for whom; the answers of AI assistants and the sources they name, with the names of other businesses they name; your email address, where we send the report. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
+              "Confirming: the check starts only when you click the link we send to your email address. That way we keep malicious bots out and nobody can start a check in someone else's name. If you do not confirm within 24 hours, nothing starts; we then keep your request with your email address for at most 12 months, so we can trace abuse.",
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website (including a website you give us) and the sources AI assistants name.",
               "What we do with it: to see what the business offers and for whom, we send OpenAI the details from Google and the text of the business's homepage, from which we first remove email addresses and phone numbers; OpenAI turns that into a short description. We keep that description with the business, and the report shows it as how we read the business. The report also shows which other businesses AI assistants named and how often.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
@@ -1317,6 +1318,8 @@ export const en: CopyShape = {
   scanBusy: {
     title: "No free checks for now",
     body: "We do a limited number of free checks every day and they have run out for today. Please try again tomorrow.",
+    mailTitle: "Check your inbox first",
+    mailBody: "We have already sent a few confirmation emails today. Click the link in one of them, or try again tomorrow.",
     back: "Back to the home page",
   },
 
@@ -1366,6 +1369,17 @@ export const en: CopyShape = {
       websitePlaceholder: "www.yourbusiness.com",
       websiteHint: "Vidalo reads your website to understand what you do. You can leave it empty: we then ask a few general questions.",
       websiteError: "We cannot read that as a website. Enter an address like www.yourbusiness.com, or leave it empty.",
+    },
+    confirm: {
+      sentTitle: "Check your inbox",
+      sentBody: "We sent you an email with a link. Click it and we start the check. The link works for 24 hours.",
+      why: "We ask for this confirmation to keep malicious bots out. That way nobody can start checks in bulk, or start a check in someone else's name.",
+      spam: "Nothing arrived? Look in your junk folder too, or enter your business again.",
+      title: (name: string) => `Start the check of ${name}`,
+      body: "This click confirms your email address. Then we start the check; the report also lands in your inbox.",
+      button: "Start the check",
+      invalid: "This link is not valid or has expired. Enter your business again and we send a new one.",
+      back: "Back to the home page",
     },
     empty: "Enter a business name or website.",
   },
@@ -2232,7 +2246,7 @@ export const en: CopyShape = {
     h1: "Set it right once. Then we keep it right.",
     lead: "You only pay once you have seen your report. First check for free, then you choose.",
     start: "Check for free",
-    startNote: "Two minutes. The report lands in your inbox. After the check you choose a plan.",
+    startNote: "You first confirm your email address, then it takes two minutes. The report lands in your inbox. After the check you choose a plan.",
     faqTitle: "Paying and cancelling",
     faq: [
       { q: "How do I pay?", a: "With iDEAL, credit card or direct debit (SEPA). You pay through Stripe; we do not see your payment details." },
@@ -3052,6 +3066,15 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
+    scanConfirm: {
+      subject: (name: string) => `Confirm your free check of ${name}`,
+      preheader: "One click and we start the check.",
+      headline: (name: string) => `Start the check of ${name}`,
+      intro: (name: string) => `You asked for a free check of ${name} on vidalo.ai. Click the button to confirm your email address; we then start the check and send the report to this address.`,
+      cta: "Confirm and start the check",
+      why: "We ask for this confirmation to keep malicious bots out: that way nobody can start checks in someone else's name. The link works once, for 24 hours.",
+      notYou: "Did you not ask for this? Then there is nothing to do. We start nothing and send you nothing more about it.",
+    },
     accountDeleted: (name: string, googleRevoked: boolean, loginDeleted = true) => ({
       subject: `Everything of ${name} is deleted`,
       body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, and your facts page and its address.${googleRevoked ? " We also revoked the connection with Google at Google." : ""} ${loginDeleted ? "If no other business belongs to your sign-in, your sign-in is deleted too." : "We delete your sign-in as soon as possible."}

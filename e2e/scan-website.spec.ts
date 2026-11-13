@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { confirmCheck, dismissNotice } from "./helpers";
 
 /**
  * Feature 001, ADR-0007: for a business Google does not list, /scan/kies asks for its website (the only place it is
@@ -61,6 +61,7 @@ test("a valid website is read: the report says what the business does", async ({
   await toKies(page);
   await page.getByLabel("Wat is je website?").fill("www.vloedlijn-music.example");
   await page.locator("main button[type='submit']").click();
+  await confirmCheck(page);
   await page.waitForURL(/\/(scan|r)\//);
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   await expect(page.getByText(/Gecontroleerd als: aanbieder van achtergrondmuziek/)).toBeVisible();
@@ -71,6 +72,7 @@ test("without a website the check still runs, and the report says it could not r
   test.setTimeout(120_000);
   await toKies(page);
   await page.locator("main button[type='submit']").click();
+  await confirmCheck(page);
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   await expect(page.getByText("We konden niet lezen wat je bedrijf doet.")).toBeVisible();
   await expect(page.getByText(/Geef bij een nieuwe controle je website op/)).toBeVisible();

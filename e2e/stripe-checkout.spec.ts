@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { confirmCheck, dismissNotice } from "./helpers";
 
 /**
  * A real Stripe test-mode checkout, run with `pnpm e2e:stripe`
@@ -15,6 +15,7 @@ async function reportFor(page: Page, name: string) {
   await form.locator("input[name='place']").fill("Rotterdam");
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
+  await confirmCheck(page);
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
 }
 
