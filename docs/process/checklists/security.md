@@ -56,6 +56,7 @@ exploit path, not opinions about structure.
 
 ## Learned (Vidalo, 11 Nov 2026)
 - Every regex run on AI answer text, or on values extracted from it, gets a length cap before matching and a timing test on a long hostile input; no `\s*` or `.*` next to a repeated group under the `m` flag.
+- The same goes for HTML fetched from an owner's or third party's site (13 Nov 2026, own-website check): read the body with a byte cap, never `res.text()` unbounded; strip blocks with `indexOf`, not a lazy `[\s\S]*?` with a backreference; tag patterns exclude `<` (`<[^<>]*>`), since `<[^>]*>` is quadratic on a page of `<`.
 - A public page reachable by a guessable key (slug, name + town) shows nothing beyond what that key's owner chose to publish; private data only behind an unguessable id or the owner's session.
 - A redirect-target check (`next`, `returnTo`) runs again on the **normalised** result: `new URL("/.//evil.example", base).pathname` is `//evil.example`, which passes every check on the raw input (002 F-023).
 - A response that carries a refreshed auth `Set-Cookie` is `Cache-Control: private, no-store`; middleware runs on static pages too, and one cached response hands a session to the next visitor (002 F-018).

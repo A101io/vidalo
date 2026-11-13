@@ -6,7 +6,13 @@
  *                 (RFC 9309: most specific group, longest match, allow wins a tie)
  *   homepage    — "noindex" in a robots meta tag or X-Robots-Tag header;
  *                 JSON-LD with a LocalBusiness (or an Organization with an
- *                 address); its telephone against the confirmed facts.
+ *                 address); its telephone against the confirmed facts;
+ *                 the phone number in the page text as the server sends it
+ *                 (scripts not run, as a fetch-only assistant reads it).
+ *   assistants  — the homepage fetched again as ChatGPT-User, Claude-User and
+ *                 Perplexity-User (the fetchers that open a page when someone
+ *                 asks): refused or a challenge page while our own request got
+ *                 the page means a firewall or bot setting shuts them out.
  *
  * Only robots that answer questions are checked, not training crawlers: a
  * blocked GPTBot does not stop ChatGPT search, a blocked OAI-SearchBot does.
@@ -18,6 +24,7 @@ import type { Engine, Facts } from "../types.js";
 import type { BusinessRecord } from "../db/types.js";
 import { getDb, isMock } from "../shared/db.js";
 import { log, errorMessage } from "../shared/log.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { formatPhoneNl, normalizePhone } from "../scanner/normalize.js";
 import { dashboardUrl } from "../reporter/links.js";
 import { copyFor, type Lang } from "../copy/index.js";
@@ -37,6 +44,19 @@ export const ANSWER_ROBOTS: { token: string; engines: Engine[] }[] = [
   // Anthropic: Claude-User fetches a page when a user asks; Claude-SearchBot fills the search index Claude cites.
   { token: "Claude-User", engines: ["claude"] },
   { token: "Claude-SearchBot", engines: ["claude"] },
+];
+
+/**
+ * Fetchers that open a page when a user asks an assistant something, with the
+ * user-agent each sends; ours ends with our own name, so the site's logs show
+ * who really asked. A firewall that checks the sender's IP range may still
+ * treat our request differently from the real one: the owner copy says so. robots.txt is not what stops these; a firewall or a
+ * "block AI bots" setting is.
+ */
+export const ANSWER_FETCHERS: { token: string; engines: Engine[]; userAgent: string }[] = [
+  { token: "ChatGPT-User", engines: ["chatgpt"], userAgent: `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ChatGPT-User/1.0; +https://openai.com/bot ${SITECHECK_USER_AGENT}` },
+  { token: "Claude-User", engines: ["claude"], userAgent: `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +Claude-User@anthropic.com) ${SITECHECK_USER_AGENT}` },
+  { token: "Perplexity-User", engines: ["perplexity"], userAgent: `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user) ${SITECHECK_USER_AGENT}` },
 ];
 
 // ---------------------------------------------------------------------------
@@ -175,6 +195,53 @@ export function metaNoindex(html: string): boolean {
   return false;
 }
 
+/**
+ * True when the phone number is in the page as the server sends it: in the
+ * text or a tel: link, not only inside a script (JSON-LD included, since
+ * many readers drop scripts). Separators and a +31 / 0031 / 0 prefix may vary.
+ */
+export function phoneInPage(html: string, normalised: string): boolean {
+  const p = parsePhoneNumberFromString(normalised);
+  if (!p) return false;
+  const nsn = p.nationalNumber;
+  const wanted = [`0${nsn}`, `${p.countryCallingCode}${nsn}`];
+  const text = stripBlocks(html)
+    .replace(/<[^<>]*>/g, (tag) => ` ${/\bhref\s*=\s*["']?tel:([^"'\s>]+)/i.exec(tag)?.[1] ?? ""} `)
+    .replace(/&(nbsp|#160|#xa0);/gi, " ")
+    .replace(/&#43;|&plus;/gi, "+");
+  for (const run of text.split(/[^\d\s().\/+\u2013\u2014-]+/)) {
+    const digits = run.replace(/\D/g, "");
+    if (digits.length >= nsn.length && wanted.some((w) => digits.includes(w))) return true;
+  }
+  return false;
+}
+
+/** Drop <script>, <style> and <noscript> blocks with indexOf, so a hostile page with unclosed tags stays linear. */
+function stripBlocks(html: string): string {
+  const lower = html.toLowerCase();
+  const open = /<(script|style|noscript)\b/g;
+  let out = "";
+  let i = 0;
+  for (;;) {
+    open.lastIndex = i;
+    const m = open.exec(lower);
+    if (!m) return out + html.slice(i);
+    out += html.slice(i, m.index) + " ";
+    const close = lower.indexOf(`</${m[1]}`, m.index);
+    const end = close < 0 ? -1 : lower.indexOf(">", close);
+    if (end < 0) return out;
+    i = end + 1;
+  }
+}
+
+/** A response that keeps the page from the reader: refused, rate-limited, or a challenge instead of the page. */
+export function isRefused(res: { status: number; text: string; headers: Headers }): boolean {
+  // 429 is left out: it may answer our own requests in a row, not the assistant.
+  if (res.status === 401 || res.status === 403) return true;
+  if (res.headers.get("cf-mitigated")?.toLowerCase() === "challenge") return true;
+  return res.status === 200 && /\/cdn-cgi\/challenge-platform\//.test(res.text) && /<title>\s*Just a moment/i.test(res.text);
+}
+
 // ---------------------------------------------------------------------------
 // the check
 // ---------------------------------------------------------------------------
@@ -183,10 +250,12 @@ export type SiteIssue =
   | { kind: "robots_blocked"; robots: string[]; engines: Engine[]; robotsUrl: string }
   | { kind: "noindex"; via: "meta" | "header"; pageUrl: string }
   | { kind: "phone_mismatch"; found: string; expected: string; pageUrl: string }
-  | { kind: "no_business_data"; pageUrl: string };
+  | { kind: "no_business_data"; pageUrl: string }
+  | { kind: "assistants_refused"; fetchers: string[]; engines: Engine[]; pageUrl: string }
+  | { kind: "phone_not_in_page"; phone: string; pageUrl: string };
 
-/** Issues that keep a correct answer from being found; no_business_data is advice only. */
-export const BLOCKING_ISSUES: ReadonlySet<SiteIssue["kind"]> = new Set(["robots_blocked", "noindex", "phone_mismatch"]);
+/** Issues that keep a correct answer from being found; no_business_data and phone_not_in_page are advice only. */
+export const BLOCKING_ISSUES: ReadonlySet<SiteIssue["kind"]> = new Set(["robots_blocked", "noindex", "phone_mismatch", "assistants_refused"]);
 
 export interface SiteCheckResult {
   domain: string;
@@ -200,10 +269,29 @@ export interface SiteCheckResult {
 
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
-async function get(fetchImpl: FetchLike, url: string): Promise<{ status: number; text: string; headers: Headers } | null> {
+/** Bytes read from a page; the rest is never downloaded, so a hostile page cannot fill memory or CPU. */
+export const MAX_PAGE_BYTES = 1_000_000;
+
+async function readCapped(res: Response): Promise<string> {
+  if (!res.body) return "";
+  const reader = res.body.getReader();
+  const all = new Uint8Array(MAX_PAGE_BYTES);
+  let size = 0;
+  while (size < MAX_PAGE_BYTES) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const part = value.subarray(0, MAX_PAGE_BYTES - size);
+    all.set(part, size);
+    size += part.length;
+  }
+  await reader.cancel().catch(() => {});
+  return new TextDecoder().decode(all.subarray(0, size));
+}
+
+async function get(fetchImpl: FetchLike, url: string, userAgent = SITECHECK_USER_AGENT): Promise<{ status: number; text: string; headers: Headers } | null> {
   try {
-    const res = await fetchImpl(url, { headers: { "user-agent": SITECHECK_USER_AGENT, accept: "text/html,text/plain;q=0.9,*/*;q=0.5" }, redirect: "follow", signal: AbortSignal.timeout(15_000) });
-    return { status: res.status, text: res.ok ? await res.text() : "", headers: res.headers };
+    const res = await fetchImpl(url, { headers: { "user-agent": userAgent, accept: "text/html,text/plain;q=0.9,*/*;q=0.5" }, redirect: "follow", signal: AbortSignal.timeout(15_000) });
+    return { status: res.status, text: res.ok ? await readCapped(res) : "", headers: res.headers };
   } catch (err) {
     log.info("sitecheck.fetch_failed", { url, error: errorMessage(err) });
     return null;
@@ -251,16 +339,28 @@ export async function checkSite(domainOrUrl: string, facts: Pick<Facts, "phone">
     if (/\b(noindex|none)\b/.test(header)) issues.push({ kind: "noindex", via: "header", pageUrl });
     else if (metaNoindex(page.text)) issues.push({ kind: "noindex", via: "meta", pageUrl });
 
+    const expected = normalizePhone(facts?.phone);
     const nodes = businessNodes(page.text);
     if (!nodes.length) {
       issues.push({ kind: "no_business_data", pageUrl });
     } else {
-      const expected = normalizePhone(facts?.phone);
       const listed = nodes.map((n) => (typeof n.telephone === "string" ? n.telephone : null)).find((t) => t);
       const found = normalizePhone(listed);
       if (expected && found && found !== expected) {
         issues.push({ kind: "phone_mismatch", found: listed!, expected: formatPhoneNl(expected), pageUrl });
       }
+    }
+    if (expected && !phoneInPage(page.text, expected)) issues.push({ kind: "phone_not_in_page", phone: formatPhoneNl(expected), pageUrl });
+
+    // Only meaningful when our own request got the page: then a refusal is aimed at the assistants by name.
+    // One at a time, so a rate limit on our own burst is not read as a refusal.
+    const refused: typeof ANSWER_FETCHERS = [];
+    for (const f of ANSWER_FETCHERS) {
+      const res = await get(fetchImpl, pageUrl, f.userAgent);
+      if (res && isRefused(res)) refused.push(f);
+    }
+    if (refused.length) {
+      issues.push({ kind: "assistants_refused", fetchers: refused.map((f) => f.token), engines: [...new Set(refused.flatMap((f) => f.engines))], pageUrl });
     }
   }
 
@@ -272,6 +372,8 @@ export function issueKey(issue: SiteIssue): string {
   switch (issue.kind) {
     case "robots_blocked":
       return `robots_blocked:${[...issue.robots].sort().join(",")}`;
+    case "assistants_refused":
+      return `assistants_refused:${[...issue.fetchers].sort().join(",")}`;
     case "phone_mismatch":
       return `phone_mismatch:${normalizePhone(issue.found) ?? issue.found}`;
     default:
@@ -325,6 +427,22 @@ ${S.phone.found(issue.found)}
 ${S.phone.expected(issue.expected)}
 
 ${S.phone.fix}`);
+        break;
+      case "assistants_refused": {
+        const who = joinList(issue.engines.map((e) => ENGINE_NAMES[e]), M.and);
+        blocks.push(`${S.refused.title(++n, who)}
+
+${S.refused.body(who)}
+
+${S.refused.fix(issue.fetchers.join(", "))}`);
+        break;
+      }
+      case "phone_not_in_page":
+        blocks.push(`${S.phoneText.title(++n)}
+
+${S.phoneText.body(issue.phone)}
+
+${S.phoneText.fix}`);
         break;
       case "no_business_data":
         blocks.push(`${S.data.title(++n)}
