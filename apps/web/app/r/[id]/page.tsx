@@ -99,7 +99,20 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
 
   return (
     <>
-      <SiteHeader variant="minimal" right={R.checkedAt(dateTimeLong(report.checkedAt))} />
+      <SiteHeader
+        variant="minimal"
+        right={
+          <>
+            {R.checkedAt(dateTimeLong(report.checkedAt))}
+            {/* A signed-in owner gets back to their own pages from any report. */}
+            {owned && (
+              <a href={href("/app")} className="ml-4 font-semibold text-ink print:hidden">
+                {copy.nav.dashboard}
+              </a>
+            )}
+          </>
+        }
+      />
       <main className="print-doc wrap flex flex-col gap-14 pb-20 pt-4 sm:gap-16 sm:pt-6 print:gap-8 print:pb-6">
         {/* Hero: the dot */}
         <section className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
