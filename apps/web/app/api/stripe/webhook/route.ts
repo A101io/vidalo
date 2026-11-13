@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { handleStripeEvent } from "@vidalo/core/billing";
 import { ready } from "@/lib/db";
+import { log } from "@vidalo/core/shared";
 import { env } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 
@@ -15,7 +16,10 @@ export async function POST(req: Request) {
   const stripe = await getStripe();
   if (!stripe || !env.stripeWebhookSecret) return NextResponse.json({ ok: false, reason: "stripe not configured" }, { status: 503 });
   const sig = req.headers.get("stripe-signature");
-  if (!sig) return NextResponse.json({ ok: false }, { status: 400 });
+  if (!sig) {
+    log.warn("security.refused", { route: "stripe/webhook", reason: "no_signature" });
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
   const payload = await req.text();
   let event;
   try {
@@ -24,6 +28,7 @@ export async function POST(req: Request) {
     // on every event. The async form works on Node as well.
     event = await stripe.webhooks.constructEventAsync(payload, sig, env.stripeWebhookSecret);
   } catch {
+    log.warn("security.refused", { route: "stripe/webhook", reason: "bad_signature" });
     return NextResponse.json({ ok: false, error: "bad signature" }, { status: 400 });
   }
   await ready();
