@@ -46,17 +46,58 @@ export function TurnstileBox({ siteKey, lang }: { siteKey: string; lang: string 
   useEffect(() => {
     let id: string | null = null;
     let cancelled = false;
+    const form = ref.current?.closest("form") ?? null;
+    // A submit before Cloudflare has handed out the token posted an empty field and
+    // the server refused it: the first sign-in on a fresh visit failed, the second
+    // worked (vidalo.ai, 13 Nov 2026). Hold such a submit and send it once the token is in.
+    let held: { submitter: HTMLElement | null } | null = null;
+    let scriptFailed = false;
+    const field = () => form?.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]') ?? null;
+    const hasToken = () => Boolean((field()?.value ?? "").trim());
+    /** Send the held submit, if any. */
+    const release = () => {
+      if (!held || !form) return;
+      const { submitter } = held;
+      held = null;
+      form.requestSubmit(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : undefined);
+    };
+    /** No token is coming (script, widget or challenge failed): stop holding; the server refuses the form and says why. */
+    const giveUp = () => {
+      scriptFailed = true;
+      release();
+    };
+    const onSubmit = (e: SubmitEvent) => {
+      // Also while the script is still loading (no widget yet): that is the common case on a first visit.
+      if (scriptFailed || hasToken()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      held = { submitter: e.submitter };
+    };
+    // Capture phase on the form runs before React's listener at the root, so a held submit never reaches the server action.
+    form?.addEventListener("submit", onSubmit, true);
     loadTurnstile()
       .then(() => {
-        if (cancelled || !ref.current || !window.turnstile) return;
+        if (cancelled || !ref.current) return;
+        if (!window.turnstile) return giveUp();
         // response-field-name keeps the field the server reads (lib/turnstile.ts, TURNSTILE_FIELD).
-        id = window.turnstile.render(ref.current, { sitekey: siteKey, language: lang, appearance: "interaction-only", "response-field-name": "cf-turnstile-response" });
+        id = window.turnstile.render(ref.current, {
+          sitekey: siteKey,
+          language: lang,
+          appearance: "interaction-only",
+          "response-field-name": "cf-turnstile-response",
+          callback: (token: string) => {
+            // Write the token ourselves rather than rely on when the script fills the field.
+            const f = field();
+            if (f && token) f.value = token;
+            release();
+          },
+          "error-callback": giveUp,
+        });
       })
-      .catch(() => {
-        // No script: the server refuses the form and says why; nothing to do here.
-      });
+      .catch(giveUp);
     return () => {
       cancelled = true;
+      form?.removeEventListener("submit", onSubmit, true);
       if (id && window.turnstile) window.turnstile.remove(id);
     };
   }, [siteKey, lang]);
