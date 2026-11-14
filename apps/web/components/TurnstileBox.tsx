@@ -7,6 +7,7 @@ declare global {
     turnstile?: {
       render: (el: HTMLElement, opts: Record<string, unknown>) => string;
       remove: (id: string) => void;
+      reset?: (id: string) => void;
     };
     __vidaloTurnstile?: Promise<void>;
   }
@@ -66,15 +67,39 @@ export function TurnstileBox({ siteKey, lang }: { siteKey: string; lang: string 
       scriptFailed = true;
       release();
     };
+    /**
+     * A token is single-use (siteverify answers "timeout-or-duplicate" the second time) and lives 5 minutes. Once a
+     * submit has sent it, the field must not offer it again: a form that stays on the page (a server action that
+     * answers with an error) or comes back from the browser's back/forward cache would post the spent token and
+     * the server would say "we could not tell you are not a robot" although nothing was wrong (13 Nov 2026).
+     * Ask Cloudflare for a fresh token and empty the field; a submit in between is held like on a first visit.
+     */
+    const renew = () => {
+      const f = field();
+      if (f) f.value = "";
+      if (id && window.turnstile?.reset) window.turnstile.reset(id);
+    };
     const onSubmit = (e: SubmitEvent) => {
       // Also while the script is still loading (no widget yet): that is the common case on a first visit.
-      if (scriptFailed || hasToken()) return;
+      if (scriptFailed) return;
+      if (hasToken()) {
+        // The token goes out with this submit. If the page is still here a moment later, it did not navigate away.
+        window.setTimeout(() => {
+          if (!cancelled) renew();
+        }, 1500);
+        return;
+      }
       e.preventDefault();
       e.stopImmediatePropagation();
       held = { submitter: e.submitter };
     };
     // Capture phase on the form runs before React's listener at the root, so a held submit never reaches the server action.
     form?.addEventListener("submit", onSubmit, true);
+    // Back to this page from the browser's cache: the form comes back with the token it already spent.
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) renew();
+    };
+    window.addEventListener("pageshow", onPageShow);
     loadTurnstile()
       .then(() => {
         if (cancelled || !ref.current) return;
@@ -91,6 +116,11 @@ export function TurnstileBox({ siteKey, lang }: { siteKey: string; lang: string 
             if (f && token) f.value = token;
             release();
           },
+          // The token ran out (5 minutes) or the challenge timed out: never offer the old one.
+          "expired-callback": () => {
+            const f = field();
+            if (f) f.value = "";
+          },
           "error-callback": giveUp,
         });
       })
@@ -98,6 +128,7 @@ export function TurnstileBox({ siteKey, lang }: { siteKey: string; lang: string 
     return () => {
       cancelled = true;
       form?.removeEventListener("submit", onSubmit, true);
+      window.removeEventListener("pageshow", onPageShow);
       if (id && window.turnstile) window.turnstile.remove(id);
     };
   }, [siteKey, lang]);
