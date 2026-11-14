@@ -63,8 +63,11 @@ describe("retention over 120 days", () => {
     expect(unrun("google_disconnect").map((j) => j.payload)).toEqual([{ businessId: a.id, reason: "churn" }]);
     await runJobs(["google_disconnect"]);
     expect((await db.listChannels(a.id)).some((x) => x.type === "gbp")).toBe(false);
-    // From here the clock counts from A's churn moment.
-    const C = Date.parse((await db.getBusiness(a.id))!.churnedAt!);
+    // From here the clock counts from A's churn moment. Two clocks start there: `churnedAt` (reminder,
+    // purge) and the churn event (the day-90 free check), written a moment later. Start from the later
+    // one, or day 90 reads as day 89 whenever a millisecond passes between the two writes (flaky, 14 Nov 2026).
+    const churnEventAt = (await db.listEvents(a.id)).filter((e) => e.type === "business.status" && e.payload.status === "churned").map((e) => Date.parse(e.at));
+    const C = Math.max(Date.parse((await db.getBusiness(a.id))!.churnedAt!), ...churnEventAt);
     const at = (n: number) => new Date(C + n * DAY);
     for (const x of controls) expect((await db.listChannels(x.id)).some((y) => y.type === "gbp")).toBe(true);
 
