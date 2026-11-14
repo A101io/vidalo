@@ -88,6 +88,9 @@ describe("removeCheck", () => {
   it("a legacy request without a run id matches the run that started soon after it", async () => {
     const c = await check("Bakkerij Oud", null);
     await db.logEvent(c.b.id, REPORT_EMAIL_EVENT, { email: "oud@example.nl", lang: "nl" });
+    // The run started a minute after the request (not the same millisecond: that made this test depend on timing).
+    const later = new Date(Date.now() + 60_000).toISOString();
+    await db.updateScanRun(c.run.id, { startedAt: later, finishedAt: later });
     expect((await removeCheck(db, { userId: null, email: "oud@example.nl" }, c.run.id)).ok).toBe(true);
     expect(db.events.filter((e) => e.businessId === c.b.id && e.type === REPORT_EMAIL_EVENT)).toHaveLength(0);
   });
