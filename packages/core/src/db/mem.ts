@@ -767,6 +767,41 @@ export class MemDb implements Db {
     this.channels.delete(id);
   }
 
+  async deleteEvents(ids: number[]): Promise<void> {
+    const gone = new Set(ids);
+    this.events = this.events.filter((e) => !gone.has(e.id));
+  }
+
+  async deleteScanRun(id: string, opts: { moveFindingsTo: string | null }): Promise<boolean> {
+    const run = this.scanRuns.get(id);
+    if (!run) return false;
+    if (opts.moveFindingsTo) {
+      const to = this.scanRuns.get(opts.moveFindingsTo);
+      if (!to || to.businessId !== run.businessId || to.id === id) return false;
+    }
+    const samples = new Set([...this.samples.values()].filter((s) => s.scanRunId === id).map((s) => s.id));
+    for (const f of this.findings.values()) {
+      if (f.businessId !== run.businessId) continue;
+      if (f.evidenceBefore && samples.has(f.evidenceBefore)) f.evidenceBefore = null;
+      if (f.evidenceAfter && samples.has(f.evidenceAfter)) f.evidenceAfter = null;
+    }
+    for (const f of [...this.findings.values()]) {
+      if (f.scanRunId !== id) continue;
+      if (opts.moveFindingsTo) f.scanRunId = opts.moveFindingsTo;
+      else {
+        this.findings.delete(f.id);
+        for (const [k, x] of this.fixes) if (x.findingId === f.id) this.fixes.delete(k);
+      }
+    }
+    for (const s of samples) this.samples.delete(s);
+    this.claims = this.claims.filter((c) => !samples.has(c.sampleId));
+    this.events = this.events.filter((e) => (e.payload as Record<string, unknown>).scanRunId !== id);
+    for (const [k, j] of this.jobs) if (!j.doneAt && j.payload.scanRunId === id) this.jobs.delete(k);
+    for (const u of this.questionUse) if (u.scanRunId === id) u.scanRunId = null;
+    this.scanRuns.delete(id);
+    return true;
+  }
+
   // --- deletion and retention (feature 002, migration 0019) ---
   async setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord> {
     const b = this.businesses.get(businessId);

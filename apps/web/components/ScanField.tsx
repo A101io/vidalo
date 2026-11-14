@@ -10,6 +10,7 @@ import { TurnstileWidget } from "@/components/TurnstileWidget";
 export async function ScanField({
   defaultName = "",
   defaultPlace = "",
+  defaultEmail,
   emailInvalid = false,
   namePlaceholder,
   button,
@@ -20,6 +21,8 @@ export async function ScanField({
 }: {
   defaultName?: string;
   defaultPlace?: string;
+  /** A signed-in visitor's own address (/controle): filled in, still editable. */
+  defaultEmail?: string;
   /** /scan/kies came back with ?fout=mail: say so under the address field. */
   emailInvalid?: boolean;
   namePlaceholder?: string;
@@ -69,6 +72,7 @@ export async function ScanField({
         type="email"
         required
         autoComplete="email"
+        defaultValue={defaultEmail}
         placeholder={s.emailPlaceholder}
         aria-invalid={emailInvalid || undefined}
         aria-describedby={emailInvalid ? `${id}-email-error` : undefined}

@@ -906,6 +906,32 @@ export class PgDb implements Db {
     await this.sql`delete from channel where id = ${id}`;
   }
 
+  async deleteEvents(ids: number[]): Promise<void> {
+    const ok = ids.filter((n) => Number.isSafeInteger(n));
+    if (ok.length) await this.sql`delete from event where id in ${this.sql(ok)}`;
+  }
+
+  async deleteScanRun(id: string, opts: { moveFindingsTo: string | null }): Promise<boolean> {
+    if (!UUID.test(id) || (opts.moveFindingsTo !== null && !UUID.test(opts.moveFindingsTo))) return false;
+    return this.sql.begin(async (tx) => {
+      const [run] = await tx`select id, business_id from scan_run where id = ${id} for update`;
+      if (!run) return false;
+      if (opts.moveFindingsTo) {
+        const [to] = await tx`select id from scan_run where id = ${opts.moveFindingsTo} and business_id = ${run.business_id} and id <> ${id}`;
+        if (!to) return false;
+      }
+      // Evidence points into this run's samples without a cascade: clear it before the samples go.
+      await tx`update finding set evidence_before = null where evidence_before in (select id from sample where scan_run_id = ${id})`;
+      await tx`update finding set evidence_after = null where evidence_after in (select id from sample where scan_run_id = ${id})`;
+      if (opts.moveFindingsTo) await tx`update finding set scan_run_id = ${opts.moveFindingsTo} where scan_run_id = ${id}`;
+      // Findings still on the run (no takeover) go with it, and their fixes with them (cascade).
+      await tx`delete from event where payload->>'scanRunId' = ${id}`;
+      await tx`delete from job where done_at is null and payload->>'scanRunId' = ${id}`;
+      await tx`delete from scan_run where id = ${id}`;
+      return true;
+    });
+  }
+
   // --- deletion and retention (feature 002, migration 0019) ---
   async setDeletion(businessId: string, input: { at: string; reason: "owner" } | null): Promise<BusinessRecord> {
     const rows = input

@@ -751,7 +751,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 13 november 2026",
+    updated: "Versie van 14 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -1010,7 +1010,7 @@ export const copy = {
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf (ook een website die je zelf opgeeft) en de bronnen die AI-assistenten noemen.",
               "Wat we ermee doen: om te zien wat het bedrijf aanbiedt en voor wie, sturen we OpenAI de gegevens van Google en de tekst van de homepage van het bedrijf, waaruit we eerst e-mailadressen en telefoonnummers weghalen; daarvan maakt OpenAI een korte beschrijving. Die beschrijving bewaren we bij het bedrijf en in het rapport staat ze als hoe wij het bedrijf lezen. In het rapport staat ook welke andere bedrijven AI-assistenten noemden en hoe vaak.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
-              "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan blijven de rapporten van je bedrijf voor jou te zien in je account en gelden de termijnen bij ‘Een betaald plan’.",
+              "Hoe lang: het rapport is 30 dagen via de link te zien. De gegevens van de controle bewaren we tot 12 maanden na de controle, zodat een latere controle kan laten zien wat er veranderde; daarna verwijderen we ze. Word je klant, dan blijven de rapporten van je bedrijf voor jou te zien in je account en gelden de termijnen bij ‘Een betaald plan’. Een controle die je met je eigen e-mailadres hebt aangevraagd, of die bij je bedrijf hoort, kun je zelf verwijderen als je bent ingelogd: bij ‘Je controles’ of in het archief van je account. Dan verwijderen we het rapport, de antwoorden van de AI-assistenten, wat we daarin vonden en wat we over die controle hebben vastgelegd, en halen we je e-mailadres bij die controle weg. Heeft een ander dezelfde controle ook aangevraagd, of heeft het bedrijf een eigenaar, dan halen we alleen jouw e-mailadres bij die controle weg en blijft het rapport voor hen bestaan.",
             ],
             "Heeft iemand anders jouw bedrijf gecontroleerd, dan gebruiken we alleen openbare zakelijke gegevens. Wil je dat niet, mail ons; dan verwijderen we die controle.",
           ],
@@ -1347,6 +1347,30 @@ export const copy = {
     title: "Even geen gratis controles",
     body: "We doen elke dag een beperkt aantal gratis controles en die zijn voor vandaag op. Probeer het morgen opnieuw.",
     back: "Terug naar de voorpagina",
+  },
+
+  /** Starting a new check from behind the login, and removing one (13 Nov 2026). */
+  checks: {
+    newNav: "Nieuwe controle",
+    newTitle: "Nieuwe controle",
+    newH1: "Een nieuwe gratis controle",
+    newBody: (email: string) => `Vul de naam en plaats van het bedrijf in. Het rapport gaat naar ${email}. Controleer je hetzelfde bedrijf binnen een dag nog eens, dan laten we het rapport van die dag zien.`,
+    newButton: "Start de controle",
+    remove: "Verwijderen",
+    removeLabel: (name: string, place: string) => `Verwijder de controle van ${name}, ${place}`,
+    removeTitle: "Controle verwijderen",
+    removeH1: (name: string, place: string) => `De controle van ${name}, ${place} verwijderen?`,
+    removeBodyRemoved: "We verwijderen het rapport, de antwoorden van de AI-assistenten, wat we daarin vonden en wat we over deze controle hebben vastgelegd. Dit kun je niet ongedaan maken.",
+    removeBodyUnlinked: "Deze controle is ook voor een ander aangevraagd, of het bedrijf heeft een eigenaar. Het rapport blijft dan bestaan voor hen. Wij halen alleen jouw e-mailadres bij deze controle weg, zodat hij niet meer bij jou staat.",
+    removeConfirm: "Ja, verwijder",
+    removeCancel: "Nee, behouden",
+    removedDone: "De controle is verwijderd.",
+    removedUnlinked: "De controle staat niet meer bij je.",
+    refused: {
+      not_yours: "Deze controle hoort niet bij je account, of bestaat niet meer.",
+      not_finished: "Deze controle loopt nog. Je kunt hem verwijderen als hij klaar is.",
+      latest: "Dit is je nieuwste controle; je overzicht is erop gebouwd. Verwijder een oudere controle, of verwijder al je gegevens bij Account.",
+    },
   },
 
   scan: {

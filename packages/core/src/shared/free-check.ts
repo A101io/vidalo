@@ -86,6 +86,17 @@ export function readCheckCookie(secret: string, value: unknown, now = Date.now()
 /** A request without a run id (made before 11 Nov 2026) matches the run that started this soon after it. */
 export const REQUEST_TO_RUN_MS = 60 * 60 * 1000;
 
+/** True when this request event (its time and payload) is the one that asked for `run`: by run id, else by the start window. */
+export function requestMatchesRun(e: { at: string; payload: Record<string, unknown> }, run: { id: string; startedAt?: string | null; finishedAt?: string | null }): boolean {
+  const linked = typeof e.payload.scanRunId === "string" ? e.payload.scanRunId : null;
+  if (linked) return run.id === linked;
+  const at = run.startedAt ?? run.finishedAt;
+  if (!at) return false;
+  const asked = new Date(e.at).getTime();
+  const started = new Date(at).getTime();
+  return started >= asked && started - asked <= REQUEST_TO_RUN_MS;
+}
+
 /**
  * Which free runs a requester asked for: the run id on their request when it carries one,
  * else the run that started within REQUEST_TO_RUN_MS after it. Never another requester's
