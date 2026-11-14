@@ -249,6 +249,13 @@ export interface Db {
   createScanRun(input: ScanRunCreate): Promise<ScanRun>;
   updateScanRun(id: string, patch: ScanRunUpdate): Promise<ScanRun>;
   getScanRun(id: string): Promise<ScanRun | null>;
+  /**
+   * Removes one scan run: its samples and claims, its events (payload scanRunId), its unrun jobs, and the findings that
+   * last saw it. `moveFindingsTo`: another run of the same business that takes those findings over (an owned business
+   * keeps its open findings and their fixes); null deletes them. Evidence links into the run's samples are cleared first.
+   * Returns false when the run does not exist, or `moveFindingsTo` is not another run of the same business.
+   */
+  deleteScanRun(id: string, opts: { moveFindingsTo: string | null }): Promise<boolean>;
   /** Scan runs for a business, newest first. */
   listScanRuns(businessId: string, limit?: number): Promise<ScanRun[]>;
   /** When the business's latest scan run of this kind started; null if it never had one. */
@@ -286,6 +293,8 @@ export interface Db {
   listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
   /** Events of this type on a business whose payload.email is this address (case-insensitive), latest first. */
   listEventsByEmail(type: string, email: string, limit?: number): Promise<EventRow[]>;
+  /** Deletes events by id (a removed check's own events). Unknown ids are ignored. */
+  deleteEvents(ids: number[]): Promise<void>;
   /** Events of one type since a moment, across every business (rate limits). */
   countEventsSince(type: string, since: Date): Promise<number>;
   /** Engine cost of every scan run started at or after `since`, free checks excluded (the daily ceiling, review R-11). */
