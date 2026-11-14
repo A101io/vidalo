@@ -9,6 +9,7 @@ import { ready } from "@/lib/db";
 import { reportsRequestedBy } from "@/lib/core";
 import { dateShort } from "@/lib/format";
 import { claimBusiness, sendMagicLink } from "./actions";
+import { CheckNotice } from "@/components/CheckNotice";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { isBusinessId, safeNext } from "@vidalo/core/shared";
 
@@ -25,7 +26,7 @@ export const dynamic = "force-dynamic";
  *    22 Oct 2026 this showed the e-mail form with a red "geen bedrijf" error,
  *    and a new link could not fix it.
  */
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string; uitgelogd?: string; opnieuw?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; business?: string; session_id?: string; sent?: string; fout?: string; verwijderd?: string; uitgelogd?: string; opnieuw?: string; controle?: string }> }) {
   const sp = await searchParams;
   const { copy, href } = await getI18n();
   const a = copy.auth;
@@ -66,6 +67,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <Shell>
         <h1 className="h2">{a.signedInH1}</h1>
         {sp.verwijderd === "1" && <p className="mt-3 text-[15px]">{copy.account.myData.deleted}</p>}
+        <CheckNotice code={sp.controle} copy={copy.checks} />
         <p className="lead mt-3">{sp.fout === "bezet" ? `${a.signedInAs(session.email)} ${a.linkTaken}` : sp.fout === "betaling" ? `${a.signedInAs(session.email)} ${a.linkUnpaid}` : a.noBusinessSignedIn(session.email)}</p>
         {checks.length > 0 && (
           <section className="mt-8" aria-labelledby="my-checks">
@@ -82,16 +84,22 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                     </strong>
                     <span className="block text-[14px] text-muted">{dateShort(c.checkedAt)}</span>
                   </span>
-                  <Link href={href(`/r/${c.runId}`)} className="btn-sm">
-                    {a.viewReport}
-                  </Link>
+                  <span className="flex flex-wrap items-center gap-3">
+                    <Link href={href(`/r/${c.runId}`)} className="btn-sm">
+                      {a.viewReport}
+                    </Link>
+                    <Link href={href(`/controle/verwijderen/${c.runId}?terug=/inloggen`)} aria-label={copy.checks.removeLabel(c.name, c.place)} className="btn-link">
+                      {copy.checks.remove}
+                    </Link>
+                  </span>
                 </li>
               ))}
             </ul>
           </section>
         )}
-        <Link href={href("/#top")} className={checks.length > 0 ? "btn-sm mt-6 w-full" : "btn-primary mt-6 w-full"}>
-          {a.startCheck}
+        {/* A new check starts here, behind the login, with this address filled in (not on the anonymous landing page). */}
+        <Link href={href("/controle")} className={checks.length > 0 ? "btn-sm mt-6 w-full" : "btn-primary mt-6 w-full"}>
+          {copy.checks.newNav}
         </Link>
         <SignOut label={a.otherEmail} />
       </Shell>

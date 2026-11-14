@@ -134,7 +134,8 @@ for (const L of ARCHIVE) {
       expect(text.some((t) => /Hercontrole/.test(t))).toBe(false);
       const failed = rows.filter({ hasText: L.failed });
       await expect(failed).toHaveCount(1);
-      await expect(failed.locator("a")).toHaveCount(0);
+      // No report to open; the only link is "remove" (13 Nov 2026), which points at the removal page.
+      await expect(failed.locator("a[href*='/r/']")).toHaveCount(0);
       // Newest first: the dates do not increase down the list.
       const dates = await rows.locator("span.font-bold").allInnerTexts();
       expect(dates.length).toBeGreaterThan(5);

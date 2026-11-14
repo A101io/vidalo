@@ -23,7 +23,7 @@ export async function ComingSoonFooter() {
           <Link href={href("/cookies")} className="nav-link">
             {copy.legal.cookies.title}
           </Link>
-          {consentCategories().length > 0 && <CookieSettingsButton label={copy.consent.settings} />}
+          {consentCategories().length > 0 && <CookieSettingsButton label={copy.consent.settings} tone="text-inherit" />}
         </span>
       </div>
     </footer>

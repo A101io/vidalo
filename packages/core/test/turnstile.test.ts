@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { KIES_TOKEN_TTL_MS, TURNSTILE_TEST_KEYS, TURNSTILE_VERIFY_URL, signKiesToken, turnstileMode, turnstilePasses, verifyKiesToken, verifyTurnstile } from "../src/shared/turnstile";
 
 const answer = (body: unknown, ok = true) => (async () => ({ ok, json: async () => body })) as unknown as typeof fetch;
@@ -55,6 +55,24 @@ describe("turnstile verification", () => {
     expect(await verifyTurnstile("x".repeat(3000), { secret: "s", fetchFn })).toBe(false);
     expect(calls).toBe(0);
     expect(await verifyTurnstile("tok", { secret: "s", fetchFn })).toBe(false);
+  });
+
+  it("an empty token is logged as turnstile.no_token and still refused, without asking Cloudflare", async () => {
+    let calls = 0;
+    const fetchFn = (async () => {
+      calls++;
+      return { ok: true, json: async () => ({ success: true }) };
+    }) as unknown as typeof fetch;
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      expect(await verifyTurnstile("   ", { secret: "s", fetchFn })).toBe(false);
+      expect(await turnstilePasses("on", "", { secret: "s", fetchFn })).toBe(false);
+      const lines = spy.mock.calls.map((c) => JSON.parse(String(c[0])));
+      expect(lines.filter((l) => l.msg === "turnstile.no_token" && l.level === "warn")).toHaveLength(2);
+      expect(calls).toBe(0);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("off lets every post through; misconfigured lets none through", async () => {
