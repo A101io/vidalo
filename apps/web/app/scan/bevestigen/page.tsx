@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = await getCopy();
-  return { title: copy.scan.confirm.button, robots: { index: false }, referrer: "no-referrer" };
+  return { title: copy.scan.confirm.button, robots: { index: false }, referrer: "same-origin" };
 }
 
 /**

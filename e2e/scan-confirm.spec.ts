@@ -13,7 +13,9 @@ async function requestLink(request: APIRequestContext, name: string): Promise<st
 }
 
 async function press(request: APIRequestContext, t: string): Promise<string> {
-  const res = await request.post("/api/scan/bevestigen", { form: { t }, maxRedirects: 0 });
+  // The confirm route takes posts from this site only (refuseCrossSite), as the button on our page sends them.
+  const origin = new URL(test.info().project.use.baseURL!).origin;
+  const res = await request.post("/api/scan/bevestigen", { form: { t }, headers: { origin }, maxRedirects: 0 });
   return new URL(res.headers()["location"]!).pathname;
 }
 

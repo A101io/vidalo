@@ -96,7 +96,8 @@ export async function startCheckViaApi(page: Page, form: Record<string, string>)
   const mail = new URL(res.headers()["location"]!);
   // Signed in with this very address: the check started at once, no mail.
   if (mail.pathname !== "/scan/mail") return res.headers()["location"]!;
-  const started = await page.request.post("/api/scan/bevestigen", { form: { t: mail.searchParams.get("link")! }, maxRedirects: 0 });
+  // The confirm route only takes posts from this site (refuseCrossSite), as a browser on our page sends them.
+  const started = await page.request.post("/api/scan/bevestigen", { form: { t: mail.searchParams.get("link")! }, headers: { origin: new URL(res.url()).origin }, maxRedirects: 0 });
   const waiting = started.headers()["location"]!;
   expect(waiting).toMatch(/\/scan\/[^/?#]+$/);
   return waiting;

@@ -10,7 +10,9 @@ export function turnstile(): { mode: TurnstileMode; siteKey?: string } {
 
 /** Whether this form post passed the check. */
 export function passesTurnstile(form: FormData, ip: string | null): Promise<boolean> {
-  return turnstilePasses(turnstile().mode, form.get(TURNSTILE_FIELD), { secret: process.env.TURNSTILE_SECRET_KEY?.trim(), ip });
+  // clientIp gives "unknown" or "local" when there is no address to trust; Cloudflare gets none then.
+  const remoteIp = ip && /^[0-9a-f.:]+$/i.test(ip) ? ip : null;
+  return turnstilePasses(turnstile().mode, form.get(TURNSTILE_FIELD), { secret: process.env.TURNSTILE_SECRET_KEY?.trim(), ip: remoteIp });
 }
 
 /** Token for the /scan/kies redirect after a passed check; null while the check is off (no token needed). */

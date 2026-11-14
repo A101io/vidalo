@@ -12,9 +12,17 @@ import { createHash } from "node:crypto";
 
 export const FREE_SCANS_PER_IP = 2;
 
-/** The visitor's address as Cloudflare (or a proxy) reports it. */
-export function clientIp(req: Pick<Request, "headers">): string {
-  return req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+/**
+ * The visitor's address as Cloudflare reports it. X-Forwarded-For is written by the client
+ * itself, so it is only read outside production (local runs behind a dev proxy); in production
+ * a request without cf-connecting-ip shares one bucket, "unknown", instead of choosing its own
+ * address and with it a fresh allowance (security SEC-08).
+ */
+export function clientIp(req: Pick<Request, "headers">, trustForwarded: boolean = process.env.NODE_ENV !== "production"): string {
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf) return cf;
+  if (!trustForwarded) return "unknown";
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
 }
 
 /** Start of the UTC day of `now`: the window the per-address count runs over. */

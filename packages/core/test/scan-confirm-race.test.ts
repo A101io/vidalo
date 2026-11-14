@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import postgres from "postgres";
-import { withMockDb, createDb, type Db } from "../src/db";
+import { withMockDb, createDb, FREE_SCAN_ESTIMATE_CENTS, type Db } from "../src/db";
 import { SCAN_CONFIRM_EVENT, confirmOnce, newConfirmToken, pendingPayload } from "../src/shared/index.js";
 
 /**
@@ -84,6 +84,25 @@ describe.each(backends)("%s: one confirmation link, many presses at once", (_n, 
     let started = false;
     expect(await confirmOnce(db, businessId, "nope", async () => ((started = true), "/x"), "/scan/druk")).toBeNull();
     expect(started).toBe(false);
+  });
+
+  it("freeScanCentsSince counts free runs only, and only since the moment (the free-check euro ceiling)", async () => {
+    const b = await db.upsertBusiness({ name: "Bakkerij Kosten", place: "Haarlem" });
+    const free = await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1 });
+    await db.updateScanRun(free.id, { costCents: 40, status: "done" });
+    const paid = await db.createScanRun({ businessId: b.id, kind: "baseline", engines: ["chatgpt"], samplesPerPrompt: 1 });
+    await db.updateScanRun(paid.id, { costCents: 300, status: "done" });
+    const before = new Date(Date.now() - 60_000);
+    expect(await db.freeScanCentsSince(before)).toBe(40);
+    expect(await db.paidScanCentsSince(before)).toBe(300);
+    expect(await db.freeScanCentsSince(new Date(Date.now() + 60_000))).toBe(0);
+  });
+
+  it("a free check that is still running counts at least the estimate, so a burst counts before it is spent", async () => {
+    const b = await db.upsertBusiness({ name: "Bakkerij Bezig", place: "Haarlem" });
+    await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    await db.createScanRun({ businessId: b.id, kind: "free", engines: ["chatgpt"], samplesPerPrompt: 1, status: "running" });
+    expect(await db.freeScanCentsSince(new Date(Date.now() - 60_000))).toBe(2 * FREE_SCAN_ESTIMATE_CENTS);
   });
 
   it("withLock: a failing holder releases the lock", async () => {

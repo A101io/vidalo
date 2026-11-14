@@ -4,7 +4,7 @@ import { ready } from "@/lib/db";
 import { localizeHref } from "@/lib/lang-paths";
 import { requestBehindGate } from "@/lib/gate-state";
 import { startFreeCheck } from "@/lib/free-check-start";
-import { confirmOnce, findPending, parseConfirmToken } from "@vidalo/core/shared";
+import { confirmOnce, findPending, parseConfirmToken, refuseCrossSite } from "@vidalo/core/shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +16,9 @@ export const dynamic = "force-dynamic";
  * goes where the first one went.
  */
 export async function POST(req: Request) {
+  // Only the button on our own page may press it: another site cannot make a visitor's browser confirm a link (SEC-07).
+  const crossSite = refuseCrossSite(req, env.baseUrl);
+  if (crossSite) return crossSite;
   const form = await req.formData();
   const t = String(form.get("t") ?? "");
   const parsed = parseConfirmToken(t);

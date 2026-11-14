@@ -22,6 +22,18 @@ export const env = {
     const n = Number(read("FREE_SCANS_PER_DAY") ?? 25);
     return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 25;
   },
+  /**
+   * What free checks may spend on AI calls per UTC day, in cents, next to the count above:
+   * a second brake should one check cost more than planned. 0 stops free checks.
+   */
+  get freeAiCapCents(): number {
+    const n = Number(read("FREE_AI_CAP_CENTS") ?? 1500);
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 1500;
+  },
+  /** Where a site-wide brake on free checks is reported, once a day per brake; unset = only logged. */
+  get alertEmail(): string | undefined {
+    return read("VIDALO_ALERT_EMAIL");
+  },
   /** Launch gate (go-live J4): the marketing pages show /binnenkort (core/shared/gate.ts). */
   get comingSoon(): boolean {
     return read("VIDALO_COMING_SOON") === "1";

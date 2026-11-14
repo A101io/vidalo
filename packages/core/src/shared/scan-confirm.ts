@@ -33,8 +33,8 @@ export const SCAN_CONFIRM_TTL_MS = 24 * 60 * 60 * 1000;
 export const CONFIRM_MAILS_PER_ADDRESS = 3;
 /** Confirmation mails one internet address (IPv6 per /64) may trigger per UTC day. */
 export const CONFIRM_MAILS_PER_IP = 5;
-/** Site-wide: confirmation mails per rolling 24 h, as a multiple of the daily free-check cap. */
-export const CONFIRM_MAILS_PER_CAP = 4;
+/** Site-wide backstop: confirmation mails per rolling 24 h, as a multiple of the daily free-check cap. High on purpose: 100 mails to random addresses must not lock real visitors out for a day (security SEC-02); the daily cap is the spend brake. */
+export const CONFIRM_MAILS_PER_CAP = 20;
 
 export type ConfirmLang = "nl" | "en";
 export interface PendingCheck {

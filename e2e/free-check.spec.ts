@@ -88,6 +88,11 @@ test("nothing starts before the mail link is pressed, and the link works once", 
   expect(page.url()).toBe(report);
 });
 
+test("another site cannot press the confirm button (SEC-07)", async ({ page }) => {
+  const res = await page.request.post("/api/scan/bevestigen", { form: { t: `x.${"a".repeat(32)}` }, headers: { origin: "https://evil.example" }, maxRedirects: 0 });
+  expect(res.status()).toBe(403);
+});
+
 test("a made-up link starts nothing", async ({ page }) => {
   await page.goto(`/scan/bevestigen?t=${encodeURIComponent(`nope.${"a".repeat(32)}`)}`);
   await expect(page.locator("main form[action='/api/scan/bevestigen']")).toHaveCount(0);

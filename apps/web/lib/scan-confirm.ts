@@ -2,6 +2,7 @@ import { env } from "@/lib/env";
 import { ready, type BusinessRecord } from "@/lib/db";
 import { localizeHref } from "@/lib/lang-paths";
 import { scanConfirmEmail, sendMail } from "@vidalo/core/reporter";
+import { alertOnce } from "@/lib/abuse-alert";
 import {
   CONFIRM_MAILS_PER_ADDRESS,
   CONFIRM_MAILS_PER_CAP,
@@ -31,14 +32,21 @@ export async function requestConfirmation(req: Request, business: BusinessRecord
   // Count and record under one lock, so parallel posts cannot overrun a cap (SEC-01).
   const token = await db.withLock(FREE_CHECK_LOCK, async () => {
     // Like the free-check caps, only while the engines are real (mock runs send no mail and cost nothing).
-    if (
-      env.realEngines &&
-      ((await db.countEventsSince(addrEvent, dayStart())) >= CONFIRM_MAILS_PER_ADDRESS ||
-        (await db.countEventsSince(ipEvent, dayStart())) >= CONFIRM_MAILS_PER_IP ||
-        (await db.countEventsSince(SCAN_CONFIRM_EVENT, new Date(Date.now() - DAY_MS))) >= siteCap)
-    ) {
-      await db.logEvent(null, "scan.refused", { reason: "confirm_mail_cap" });
-      return null;
+    if (env.realEngines) {
+      const refusal =
+        (await db.countEventsSince(addrEvent, dayStart())) >= CONFIRM_MAILS_PER_ADDRESS
+          ? "confirm_address_cap"
+          : (await db.countEventsSince(ipEvent, dayStart())) >= CONFIRM_MAILS_PER_IP
+            ? "confirm_ip_cap"
+            : (await db.countEventsSince(SCAN_CONFIRM_EVENT, new Date(Date.now() - DAY_MS))) >= siteCap
+              ? "confirm_mail_cap"
+              : null;
+      if (refusal) {
+        await db.logEvent(null, "scan.refused", { reason: refusal });
+        // Only the site-wide backstop is news for Vidalo; one address or connection is just that visitor.
+        if (refusal === "confirm_mail_cap") await alertOnce(refusal, { cap: siteCap });
+        return null;
+      }
     }
     const { token, hash } = newConfirmToken(business.id);
     await db.logEvent(business.id, SCAN_CONFIRM_EVENT, pendingPayload(requester, lang, hash));

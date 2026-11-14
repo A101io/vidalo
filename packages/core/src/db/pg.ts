@@ -36,6 +36,7 @@ import type {
   SignInEnd,
   SignInRow,
 } from "./types";
+import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
 type Row = Record<string, unknown>;
@@ -669,6 +670,11 @@ export class PgDb implements Db {
 
   async paidScanCentsSince(since: Date): Promise<number> {
     const [row] = await this.sql`select coalesce(sum(cost_cents), 0)::int as n from scan_run where kind <> 'free' and started_at >= ${since}`;
+    return Number(row?.n ?? 0);
+  }
+
+  async freeScanCentsSince(since: Date): Promise<number> {
+    const [row] = await this.sql`select coalesce(sum(case when status in ('done', 'failed') then cost_cents else greatest(cost_cents, ${FREE_SCAN_ESTIMATE_CENTS}) end), 0)::int as n from scan_run where kind = 'free' and started_at >= ${since}`;
     return Number(row?.n ?? 0);
   }
 

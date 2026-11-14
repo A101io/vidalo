@@ -5,6 +5,7 @@ import { ready } from "@/lib/db";
 import { createScanState, startFreeScan, FREE_SCAN_ENGINES } from "@/lib/core";
 import { FREE_SCANS_PER_IP, REPORT_EMAIL_EVENT, clientIp, dayStart, freeCheckEvents, scanIpEvent } from "@vidalo/core/shared";
 import type { BusinessRecord } from "@vidalo/core/db";
+import { alertOnce } from "@/lib/abuse-alert";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -14,12 +15,20 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * the Places lookup (nothing is spent on a visitor who cannot start one), and
  * startFreeCheck asks it again when the check really starts.
  */
-export async function freeCheckRefusal(req: Request): Promise<"daily_cap" | "ip_cap" | null> {
+export async function freeCheckRefusal(req: Request): Promise<"daily_cap" | "spend_cap" | "ip_cap" | null> {
   if (!env.realEngines) return null;
   const db = await ready();
-  if ((await db.countEventsSince("scan.requested", new Date(Date.now() - DAY_MS))) >= env.freeScansPerDay) return "daily_cap";
+  if ((await db.countEventsSince("scan.requested", new Date(Date.now() - DAY_MS))) >= env.freeScansPerDay) return alerted("daily_cap", { cap: env.freeScansPerDay });
+  const spent = await db.freeScanCentsSince(dayStart());
+  if (spent >= env.freeAiCapCents) return alerted("spend_cap", { spent, cap: env.freeAiCapCents });
   if ((await db.countEventsSince(scanIpEvent(clientIp(req)), dayStart())) >= FREE_SCANS_PER_IP) return "ip_cap";
   return null;
+}
+
+/** A site-wide brake reports itself (lib/abuse-alert.ts) and is then the refusal. */
+async function alerted<T extends string>(brake: T, detail: Record<string, unknown>): Promise<T> {
+  await alertOnce(brake, detail);
+  return brake;
 }
 
 /**
@@ -45,7 +54,7 @@ export async function startFreeCheck(req: Request, business: BusinessRecord, req
 
   const refusal = await freeCheckRefusal(req);
   if (refusal) {
-    await db.logEvent(null, "scan.refused", { reason: refusal, cap: refusal === "daily_cap" ? env.freeScansPerDay : FREE_SCANS_PER_IP });
+    await db.logEvent(null, "scan.refused", { reason: refusal });
     return "/scan/druk";
   }
   if (env.realEngines) await db.logEvent(null, scanIpEvent(clientIp(req)), {});
