@@ -27,7 +27,7 @@ export async function SiteFooter({ variant = "full", note, tagline }: { variant?
             <Link href={href("/cookies")} className="nav-link">
               {copy.legal.cookies.title}
             </Link>
-            {hasCookieChoice && <CookieSettingsButton label={copy.consent.settings} />}
+            {hasCookieChoice && <CookieSettingsButton label={copy.consent.settings} tone="text-inherit" />}
             <span>{note ?? f.copyright}</span>
             <LangSwitch />
           </span>

@@ -119,9 +119,14 @@ export function CookieConsent({ copy, cookiesHref, categories }: { copy: CopySha
 }
 
 /** Footer button: reopens the notice so a choice can be changed or withdrawn (LEGAL-NL §6). */
-export function CookieSettingsButton({ label }: { label: string }) {
+export function CookieSettingsButton({ label, tone = "text-ink-2" }: { label: string; tone?: string }) {
+  // Looks exactly like the neighbouring links: no button padding or border, the text's own size, line height and
+  // colour, and only as wide as its label so the hover underline matches (`.nav-link` draws it across the box).
   return (
-    <button type="button" className="nav-link text-left text-ink-2" onClick={() => window.dispatchEvent(new Event(OPEN_CONSENT_EVENT))}>
+    <button
+      type="button"
+      className={`nav-link m-0 inline-block cursor-pointer self-start border-0 p-0 text-left align-baseline text-[length:inherit] leading-[inherit] ${tone}`}
+      onClick={() => window.dispatchEvent(new Event(OPEN_CONSENT_EVENT))}>
       {label}
     </button>
   );
