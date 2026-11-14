@@ -2,11 +2,118 @@
 
 The launch gate. "continue" resumes from the first row that is not ✓. Status key: `✓verified` (observed, with evidence and date) · `written` (code exists, not proven against real infrastructure) · `blocked` (names what it needs) · `open` · `n/a`. Not legal advice.
 
+## Actions for Julian (14 Nov 2026)
+
+Every open launch row, with a recommendation and the exact step. **J** = you do it, **C** = Claude does it after your yes. Do them top to bottom; each says what it unblocks. Spend is marked €.
+
+### Answers in chat (no spend)
+
+**A-01 (J) Vidalo's own facts (W2, W3, Control Room Q-20261106-09).** Recommendation: confirm if right, so vidalo.ai/feiten stops saying "nog niet bevestigd". Reply with either `facts confirmed` or the corrections:
+
+| Field | Value on the page |
+|---|---|
+| Address | `Factorij 80, 3071 AV Rotterdam` |
+| Hours | `maandag t/m vrijdag 09:00–17:00` |
+| Phone | `+31 85 109 1393` |
+| Payment | `iDEAL, card, SEPA` |
+| Not to be confused with | `Vidado`, `Vidyo` |
+| Erkenningen | none |
+
+Then C sets `OWN_FACTS_VERIFIED_AT` and fills the four open items in `own.test.ts`.
+
+**A-02 (J) KvK and btw-nummer in footer, terms and Stripe (Q-20261106-05).** Open https://www.kvk.nl/zoeken/?source=all&q=42057858 and check it is A101 B.V. at Factorij 80. Reply `KvK ok` or the right number. Values used everywhere:
+```
+KvK 42057858
+btw NL869514192B01
+```
+
+**A-03 (J) Launch with Dutch customers only (B6, Q-20261106-08).** Recommendation: yes. Checkout already refuses a business abroad; the accountant question stays open and is not a launch blocker. Reply `NL only`.
+
+**A-04 (J) Feature 003 decisions** (`docs/features/003-site-builder/state.md`). Recommendation: the suggested answers. Reply `003 as suggested`: www always, bare domain where the registrar allows; Monthly → Yearly switch at €470; "Verwijder alles" on Yearly deletes at once, no refund; domain registration (branch `claude/domain-registrar-bc28c8`) decided apart. Not a launch blocker.
+
+### Spend decisions (€)
+
+**A-05 (J, €25/month) Supabase Pro with daily backups (D2, Q-20261106-07).** Recommendation: yes, before launch; on the free plan there are no backups and the project pauses after a week without traffic. https://supabase.com/dashboard/org/_/billing → pick org `A101BV` → Change subscription plan → `Pro`. Then C downloads the first daily backup and restores it into a local Postgres as the restore drill (never onto the hosted project).
+
+**A-06 (J, price shown on the page) Cloudflare for SaaS + facts hosts (D5, D6, W6: H1–H4).** Recommendation: yes; facts pages on customers' own domains and `{slug}-feiten.vidalo.io` need it. Public DNS on 14 Nov 2026 shows neither `feiten.vidalo.io` nor the wildcard yet.
+- H1: https://dash.cloudflare.com/37c9615a0d7d9629154eca03d7de59a6/vidalo.io/dns/records → Add record. Type `AAAA`, Name `feiten`, IPv6 address `100::`, Proxy **Proxied**, TTL Auto.
+- H2: same page → Add record. Type `AAAA`, Name `*`, IPv6 address `100::`, Proxy **Proxied**, TTL Auto.
+- H3: https://dash.cloudflare.com/37c9615a0d7d9629154eca03d7de59a6/vidalo.io/ssl-tls/custom-hostnames → Enable Cloudflare for SaaS (read the price first) → Fallback Origin → field *Add fallback origin*:
+  ```
+  feiten.vidalo.io
+  ```
+- H4: https://dash.cloudflare.com/profile/api-tokens → the token stored on `vidalo-worker` as `CLOUDFLARE_API_TOKEN` → `…` → Edit → + Add more → `Zone` · `Workers Routes` · `Edit` → Continue to summary → Update token. The value stays the same.
+- Then C proves it after the next deploy: `curl -s https://feiten.vidalo.io/healthz` answers `ok`.
+
+**A-07 (J, free) Staging database (X6, Q-20261105-14).** Recommendation: a free project in the free org "A101 Staging", not $10/month. https://supabase.com/dashboard/new/_ → org `A101 Staging` → Name `vidalo-staging`, Region `West EU (Ireland)`, a generated password into your password manager → Create. Reply with the project ref; C applies the migrations, seeds a second test owner and runs the cross-tenant checks.
+
+### Setup steps
+
+**A-08 (J) Stripe key on `vidalo-worker` (Q-20261112-02).** Production web uses the live restricted key since 2 Nov (`rk_live_…`, in `.env.live`). Recommendation: the same key on the worker; without it no purge runs. In a terminal on your Mac:
+```bash
+cd /Users/a101/Vidalo/apps/worker && npx wrangler secret put STRIPE_SECRET_KEY
+```
+Paste the `STRIPE_SECRET_KEY` value from `/Users/a101/Vidalo/.env.live` when it asks. C reads back `wrangler secret list --name vidalo-worker` (names only).
+
+**A-09 (J) Live Stripe dashboard details and one real purchase (B4, L2, L4, L5, L9, L10).**
+- https://dashboard.stripe.com/settings/public — Public business name `Vidalo`; Statement descriptor `VIDALO`; Support e-mail `support@vidalo.io`; Website `https://vidalo.ai`; Terms of service `https://vidalo.ai/voorwaarden`; Privacy policy `https://vidalo.ai/privacy`.
+- https://dashboard.stripe.com/settings/branding — logo, and in the invoice footer:
+  ```
+  A101 B.V. · KvK 42057858 · btw NL869514192B01
+  ```
+- https://dashboard.stripe.com/settings/billing/automatic — Smart Retries on; e-mail the customer; after all retries **mark the subscription as unpaid**.
+- After the deploy in A-14: buy Vidalo Scan (€149) on https://vidalo.ai with your own card or iDEAL, then refund it at https://dashboard.stripe.com/payments. C reads back the `checkout.completed` event (`termsConsent: "accepted"`, proof for B3).
+
+**A-10 (J) Sign-in mail through Resend (A2).** The Resend DKIM record for `vidalo.io` is published (checked 14 Nov 2026). Check https://resend.com/domains shows `vidalo.io` as Verified, make an API key with Sending access at https://resend.com/api-keys, then https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/smtp → Enable Custom SMTP:
+
+| Field | Value |
+|---|---|
+| Sender email | `inloggen@vidalo.io` |
+| Sender name | `Vidalo` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | the Resend API key (`re_…`) |
+
+Then https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/templates → Magic link: subject `Je inloglink voor Vidalo`, body the whole of `docs/brand/supabase-magic-link.html`.
+
+**A-11 (J) Google ownership sign-in for everyone (A3).** Recommendation: start now; Google's review of the `business.manage` scope can take weeks. Until then only test users can prove ownership.
+- https://console.cloud.google.com/auth/clients → client `Vidalo web` → Authorized redirect URIs → add
+  ```
+  https://vidalo.ai/api/google/callback
+  ```
+- https://console.cloud.google.com/auth/branding — App home page `https://vidalo.ai`, Privacy policy `https://vidalo.ai/privacy`, Terms of service `https://vidalo.ai/voorwaarden`, Authorized domains `vidalo.ai` and `vidalo.io`.
+- https://console.cloud.google.com/auth/audience → Publish app, then https://console.cloud.google.com/auth/verification → Prepare for verification. Scope justification:
+  ```
+  Vidalo lets the owner of a local business prove they manage its Google Business Profile. We read the list of locations the signed-in account manages and compare each place id with the business the owner claims. Only after the owner approves a specific change do we update that location's details (for example opening hours or website). We never post, reply to reviews or read messages.
+  ```
+  Google asks for a demo video; C writes the script and the screens to record.
+
+**A-12 (J) Error and uptime monitoring (X4).** Recommendation: Sentry, EU data region, free plan, for errors and uptime checks on `https://vidalo.ai/`, `https://vidalo.ai/privacy`, `https://vidalo.ai/api/health`. Sign up at https://sentry.io/signup/ with data region **European Union**. C then adds it to `docs/processors.md`, the privacy statement and `legal.test.ts` in one PR, which you approve before merge (a new vendor is a privacy change). Whether Sentry's free plan includes uptime checks is not verified; otherwise C proposes a separate free uptime service.
+
+### Runs Claude does after your yes
+
+**A-13 Trademark for "Vidalo" (J1, Q-20261105-08).** Deferred by Julian on 14 Nov 2026 until the first customers; consciously accepted for launch.
+
+**A-14 (C) Production deploy with feature 002 (Q-20261112-02).** After A-08. The coming-soon gate stays on, so this is not the launch. C runs `deploy.yml` → `production` and `verify-deploy.mjs`, then you request one sign-in mail on https://vidalo.ai/inloggen (A1 on the new host) and C reads the result.
+
+**A-15 (C) Arm the retention purge (Q-20261112-03).** One day after A-14, read the `retention.would_purge` counts, then set `VIDALO_PURGE=1` on `vidalo-worker`. Reply `arm purge` once the counts are in front of you.
+
+**A-16 (C) One real sandbox checkout end to end, cancel and pause included (B3, B5).** `scripts/e2e-stripe.sh` against the sandbox. Reply `run sandbox checkout`.
+
+**A-17 (C, € about 10–15 in AI calls, estimate) The 20-business scan (P3).** Recommendation: yes, one town, all live engines; it validates the product before launch. Reply with a town, or `Rotterdam` as default.
+
+**A-18 (C) Rollback drill on `vidalo-web-preview` (X5).** Two preview deploys, one rollback, verify, roll forward. Reply `run rollback drill`.
+
+### The launch
+
+**A-19 (J) Open the site (J4, the one-way door).** When A-01 to A-18 are done or consciously accepted: reply `launch`. C sets `VIDALO_COMING_SOON=0` on `vidalo-web`, deploys, and verifies `https://vidalo.ai` serves the full site.
+
 ## Decisions for Julian first
 | # | Decision | Status |
 |---|---|---|
 | J1 | Product name: **Vidalo** (Julian, 13 Oct 2026; was Maicro). Web search found no Vidalo brand; nearest: Vidado (AI data extraction), Vidyo (video calls). Formal TMview check (EUIPO + BOIP) and the domains are Julian's. | decided; TMview + domains open |
-| J2 | Domain: **`vidalo.nl` is the main domain**; `vidalo.com` and `vidalo.io` redirect to it (Julian, 13 Oct 2026). `.com` and `.io` at Cloudflare Registrar, `.nl` at a Dutch registrar with DNS on Cloudflare. **Checked 14 Oct 2026 (whois + DNS from Julian's Mac): `vidalo.nl` is taken** (registered 14 Jun 2026 by a third party, registrar Internationale Domeinregistratie Nederland, DNSSEC on, A record 37.97.254.29); **`vidalo.com` is taken** (since 2003, German registrant, alfahosting DNS); `vidalo.io` is free, as are `vidalo.ai` and `vidalo.co`; `vidalo.app` is taken. **Decided 14 Oct 2026: `vidalo.io` is the site** (registered by Julian that day); only `www.vidalo.io` redirects to it; `.nl` and `.com` are out of code, copy and config. | decided. 16 Oct 2026: one.com holds `vidalo.io`; its zone is active in A101's Cloudflare account (Domains D1) |
+| J2 | Domain: **`vidalo.nl` is the main domain**; `vidalo.com` and `vidalo.io` redirect to it (Julian, 13 Oct 2026). `.com` and `.io` at Cloudflare Registrar, `.nl` at a Dutch registrar with DNS on Cloudflare. **Checked 14 Oct 2026 (whois + DNS from Julian's Mac): `vidalo.nl` is taken** (registered 14 Jun 2026 by a third party, registrar Internationale Domeinregistratie Nederland, DNSSEC on, A record 37.97.254.29); **`vidalo.com` is taken** (since 2003, German registrant, alfahosting DNS); `vidalo.io` is free, as are `vidalo.ai` and `vidalo.co`; `vidalo.app` is taken. **Decided 14 Oct 2026: `vidalo.io` is the site** (registered by Julian that day); only `www.vidalo.io` redirects to it; `.nl` and `.com` are out of code, copy and config. **6 Nov 2026: `vidalo.ai` is the site** (Cloudflare); `vidalo.io` 301s to it and keeps the mail and facts hosts. | decided. 16 Oct 2026: one.com holds `vidalo.io`; its zone is active in A101's Cloudflare account (Domains D1) |
 | J3 | Hosting: **all on Cloudflare** (Julian, 13 Oct 2026): `vidalo-web` (OpenNext) and `vidalo-worker` (cron, scan queue, facts pages), A101's account. | decided |
 | J4 | Launch gate: `VIDALO_COMING_SOON=1` shows `/binnenkort` on the marketing routes (legal, cookies, reports, sign-in, account, unsubscribe, facts keep working; `core/shared/gate.ts`, tested). **18 Oct 2026 (Julian): the public "Bekijk de site alvast" button is removed** (code, copy, config); the full site opens only with `VIDALO_PREVIEW_KEY` through `/api/preview` (constant-time compare, empty key refused). `/binnenkort` collects the coming-soon list instead (P8). At launch set the gate to 0 | decided; built |
 
@@ -44,9 +151,9 @@ The launch gate. "continue" resumes from the first row that is not ✓. Status k
 | # | Item | Status |
 |---|---|---|
 | B1 | Vidalo's own Stripe account, id pinned as `VIDALO_STRIPE_ACCOUNT` | **Changed 25 Oct 2026 (Julian):** the Vidalo **sandbox** `acct_1UR4RAELCe3OOCe2` is the account in use (`docs/setup/stripe-and-resend.md` §2); no live account exists yet. **Done per Julian (26 Oct 2026):** the Stripe key and iDEAL + SEPA. Open: confirm whether the key and SEPA are live or sandbox (Claude cannot read either), Terms/Privacy URLs, statement descriptor (needs live). Tax stays the fixed 21% rate, no Stripe Tax (decision 16 Oct, `docs/setup/stripe-and-resend.md`) |
-| B2 | `pnpm stripe:setup --apply` (prices, 21% tax rate, webhook) | done in the sandbox 25 Oct 2026: prices €149 and €49/month, BTW 21% exclusive, portal without cancelling, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` → `https://vidalo.io/api/stripe/webhook`; key, price ids, tax rate, portal and webhook secret are secrets on `vidalo-web` (`wrangler secret list`, 26 Oct). **Open:** `--apply --live` on a live account |
+| B2 | `pnpm stripe:setup --apply` (prices, 21% tax rate, webhook) | done in the sandbox 25 Oct 2026: prices €149 and €49/month, BTW 21% exclusive, portal without cancelling, webhook `we_1UUPzEELCe3OOCe2Z48U08Sn` → `https://vidalo.io/api/stripe/webhook`; key, price ids, tax rate, portal and webhook secret are secrets on `vidalo-web` (`wrangler secret list`, 26 Oct). ~~Open: `--apply --live` on a live account~~ *14 Nov 2026:* done on live 2 Nov 2026 (`docs/setup/stripe-and-resend.md`: tax rate `txr_1UXOVfEKzmvgQ7J9uS8y2KyS`, webhook `we_1UXOYhEKzmvgQ7J9svK5J2yX`). The new 003 prices (Yearly, website, locations, coupon) exist only in the sandbox |
 | B3 | Terms and Privacy URLs set in Stripe settings. **Checkout now requires them** (14 Oct 2026: terms checkbox, B2B confirmation with legal links, btw-nummer, origin-derived return URLs, as for Sonable; `docs/PAYMENTS.md`). Proof: a completed session whose `checkout.completed` event reads `termsConsent: "accepted"` | **sandbox done 9 Nov 2026**: `https://vidalo.ai/voorwaarden` and `https://vidalo.ai/privacy` set on `acct_1UR4RAELCe3OOCe2` (Dashboard-only field, no API); proof: a Checkout session with `consent_collection.terms_of_service=required` is created (`cs_test_a1qiGqoq…`) where the same call failed before. The live account `acct_1UR4QnEKzmvgQ7J9` already creates one in test mode, so its URLs are set. Still open: a completed session whose event reads `termsConsent: "accepted"` (the test flow, step 2.2) |
-| B4 | One live purchase on a real card, refunded | blocked: B2 |
+| B4 | One live purchase on a real card, refunded | open: Julian (A-09 below). Live account, prices, tax rate, portal, webhook and checkout are done since 2 Nov 2026 (`docs/setup/stripe-and-resend.md` status table) |
 | B6 | Businesses outside the Netherlands pay with the right VAT (`docs/PAYMENTS.md`, "Businesses outside the Netherlands"): accountant confirms 21% NL / reverse charge EU B2B / none outside the EU, Stripe Tax set up, `VIDALO_STRIPE_TAX=1` on `vidalo-web`, VAT FAQ updated. Until then checkout refuses a business abroad | open: accountant (Julian asked 26 Oct 2026) |
 | B5 | Cancel and pause in the app (`docs/CANCEL-PAUSE.md`): cancel at period end with reason (optional), undo until the end, pause 1–3 months with Stripe `pause_collection`, confirmation mail for each change, portal cancelling switched off | written 25 Oct 2026, mock-mode browser run and tests; migration 0012 applied to the hosted project 25 Oct 2026 (read back 26 Oct). **Open:** a run against a real sandbox subscription, counsel on the pause article |
 
@@ -78,7 +185,7 @@ What the site promises a customer exists for Vidalo itself, from one record: `pa
 ## Legal
 | # | Item | Status |
 |---|---|---|
-| L1 | Terms, privacy, cookie statement, NL + EN, at `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`) | written, awaiting Julian's approval of the PR `claude/legal-final`: final texts from Sonable's counsel-reviewed set, adapted to Vidalo (Julian, 26 Oct 2026: no outside counsel in this phase). Verified on the local dev server 26 Oct 2026: `/voorwaarden`, `/privacy`, `/cookies`, `/en/terms`, `/en/privacy`, `/en/cookies` answer 200 with 18/20/6 sections, no "Concept" notice, no noindex, all three in `sitemap.xml`; footer links go to the same routes in each language; terms render as numbered articles (1.1, 6.3 a–e); no horizontal scroll at 375px; `pnpm -r typecheck`, `pnpm -r test` (315 core + 15 worker) and `pnpm e2e:mock` green. Not verified on production (needs a deploy). Launch blockers named in the PR: the retention purge job the privacy text promises is not built; the Stripe Terms/Privacy URLs (B3) |
+| L1 | Terms, privacy, cookie statement, NL + EN, at `/voorwaarden`, `/privacy`, `/cookies` (EN `/en/terms`, `/en/privacy`, `/en/cookies`) | *14 Nov 2026:* merged as #75; the retention purge it named as a blocker is built in feature 002 (#123), not yet armed (`VIDALO_PURGE`). Was: written, awaiting Julian's approval of the PR `claude/legal-final`: final texts from Sonable's counsel-reviewed set, adapted to Vidalo (Julian, 26 Oct 2026: no outside counsel in this phase). Verified on the local dev server 26 Oct 2026: `/voorwaarden`, `/privacy`, `/cookies`, `/en/terms`, `/en/privacy`, `/en/cookies` answer 200 with 18/20/6 sections, no "Concept" notice, no noindex, all three in `sitemap.xml`; footer links go to the same routes in each language; terms render as numbered articles (1.1, 6.3 a–e); no horizontal scroll at 375px; `pnpm -r typecheck`, `pnpm -r test` (315 core + 15 worker) and `pnpm e2e:mock` green. Not verified on production (needs a deploy). Launch blockers named in the PR: the retention purge job the privacy text promises is not built; the Stripe Terms/Privacy URLs (B3) |
 | L2 | Processors, records of processing, DPIA screening | written (`docs/processors.md`, `docs/records-of-processing.md`, `docs/legal-compliance-guidelines.md`) |
 
 ## Domains (J2)
