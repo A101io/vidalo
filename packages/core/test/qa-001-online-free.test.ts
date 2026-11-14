@@ -99,25 +99,50 @@ describe("QA 001: a free check of Sonable, Rotterdam through runScan (mock mode)
   });
 });
 
-describe("QA 001: an honest name with an instruction word and no listing", () => {
+describe("QA 001: an honest name with an instruction word and no listing (V1-QA-02)", () => {
   beforeEach(() => {
     vi.stubEnv("VIDALO_MOCK", "1");
     vi.stubEnv("OPENAI_API_KEY", "");
   });
   afterEach(() => vi.unstubAllEnvs());
 
-  // V1-QA-02: typedBusinessProblem lets "Prompt Uitzendbureau" through (honest name), but every online/neutral template
-  // needs the name slot, which sanitizeSlot refuses, so the check asks nothing and still finishes.
-  it.fails("asks at least one question (fails today: 0 questions, see V1-QA-02)", async () => {
+  // typedBusinessProblem lets "Prompt Software" through on purpose (S-04, an honest name). The mock resolver gives it no
+  // listing ("software" is in MOCK_ONLINE_RE), the understanding step falls back (online, neutral), every neutral template
+  // needs the name slot, sanitizeSlot refuses "prompt", and runScan (scanner/index.ts:269-270) then asks today's local set.
+  async function freeCheck(name: string) {
     const db = withMockDb();
-    const prep = await prepareBusiness({ name: "Prompt Uitzendbureau", place: "Utrecht", db });
-    expect(prep.business.googlePlaceId).toBeNull();
+    const prep = await prepareBusiness({ name, place: "Utrecht", db });
     let asked: string[] = [];
     const report = await runScan({
       businessId: prep.business.id, kind: "free", engines: ["chatgpt"], clients: [createMockEngine("chatgpt")], db,
       onProgress: (ev) => { if (ev.type === "questions") asked = ev.questions.map((q) => q.text); },
     });
-    expect((await db.getScanRun(report.scanRunId))!.status).toBe("done");
+    return { prep, report, asked };
+  }
+
+  it("control: 'Plain Software' (no listing, no website) gets the neutral set of 3", async () => {
+    const { prep, report, asked } = await freeCheck("Plain Software");
+    expect(prep.business.googlePlaceId).toBeNull();
+    expect(report.profile).toMatchObject({ mode: "online", source: "fallback" });
+    expect(asked).toEqual(["Bestaat Plain Software nog?", "Wat doet Plain Software?", "Wat is de website van Plain Software?"]);
+  });
+
+  it("observed today: 'Prompt Software' (no listing) is asked the shop-front set and gets a coloured dot", async () => {
+    const { prep, report, asked } = await freeCheck("Prompt Software");
+    expect(prep.business.googlePlaceId).toBeNull();
+    expect(report.profile).toMatchObject({ mode: "online", source: "fallback" });
+    expect(asked).toHaveLength(6);
+    expect(asked).toContain("Is Prompt Software in Utrecht op zondag open?");
+    expect(asked).toContain("Kan ik bij Prompt Software in Utrecht pinnen?");
+    expect(asked).toContain("Wat is het adres van Prompt Software in Utrecht?");
+    expect(report.stip).not.toBe("grijs");
+  });
+
+  // AC-A3 (+ ADR-0007 point 4): no listing and an unsure step -> the online/neutral set, never the shop-front questions.
+  it.fails("AC-A3: no shop-front question for a business without a listing (fails today, V1-QA-02)", async () => {
+    const { asked } = await freeCheck("Prompt Software");
     expect(asked.length).toBeGreaterThan(0);
+    for (const q of asked) expect(q).not.toMatch(SHOP_FRONT);
+    for (const q of asked) expect(q).not.toContain("Utrecht");
   });
 });
