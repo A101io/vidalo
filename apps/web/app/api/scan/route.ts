@@ -10,7 +10,10 @@ import { TURNSTILE_FIELD, clientIp, parseTypedWebsite, typedBusinessProblem } fr
 import { passesTurnstile, kiesToken } from "@/lib/turnstile";
 import { CHECK_COOKIE, CHECK_COOKIE_OPTIONS, checkCookieValue, checkFromCookie } from "@/lib/free-check";
 import { parseFreeCheckRequest } from "@vidalo/core/shared";
-import { freeCheckRefusal } from "@/lib/free-check-start";
+import { freeCheckRefusal, startFreeCheck } from "@/lib/free-check-start";
+import { getSession } from "@/lib/session";
+import { CONFIRM_MAILS_PER_ADDRESS, FREE_CHECK_LOCK, confirmAddressEvent, dayStart } from "@vidalo/core/shared";
+import type { BusinessRecord } from "@/lib/db";
 import { requestConfirmation } from "@/lib/scan-confirm";
 
 export const runtime = "nodejs";
@@ -102,12 +105,37 @@ export async function POST(req: Request) {
 
   const { business } = await prepareBusiness({ name: candidate.name, place: finalPlace, candidate, website: typedWebsite });
 
-  // The address is not proven yet: it gets a link, and only that link starts the check.
-  // The address is done travelling: the cookie goes.
-  const next = await requestConfirmation(req, business, requester, lang);
+  // Signed in with this very address: the sign-in link already proved it, so the check starts now,
+  // under the same lock and caps as a confirmed link. Any other address gets a link, and only that
+  // link starts the check. The address is done travelling: the cookie goes.
+  const next = (await provenBySession(requester.email)) ? await startSignedIn(req, business, requester, lang) : await requestConfirmation(req, business, requester, lang);
   const res = NextResponse.redirect(to(next), 303);
   res.cookies.set(CHECK_COOKIE, "", { ...CHECK_COOKIE_OPTIONS, maxAge: 0 });
   return res;
+}
+
+/** True when a visitor is signed in and the check's address is the sign-in's own address (proven by the sign-in link). */
+async function provenBySession(email: string): Promise<boolean> {
+  const session = await getSession();
+  return !!session && session.email.trim().toLowerCase() === email.trim().toLowerCase();
+}
+
+/**
+ * The signed-in start: under the lock, and with the same daily allowance per address as the mail link
+ * (CONFIRM_MAILS_PER_ADDRESS), so one account cannot run more checks a day than one mailbox could.
+ */
+async function startSignedIn(req: Request, business: BusinessRecord, requester: { email: string; marketing: boolean }, lang: "nl" | "en"): Promise<string> {
+  const db = await ready();
+  const addrEvent = confirmAddressEvent(requester.email);
+  return db.withLock(FREE_CHECK_LOCK, async () => {
+    if (env.realEngines && (await db.countEventsSince(addrEvent, dayStart())) >= CONFIRM_MAILS_PER_ADDRESS) {
+      await db.logEvent(null, "scan.refused", { reason: "address_cap", at: "signed_in" });
+      return "/scan/druk";
+    }
+    const next = await startFreeCheck(req, business, requester, lang, "signed_in");
+    if (env.realEngines && next !== "/scan/druk") await db.logEvent(null, addrEvent, {});
+    return next;
+  });
 }
 
 export async function GET(req: Request) {

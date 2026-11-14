@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { confirmCheck, dismissNotice, startCheckViaApi } from "./helpers";
+import { dismissNotice, startCheckViaApi } from "./helpers";
 
 /**
  * 13 Nov 2026 owner fixes (mock mode): the sticky footer and the cookie button in it, starting a new check from
@@ -90,14 +90,29 @@ test("a signed-in person without a business starts a new check from behind the l
   await form.locator("input[name='place']").fill("Haarlem");
   await page.screenshot({ path: "out/screenshots/nieuwe-controle.png" });
   await form.locator("button[type='submit']").click();
-  // Signed in or not, the check starts from the confirmation link (core/shared/scan-confirm.ts).
-  await confirmCheck(page);
+  // The sign-in already proved this address: no confirmation mail, the check starts at once.
+  await page.waitForURL(/\/(scan|r)\//);
+  expect(new URL(page.url()).pathname).not.toBe("/scan/mail");
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   // The second check on the same login: the list holds both.
   await freeCheck(page, `Kapper Tweede ${Date.now()}`, email);
   await page.goto("/inloggen");
   await expect(page.locator("#my-checks ~ ul li")).toHaveCount(2);
   await page.screenshot({ path: "out/screenshots/je-controles.png", fullPage: true });
+});
+
+test("signed in, but a check for another address still waits for that address's confirmation", async ({ page }) => {
+  await signIn(page, `ingelogd-${Date.now()}@example.com`);
+  const res = await page.request.post("/api/scan", { form: { q: `Slager Ander ${Date.now()}`, place: "Haarlem", email: "iemand-anders@example.com" }, maxRedirects: 0 });
+  expect(new URL(res.headers()["location"]!).pathname).toBe("/scan/mail");
+});
+
+test("signed in with the same address in other capitals: no confirmation mail", async ({ page }) => {
+  const email = `hoofdletters-${Date.now()}@example.com`;
+  await signIn(page, email);
+  const res = await page.request.post("/api/scan", { form: { q: `Bakker Hoofd ${Date.now()}`, place: "Haarlem", email: email.toUpperCase() }, maxRedirects: 0 });
+  expect(new URL(res.headers()["location"]!).pathname).toMatch(/^\/scan\/[^/]+$/);
+  expect(new URL(res.headers()["location"]!).pathname).not.toBe("/scan/mail");
 });
 
 test("/controle sends a visitor who is not signed in to the sign-in page", async ({ page }) => {

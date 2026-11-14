@@ -26,3 +26,6 @@ SEC-05 (unlisted business name in the mail), SEC-06 (500-row event window, looku
 
 ## Not checked
 A real Resend mail and a real mailbox's link scanner; the Cloudflare rule itself; Hyperdrive under load; mobile layout of the two new pages.
+
+## Round 3 (14 Nov 2026): signed-in skip
+A signed-in visitor whose check address equals the session's e-mail (case-insensitive) skips the mail link: the sign-in link already proved it (`apps/web/app/api/scan/route.ts`, `startSignedIn`). Same lock, daily cap and per-IP allowance, plus the per-address daily allowance of the mail path (`CONFIRM_MAILS_PER_ADDRESS`), so one account runs no more checks a day than one mailbox (security P2 from the narrow review, fixed). Another address still gets the mail. Mock sessions cannot reach real engines (`allowMockAuth` only with `VIDALO_MOCK=1` or outside production). Privacy text NL + EN says so; version 15 November 2026 relocked against main's published 14 November lock. Closes QA-06 / SEC-10. Tests: owner-fixes e2e (same address starts at once; other address gets `/scan/mail`; other capitals still skip), signed-in, account, free-check, scan-confirm: 48 passed.
