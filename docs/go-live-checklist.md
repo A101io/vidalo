@@ -77,7 +77,7 @@ Paste the `STRIPE_SECRET_KEY` value from `/Users/a101/Vidalo/.env.live` when it 
 
 Then https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/templates → Magic link: subject `Je inloglink voor Vidalo`, body the whole of `docs/brand/supabase-magic-link.html`.
 
-**A-11 (J) Google ownership sign-in for everyone (A3).** Recommendation: start now; Google's review of the `business.manage` scope can take weeks. Until then only test users can prove ownership.
+**A-11 (J) Google ownership sign-in (A3).** Recommendation: start now, but it is not a launch blocker: owners prove ownership by phone (A-11b) until Google opens it. Google's Basic API Access for the Business Profile API needs a profile verified and active for 60 days, and the review of the `business.manage` scope can take weeks on top.
 - https://console.cloud.google.com/auth/clients → client `Vidalo web` → Authorized redirect URIs → add
   ```
   https://vidalo.ai/api/google/callback
@@ -88,6 +88,11 @@ Then https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/templates 
   Vidalo lets the owner of a local business prove they manage its Google Business Profile. We read the list of locations the signed-in account manages and compare each place id with the business the owner claims. Only after the owner approves a specific change do we update that location's details (for example opening hours or website). We never post, reply to reviews or read messages.
   ```
   Google asks for a demo video; C writes the script and the screens to record.
+
+**A-11b (J) Ownership by phone code, the route every owner uses at launch (A3).** Built and merged (`shared/phone-proof.ts`, `/app/google`): Twilio Verify calls or texts a code to the number Google lists for the business. The Verify service `Vidalo` and the three keys on `vidalo-web` exist since 26 Oct; calls to NL are on. Open:
+- SMS to Dutch mobiles: https://console.twilio.com/us1/develop/sms/settings/geo-permissions → tick **Netherlands** → Save. Twilio has no API to read this back, so reply `sms nl on`.
+- One real code, after the deploy in A-14: sign in on https://vidalo.ai with an owner account of a business whose Google listing shows a phone you answer, open https://vidalo.ai/app/google → choose call or SMS → enter the code. C reads back `owner.phone_code_checked` and `ownerVerifiedVia: phone_code`.
+- WhatsApp is optional and stays off (`TWILIO_VERIFY_WHATSAPP` unset) until Vidalo has its own WhatsApp sender in Twilio.
 
 **A-12 (J) Error and uptime monitoring (X4).** Recommendation: Sentry, EU data region, free plan, for errors and uptime checks on `https://vidalo.ai/`, `https://vidalo.ai/privacy`, `https://vidalo.ai/api/health`. Sign up at https://sentry.io/signup/ with data region **European Union**. C then adds it to `docs/processors.md`, the privacy statement and `legal.test.ts` in one PR, which you approve before merge (a new vendor is a privacy change). Whether Sentry's free plan includes uptime checks is not verified; otherwise C proposes a separate free uptime service.
 
