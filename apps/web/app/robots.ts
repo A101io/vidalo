@@ -3,7 +3,7 @@ import { SITE } from "@/lib/seo";
 
 // Reports (/r/...) are private links and also carry noindex; the dashboard,
 // API and scan flow are never useful in a search result.
-const PRIVATE = ["/r/", "/en/r/", "/app", "/en/app", "/api/", "/scan/", "/en/scan/", "/auth/", "/welkom", "/en/welcome", "/feiten/", "/en/facts/", "/afmelden", "/en/unsubscribe"];
+const PRIVATE = ["/r/", "/en/r/", "/app", "/en/app", "/api/", "/scan/", "/en/scan/", "/auth/", "/welkom", "/en/welcome", "/feiten/", "/en/facts/", "/afmelden", "/en/unsubscribe", "/controle", "/en/check"];
 
 /**
  * Search engines and AI assistants are welcome on every public page: being

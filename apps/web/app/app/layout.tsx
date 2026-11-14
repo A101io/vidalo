@@ -27,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const R = copy.reconfirm;
   const links = [
     { href: "/app", label: d.h1 },
+    { href: "/controle", label: copy.checks.newNav },
     { href: "/app/voortgang", label: copy.progress.nav },
     { href: "/app/rapporten", label: copy.ownerArea.archive.nav },
     { href: "/app/gegevens", label: d.setupSteps.facts },

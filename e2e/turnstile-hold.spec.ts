@@ -28,7 +28,7 @@ const SECRET = process.env.TURNSTILE_SECRET_KEY || "1x00000000000000000000000000
 
 // Real widget order is "callback, then field" per the author; fill after the callback so the hold's setTimeout is exercised.
 const FAKE = `
-window.__ts = { widgets: [], removed: [] };
+window.__ts = { widgets: [], removed: [], resets: [] };
 window.turnstile = {
   render(el, opts) {
     const inp = document.createElement("input");
@@ -40,6 +40,8 @@ window.turnstile = {
     return id;
   },
   remove(id) { window.__ts.removed.push(id); },
+  // The real reset empties the field and starts a new challenge; the token then comes back through the callback.
+  reset(id) { window.__ts.resets.push(id); const w = window.__ts.widgets.find((x) => x.id === id); if (w) w.inp.value = ""; },
 };
 window.__tsSolve = (i, token) => { const w = window.__ts.widgets[i]; w.opts.callback && w.opts.callback(token); w.inp.value = token; };
 `;
@@ -255,4 +257,59 @@ test("real Cloudflare script (test site key), loaded late: the early submit is h
   await page.waitForURL(/\/app/, { timeout: 30_000 });
   expect(sent).toHaveLength(1);
   expect(sent[0].token.length).toBeGreaterThan(0);
+});
+
+/** The free check form on the landing page with the script released and the first token handed out; /api/scan answers 204 so the page stays. */
+async function openCheckWithToken(page: Page) {
+  const gate = await holdScript(page);
+  gate.release();
+  const sent = posts(page, isScan);
+  await page.route("**/api/scan", (r) => r.fulfill({ status: 204 }));
+  await page.goto("/");
+  await dismissNotice(page);
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill("Bakkerij QA");
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='email']").fill("qa-turnstile@example.nl");
+  await page.waitForFunction(() => Object.keys(document.querySelector("form[action='/api/scan']") ?? {}).some((k) => k.startsWith("__react")));
+  await page.waitForFunction(() => (window as any).__ts?.widgets.length > 0);
+  await page.evaluate((t) => (window as any).__tsSolve(0, t), DUMMY);
+  return { form, sent };
+}
+const tokenField = (page: Page) => page.evaluate(() => (document.querySelector("form[action='/api/scan'] input[name='cf-turnstile-response']") as HTMLInputElement | null)?.value ?? null);
+
+test("AC6: a token that went out with a submit is not offered again; the next submit waits for a fresh one (13 Nov 2026)", async ({ page }) => {
+  const { form, sent } = await openCheckWithToken(page);
+  // 204: the browser stays on the page; noWaitAfter because there is no navigation to wait for.
+  await form.locator("button[type='submit']").click({ noWaitAfter: true });
+  await page.waitForTimeout(300);
+  expect(sent).toHaveLength(1);
+  expect(sent[0].token).toBe(DUMMY);
+  // The page did not navigate away: after a moment the spent token is gone and the widget was asked for a new one.
+  await page.waitForFunction(() => (window as any).__ts.resets.length === 1, undefined, { timeout: 5000 });
+  expect(await tokenField(page)).toBe("");
+  // A second submit now is held, not sent with the spent token.
+  await page.evaluate(() => (document.querySelector("form[action='/api/scan']") as HTMLFormElement).requestSubmit());
+  await page.waitForTimeout(800);
+  expect(sent).toHaveLength(1);
+  // (Sending once the fresh token arrives is AC4.)
+});
+
+test("AC7: a form restored from the back/forward cache comes back without its spent token", async ({ page }) => {
+  const { form, sent } = await openCheckWithToken(page);
+  expect(await tokenField(page)).toBe(DUMMY);
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+  expect(await tokenField(page)).toBe("");
+  // Every widget on the page (the landing page has several forms) asks for a fresh token.
+  const widgets = await page.evaluate(() => (window as any).__ts.widgets.length);
+  expect(await page.evaluate(() => (window as any).__ts.resets.length)).toBe(widgets);
+  await form.locator("button[type='submit']").click();
+  await page.waitForTimeout(600);
+  expect(sent).toHaveLength(0);
+  // An ordinary pageshow (not from the cache) leaves a live token alone.
+  await page.evaluate((t) => (window as any).__tsSolve(0, t), DUMMY + ".3");
+  await page.waitForTimeout(500);
+  expect(sent).toHaveLength(1);
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false })));
+  expect(await page.evaluate(() => (window as any).__ts.resets.length)).toBe(widgets);
 });

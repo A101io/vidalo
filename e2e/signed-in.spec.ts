@@ -40,7 +40,7 @@ test("signed in without a business: no form, a free check and sign-out", async (
   await expect(page.getByText(/Je bent ingelogd als niemand-/)).toBeVisible();
   await expect(page.locator("input[name='email']")).toHaveCount(0);
   await expect(page.getByText("We vonden geen bedrijf bij dit e-mailadres")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Start een gratis controle" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Nieuwe controle" })).toBeVisible();
   // /app sends the same visitor here, not into a loop.
   const res = await page.goto("/app");
   expect(res?.status()).toBe(200);

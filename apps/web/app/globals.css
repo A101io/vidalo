@@ -42,7 +42,12 @@
     background: var(--bg);
     min-height: 100dvh;
     overflow-x: hidden;
+    /* Sticky footer: the page is at least the viewport tall and <main> takes the spare height, so the footer
+       reaches the bottom on short pages (message pages, sign-in). Fixed and hidden children take no part. */
+    display: flex;
+    flex-direction: column;
   }
+  body > main { flex: 1 0 auto; }
   h1, h2, h3, h4 { font-weight: 800; line-height: 1.1; }
   a { color: inherit; text-decoration: none; }
   a:hover { color: var(--blue); }

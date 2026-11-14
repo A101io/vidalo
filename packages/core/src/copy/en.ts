@@ -728,7 +728,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 13 November 2026",
+    updated: "Version of 14 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -987,7 +987,7 @@ export const en: CopyShape = {
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website (including a website you give us) and the sources AI assistants name.",
               "What we do with it: to see what the business offers and for whom, we send OpenAI the details from Google and the text of the business's homepage, from which we first remove email addresses and phone numbers; OpenAI turns that into a short description. We keep that description with the business, and the report shows it as how we read the business. The report also shows which other businesses AI assistants named and how often.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
-              "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, your business's reports stay visible to you in your account and the periods under ‘A paid plan’ apply.",
+              "Retention: the report can be viewed through the link for 30 days. We keep the data of the check for up to 12 months after the check, so a later check can show what changed; then we delete it. If you become a customer, your business's reports stay visible to you in your account and the periods under ‘A paid plan’ apply. When you are signed in, you can remove a check yourself if you requested it with your own email address or if it belongs to your business: under ‘Your checks’ or in your account's archive. We then delete the report, the answers of the AI assistants, what we found in them and what we recorded about that check, and we remove your email address from that check. If someone else requested the same check too, or the business has an owner, we only remove your email address from that check and the report stays for them.",
             ],
             "If someone else checked your business, we use only public business details. If you do not want that, email us and we will delete that check.",
           ],
@@ -1318,6 +1318,30 @@ export const en: CopyShape = {
     title: "No free checks for now",
     body: "We do a limited number of free checks every day and they have run out for today. Please try again tomorrow.",
     back: "Back to the home page",
+  },
+
+  /** Starting a new check from behind the login, and removing one (13 Nov 2026). */
+  checks: {
+    newNav: "New check",
+    newTitle: "New check",
+    newH1: "A new free check",
+    newBody: (email: string) => `Enter the name and town of the business. The report goes to ${email}. Check the same business again within a day and we show you that day's report.`,
+    newButton: "Start the check",
+    remove: "Remove",
+    removeLabel: (name: string, place: string) => `Remove the check of ${name}, ${place}`,
+    removeTitle: "Remove check",
+    removeH1: (name: string, place: string) => `Remove the check of ${name}, ${place}?`,
+    removeBodyRemoved: "We delete the report, the answers of the AI assistants, what we found in them and what we recorded about this check. This cannot be undone.",
+    removeBodyUnlinked: "This check was also requested by someone else, or the business has an owner. The report then stays for them. We only remove your email address from this check, so it is no longer yours.",
+    removeConfirm: "Yes, remove",
+    removeCancel: "No, keep it",
+    removedDone: "The check has been removed.",
+    removedUnlinked: "The check is no longer yours.",
+    refused: {
+      not_yours: "This check does not belong to your account, or no longer exists.",
+      not_finished: "This check is still running. You can remove it once it has finished.",
+      latest: "This is your newest check; your overview is built on it. Remove an older check, or delete all your data under Account.",
+    },
   },
 
   scan: {
