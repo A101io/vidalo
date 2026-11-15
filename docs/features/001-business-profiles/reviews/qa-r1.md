@@ -12,7 +12,7 @@ no mail. The security and compliance reviews of this round are not redone here.*
   (AC-1, AC-4), 1 fail (AC-A3), 5 partly or not verifiable here (AC-2, AC-7, AC-A1, AC-A9, AC-A10).
 - **Findings:** 2 × P1 (V1-QA-02, V1-QA-03), 2 × P2 (V1-QA-01, V1-QA-04).
 
-## Runs (observed counts, 15 Nov 2026, 23:10–23:55 UTC)
+## Runs (observed counts, 15 Nov 2026, 23:10–23:20 UTC)
 
 | What | Result |
 |---|---|
