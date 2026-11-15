@@ -19,7 +19,7 @@
  * what a customer would get.
  *
  * Needs RESEND_API_KEY and a verified sending domain for EMAIL_FROM (default
- * controle@vidalo.io), from the environment or the root .env. Not covered:
+ * controle@vidalo.ai), from the environment or the root .env. Not covered:
  * the sign-in link, which Supabase sends itself (docs/mail-lab.md).
  */
 import { execFileSync } from "node:child_process";

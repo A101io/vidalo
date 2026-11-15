@@ -1,5 +1,13 @@
 # Mail for vidalo.io — Google Workspace, the Sonable way
 
+> **15 Nov 2026: the addresses moved to vidalo.ai.** Code, copy, legal texts and the
+> sender defaults use `support@`, `hello@`, `controle@`, `inloggen@` and `julian@vidalo.ai`.
+> vidalo.ai already has Workspace MX, SPF, DMARC and Google DKIM (public DNS, 15 Nov). The
+> vidalo.io aliases below stay, so mail sent to the old addresses still arrives. Resend needs
+> `vidalo.ai` as a verified sending domain before the change is deployed, or report and
+> sign-in mails fail. Not yet moved: the support relay entry in
+> `A101/kit/adopt/support/support-inbox-relay.gs` (still keyed on `support@vidalo.io`, relay is off).
+
 Written 18 Oct 2026. Mirrors `A101/_OS/SONABLE.md` (Communication channels) and
 `A101/_OS/DNS_AND_MAIL_CHANGES.md`. Nothing here is done yet; the DNS zone is on
 Cloudflare (`5d39e2dacc81b8603d5dc69a163b6bca`) and has no mail records at all.

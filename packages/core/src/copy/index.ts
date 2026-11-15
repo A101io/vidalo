@@ -662,7 +662,7 @@ export const copy = {
         { q: "Moet ik iets installeren?", a: "Nee." },
         { q: "Hoe vaak controleren jullie?", a: "Met Vidalo Monthly elke maand, en opnieuw na elke wijziging in je gegevens en na elke herstelde fout. Met alleen Vidalo Scan doen we één volledige controle en controleren we daarna de herstelde fouten opnieuw." },
         { q: "AI vindt helemaal niets over mijn bedrijf. Kunnen jullie daar iets aan doen?", a: "Ja, dat is precies waar we voor zijn. We maken een feitenpagina die AI kan lezen, laten zien hoe je in Google, Bing, Apple en de Nederlandse gidsen komt, en controleren daarna of je genoemd wordt. Garanderen dat een AI je noemt kan niemand; zorgen dat het je kan vinden wel." },
-        { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple nemen we wel mee. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.io." },
+        { q: "Werkt Vidalo ook buiten Nederland?", a: "Ja. We begonnen in Nederland en werken ook voor bedrijven daarbuiten. Dan stellen we de vragen in het Engels, vanuit jouw land, en staat je feitenpagina in het Engels. De Nederlandse gidsen slaan we dan over; Google, Bing en Apple nemen we wel mee. Betalen voor een bedrijf buiten Nederland zetten we nu nog samen met je klaar via support@vidalo.ai." },
         { q: "Werkt dit ook als ik geen winkel heb?", a: "Ja. Eerst kijken we wat voor bedrijf je hebt: een zaak waar klanten langskomen, een bedrijf dat naar de klant toe gaat, of een bedrijf dat online of door heel het land werkt. Een online bedrijf krijgt geen vragen over openingstijden of een adres, maar vragen over wat je doet, over je website en over wie AI noemt als iemand een aanbieder zoekt of een alternatief voor jou. In je rapport zie je als aantallen hoe vaak AI je noemt en wie het dan wel noemt. Of AI je noemt, kunnen wij niet bepalen; de stip gaat over of je feiten kloppen." },
         { q: "Wat als AI mijn concurrent noemt?", a: "Dat kunnen we niet verbieden. Wel zorgen we dat de AI over jou de juiste feiten heeft, zodat je niet wegvalt omdat het denkt dat je dicht bent of iets niet doet." },
       ],
@@ -678,7 +678,7 @@ export const copy = {
       lang: "NL",
       columns: [
         { title: "Product", links: [{ label: "Hoe het werkt", href: "/hoe-het-werkt" }, { label: "Waarom", href: "/waarom" }, { label: "AI-agents en OKF", href: "/straks" }, { label: "Voorbeeldrapport", href: "/#rapport" }, { label: "Prijs", href: "/prijzen" }, { label: "Per vak", href: "/#vak" }] },
-        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
+        { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.ai" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · +31 85 109 1393 · Prijzen excl. btw",
@@ -751,8 +751,8 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 14 november 2026",
-    contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.io · +31 85 109 1393",
+    updated: "Versie van 15 november 2026",
+    contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
       intro: "Deze voorwaarden gelden voor elke controle, elk plan en elk ander gebruik van Vidalo. Vidalo is er alleen voor bedrijven.",
@@ -846,7 +846,7 @@ export const copy = {
           p: [
             "Op de Feitenpagina staan alleen Gegevens die jij bevestigd hebt, met de datum waarop je ze bevestigde. De pagina staat op je eigen domein of op een ander adres dat we je laten zien.",
             "We bewaren en publiceren die inhoud voor jou. Inhoud die onrechtmatig is of in strijd met deze voorwaarden, zoals onjuiste gegevens over een ander bedrijf of inbreuk op rechten van anderen, mogen we weigeren, aanpassen of offline halen. We doen dat zorgvuldig en in verhouding tot het probleem.",
-            "Iedereen kan inhoud melden die hij onrechtmatig vindt, via support@vidalo.io. Vermeld in de melding:",
+            "Iedereen kan inhoud melden die hij onrechtmatig vindt, via support@vidalo.ai. Vermeld in de melding:",
             [
               "waarom de inhoud volgens jou onrechtmatig is;",
               "het precieze webadres van de inhoud;",
@@ -854,8 +854,8 @@ export const copy = {
               "dat je de melding te goeder trouw doet en dat de gegevens erin juist en volledig zijn.",
             ],
             "We bevestigen dat we een melding hebben ontvangen, beoordelen haar zorgvuldig en laten de melder weten wat we besluiten. We gebruiken daarvoor geen automatische besluitvorming.",
-            "Halen we inhoud van jou weg of beperken we je Account, dan laten we je weten wat we deden, waarom, op grond van welke regel en hoe je bezwaar maakt. Bezwaar maak je via support@vidalo.io; een mens beoordeelt het.",
-            "support@vidalo.io is ook ons contactpunt voor autoriteiten en gebruikers in de zin van de Digitaledienstenverordening (DSA). Je bereikt ons daar in het Nederlands en het Engels.",
+            "Halen we inhoud van jou weg of beperken we je Account, dan laten we je weten wat we deden, waarom, op grond van welke regel en hoe je bezwaar maakt. Bezwaar maak je via support@vidalo.ai; een mens beoordeelt het.",
+            "support@vidalo.ai is ook ons contactpunt voor autoriteiten en gebruikers in de zin van de Digitaledienstenverordening (DSA). Je bereikt ons daar in het Nederlands en het Engels.",
             "Eindigt je Plan, dan verwijst de Feitenpagina door naar je eigen website. Verwijder je je gegevens, dan verdwijnt de pagina.",
           ],
         },
@@ -881,7 +881,7 @@ export const copy = {
             "Je kunt Vidalo Monthly onder ‘Abonnement’ 1, 2 of 3 maanden pauzeren. In die tijd controleren en herstellen we niets en betaal je niets; je Feitenpagina blijft online. Je krijgt een bevestiging per e-mail en een week voor het einde een herinnering. Op de einddatum loopt het abonnement vanzelf verder tegen de gewone prijs. Je kunt eerder hervatten of tijdens de pauze opzeggen. Pauzeren kan niet zolang een betaling openstaat.",
             "Eindigt je abonnement, dan stoppen we met controleren en herstellen, en verwijst je Feitenpagina door naar je eigen website. Wat bij andere partijen al hersteld is, blijft daar staan. Wat we daarna met je gegevens doen, staat in ons privacybeleid.",
             "Bij Vidalo Scan blijft je Feitenpagina online zolang je account bestaat: tot je zelf alles verwijdert, of tot we je gegevens verwijderen 24 maanden na je laatste keer inloggen of je laatste betaling. 14 dagen daarvoor krijg je een herinnering per e-mail; log je in, dan schuift die datum op.",
-            "Opzeggen kan ook per e-mail naar support@vidalo.io. Je krijgt dan dezelfde bevestiging.",
+            "Opzeggen kan ook per e-mail naar support@vidalo.ai. Je krijgt dan dezelfde bevestiging.",
           ],
         },
         {
@@ -920,7 +920,7 @@ export const copy = {
           p: [
             "Op vidalo.ai kun je vragen stellen aan een assistent. Die assistent is een AI-systeem, geen mens; dat staat ook in het chatvenster.",
             "De assistent beantwoordt alleen vragen over Vidalo, met informatie van onze eigen website. Een antwoord kan onvolledig of fout zijn en bindt ons niet. Wat in deze voorwaarden, op de prijspagina en in je bevestiging staat, gaat voor.",
-            "De assistent geeft geen juridisch, fiscaal of ander persoonlijk advies. Typ geen persoonsgegevens of vertrouwelijke informatie in het chatvenster. Wil je een mens spreken, mail dan support@vidalo.io.",
+            "De assistent geeft geen juridisch, fiscaal of ander persoonlijk advies. Typ geen persoonsgegevens of vertrouwelijke informatie in het chatvenster. Wil je een mens spreken, mail dan support@vidalo.ai.",
           ],
         },
         {
@@ -990,7 +990,7 @@ export const copy = {
           h: "Wie verantwoordelijk is",
           p: [
             "Verwerkingsverantwoordelijke is A101 B.V., handelend onder de naam Vidalo, Factorij 80, 3071 AV Rotterdam, KvK 42057858.",
-            "Voor vragen en verzoeken over je gegevens mail je support@vidalo.io, bel je +31 85 109 1393 of schrijf je naar het adres hierboven. We hebben geen functionaris voor gegevensbescherming; dat is voor ons niet verplicht.",
+            "Voor vragen en verzoeken over je gegevens mail je support@vidalo.ai, bel je +31 85 109 1393 of schrijf je naar het adres hierboven. We hebben geen functionaris voor gegevensbescherming; dat is voor ons niet verplicht.",
           ],
         },
         {
@@ -1103,7 +1103,7 @@ export const copy = {
             "Bij de gratis controle kun je een vakje aanvinken om af en toe nieuws over Vidalo te ontvangen. Het vakje staat standaard uit; zonder vinkje sturen we je alleen het rapport en de twee herinneringen hierboven.",
             [
               "Gegevens: je e-mailadres, de taal van de pagina, het moment van aanvinken en de zin waarmee je toestemming gaf.",
-              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG en artikel 11.7 Telecommunicatiewet). Je trekt die in met de afmeldlink in elke mail of met een mail naar hello@vidalo.io; daarna sturen we je geen nieuws meer.",
+              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG en artikel 11.7 Telecommunicatiewet). Je trekt die in met de afmeldlink in elke mail of met een mail naar hello@vidalo.ai; daarna sturen we je geen nieuws meer.",
               "Hoe lang: tot je je afmeldt.",
             ],
           ],
@@ -1114,7 +1114,7 @@ export const copy = {
             "Zet je je op de lijst op de pagina ‘Binnenkort’, dan mailen we je één keer wanneer Vidalo opengaat. Geen nieuwsbrief en geen reclame voor iets anders.",
             [
               "Gegevens: je e-mailadres, de taal van de pagina, het moment van aanmelden en de zin waarmee je toestemming gaf.",
-              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG). Je trekt die in met een mail naar hello@vidalo.io; dan halen we je adres direct van de lijst.",
+              "Grondslag: je toestemming (artikel 6 lid 1 onder a AVG). Je trekt die in met een mail naar hello@vidalo.ai; dan halen we je adres direct van de lijst.",
               "Hoe lang: tot we iedereen over de opening hebben gemaild; daarna verwijderen we de lijst.",
             ],
           ],
@@ -1172,8 +1172,8 @@ export const copy = {
           h: "Je rechten",
           p: [
             "Je hebt het recht om je gegevens in te zien, te laten verbeteren of te laten verwijderen, de verwerking te laten beperken, je gegevens in een gangbaar bestandsformaat te krijgen, en een toestemming in te trekken. Intrekken werkt voor de toekomst.",
-            "Veel kun je zelf, onder ‘Account’ in je account. Bij ‘Je gegevens’ download je alles wat we over je bedrijf en je inlog bewaren, zonder toegangssleutels, en verwijder je alles. Heb je een lopend abonnement op Vidalo Monthly, dan zeggen we het op tegen de einddatum en verwijderen we alles op die datum; het bedrag voor de lopende maand krijg je niet terug, en tot die datum kun je het verwijderen terugdraaien. Wil je dat we eerder verwijderen, mail dan support@vidalo.io. Na het verwijderen krijg je een bevestiging per e-mail. Onder ‘Google’ verbreek je de koppeling met Google. Je kiest onder ‘Account’ ook welke e-mails je wilt krijgen.",
-            "Voor de rest mail je support@vidalo.io. We reageren binnen een maand. Soms vragen we je eerst te laten zien dat het verzoek van jou komt.",
+            "Veel kun je zelf, onder ‘Account’ in je account. Bij ‘Je gegevens’ download je alles wat we over je bedrijf en je inlog bewaren, zonder toegangssleutels, en verwijder je alles. Heb je een lopend abonnement op Vidalo Monthly, dan zeggen we het op tegen de einddatum en verwijderen we alles op die datum; het bedrag voor de lopende maand krijg je niet terug, en tot die datum kun je het verwijderen terugdraaien. Wil je dat we eerder verwijderen, mail dan support@vidalo.ai. Na het verwijderen krijg je een bevestiging per e-mail. Onder ‘Google’ verbreek je de koppeling met Google. Je kiest onder ‘Account’ ook welke e-mails je wilt krijgen.",
+            "Voor de rest mail je support@vidalo.ai. We reageren binnen een maand. Soms vragen we je eerst te laten zien dat het verzoek van jou komt.",
             "Gegevens geven is niet wettelijk verplicht. Zonder e-mailadres kunnen we geen controle starten en je geen rapport sturen, en zonder betaal- en bedrijfsgegevens kunnen we een plan niet leveren.",
           ],
         },
@@ -1263,7 +1263,7 @@ export const copy = {
       label: "Je e-mailadres",
       placeholder: "naam@bedrijf.nl",
       button: "Zet me op de lijst",
-      consent: "Ja, mail me één keer wanneer Vidalo opengaat. Afmelden kan altijd via hello@vidalo.io.",
+      consent: "Ja, mail me één keer wanneer Vidalo opengaat. Afmelden kan altijd via hello@vidalo.ai.",
       thanks: "Dank je. Je staat op de lijst; we mailen je zodra Vidalo opengaat.",
       invalid: "Dat e-mailadres lijkt niet te kloppen. Kijk het nog even na.",
       noConsent: "Vink het vakje aan, dan zetten we je op de lijst.",
@@ -1306,9 +1306,9 @@ export const copy = {
     send: "Stuur",
     thinking: "Even kijken.",
     faqNote: "Antwoord uit onze veelgestelde vragen.",
-    fallback: "Dat weet ik niet zeker. Mail ons op support@vidalo.io, dan krijg je antwoord van een mens.",
-    error: "Antwoorden lukt nu even niet. Mail ons op support@vidalo.io.",
-    rateLimited: "Je stelt veel vragen in korte tijd. Probeer het over een paar minuten opnieuw, of mail support@vidalo.io.",
+    fallback: "Dat weet ik niet zeker. Mail ons op support@vidalo.ai, dan krijg je antwoord van een mens.",
+    error: "Antwoorden lukt nu even niet. Mail ons op support@vidalo.ai.",
+    rateLimited: "Je stelt veel vragen in korte tijd. Probeer het over een paar minuten opnieuw, of mail support@vidalo.ai.",
   },
 
   /** The cookie notice (components/CookieConsent.tsx) and the footer button that reopens it. */
@@ -1340,7 +1340,7 @@ export const copy = {
     button: "Afmelden",
     doneH1: "Je bent afgemeld",
     doneBody: "We sturen je alleen nog mails die nodig zijn voor je abonnement of je inlog. Ingelogd kun je bij Account kiezen wat je weer wilt krijgen.",
-    invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op support@vidalo.io, dan regelen we het.",
+    invalid: "Deze afmeldlink klopt niet of is verlopen. Mail ons op support@vidalo.ai, dan regelen we het.",
   },
 
   scanBusy: {
@@ -2301,9 +2301,9 @@ export const copy = {
   checkout: {
     mockNotice: "Betaling gesimuleerd (geen Stripe-sleutel ingesteld).",
     cancelled: "Je betaling is niet afgerond. Er is niets afgeschreven. Je kunt het hieronder opnieuw proberen.",
-    abroad: "Betalen voor een bedrijf buiten Nederland kan nog niet. Er is niets afgeschreven. Mail support@vidalo.io, dan zetten we het voor je klaar.",
-    alreadyPaid: "Voor dit bedrijf is al betaald. Er is niets afgeschreven. Log in met het e-mailadres van die betaling, of mail support@vidalo.io.",
-    error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op support@vidalo.io.",
+    abroad: "Betalen voor een bedrijf buiten Nederland kan nog niet. Er is niets afgeschreven. Mail support@vidalo.ai, dan zetten we het voor je klaar.",
+    alreadyPaid: "Voor dit bedrijf is al betaald. Er is niets afgeschreven. Log in met het e-mailadres van die betaling, of mail support@vidalo.ai.",
+    error: "Afrekenen lukt nu even niet. Er is niets afgeschreven. Probeer het later opnieuw of mail ons op support@vidalo.ai.",
     productSetup: "Vidalo Scan (eenmalig)",
     productMonitor: "Vidalo Monthly (per maand)",
     /** Above the pay button on Stripe Checkout. Stripe renders [label](url) as a link. */
@@ -2325,10 +2325,10 @@ export const copy = {
       { q: "Hoe zeg ik op?", a: "Wanneer je wilt, onder ‘Abonnement’ in je account. Er is geen opzegtermijn; de lopende maand loopt af." },
       { q: "Kan ik ook even pauzeren?", a: "Ja, 1, 2 of 3 maanden, onder ‘Abonnement’ in je account. Je betaalt dan niets en je feitenpagina blijft online. Daarna gaat alles vanzelf verder." },
       { q: "Wat als een betaling mislukt?", a: "Dan proberen we het een paar keer opnieuw en krijg je een mail. Lukt het niet, dan zetten we de bewaking stil tot de betaling rond is. Je feitenpagina blijft staan." },
-      { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.io. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
+      { q: "Ik heb meer vestigingen. Wat kost dat?", a: "Elke extra vestiging, tot en met de tiende, kost €99 eenmalig en €39 per maand, bovenop het plan voor je eerste vestiging. Elke vestiging krijgt eigen vragen en een eigen feitenpagina. Je vraagt ze aan via hello@vidalo.ai. Meer dan tien vestigingen? Mail ons voor een prijs op maat." },
       { q: "Hoe maak ik een account aan?", a: "Niet apart. Je account hoort bij het e-mailadres dat je bij de gratis controle invult; daar komt het rapport. Koop je daarna een plan, dan log je in met datzelfde adres via een link in je mail, zonder wachtwoord, en zie je daar je bedrijf en je gegevens." },
       { q: "Kan ik later bewaking toevoegen?", a: "Ja. Heb je alleen ‘Vidalo Scan’ gekozen, dan voeg je ‘Vidalo Monthly’ later toe onder ‘Abonnement’ in je account." },
-      { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.io. Het domein staat op jouw naam." },
+      { q: "Kunnen jullie ook een website maken?", a: "Ja. Een eenvoudige website van één pagina kost €249 eenmalig, een uitgebreide website vanaf €750. Je vraagt hem aan via hello@vidalo.ai. Het domein staat op jouw naam." },
     ],
   },
 
@@ -2365,7 +2365,7 @@ export const copy = {
         gepauzeerd: "Je abonnement staat stil. De bevestiging staat in je mail.",
         hervat: "Je abonnement loopt weer. De bevestiging staat in je mail.",
       },
-      error: "Dat lukte niet. Probeer het opnieuw of mail support@vidalo.io.",
+      error: "Dat lukte niet. Probeer het opnieuw of mail support@vidalo.ai.",
       pause: {
         h1: "Abonnement pauzeren",
         intro: "Zet je abonnement stil. In die tijd betaal je niets.",
@@ -2416,7 +2416,7 @@ export const copy = {
     processingH1: "Bedankt, je betaling wordt verwerkt",
     processingBody: "Bij een incasso duurt het een paar werkdagen voor het geld binnen is. Je kunt alvast de stappen hieronder doen; we starten zodra de betaling rond is.",
     failedH1: "Je betaling is niet gelukt",
-    failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op support@vidalo.io.",
+    failedBody: "Er is niets afgeschreven. Probeer het opnieuw vanaf je rapport, of mail ons op support@vidalo.ai.",
     receipt: (amount: string, email: string | null) => `Je betaalde ${amount} incl. btw.${email ? ` De factuur staat in je mail (${email}).` : ""}`,
     steps: [
       { title: "Laat zien dat jij de eigenaar bent", body: "Log in met het account van je Google-bedrijfsprofiel, of vraag een code via het telefoonnummer van je bedrijf.", href: "/app/google", cta: "Eigenaar bevestigen" },
@@ -2446,7 +2446,7 @@ export const copy = {
     myChecksH2: "Je controles",
     myChecksNote: "De gratis controles die je met dit e-mailadres hebt aangevraagd. Een rapport is 30 dagen te zien.",
     viewReport: "Bekijk rapport",
-    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Heb je betaald? Log dan in met het adres waarmee je betaalde, of mail support@vidalo.io, dan koppelen we je bedrijf. Nog niet gecontroleerd? Start met een gratis controle.`,
+    noBusinessSignedIn: (email: string) => `Je bent ingelogd als ${email}, maar bij dit e-mailadres hoort nog geen bedrijf. Heb je betaald? Log dan in met het adres waarmee je betaalde, of mail support@vidalo.ai, dan koppelen we je bedrijf. Nog niet gecontroleerd? Start met een gratis controle.`,
     startCheck: "Start een gratis controle",
     otherEmail: "Ander e-mailadres? Log uit",
     linkExpired: "Deze inloglink werkt niet meer: hij is al gebruikt of verlopen. Vraag hieronder een nieuwe aan.",
@@ -2454,8 +2454,8 @@ export const copy = {
     /** From /welkom after checkout, while already signed in: link that business to this account. */
     linkBusiness: (name: string, place: string) => `Koppel ${name} (${place}) aan dit account?`,
     linkButton: "Ja, koppel dit bedrijf",
-    linkTaken: "Dit bedrijf is al aan een ander account gekoppeld. Mail support@vidalo.io als dat niet klopt.",
-    linkUnpaid: "We zien nog geen betaling voor dit bedrijf bij deze link. Log in met het e-mailadres waarmee je betaalde, of mail support@vidalo.io.",
+    linkTaken: "Dit bedrijf is al aan een ander account gekoppeld. Mail support@vidalo.ai als dat niet klopt.",
+    linkUnpaid: "We zien nog geen betaling voor dit bedrijf bij deze link. Log in met het e-mailadres waarmee je betaalde, of mail support@vidalo.ai.",
   },
 
   dashboard: {
@@ -2669,7 +2669,7 @@ export const copy = {
       resolvedWhen: "als het antwoord klopt",
       orEarlier: "of eerder",
       questions: "Vragen",
-      support: (ref: string) => `Mail support@vidalo.io en noem "${ref}". We antwoorden binnen een werkdag.`,
+      support: (ref: string) => `Mail support@vidalo.ai en noem "${ref}". We antwoorden binnen een werkdag.`,
     },
     flash: {
       scheduled: "Dank. We vragen het binnen een uur opnieuw.",
@@ -2816,7 +2816,7 @@ export const copy = {
         gewijzigd: "Je e-mailadres is gewijzigd.",
         bevestigd: "Je nieuwe e-mailadres is bevestigd.",
         zelfde: "Dit is al je e-mailadres.",
-        bezet: "Dit adres kun je hier niet gebruiken. Mail support@vidalo.io als het wel van jou is.",
+        bezet: "Dit adres kun je hier niet gebruiken. Mail support@vidalo.ai als het wel van jou is.",
         fout: "Dat lukte niet. Controleer het adres en probeer het opnieuw.",
       } as Record<string, string>,
     },
@@ -3080,7 +3080,7 @@ export const copy = {
       confirm: "Bevestig",
       errors: {
         no_mobile: "Het nummer dat Google toont is een vast nummer. Kies \"Bel me met een code\".",
-        no_phone: "Google toont geen telefoonnummer voor je bedrijf. Mail support@vidalo.io, dan helpen we je verder.",
+        no_phone: "Google toont geen telefoonnummer voor je bedrijf. Mail support@vidalo.ai, dan helpen we je verder.",
         too_many_sends: "Je hebt vandaag al drie codes gevraagd. Probeer het morgen opnieuw.",
         too_many_tries: "Te vaak een verkeerde code. Probeer het over een uur opnieuw.",
         send_failed: "Het versturen lukte niet. Probeer het zo opnieuw.",
@@ -3104,7 +3104,7 @@ export const copy = {
       error: "Er ging iets mis bij Google. Probeer het nog een keer.",
     },
     retry: "Opnieuw proberen",
-    contact: "Lukt het niet? Mail ons op support@vidalo.io, dan koppelen we het samen.",
+    contact: "Lukt het niet? Mail ons op support@vidalo.ai, dan koppelen we het samen.",
   },
 
   factsPage: {
@@ -3185,7 +3185,7 @@ Je hoeft niets meer te doen.`,
 
 Wil je iets bewaren? Tot ${date} kun je je rapporten en je gegevens downloaden onder 'Account': ${url}
 
-${scan ? "Wil je dat we je gegevens bewaren? Log dan voor die datum in; dan schuift de datum op." : "Wil je weer verder met Vidalo? Log in en kies een plan; dan blijven je gegevens bewaard."} Wil je dat we eerder verwijderen, mail dan support@vidalo.io.`,
+${scan ? "Wil je dat we je gegevens bewaren? Log dan voor die datum in; dan schuift de datum op." : "Wil je weer verder met Vidalo? Log in en kies een plan; dan blijven je gegevens bewaard."} Wil je dat we eerder verwijderen, mail dan support@vidalo.ai.`,
     }),
     /** Feature 002 (A-05, F-013): "Verwijder alles" during a running Vidalo Monthly. Sent at once. Service mail. */
     deletionScheduled: (name: string, date: string, url: string) => ({
