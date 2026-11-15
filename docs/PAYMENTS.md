@@ -21,7 +21,7 @@ reverse charge, one outside the EU no Dutch VAT), so:
 - `VIDALO_STRIPE_TAX` unset (today, decision 16 Oct stands): checkout for a
   business outside NL is refused before Stripe, logged as
   `checkout.refused` / `abroad_no_tax`, and the page says to mail
-  support@vidalo.io. Dutch businesses pay as before.
+  support@vidalo.ai. Dutch businesses pay as before.
 - `VIDALO_STRIPE_TAX=1`: `automatic_tax` on every session and no tax rate on
   the lines; Stripe Tax works it out from the billing address and the VAT
   number Checkout already collects. Needs, in the Stripe dashboard: Stripe Tax

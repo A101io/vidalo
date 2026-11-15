@@ -31,7 +31,7 @@ describe("copy follows the plan", () => {
     });
 
     it(`${lang}: signed in without a business points to the payer's address and support`, () => {
-      expect(c.auth.noBusinessSignedIn("x@y.nl")).toContain("support@vidalo.io");
+      expect(c.auth.noBusinessSignedIn("x@y.nl")).toContain("support@vidalo.ai");
     });
   }
 });

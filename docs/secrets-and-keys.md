@@ -67,7 +67,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `VIDALO_STRIPE_TAX` | `1` after the accountant's yes and Stripe Tax set up (`docs/PAYMENTS.md`) | Web env (plain variable) | A checkout for a business abroad opens with the VAT Stripe Tax picks; unset = refused |
 | `RESEND_API_KEY` | Resend | Worker + web env | A report mail arrives |
 | `UNSUBSCRIBE_SECRET` | `openssl rand -hex 32` | Worker + web env | Unsubscribe link works; without it follow-ups are not sent |
-| `SUPPORT_RELAY_SECRET` | `openssl rand -hex 32`; the same value as `RELAY_SECRET_VIDALO` in the mailbox relay's script properties (`docs/mail.md`) | Web env (`vidalo-web`) | `POST /api/support-autoreply` answers 401 to a wrong secret and 503 while unset; a test mail to support@vidalo.io gains a `Vidalo/…` label and a `support_autoreply_log` row |
+| `SUPPORT_RELAY_SECRET` | `openssl rand -hex 32`; the same value as `RELAY_SECRET_VIDALO` in the mailbox relay's script properties (`docs/mail.md`) | Web env (`vidalo-web`) | `POST /api/support-autoreply` answers 401 to a wrong secret and 503 while unset; a test mail to support@vidalo.ai gains a `Vidalo/…` label and a `support_autoreply_log` row |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
 | `GA4_MEASUREMENT_ID` (public, `G-…`) | analytics.google.com → Admin → Data streams → Web stream "vidalo.ai" → Measurement ID | `apps/web/wrangler.jsonc` production `vars` | Unset: no GA4, no "Statistieken" choice in the cookie notice |

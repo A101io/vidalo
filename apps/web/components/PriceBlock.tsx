@@ -94,7 +94,7 @@ export async function PriceBlock() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 text-[13px] text-grijs">
           <span>{W.note}</span>
-          <a href="mailto:hello@vidalo.io" className="text-[15px] font-bold text-blue-light">
+          <a href="mailto:hello@vidalo.ai" className="text-[15px] font-bold text-blue-light">
             {W.ask}
           </a>
         </div>
@@ -115,7 +115,7 @@ export async function PriceBlock() {
         <p className="text-[15px] font-extrabold">{L.price}</p>
         <div className="flex flex-wrap items-center justify-between gap-4 text-[13px] text-grijs">
           <span>{L.note}</span>
-          <a href="mailto:hello@vidalo.io" className="text-[15px] font-bold text-blue-light">
+          <a href="mailto:hello@vidalo.ai" className="text-[15px] font-bold text-blue-light">
             {L.ask}
           </a>
         </div>

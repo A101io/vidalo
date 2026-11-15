@@ -646,7 +646,7 @@ export const en: CopyShape = {
         { q: "Do I need to install anything?", a: "No." },
         { q: "How often do you check?", a: "With Vidalo Monthly every month, and again after every change to your details and after every fixed error. With Vidalo Scan alone we do one full check and then check the fixed errors again." },
         { q: "AI finds nothing at all about my business. Can you do something about that?", a: "Yes, that is exactly what we are for. We make a facts page AI can read, show how to get into Google, Bing, Apple and, in the Netherlands, the business directories, and then check whether you are named. Nobody can guarantee that an AI will name you, but we can make sure it is able to find you." },
-        { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do include. Paying for a business outside the Netherlands we still set up with you through support@vidalo.io." },
+        { q: "Does Vidalo work outside the Netherlands?", a: "Yes. We started in the Netherlands and work for businesses elsewhere too. We then ask the questions in English, from your country, and your facts page is in English. We skip the Dutch directories; Google, Bing and Apple we do include. Paying for a business outside the Netherlands we still set up with you through support@vidalo.ai." },
         { q: "Does this work if I have no shop?", a: "Yes. First we look at what kind of business you have: a place customers visit, a business that goes to the customer, or one that works online or nationwide. An online business gets no questions about opening hours or an address, but questions about what you do, your website and who AI names when someone looks for a provider or an alternative to you. In your report you see, as counts, how often AI names you and who it names instead. Whether AI names you is not ours to decide; the dot is about whether your facts are right." },
         { q: "What if AI names my competitor?", a: "We cannot prevent that. What we do make sure of is that the AI has the right facts about you, so you do not drop out because it thinks you are closed or do not do something." },
       ],
@@ -662,7 +662,7 @@ export const en: CopyShape = {
       lang: "EN",
       columns: [
         { title: "Product", links: [{ label: "How it works", href: "/hoe-het-werkt" }, { label: "Why", href: "/waarom" }, { label: "AI agents and OKF", href: "/straks" }, { label: "Example report", href: "/#rapport" }, { label: "Pricing", href: "/prijzen" }, { label: "By trade", href: "/#vak" }] },
-        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.io" }] },
+        { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.ai" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
       legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · +31 85 109 1393 · Prices excl. VAT",
@@ -728,8 +728,8 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 14 November 2026",
-    contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.io · +31 85 109 1393",
+    updated: "Version of 15 November 2026",
+    contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
       intro: "These terms apply to every check, every plan and every other use of Vidalo. Vidalo is for businesses only. This is a translation; the Dutch text prevails.",
@@ -823,7 +823,7 @@ export const en: CopyShape = {
           p: [
             "The Facts page shows only Details you have confirmed, with the date you confirmed them. The page is on your own domain or at another address we show you.",
             "We store and publish that content for you. Content that is unlawful or breaches these terms, such as incorrect details about another business or an infringement of the rights of others, we may refuse, adjust or take offline. We do so carefully and in proportion to the problem.",
-            "Anyone can report content they consider unlawful, at support@vidalo.io. Include in the notice:",
+            "Anyone can report content they consider unlawful, at support@vidalo.ai. Include in the notice:",
             [
               "why you consider the content unlawful;",
               "the exact web address of the content;",
@@ -831,8 +831,8 @@ export const en: CopyShape = {
               "that you make the notice in good faith and that the information in it is accurate and complete.",
             ],
             "We confirm that we received a notice, assess it carefully and tell the person who made it what we decide. We do not use automated decision-making for this.",
-            "If we remove content of yours or restrict your Account, we tell you what we did, why, on the basis of which rule and how to object. You object at support@vidalo.io; a person reviews it.",
-            "support@vidalo.io is also our point of contact for authorities and users under the Digital Services Act (DSA). You can reach us there in Dutch and English.",
+            "If we remove content of yours or restrict your Account, we tell you what we did, why, on the basis of which rule and how to object. You object at support@vidalo.ai; a person reviews it.",
+            "support@vidalo.ai is also our point of contact for authorities and users under the Digital Services Act (DSA). You can reach us there in Dutch and English.",
             "When your Plan ends, the Facts page redirects to your own website. If you delete your data, the page disappears.",
           ],
         },
@@ -858,7 +858,7 @@ export const en: CopyShape = {
             "You can pause Vidalo Monthly for 1, 2 or 3 months under ‘Subscription’. During that time we do not check or fix anything and you pay nothing; your Facts page stays online. You receive a confirmation by email and a reminder a week before the end. On the end date the subscription continues automatically at the regular price. You can resume earlier or cancel during the pause. You cannot pause while a payment is outstanding.",
             "When your subscription ends, we stop checking and fixing, and your Facts page redirects to your own website. What has already been fixed at other parties stays there. What we do with your data afterwards is stated in our privacy policy.",
             "With Vidalo Scan your Facts page stays online as long as your account exists: until you delete everything yourself, or until we delete your data 24 months after your last sign-in or your last payment. You get a reminder by email 14 days before; if you sign in, that date moves on.",
-            "You can also cancel by email to support@vidalo.io. You then receive the same confirmation.",
+            "You can also cancel by email to support@vidalo.ai. You then receive the same confirmation.",
           ],
         },
         {
@@ -897,7 +897,7 @@ export const en: CopyShape = {
           p: [
             "On vidalo.ai you can ask questions to an assistant. That assistant is an AI system, not a person; the chat window says so too.",
             "The assistant answers only questions about Vidalo, using information from our own website. An answer may be incomplete or wrong and does not bind us. What these terms, the pricing page and your confirmation say prevails.",
-            "The assistant gives no legal, tax or other personal advice. Do not type personal data or confidential information into the chat window. If you want to talk to a person, email support@vidalo.io.",
+            "The assistant gives no legal, tax or other personal advice. Do not type personal data or confidential information into the chat window. If you want to talk to a person, email support@vidalo.ai.",
           ],
         },
         {
@@ -967,7 +967,7 @@ export const en: CopyShape = {
           h: "Who is responsible",
           p: [
             "The controller is A101 B.V., trading as Vidalo, Factorij 80, 3071 AV Rotterdam, the Netherlands, KvK 42057858.",
-            "For questions and requests about your data, email support@vidalo.io, call +31 85 109 1393 or write to the address above. We have no data protection officer; we are not required to.",
+            "For questions and requests about your data, email support@vidalo.ai, call +31 85 109 1393 or write to the address above. We have no data protection officer; we are not required to.",
           ],
         },
         {
@@ -1080,7 +1080,7 @@ export const en: CopyShape = {
             "With the free check you can tick a box to receive occasional news about Vidalo. The box is off by default; without it we only send you the report and the two reminders above.",
             [
               "Data: your email address, the language of the page, the moment you ticked the box and the sentence you agreed to.",
-              "Basis: your consent (article 6(1)(a) GDPR and article 11.7 of the Dutch Telecommunications Act). You withdraw it with the unsubscribe link in every email or by emailing hello@vidalo.io; after that we send you no more news.",
+              "Basis: your consent (article 6(1)(a) GDPR and article 11.7 of the Dutch Telecommunications Act). You withdraw it with the unsubscribe link in every email or by emailing hello@vidalo.ai; after that we send you no more news.",
               "Retention: until you unsubscribe.",
             ],
           ],
@@ -1091,7 +1091,7 @@ export const en: CopyShape = {
             "If you join the list on the ‘Coming soon’ page, we email you once when Vidalo opens. No newsletter and no advertising for anything else.",
             [
               "Data: your email address, the language of the page, the time you signed up and the sentence with which you gave consent.",
-              "Basis: your consent (article 6(1)(a) GDPR). You withdraw it by emailing hello@vidalo.io; we then remove your address from the list straight away.",
+              "Basis: your consent (article 6(1)(a) GDPR). You withdraw it by emailing hello@vidalo.ai; we then remove your address from the list straight away.",
               "Retention: until we have emailed everyone about the opening; then we delete the list.",
             ],
           ],
@@ -1149,8 +1149,8 @@ export const en: CopyShape = {
           h: "Your rights",
           p: [
             "You have the right to access your data, have it corrected or deleted, have its processing restricted, receive your data in a common file format, and withdraw a consent. Withdrawal works for the future.",
-            "Much of this you can do yourself, under ‘Account’ in your account. Under ‘Your data’ you download everything we keep about your business and your sign-in, without access keys, and you delete everything. If you have a running Vidalo Monthly subscription, we cancel it as of the end date and delete everything on that date; the amount for the current month is not refunded, and until that date you can undo the deletion. If you want us to delete earlier, write to support@vidalo.io. After deleting you get a confirmation by email. Under ‘Google’ you disconnect Google. Under ‘Account’ you also choose which emails you want to receive.",
-            "For anything else, email support@vidalo.io. We respond within a month. Sometimes we first ask you to show that the request comes from you.",
+            "Much of this you can do yourself, under ‘Account’ in your account. Under ‘Your data’ you download everything we keep about your business and your sign-in, without access keys, and you delete everything. If you have a running Vidalo Monthly subscription, we cancel it as of the end date and delete everything on that date; the amount for the current month is not refunded, and until that date you can undo the deletion. If you want us to delete earlier, write to support@vidalo.ai. After deleting you get a confirmation by email. Under ‘Google’ you disconnect Google. Under ‘Account’ you also choose which emails you want to receive.",
+            "For anything else, email support@vidalo.ai. We respond within a month. Sometimes we first ask you to show that the request comes from you.",
             "Providing data is not a legal requirement. Without an email address we cannot start a check or send you a report, and without payment and business details we cannot deliver a plan.",
           ],
         },
@@ -1238,7 +1238,7 @@ export const en: CopyShape = {
       label: "Your email address",
       placeholder: "name@company.com",
       button: "Put me on the list",
-      consent: "Yes, email me once when Vidalo opens. You can unsubscribe at any time via hello@vidalo.io.",
+      consent: "Yes, email me once when Vidalo opens. You can unsubscribe at any time via hello@vidalo.ai.",
       thanks: "Thank you. You are on the list; we will email you as soon as Vidalo opens.",
       invalid: "That email address does not look right. Please check it.",
       noConsent: "Tick the box, and we will put you on the list.",
@@ -1279,9 +1279,9 @@ export const en: CopyShape = {
     send: "Send",
     thinking: "One moment.",
     faqNote: "Answer from our frequently asked questions.",
-    fallback: "I am not sure about that. Email us at support@vidalo.io and a person will answer.",
-    error: "Answering is not working right now. Email us at support@vidalo.io.",
-    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email support@vidalo.io.",
+    fallback: "I am not sure about that. Email us at support@vidalo.ai and a person will answer.",
+    error: "Answering is not working right now. Email us at support@vidalo.ai.",
+    rateLimited: "You are asking many questions in a short time. Try again in a few minutes, or email support@vidalo.ai.",
   },
 
   consent: {
@@ -1311,7 +1311,7 @@ export const en: CopyShape = {
     button: "Unsubscribe",
     doneH1: "You have been unsubscribed",
     doneBody: "We only send you emails needed for your plan or your login. Signed in, you can choose under Account what you want to receive again.",
-    invalid: "This unsubscribe link is not valid or has expired. Email us at support@vidalo.io and we will sort it out.",
+    invalid: "This unsubscribe link is not valid or has expired. Email us at support@vidalo.ai and we will sort it out.",
   },
 
   scanBusy: {
@@ -2242,9 +2242,9 @@ export const en: CopyShape = {
   checkout: {
     mockNotice: "Payment simulated (no Stripe key set).",
     cancelled: "Your payment was not completed. Nothing has been charged. You can try again below.",
-    abroad: "Paying for a business outside the Netherlands is not possible yet. Nothing has been charged. Email support@vidalo.io and we will set it up for you.",
-    alreadyPaid: "This business has already been paid for. Nothing has been charged. Log in with the email address of that payment, or email support@vidalo.io.",
-    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.io.",
+    abroad: "Paying for a business outside the Netherlands is not possible yet. Nothing has been charged. Email support@vidalo.ai and we will set it up for you.",
+    alreadyPaid: "This business has already been paid for. Nothing has been charged. Log in with the email address of that payment, or email support@vidalo.ai.",
+    error: "Checkout is not working right now. Nothing has been charged. Please try again later or email us at support@vidalo.ai.",
     productSetup: "Vidalo Scan (one-off)",
     productMonitor: "Vidalo Monthly (per month)",
     consentSubmit: (terms: string, privacy: string) => `Vidalo is a service for businesses, not consumers. By paying you confirm you are buying on behalf of a business and agree to Vidalo's [terms and conditions](${terms}) and [privacy policy](${privacy}).`,
@@ -2264,10 +2264,10 @@ export const en: CopyShape = {
       { q: "How do I cancel?", a: "Whenever you like, under ‘Subscription’ in your account. There is no notice period; the current month runs out." },
       { q: "Can I pause for a while?", a: "Yes, for 1, 2 or 3 months, under ‘Subscription’ in your account. You pay nothing in that time and your facts page stays online. After that everything starts again by itself." },
       { q: "What if a payment fails?", a: "Then we try again a few times and you get an email. If it still does not work, we pause monitoring until the payment is complete. Your facts page stays up." },
-      { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.io. More than ten locations? Mail us for a price to fit." },
+      { q: "I have more locations. What does that cost?", a: "Each extra location, up to the tenth, costs €99 one-off and €39 per month, on top of the plan for your first location. Each location gets its own questions and its own facts page. You ask for them at hello@vidalo.ai. More than ten locations? Mail us for a price to fit." },
       { q: "How do I create an account?", a: "You do not. Your account belongs to the email address you enter for the free check; that is where the report goes. If you then buy a plan, you log in with that same address through a link in your email, without a password, and see your business and your details there." },
       { q: "Can I add monitoring later?", a: "Yes. If you only chose ‘Vidalo Scan’, you add ‘Vidalo Monthly’ later under ‘Subscription’ in your account." },
-      { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.io. The domain is in your name." },
+      { q: "Can you build a website too?", a: "Yes. A simple one-page website costs €249 one-off, an extended website from €750. Ask for one at hello@vidalo.ai. The domain is in your name." },
     ],
   },
 
@@ -2303,7 +2303,7 @@ export const en: CopyShape = {
         gepauzeerd: "Your subscription is paused. The confirmation is in your inbox.",
         hervat: "Your subscription is running again. The confirmation is in your inbox.",
       },
-      error: "That did not work. Try again or email support@vidalo.io.",
+      error: "That did not work. Try again or email support@vidalo.ai.",
       pause: {
         h1: "Pause your subscription",
         intro: "Pause your subscription. You pay nothing in that time.",
@@ -2354,7 +2354,7 @@ export const en: CopyShape = {
     processingH1: "Thank you, your payment is being processed",
     processingBody: "With a direct debit it takes a few working days for the money to arrive. You can already do the steps below; we start as soon as the payment is complete.",
     failedH1: "Your payment did not go through",
-    failedBody: "Nothing has been charged. Try again from your report, or email us at support@vidalo.io.",
+    failedBody: "Nothing has been charged. Try again from your report, or email us at support@vidalo.ai.",
     receipt: (amount: string, email: string | null) => `You paid ${amount} incl. VAT.${email ? ` The invoice is in your inbox (${email}).` : ""}`,
     steps: [
       { title: "Show that you are the owner", body: "Log in with the account of your Google Business Profile, or ask for a code on your business phone number.", href: "/app/google", cta: "Confirm ownership" },
@@ -2381,15 +2381,15 @@ export const en: CopyShape = {
     myChecksH2: "Your checks",
     myChecksNote: "The free checks you requested with this email address. A report can be viewed for 30 days.",
     viewReport: "View report",
-    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Have you paid? Log in with the address you paid with, or email support@vidalo.io and we will link your business. Not checked yet? Start with a free check.`,
+    noBusinessSignedIn: (email: string) => `You are logged in as ${email}, but no business belongs to this email address yet. Have you paid? Log in with the address you paid with, or email support@vidalo.ai and we will link your business. Not checked yet? Start with a free check.`,
     startCheck: "Start a free check",
     otherEmail: "Another email address? Log out",
     linkExpired: "This sign-in link no longer works: it was already used or has expired. Request a new one below.",
     signedInAs: (email: string) => `You are signed in as ${email}.`,
     linkBusiness: (name: string, place: string) => `Link ${name} (${place}) to this account?`,
     linkButton: "Yes, link this business",
-    linkTaken: "This business is already linked to another account. Email support@vidalo.io if that is wrong.",
-    linkUnpaid: "We see no payment for this business with this link yet. Log in with the email address you paid with, or email support@vidalo.io.",
+    linkTaken: "This business is already linked to another account. Email support@vidalo.ai if that is wrong.",
+    linkUnpaid: "We see no payment for this business with this link yet. Log in with the email address you paid with, or email support@vidalo.ai.",
   },
 
   dashboard: {
@@ -2597,7 +2597,7 @@ export const en: CopyShape = {
       resolvedWhen: "once the answer is right",
       orEarlier: "or earlier",
       questions: "Questions",
-      support: (ref: string) => `Mail support@vidalo.io and mention "${ref}". We answer within a working day.`,
+      support: (ref: string) => `Mail support@vidalo.ai and mention "${ref}". We answer within a working day.`,
     },
     flash: {
       scheduled: "Thanks. We ask again within an hour.",
@@ -2737,7 +2737,7 @@ export const en: CopyShape = {
         gewijzigd: "Your email address has been changed.",
         bevestigd: "Your new email address is confirmed.",
         zelfde: "This is already your email address.",
-        bezet: "You cannot use this address here. Email support@vidalo.io if it is yours.",
+        bezet: "You cannot use this address here. Email support@vidalo.ai if it is yours.",
         fout: "That did not work. Check the address and try again.",
       } as Record<string, string>,
     },
@@ -2994,7 +2994,7 @@ export const en: CopyShape = {
       confirm: "Confirm",
       errors: {
         no_mobile: "The number Google shows is a landline. Choose \"Call me with a code\".",
-        no_phone: "Google shows no phone number for your business. Mail support@vidalo.io and we will help you further.",
+        no_phone: "Google shows no phone number for your business. Mail support@vidalo.ai and we will help you further.",
         too_many_sends: "You have already asked for three codes today. Try again tomorrow.",
         too_many_tries: "Too many wrong codes. Try again in an hour.",
         send_failed: "Sending did not work. Try again in a moment.",
@@ -3018,7 +3018,7 @@ export const en: CopyShape = {
       error: "Something went wrong at Google. Please try again.",
     },
     retry: "Try again",
-    contact: "Not working? Email us at support@vidalo.io and we will connect it together.",
+    contact: "Not working? Email us at support@vidalo.ai and we will connect it together.",
   },
 
   factsPage: {
@@ -3090,7 +3090,7 @@ There is nothing more you need to do.`,
 
 Want to keep something? Until ${date} you can download your reports and your data under 'Account': ${url}
 
-${scan ? "Want us to keep your data? Sign in before that date; the date then moves on." : "Want to continue with Vidalo? Sign in and choose a plan; your data is then kept."} Want us to delete earlier, write to support@vidalo.io.`,
+${scan ? "Want us to keep your data? Sign in before that date; the date then moves on." : "Want to continue with Vidalo? Sign in and choose a plan; your data is then kept."} Want us to delete earlier, write to support@vidalo.ai.`,
     }),
     deletionScheduled: (name: string, date: string, url: string) => ({
       subject: `Your subscription for ${name} ends on ${date}, then we delete everything`,
