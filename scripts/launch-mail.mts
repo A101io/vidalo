@@ -2,7 +2,7 @@
  * The launch mail to the coming-soon list (go-live P8), once, on launch day.
  *
  *   pnpm launch:mail            dry run: reads the list, writes the plan and both mails to out/launch-mail/
- *   pnpm launch:mail --send     sends, one mail per address, from hello@vidalo.io
+ *   pnpm launch:mail --send     sends, one mail per address, from hello@vidalo.ai
  *
  * --send needs RESEND_API_KEY and out/launch-mail/APPROVED holding the digest
  * the dry run printed (packages/core/src/reporter/launch.ts). A new sign-up
@@ -35,7 +35,7 @@ const { createDb } = await import("@vidalo/core/db");
 const { sendMail, planLaunchMail, launchSendGate, LAUNCH_DELETE_SQL } = await import("@vidalo/core/reporter");
 
 const site = process.env.PUBLIC_BASE_URL ?? "https://vidalo.ai";
-const from = "Vidalo <hello@vidalo.io>";
+const from = "Vidalo <hello@vidalo.ai>";
 const dir = path.resolve("out/launch-mail");
 await mkdir(dir, { recursive: true });
 
@@ -72,7 +72,7 @@ for (const r of plan.recipients) {
   if (sent.has(r.email)) continue;
   const m = plan.mails[r.language];
   try {
-    await sendMail({ to: r.email, from, replyTo: "hello@vidalo.io", subject: m.subject, text: m.text, html: m.html, tags: { kind: "launch", lang: r.language } });
+    await sendMail({ to: r.email, from, replyTo: "hello@vidalo.ai", subject: m.subject, text: m.text, html: m.html, tags: { kind: "launch", lang: r.language } });
     await appendFile(sentFile, `${r.email}\n`);
     sent.add(r.email);
   } catch (err) {

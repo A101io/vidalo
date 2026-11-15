@@ -1,4 +1,4 @@
-# 003 — QA verification
+# 004 — QA verification
 
 QA agent, 11 Nov 2026, worktree `claude/scan-mail-confirm` (uncommitted change). Standard: `01-brief.md` AC-1..AC-10.
 

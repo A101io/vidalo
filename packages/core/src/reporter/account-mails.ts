@@ -15,7 +15,7 @@ type Lang = "nl" | "en";
 
 function wrap(lang: Lang, subject: string, body: string): Mail {
   const m = copyFor(lang).mails;
-  const text = `${m.hi}\n\n${body}\n\n${lang === "en" ? "Questions? Reply to this mail or write to support@vidalo.io." : "Vragen? Antwoord op deze mail of mail support@vidalo.io."}\n\n${m.regards}\n`;
+  const text = `${m.hi}\n\n${body}\n\n${lang === "en" ? "Questions? Reply to this mail or write to support@vidalo.ai." : "Vragen? Antwoord op deze mail of mail support@vidalo.ai."}\n\n${m.regards}\n`;
   return { subject, text, html: textToHtml(text, lang) };
 }
 
@@ -34,14 +34,14 @@ export function deletionScheduledEmail(lang: Lang, businessName: string, at: str
 /** After a purge: the business is gone, so nothing is logged on it; the address is never logged. */
 export async function sendDeletedMail(to: { email: string; language: Lang; businessName: string; googleRevoked: boolean; loginDeleted: boolean }): Promise<void> {
   const m = deletedEmail(to.language, to.businessName, to.googleRevoked, to.loginDeleted);
-  await sendMail({ to: to.email, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind: "account_deleted", lang: to.language } });
+  await sendMail({ to: to.email, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.ai", tags: { kind: "account_deleted", lang: to.language } });
 }
 
 /** At once when "Verwijder alles" cancels a running Vidalo Monthly (F-013); logged as mail.deletion_scheduled. */
 export async function sendDeletionScheduledMail(b: BusinessRecord, at: string, to: string | null = b.ownerEmail): Promise<boolean> {
   if (!to) return false;
   const m = deletionScheduledEmail(b.language, b.name, at);
-  const r = await sendMail({ to, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind: "deletion_scheduled", lang: b.language } });
+  const r = await sendMail({ to, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.ai", tags: { kind: "deletion_scheduled", lang: b.language } });
   await getDb().logEvent(b.id, "mail.deletion_scheduled", { until: at, mode: r.mode, id: r.id });
   return true;
 }
@@ -55,7 +55,7 @@ export function deletionReminderEmail(lang: Lang, businessName: string, at: stri
 export async function sendDeletionReminder(b: BusinessRecord): Promise<boolean> {
   if (!b.ownerEmail || !b.deleteAt) return false;
   const m = deletionReminderEmail(b.language, b.name, b.deleteAt, b.plan === "setup" && b.status === "trial");
-  const r = await sendMail({ to: b.ownerEmail, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind: "deletion_reminder", lang: b.language } });
+  const r = await sendMail({ to: b.ownerEmail, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.ai", tags: { kind: "deletion_reminder", lang: b.language } });
   await getDb().logEvent(b.id, "mail.deletion_reminder", { until: b.deleteAt, mode: r.mode, id: r.id });
   return true;
 }

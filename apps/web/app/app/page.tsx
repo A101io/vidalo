@@ -312,7 +312,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <li key={it.title} className="flex flex-col gap-0.5">
                   <strong>{it.title}</strong>
                   <span className="text-[14px] text-muted">{it.body}</span>
-                  <a href={`mailto:support@vidalo.io?subject=${encodeURIComponent(`${it.subject}: ${business.name}, ${business.place}`)}`} className="text-[15px] font-bold text-blue hover:underline">
+                  <a href={`mailto:support@vidalo.ai?subject=${encodeURIComponent(`${it.subject}: ${business.name}, ${business.place}`)}`} className="text-[15px] font-bold text-blue hover:underline">
                     {it.cta}
                   </a>
                 </li>

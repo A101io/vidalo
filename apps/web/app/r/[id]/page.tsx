@@ -135,8 +135,8 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
                   {!v.checkedAsNeutral && !(owned && owned.id === report.business.id) && (
                     <>
                       {" "}
-                      <a className="btn-link" href="mailto:support@vidalo.io">
-                        support@vidalo.io
+                      <a className="btn-link" href="mailto:support@vidalo.ai">
+                        support@vidalo.ai
                       </a>
                       .
                     </>

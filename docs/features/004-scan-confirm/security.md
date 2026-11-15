@@ -1,4 +1,4 @@
-# 003 scan-confirm: security review (phase 4)
+# 004 scan-confirm: security review (phase 4)
 
 Reviewed 11 Nov 2026 against the uncommitted change on `claude/scan-mail-confirm` (diff + untracked
 files). Read-only on code. No phase-1 security checklist was written for this feature, so the

@@ -1,4 +1,4 @@
-# 003 — Compliance verify (phase 4)
+# 004 — Compliance verify (phase 4)
 
 Reviewer: compliance agent, 11 Nov 2026. Not legal advice. Scope: the uncommitted change on
 `claude/scan-mail-confirm` (`git diff` plus the untracked files), checked against

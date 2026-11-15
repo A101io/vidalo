@@ -1,4 +1,4 @@
-# 003 — Free check starts only after the e-mail is confirmed
+# 004 — Free check starts only after the e-mail is confirmed
 
 ## Request (Julian, 11 Nov 2026, verbatim)
 > Hoe voorkomen we nu dat bots of kwaadaardige agents duizenden scans kunnen uitvoeren.

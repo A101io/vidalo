@@ -1,4 +1,4 @@
-# 003 — Verification (11 Nov 2026)
+# 004 — Verification (11 Nov 2026)
 
 Reports: `qa.md`, `security.md`, `compliance.md` (this folder). No phase-1 checklists existed for this feature (it went from request to build in one session); the lessons are in `docs/process/checklists/security.md`.
 
@@ -32,7 +32,7 @@ A signed-in visitor whose check address equals the session's e-mail (case-insens
 
 ## Round 4 (14 Nov 2026): the remaining brakes
 - **Euro ceiling for free checks**: `FREE_AI_CAP_CENTS` (default 1500 a UTC day; 0 stops them), via `Db.freeScanCentsSince`. A running free check counts at least `FREE_SCAN_ESTIMATE_CENTS` (60), so a burst counts before it is spent, and a failed scan now stores what it spent (`scanner/index.ts`; also makes the paid R-11 ceiling honest). Kept apart from the paid ceiling on purpose: an attack on the free check must not make paying customers wait.
-- **Alert**: `apps/web/lib/abuse-alert.ts`. The daily count, the euro ceiling and the confirmation-mail backstop log every refusal and, once per brake per UTC day, an event `alert.free_check.*` and a mail to `VIDALO_ALERT_EMAIL` (`hello@vidalo.io`, production vars). Detail holds only cap and spent. No lock on the dedup (it runs inside FREE_CHECK_LOCK; a nested lock costs a second of three Worker connections), so a race can send a rare duplicate (P3, accepted).
+- **Alert**: `apps/web/lib/abuse-alert.ts`. The daily count, the euro ceiling and the confirmation-mail backstop log every refusal and, once per brake per UTC day, an event `alert.free_check.*` and a mail to `VIDALO_ALERT_EMAIL` (`hello@vidalo.ai`, production vars). Detail holds only cap and spent. No lock on the dedup (it runs inside FREE_CHECK_LOCK; a nested lock costs a second of three Worker connections), so a race can send a rare duplicate (P3, accepted).
 - **Mail backstop** 20 × the daily cap (was 4 ×): 100 posts no longer lock real visitors out (SEC-02). Up to 500 confirmation mails a day to strangers remain possible with ~100 IPs and paid Turnstile solving (P2, accepted; the alert makes it visible).
 - **Origin check** on POST `/api/scan/bevestigen` (`refuseCrossSite`, SEC-07). The confirm page's referrer policy is `same-origin` (was `no-referrer`, which made Chrome send `Origin: null` and the check refuse our own button); the link still never reaches another site.
 - **No X-Forwarded-For in production** (`clientIp`, SEC-08): without `cf-connecting-ip` every request shares the bucket `unknown`; Turnstile then gets no remote IP. Cloudflare always sets the header on the Worker; a local `next start` shares one bucket (P2, local only).

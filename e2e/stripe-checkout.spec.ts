@@ -26,7 +26,7 @@ async function payWithTestCard(page: Page) {
   await expect(page.getByText(/BTW|VAT/i).first()).toBeVisible();
 
   const email = page.locator("#email");
-  if (await email.isVisible().catch(() => false)) await email.fill(`e2e+${Date.now()}@vidalo.io`);
+  if (await email.isVisible().catch(() => false)) await email.fill(`e2e+${Date.now()}@vidalo.ai`);
   // Payment methods are an accordion; the card fields appear once "card" is chosen.
   // A transparent accordion button covers the "Kaart" row; Playwright counts it as hidden, so force the click.
   const cardTab = page.locator('[data-testid="card-accordion-item-button"]');

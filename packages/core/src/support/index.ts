@@ -1,5 +1,5 @@
 /**
- * support@vidalo.io auto-replies — Vidalo's configuration of the A101 kit's
+ * support@vidalo.ai auto-replies — Vidalo's configuration of the A101 kit's
  * support brain (./kit-support.ts, vendored) and the dependencies the
  * `/api/support-autoreply` route hands it.
  *
@@ -7,7 +7,7 @@
  * what the website assistant reads, so a price or FAQ change reaches the mail
  * responder in the same commit. The relay in the Workspace mailbox
  * (A101/kit/adopt/support/support-inbox-relay.gs) sends whatever this returns
- * as `Vidalo Support <support@vidalo.io>`; docs/mail.md has the whole picture.
+ * as `Vidalo Support <support@vidalo.ai>`; docs/mail.md has the whole picture.
  */
 import { assistantRules, buildKnowledge } from "../chat/index.js";
 import { copyFor, type Lang } from "../copy/index.js";
@@ -24,7 +24,7 @@ export * from "./kit-support.js";
 
 /** The statutory line that closes every reply, in the reader's language, plus the support address. */
 export function supportIdentityLine(lang: Lang): string {
-  return `${copyFor(lang).landing.footer.legal} · support@vidalo.io`;
+  return `${copyFor(lang).landing.footer.legal} · support@vidalo.ai`;
 }
 
 /**
@@ -46,8 +46,8 @@ export const VIDALO_SUPPORT_CONFIG: SupportBrainConfig = {
   brand: "Vidalo",
   productDescription:
     "an AI facts check for Dutch businesses: it checks what ChatGPT, Google AI, Gemini, Perplexity and Claude say about a business, finds wrong facts and their sources, publishes a facts page on the owner's domain, and asks sources for a correction or shows the owner what to change. Customers are Dutch business owners.",
-  supportEmail: "support@vidalo.io",
-  salesEmail: "hello@vidalo.io",
+  supportEmail: "support@vidalo.ai",
+  salesEmail: "hello@vidalo.ai",
   identityLine: supportIdentityLine,
   knowledge: (lang) => buildKnowledge(copyFor(lang), lang),
   responseRules: [...assistantRules("nl"), ...assistantRules("en")].join("\n"),
