@@ -154,6 +154,12 @@ describe("quotes and families", () => {
     expect(both.map((q) => q.text)).toEqual(["Sonable werkt zonder licentie."]);
   });
 
+  it("drops a line that is only the name, with its list marker or its place (V1-QA-04)", () => {
+    const answer = "Dit zijn de opties:\n1. Sonable\n2. **Sonable** (Utrecht)\n3. Sonable Muziek BV\nSonable levert achtergrondmuziek voor winkels zonder licentiekosten.";
+    const out = quotesFor([{ answerText: answer, engine: "chatgpt" }], [], f);
+    expect(out.map((q) => q.text)).toEqual(["Sonable levert achtergrondmuziek voor winkels zonder licentiekosten."]);
+  });
+
   it("clips a long sentence at a word boundary", () => {
     const long = `Sonable ${"levert muziek ".repeat(40)}aan bedrijven.`;
     const q = quotesFor([{ answerText: long, engine: "chatgpt" }], [], f);

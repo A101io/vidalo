@@ -96,6 +96,14 @@ function clipAtWord(text: string, max = QUOTE_MAX): string {
   return `${(at > 0 ? cut.slice(0, at) : cut).replace(/[\s,;:–—-]+$/, "")}…`;
 }
 
+/** A quote needs a few words besides the name (and the town): a list line that is only the name says nothing (V1-QA-04). */
+const QUOTE_MIN_OTHER_WORDS = 3;
+function onlyTheName(sentence: string, facts: Pick<Facts, "name" | "place">): boolean {
+  const drop = new Set([...normalizeName(facts.name).split(" "), ...normalizeName(facts.place ?? "").split(" ")].filter(Boolean));
+  const other = normalizeName(sentence).split(" ").filter((w) => w && !drop.has(w));
+  return other.length < QUOTE_MIN_OTHER_WORDS;
+}
+
 /**
  * Up to three sentences that name the business and no other business seen in this
  * question's answers (AC-5: we never put AI's words about a competitor on the page).
@@ -115,6 +123,7 @@ export function quotesFor(
     if (!s.engine) continue;
     for (const sentence of plainSentences(s.answerText)) {
       if (!mentionsBusiness(sentence, facts)) continue;
+      if (onlyTheName(sentence, facts)) continue;
       const norm = ` ${normalizeName(sentence)} `;
       if (otherKeys.some((k) => norm.includes(k))) continue;
       const text = clipAtWord(sentence);
