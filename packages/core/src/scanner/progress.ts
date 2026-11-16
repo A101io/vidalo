@@ -67,9 +67,10 @@ export function scanStatusBody(state: ScanJobState) {
   return {
     status: state.status,
     stage: state.stage,
-    profile: state.profile,
-    questions: state.questions,
-    engines: state.engines,
+    // Each nested object is rebuilt from named fields: what a stored state carries beyond them never leaves (V1-SEC-04).
+    profile: state.profile ? { mode: state.profile.mode, offer: state.profile.offer, audience: state.profile.audience, category: state.profile.category, source: state.profile.source } : null,
+    questions: (state.questions ?? []).map((q) => ({ id: q.id, text: q.text })),
+    engines: (state.engines ?? []).map((e) => ({ engine: e.engine, received: e.received, expected: e.expected })),
     reportUrl: state.status === "done" && state.scanRunId ? `/r/${state.scanRunId}` : null,
   };
 }
