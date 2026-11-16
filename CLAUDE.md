@@ -11,7 +11,7 @@ The product is **Vidalo** (from *videre*, to see). The code, copy (NL + EN), pac
 | Supabase project name `maicro` (ref `bbynmqvaxpjdnkaasutd`) | display name only, Julian renames in the dashboard; the ref never changes |
 | Committed migrations | keep the word Maicro in two comments; migrations are never edited |
 | `docs/design-g/*.html` | the original design boards, kept as they were |
-| Domain | **`vidalo.ai`** is the site since 6 Nov 2026 (bought by Julian on Cloudflare, zone active in the A101 account). `vidalo.io` (registered 14 Oct 2026 at one.com) stays bound and 301s GET/HEAD to vidalo.ai; mail (`hello@`, `support@`, `controle@`, `inloggen@vidalo.io`) and facts-page hosts (`*.feiten.vidalo.io`, `FACTS_HOST_SUFFIX`) stay on vidalo.io. `vidalo.nl` and `vidalo.com` are held by others |
+| Domain | **`vidalo.ai`** is the site since 6 Nov 2026 (bought by Julian on Cloudflare, zone active in the A101 account). `vidalo.io` (registered 14 Oct 2026 at one.com) stays bound and 301s GET/HEAD to vidalo.ai; facts-page hosts (`*.feiten.vidalo.io`, `FACTS_HOST_SUFFIX`) stay on vidalo.io. Mail addresses moved to vidalo.ai on 15 Nov 2026 (`hello@`, `support@`, `controle@`, `inloggen@`, `julian@vidalo.ai`; the vidalo.io aliases keep receiving), see `docs/mail.md`. `vidalo.nl` and `vidalo.com` are held by others |
 | Stripe, Cloudflare Workers, Google OAuth app, Resend | none exist yet; create them as Vidalo |
 
 ## Resuming work — read this first
@@ -60,7 +60,7 @@ Short. One action at a time. Real strings, not placeholders. End with one concre
 - **Content**: `docs/content-check.md` is the fact-check; every number on the site carries a verified source as of 14 Oct. Free reports expire after 30 days (`app/r/[id]/page.tsx`). Copilot is a stub (`scanner/engines/copilot.ts`): keep it out of free-check copy until the adapter ships.
 
 ## Added 18 Oct 2026
-- **Address**: `hello@vidalo.io` in both languages (was `hallo@`), in copy, chat, security.txt, llms.txt and docs. The mailbox itself is Julian's to create.
+- **Address**: `hello@vidalo.io` (since 15 Nov 2026 `hello@vidalo.ai`) in both languages (was `hallo@`), in copy, chat, security.txt, llms.txt and docs. The mailbox itself is Julian's to create.
 - **Coming-soon list**: form on `/binnenkort` (EN `/coming-soon`) → `POST /api/waitlist` → table `waitlist` (`0009_waitlist.sql`, applied on the hosted project 18 Oct; its ledger row there is still named `0007_waitlist`, version `20261018192302`, because it was applied before the file was renumbered after #23's 0007/0008). RLS on, no policies, no grants for anon/authenticated (proven with a rolled-back DO block: anon and authenticated denied read and write, owner inserts). Checks live in `core/shared/waitlist.ts` (tested): hidden `website` trap field (bot gets "ok", nothing stored), required consent box, address normalised and validated, 5 posts per IP per 10 min, 300 per hour site-wide, foreign `Origin` refused. Same "ok" for new and existing addresses (no enumeration). The stored consent is the server's sentence in the page's language; events carry only language and `created`, never the address. Nobody gets mailed yet: sending the launch mail and deleting the list afterwards is a launch-day task (go-live P8).
 - **Staging + local production run**: see go-live X6/X7; `scripts/local-prod.sh`, launch entry `vidalo-prod-local`.
 

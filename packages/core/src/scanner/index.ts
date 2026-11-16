@@ -289,12 +289,14 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   // Previous open findings, loaded before we upsert so we can diff afterwards.
   const previousOpen = await db.listFindings(business.id, ["open", "fixing", "recheck"]);
 
+  // Outside the try: a scan that fails after paid calls still records what it spent (security review, 14 Nov 2026).
+  let costCents = 0;
+  let understandCounted = false;
   try {
     const promptById = new Map(prompts.map((p) => [p.id, p]));
     const extractLimit = createLimiter(defaultExtractMode() === "llm" ? concurrency : 16);
     const samples: Sample[] = [];
     const claimsPerSample: Claim[][] = [];
-    let costCents = 0;
 
     // Ask the cells in the plan, store the usable answers (skipped ones carry no evidence) and extract their claims.
     const round = async (plan: Cell[]) => {
@@ -328,6 +330,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
     }
     // The understanding step's calls count towards the run's cost, so the daily ceiling sees them.
     costCents = Math.round(costCents + understandCents);
+    understandCounted = true;
 
     opts.onProgress?.({ type: "phase", phase: "persist" });
     opts.onProgress?.({ type: "phase", phase: "extract" });
@@ -411,7 +414,8 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
     }
     return report;
   } catch (err) {
-    await db.updateScanRun(scanRun.id, { status: "failed", finishedAt: new Date().toISOString(), error: String((err as Error)?.message ?? err) });
+    const spent = Math.round(costCents + (understandCounted ? 0 : understandCents));
+    await db.updateScanRun(scanRun.id, { status: "failed", finishedAt: new Date().toISOString(), costCents: spent, error: String((err as Error)?.message ?? err) });
     await db.logEvent(business.id, "scan.failed", { scanRunId: scanRun.id, error: String((err as Error)?.message ?? err) });
     throw err;
   }

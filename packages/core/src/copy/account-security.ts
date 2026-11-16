@@ -42,7 +42,7 @@ export const accountSecurityNl = {
     moneyH: "Je geld",
     monthlyAt: (date: string) => `Je abonnement op Vidalo Monthly loopt nog. We zeggen het op tegen ${date} en verwijderen alles op die dag. Het bedrag voor de lopende maand krijg je niet terug. Tot ${date} kun je het verwijderen terugdraaien.`,
     monthlyNext: "Je abonnement op Vidalo Monthly loopt nog. We zeggen het op tegen het einde van de lopende maand en verwijderen alles op die dag; de datum zie je daarna hier en in je mail. Het bedrag voor de lopende maand krijg je niet terug. Tot die dag kun je het verwijderen terugdraaien.",
-    scan: "Het bedrag voor Vidalo Scan krijg je niet terug, omdat we al voor je aan het werk zijn gegaan. Konden we binnen 30 dagen niet vaststellen dat jij de eigenaar bent? Vraag dan eerst je geld terug via support@vidalo.io, en verwijder daarna.",
+    scan: "Het bedrag voor Vidalo Scan krijg je niet terug, omdat we al voor je aan het werk zijn gegaan. Konden we binnen 30 dagen niet vaststellen dat jij de eigenaar bent? Vraag dan eerst je geld terug via support@vidalo.ai, en verwijder daarna.",
     invoices: "Na het verwijderen kun je je facturen niet meer in je account downloaden. Download ze dus eerst.",
     invoicesButton: "Facturen downloaden",
     confirm: (name: string) => `Ja, verwijder alles van ${name}`,
@@ -55,7 +55,7 @@ export const accountSecurityNl = {
     status: {
       gepland: "Je abonnement is opgezegd en je gegevens worden op de einddatum verwijderd. Je kreeg er een mail over.",
       bewaard: "Je gegevens blijven bewaard.",
-      fout: "Opzeggen lukte niet, dus er is niets ingepland. Probeer het opnieuw of mail support@vidalo.io.",
+      fout: "Opzeggen lukte niet, dus er is niets ingepland. Probeer het opnieuw of mail support@vidalo.ai.",
       bezig: "We verwijderen je gegevens. Je krijgt een mail zodra het klaar is.",
     } as Record<string, string>,
   },

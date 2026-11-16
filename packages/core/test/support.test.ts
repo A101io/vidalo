@@ -14,7 +14,7 @@ import {
 } from "../src/support/index.js";
 
 /**
- * The support@vidalo.io responder: Vidalo's configuration of the kit's brain.
+ * The support@vidalo.ai responder: Vidalo's configuration of the kit's brain.
  * The kit's own 34 tests are the specification of kit-support.ts; what is
  * tested here is what Vidalo adds — the one knowledge file, the deny list,
  * the account context, the log in MemDb — and that the endpoint fails closed.
@@ -23,24 +23,24 @@ import {
 const scan = (draft: string) =>
   scanOutboundReply(draft, { senderEmail: "bakker@example.nl" }, {
     allowedLinkHosts: VIDALO_SUPPORT_CONFIG.allowedLinkHosts,
-    allowedAddresses: ["support@vidalo.io", "hello@vidalo.io"],
+    allowedAddresses: ["support@vidalo.ai", "hello@vidalo.ai"],
     denyPatterns: VIDALO_SUPPORT_CONFIG.denyPatterns,
   });
 
-describe("support@vidalo.io — what the mail responder knows and refuses", () => {
+describe("support@vidalo.ai — what the mail responder knows and refuses", () => {
   it("reads the same knowledge as the website assistant, in both languages, with the prices and the addresses", () => {
     const knowledge = VIDALO_SUPPORT_CONFIG.knowledge as (lang: "nl" | "en") => string;
     expect(knowledge("nl")).toBe(buildKnowledge(copy, "nl"));
     expect(knowledge("en")).toBe(buildKnowledge(copyFor("en"), "en"));
     expect(knowledge("nl")).toContain("€149");
-    expect(knowledge("nl")).toContain("support@vidalo.io");
+    expect(knowledge("nl")).toContain("support@vidalo.ai");
     expect(VIDALO_SUPPORT_CONFIG.responseRules).toContain("Beloof nooit");
     expect(VIDALO_SUPPORT_CONFIG.responseRules).toContain("Never promise");
   });
 
   it("closes every reply with the statutory line in the reader's language", () => {
     expect(supportIdentityLine("nl")).toContain("KvK 42057858");
-    expect(supportIdentityLine("nl")).toContain("support@vidalo.io");
+    expect(supportIdentityLine("nl")).toContain("support@vidalo.ai");
     expect(supportIdentityLine("en")).toContain("A101 B.V.");
   });
 
@@ -57,12 +57,12 @@ describe("support@vidalo.io — what the mail responder knows and refuses", () =
   });
 
   it("lets a reply link to vidalo.io and name the two mailboxes, and nothing else", () => {
-    expect(scan("Zie https://vidalo.io/prijzen of mail hello@vidalo.io.").safe).toBe(true);
+    expect(scan("Zie https://vidalo.io/prijzen of mail hello@vidalo.ai.").safe).toBe(true);
     expect(scan("Zie https://evil.example.com").violations).toContain("disallowed_link:evil.example.com");
   });
 });
 
-describe("support@vidalo.io — the account context and the log", () => {
+describe("support@vidalo.ai — the account context and the log", () => {
   it("writes the account line for a business owner, in the owner's language, and nothing for a stranger", async () => {
     const db = new MemDb();
     await db.upsertBusiness({ name: "Bakkerij De Vries", place: "Haarlem", ownerUserId: "u1", ownerEmail: "eigenaar@bakkerijdevries.nl", status: "monitoring", language: "en" } as never);

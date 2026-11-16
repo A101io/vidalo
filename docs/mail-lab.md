@@ -39,7 +39,7 @@ The `.eml` files are in `out/mail-lab/mail/`. They carry the mail's tags as `X-V
 
 ## 2. Real delivery to your own inbox (once Resend is live)
 
-Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `controle@vidalo.io`; `docs/mail.md`, `docs/setup/stripe-and-resend.md`). Both can come from the environment or the root `.env`.
+Needs `RESEND_API_KEY` and a verified sending domain for `EMAIL_FROM` (default `controle@vidalo.ai`; `docs/mail.md`, `docs/setup/stripe-and-resend.md`). Both can come from the environment or the root `.env`.
 
 ```
 pnpm mail:send --to you@example.com            # dry run: lists the 14 mails
@@ -58,7 +58,7 @@ pnpm mail:send --to you@example.com --lang en  # the owner mails as an English o
 
 Supabase sends the magic link itself, so the lab cannot capture it. Its wording lives in the Supabase dashboard (Authentication → Emails), not in this repo. Test it by hand once custom SMTP through Resend is set (go-live A2):
 1. On vidalo.io, sign in at `/inloggen` with your own address.
-2. Check that the mail arrives from `inloggen@vidalo.io`, in the inbox, with a link that signs you in and lands on `/app`.
+2. Check that the mail arrives from `inloggen@vidalo.ai`, in the inbox, with a link that signs you in and lands on `/app`.
 3. Do the same at `/en/login`.
 
 The template is the same in both languages today.

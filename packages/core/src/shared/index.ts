@@ -15,6 +15,7 @@ export * from "./contact.js";
 export * from "./my-data.js";
 export * from "./turnstile.js";
 export * from "./scan-limit.js";
+export * from "./scan-confirm.js";
 export * from "./ondemand.js";
 export * from "./plan.js";
 export * from "./typed-business.js";

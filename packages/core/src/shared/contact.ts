@@ -4,8 +4,8 @@
  * disagree. The phone is A101's company number (A101/_OS/COMPANY.md).
  */
 export const CONTACT = {
-  email: "hello@vidalo.io",
-  support: "support@vidalo.io",
+  email: "hello@vidalo.ai",
+  support: "support@vidalo.ai",
   /** Shown as written; `tel:` gets the digits only. */
   phone: "+31 85 109 1393",
   /** WhatsApp Business, on the company number (confirmed by Julian 25 Oct 2026). */

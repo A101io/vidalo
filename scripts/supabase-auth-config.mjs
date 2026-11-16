@@ -61,7 +61,7 @@ function report(cfg) {
   ok(`subject (confirm signup) = ${cfg.mailer_subjects_confirmation}`, cfg.mailer_subjects_confirmation === subject);
   ok("template (magic link) is the Vidalo template", cfg.mailer_templates_magic_link_content === template);
   ok("template (confirm signup) is the Vidalo template", cfg.mailer_templates_confirmation_content === template);
-  ok(`sender = ${cfg.smtp_sender_name} <${cfg.smtp_admin_email}> via ${cfg.smtp_host}:${cfg.smtp_port}, password set`, cfg.smtp_host === "smtp.resend.com" && cfg.smtp_admin_email === "inloggen@vidalo.io" && Boolean(cfg.smtp_pass));
+  ok(`sender = ${cfg.smtp_sender_name} <${cfg.smtp_admin_email}> via ${cfg.smtp_host}:${cfg.smtp_port}, password set`, cfg.smtp_host === "smtp.resend.com" && cfg.smtp_admin_email === "inloggen@vidalo.ai" && Boolean(cfg.smtp_pass));
 }
 
 const checkOnly = process.argv.includes("--check");

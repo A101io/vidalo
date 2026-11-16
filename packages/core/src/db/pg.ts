@@ -36,6 +36,7 @@ import type {
   SignInEnd,
   SignInRow,
 } from "./types";
+import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
 type Row = Record<string, unknown>;
@@ -672,6 +673,11 @@ export class PgDb implements Db {
     return Number(row?.n ?? 0);
   }
 
+  async freeScanCentsSince(since: Date): Promise<number> {
+    const [row] = await this.sql`select coalesce(sum(case when status in ('done', 'failed') then cost_cents else greatest(cost_cents, ${FREE_SCAN_ESTIMATE_CENTS}) end), 0)::int as n from scan_run where kind = 'free' and started_at >= ${since}`;
+    return Number(row?.n ?? 0);
+  }
+
   // --- coming-soon list ---
   async joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }> {
     const rows = await this.sql`
@@ -806,6 +812,23 @@ export class PgDb implements Db {
       on conflict (business_id) do update set ${this.sql(update)}
       returning *`;
     return mapGoogleIndex(rows[0]!);
+  }
+
+  async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    // The transaction only holds the lock (released at commit or rollback); fn's queries use other pool connections.
+    // A waiter must not sit on a pool connection: with every connection waiting, the holder could not run fn (a deadlock
+    // seen in test/scan-confirm-race.test.ts). So try, give the connection back, and try again.
+    const NOT_MINE = Symbol("not mine");
+    const deadline = Date.now() + 20_000;
+    for (let wait = 10; ; wait = Math.min(wait * 2, 200)) {
+      const out = await this.sql.begin(async (tx) => {
+        const [row] = await tx`select pg_try_advisory_xact_lock(hashtext(${key})) as ok`;
+        return row?.ok ? [await fn()] : [NOT_MINE];
+      });
+      if (out[0] !== NOT_MINE) return out[0] as T;
+      if (Date.now() > deadline) throw new Error(`withLock(${key}): not acquired in 20 s`);
+      await new Promise((r) => setTimeout(r, wait + Math.floor(Math.random() * wait)));
+    }
   }
 
   // --- sign-ins (feature 002, migration 0018) ---

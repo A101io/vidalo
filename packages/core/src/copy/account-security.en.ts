@@ -40,7 +40,7 @@ export const accountSecurityEn: CopyShape["accountSecurity"] = {
     moneyH: "Your money",
     monthlyAt: (date: string) => `Your Vidalo Monthly subscription is still running. We cancel it as of ${date} and delete everything that day. The amount for the current month is not refunded. Until ${date} you can undo the deletion.`,
     monthlyNext: "Your Vidalo Monthly subscription is still running. We cancel it as of the end of the current month and delete everything that day; you then see the date here and in your mail. The amount for the current month is not refunded. Until that day you can undo the deletion.",
-    scan: "The amount for Vidalo Scan is not refunded, because we have already started working for you. Could we not establish within 30 days that you are the owner? Then first ask for a refund at support@vidalo.io, and delete after that.",
+    scan: "The amount for Vidalo Scan is not refunded, because we have already started working for you. Could we not establish within 30 days that you are the owner? Then first ask for a refund at support@vidalo.ai, and delete after that.",
     invoices: "After deleting you can no longer download your invoices in your account. So download them first.",
     invoicesButton: "Download invoices",
     confirm: (name: string) => `Yes, delete everything of ${name}`,
@@ -53,7 +53,7 @@ export const accountSecurityEn: CopyShape["accountSecurity"] = {
     status: {
       gepland: "Your subscription is cancelled and your data will be deleted on the end date. We sent you a mail about it.",
       bewaard: "Your data is kept.",
-      fout: "Cancelling did not work, so nothing is scheduled. Try again or write to support@vidalo.io.",
+      fout: "Cancelling did not work, so nothing is scheduled. Try again or write to support@vidalo.ai.",
       bezig: "We are deleting your data. You get a mail as soon as it is done.",
     } as Record<string, string>,
   },

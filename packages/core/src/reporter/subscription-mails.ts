@@ -46,7 +46,7 @@ type Words = Record<SubscriptionMailKind, Builder> & { hi: string; questions: st
 
 const NL: Words = {
   hi: "Hoi,",
-  questions: "Vragen? Antwoord op deze mail of mail support@vidalo.io.",
+  questions: "Vragen? Antwoord op deze mail of mail support@vidalo.ai.",
   bye: "Groet,\nVidalo",
   cancel_confirmed: (name, date, url, deleteDate) => ({
     subject: `Je abonnement voor ${name} is opgezegd`,
@@ -93,7 +93,7 @@ Je abonnement: ${url}`,
 
 const EN: Words = {
   hi: "Hi,",
-  questions: "Questions? Reply to this email or write to support@vidalo.io.",
+  questions: "Questions? Reply to this email or write to support@vidalo.ai.",
   bye: "Best,\nVidalo",
   cancel_confirmed: (name, date, url, deleteDate) => ({
     subject: `Your subscription for ${name} is cancelled`,
@@ -142,7 +142,7 @@ Your subscription: ${url}`,
 export async function sendSubscriptionMail(b: BusinessRecord, kind: SubscriptionMailKind, at?: string | null): Promise<MailResult | null> {
   if (!b.ownerEmail) return null;
   const m = subscriptionEmail(kind, { name: b.name, lang: b.language, at: at ?? undefined });
-  const r = await sendMail({ to: b.ownerEmail, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.io", tags: { kind } });
+  const r = await sendMail({ to: b.ownerEmail, subject: m.subject, text: m.text, html: m.html, replyTo: "support@vidalo.ai", tags: { kind } });
   await getDb().logEvent(b.id, `mail.${kind}`, { until: at ?? null, mode: r.mode, id: r.id });
   return r;
 }

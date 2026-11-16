@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { confirmCheck, dismissNotice } from "./helpers";
 
 /**
  * A real Stripe test-mode checkout, run with `pnpm e2e:stripe`
@@ -15,6 +15,7 @@ async function reportFor(page: Page, name: string) {
   await form.locator("input[name='place']").fill("Rotterdam");
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
+  await confirmCheck(page);
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
 }
 
@@ -25,7 +26,7 @@ async function payWithTestCard(page: Page) {
   await expect(page.getByText(/BTW|VAT/i).first()).toBeVisible();
 
   const email = page.locator("#email");
-  if (await email.isVisible().catch(() => false)) await email.fill(`e2e+${Date.now()}@vidalo.io`);
+  if (await email.isVisible().catch(() => false)) await email.fill(`e2e+${Date.now()}@vidalo.ai`);
   // Payment methods are an accordion; the card fields appear once "card" is chosen.
   // A transparent accordion button covers the "Kaart" row; Playwright counts it as hidden, so force the click.
   const cardTab = page.locator('[data-testid="card-accordion-item-button"]');

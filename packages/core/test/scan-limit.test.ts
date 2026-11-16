@@ -11,6 +11,13 @@ describe("free check limit per address", () => {
     expect(clientIp(req({}))).toBe("local");
   });
 
+  it("production never trusts X-Forwarded-For: without Cloudflare's header every request shares one bucket (SEC-08)", () => {
+    expect(clientIp(req({ "cf-connecting-ip": "203.0.113.7", "x-forwarded-for": "198.51.100.1" }), false)).toBe("203.0.113.7");
+    expect(clientIp(req({ "x-forwarded-for": "198.51.100.1" }), false)).toBe("unknown");
+    expect(clientIp(req({ "x-forwarded-for": "198.51.100.2" }), false)).toBe("unknown");
+    expect(clientIp(req({}), false)).toBe("unknown");
+  });
+
   it("never stores the address: the event type is a hash, the same all day, different the next", () => {
     const morning = new Date("2026-10-24T06:00:00Z");
     const evening = new Date("2026-10-24T23:59:00Z");

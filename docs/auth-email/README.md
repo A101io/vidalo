@@ -12,7 +12,7 @@ https://supabase.com/dashboard/project/bbynmqvaxpjdnkaasutd/auth/smtp
 | Field | Value |
 |---|---|
 | Enable Custom SMTP | on |
-| Sender email | `inloggen@vidalo.io` |
+| Sender email | `inloggen@vidalo.ai` |
 | Sender name | `Vidalo` |
 | Host | `smtp.resend.com` |
 | Port | `465` |
@@ -96,7 +96,7 @@ It never touches step 1 (the SMTP sender and the Resend key).
 
 ## Check
 
-Request a link on `/inloggen`, then confirm: sender "Vidalo <inloggen@vidalo.io>", Dutch
+Request a link on `/inloggen`, then confirm: sender "Vidalo <inloggen@vidalo.ai>", Dutch
 and English text, the button's address starts with the site's own host and
 `/auth/confirm`, and clicking it lands signed in (`/app`, or "geen bedrijf" for an
 address without a business).
