@@ -57,6 +57,7 @@ exploit path, not opinions about structure.
 ## Learned (Vidalo, 11 Nov 2026)
 - Every regex run on AI answer text, or on values extracted from it, gets a length cap before matching and a timing test on a long hostile input; no `\s*` or `.*` next to a repeated group under the `m` flag.
 - A public page reachable by a guessable key (slug, name + town) shows nothing beyond what that key's owner chose to publish; private data only behind an unguessable id or the owner's session.
+- A single-use link or token that starts something costly is **claimed atomically before** the costly step (conditional update / unique insert / advisory lock), never marked "used" afterwards; and a cap counted from the event table (count, then insert) is not a cap under parallel requests. Test with N parallel presses: exactly one start (004 SEC-01: 60 presses of one confirmation link gave 60 free checks).
 - A redirect-target check (`next`, `returnTo`) runs again on the **normalised** result: `new URL("/.//evil.example", base).pathname` is `//evil.example`, which passes every check on the raw input (002 F-023).
 - A response that carries a refreshed auth `Set-Cookie` is `Cache-Control: private, no-store`; middleware runs on static pages too, and one cached response hands a session to the next visitor (002 F-018).
 - A delete of an outside resource (custom hostname, route, OAuth grant) by name happens only when this record provably holds that resource; a name the user typed is not proof (002 F-019).
@@ -69,3 +70,8 @@ exploit path, not opinions about structure.
 - A dependency that is missing outside mock mode fails closed and is counted; "no key → log mock, return success" turns an erasure into a report of one (002 V-COMP-01).
 - Every external step a job or action performs (revoke, delete hostname, delete login, call Stripe) is checked against `secrets.manifest.json` **for the Worker that runs it**, not only against the code: a key targeted at web only makes the worker's step a silent mock in production. The same step gated on an unrelated key (a revoke gated on the OAuth client id) counts as missing config (002 V2-SEC-01).
 - A failure of an irreversible step after the point of no return (login delete after the row delete) gets its own retry job carrying the id, and the confirmation mail claims only what was done (002 V2-SEC-02).
+- A spend ceiling counts work in flight (at an estimate) and work that failed after paid calls, not only finished rows: a burst of running jobs is spent before a sum over finished rows sees it (004, 14 Nov 2026).
+
+## Learned (Vidalo, 16 Nov 2026, 005 verify)
+- A path that builds a record from what the visitor typed (no outside id: "not listed", "as typed") must not attach to, or write into, an existing record found by a guessable key (slug of name + town) that came from a verified source (a Google place id, a KvK number, an owner). Decide on the **stored** record, not only on the incoming candidate (005 SEC-01: one click put a stranger's website into a listed business's provisional facts).
+- A privacy sentence "we only compare it and do not keep it" is checked against every branch the value reaches; a value that doubles as an input elsewhere (a website identity that becomes the checked website) is stored and fetched there (005 SEC-02).

@@ -138,6 +138,7 @@ test("AC4 free check (native POST): held, then one POST with token and the submi
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill("Bakkerij QA");
   await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='identity']").fill("www.bakkerij-qa.nl");
   await form.locator("input[name='email']").fill("qa-turnstile@example.nl");
   await page.waitForFunction(() => Object.keys(document.querySelector("form[action='/api/scan']") ?? {}).some((k) => k.startsWith("__react")));
   // Give the button a name/value so a dropped submitter would show in the body.
@@ -270,6 +271,7 @@ async function openCheckWithToken(page: Page) {
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill("Bakkerij QA");
   await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='identity']").fill("www.bakkerij-qa.nl");
   await form.locator("input[name='email']").fill("qa-turnstile@example.nl");
   await page.waitForFunction(() => Object.keys(document.querySelector("form[action='/api/scan']") ?? {}).some((k) => k.startsWith("__react")));
   await page.waitForFunction(() => (window as any).__ts?.widgets.length > 0);

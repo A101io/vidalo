@@ -32,6 +32,7 @@ import type {
   SignInEnd,
   SignInRow,
 } from "./types";
+import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 import type { PurgeGuard } from "./types";
 import { LOGIN_WITHOUT_BUSINESS_DAYS, purgeAllowed } from "../shared/deletion";
@@ -564,6 +565,12 @@ export class MemDb implements Db {
     return [...this.scanRuns.values()].filter((r) => r.kind !== "free" && new Date(r.startedAt).getTime() >= since.getTime()).reduce((n, r) => n + (r.costCents ?? 0), 0);
   }
 
+  async freeScanCentsSince(since: Date): Promise<number> {
+    return [...this.scanRuns.values()]
+      .filter((r) => r.kind === "free" && new Date(r.startedAt).getTime() >= since.getTime())
+      .reduce((n, r) => n + (r.status === "done" || r.status === "failed" ? (r.costCents ?? 0) : Math.max(r.costCents ?? 0, FREE_SCAN_ESTIMATE_CENTS)), 0);
+  }
+
   // --- coming-soon list ---
   async joinWaitlist(input: WaitlistInput): Promise<{ created: boolean }> {
     if (this.waitlist.has(input.email)) return { created: false };
@@ -673,6 +680,23 @@ export class MemDb implements Db {
     const row: GoogleIndexState = { ...(existing ?? empty), ...defined, updatedAt: new Date().toISOString() };
     this.googleIndex.set(row.businessId, row);
     return structuredClone(row);
+  }
+
+  private locks = new Map<string, Promise<unknown>>();
+
+  async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const before = this.locks.get(key) ?? Promise.resolve();
+    const run = before.then(fn, fn);
+    const tail = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.locks.set(key, tail);
+    try {
+      return await run;
+    } finally {
+      if (this.locks.get(key) === tail) this.locks.delete(key);
+    }
   }
 
   // --- sign-ins (feature 002, migration 0018) ---

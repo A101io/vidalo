@@ -56,7 +56,10 @@ export async function prepareBusiness(opts: PrepareOptions): Promise<Prepared> {
     sector: existing?.sector ?? sectorForCandidate(candidate),
   });
 
-  const typedWebsite = !candidate.placeId && !candidate.website ? (opts.website ?? null) : null;
+  // Only for a business nothing public describes: a typed website never goes onto a business Google or the KvK already
+  // lists, or a stranger could attach any site to it by typing its name and choosing "not listed" (feature 005, SEC-01).
+  const listed = Boolean(existing?.googlePlaceId || existing?.kvk || candidate.kvk);
+  const typedWebsite = !listed && !candidate.placeId && !candidate.website ? (opts.website ?? null) : null;
   let facts = await db.latestFacts(business.id);
   if (!facts) {
     // The typed address is not given to the draft: that would scrape it with a fetch that follows redirects unguarded (security S-13).

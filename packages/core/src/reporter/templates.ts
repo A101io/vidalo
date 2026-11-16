@@ -687,6 +687,29 @@ export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
 }
 
 // ---------------------------------------------------------------------------
+// 5b. Confirm a free check (core/shared/scan-confirm.ts)
+// ---------------------------------------------------------------------------
+
+/** The link that starts a free check; the only mail an address gets before it is confirmed. */
+export function scanConfirmEmail(d: { business: Pick<Business, "name">; confirmUrl: string; lang?: Lang }): Mail {
+  const lang = d.lang ?? "nl";
+  const C = copyFor(lang).mails.scanConfirm;
+  const name = d.business.name;
+  return renderMail({
+    lang,
+    subject: C.subject(name),
+    preheader: C.preheader,
+    headline: C.headline(name),
+    blocks: [
+      { kind: "p", text: C.intro(name) },
+      { kind: "cta", label: C.cta, url: d.confirmUrl },
+      { kind: "note", text: C.why },
+      { kind: "note", text: C.notYou },
+    ],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 6. Unfixable notice
 // ---------------------------------------------------------------------------
 
