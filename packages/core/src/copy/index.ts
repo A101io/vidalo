@@ -60,6 +60,13 @@ export const copy = {
     emailLabel: "E-mailadres",
     emailPlaceholder: "naam@bedrijf.nl",
     emailInvalid: "Vul een geldig e-mailadres in, zoals naam@bedrijf.nl.",
+    /** What tells the business apart (shared/business-identity.ts): a name alone is never enough. */
+    identityLabel: "Postcode en huisnummer, of website",
+    identityPlaceholder: "Postcode + huisnummer, of website",
+    identityHint: "Zo weten we zeker welk bedrijf je bedoelt. Postcode en huisnummer vergelijken we alleen; we bewaren ze niet.",
+    /** Under the button, always (art. 13 AVG at the point of collection); the link text is the second part. */
+    privacy: ["Wat we met je gegevens doen, staat in onze", "privacyverklaring"],
+    identityInvalid: "Vul de postcode en het huisnummer in, zoals 3071 AV 80, of de website, zoals www.jouwbedrijf.nl.",
     /** Off by default; a free check is no purchase, so news needs this consent (core/shared/free-check.ts). */
     marketing: "Ik wil af en toe nieuws over Vidalo ontvangen. Afmelden kan in elke mail.",
   },
@@ -751,7 +758,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 16 november 2026",
+    updated: "Versie van 17 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -1008,6 +1015,7 @@ export const copy = {
             [
               "Gegevens: de naam, plaats en openbare gegevens van het bedrijf, zoals adres, telefoonnummer, website en openingstijden; een korte beschrijving van wat het bedrijf aanbiedt en voor wie; de antwoorden van AI-assistenten en de bronnen die ze noemen, met de namen van andere bedrijven die ze noemen; je e-mailadres, waar we het rapport naartoe sturen. Om misbruik te beperken maken we van je IP-adres en de datum een code en bewaren we die code; je IP-adres zelf bewaren we niet.",
               "Bevestigen: de controle start pas als je op de link klikt die we naar je e-mailadres sturen. Zo houden we kwaadaardige bots buiten de deur en kan niemand een controle starten op naam van een ander. Ben je ingelogd en vraag je de controle aan op het e-mailadres van je inlog, dan is dat adres al bevestigd en start de controle meteen. Bevestig je niet binnen 24 uur, dan start er niets; je aanvraag met je e-mailadres bewaren we dan hooguit 12 maanden, om misbruik te kunnen terugzien.",
+              "Herkennen: naast de naam vul je de postcode en het huisnummer of de website van je bedrijf in, zodat we het juiste bedrijf controleren en niet een ander met een naam die erop lijkt. Werk je vanuit huis, dan is die postcode met huisnummer je woonadres. Postcode en huisnummer vergelijken we alleen met de bedrijfsgegevens die Google toont; we sturen ze nergens heen en bewaren ze niet. Ze staan hooguit 15 minuten in de cookie vidalo_check. Kent Google je bedrijf niet en vul je een website in, dan controleren we die website als die van je bedrijf en bewaren we hem bij het bedrijf.",
               "Herkomst: van jou, en uit openbare bronnen: Google (bedrijfsgegevens uit Google Maps), het Handelsregister van de KvK, de website van het bedrijf (ook een website die je zelf opgeeft) en de bronnen die AI-assistenten noemen.",
               "Wat we ermee doen: om te zien wat het bedrijf aanbiedt en voor wie, sturen we OpenAI de gegevens van Google en de tekst van de homepage van het bedrijf, waaruit we eerst e-mailadressen en telefoonnummers weghalen; daarvan maakt OpenAI een korte beschrijving. Die beschrijving bewaren we bij het bedrijf en in het rapport staat ze als hoe wij het bedrijf lezen. In het rapport staat ook welke andere bedrijven AI-assistenten noemden en hoe vaak.",
               "Grondslag: ons gerechtvaardigd belang, en dat van jou, om te laten zien wat AI-assistenten over een bedrijf zeggen (artikel 6 lid 1 onder f AVG). Het gaat om zakelijke gegevens die al openbaar zijn.",
@@ -1215,7 +1223,7 @@ export const copy = {
               ["sb-…-auth-token-code-verifier", "Tijdens het inloggen: koppelt de inloglink uit je mail aan deze browser.", "Verwijderd zodra je bent ingelogd, anders hoogstens 90 dagen"],
               ["vidalo_google_state", "Tijdens het koppelen van je Google-account: beschermt die stap tegen misbruik.", "10 minuten"],
               ["vidalo_preview", "Alleen zolang de site nog niet open is: laat je de site zien achter de pagina ‘Binnenkort’.", "Tot je de browser sluit"],
-              ["vidalo_check", "Tijdens de gratis controle: neemt je e-mailadres mee van het formulier naar de pagina waar je je bedrijf kiest, zodat het niet in de link hoeft te staan.", "15 minuten, of eerder zodra de controle start"],
+              ["vidalo_check", "Tijdens de gratis controle: neemt je e-mailadres en de postcode met huisnummer of website die je invulde mee van het formulier naar de pagina waar je je bedrijf kiest, zodat ze niet in de link hoeven te staan.", "15 minuten, of eerder zodra de controle start"],
               ["vidalo_business", "Als er meer dan één bedrijf bij je account hoort: onthoudt welk bedrijf je in je account koos.", "90 dagen"],
             ],
           },
@@ -1358,7 +1366,7 @@ export const copy = {
     newNav: "Nieuwe controle",
     newTitle: "Nieuwe controle",
     newH1: "Een nieuwe gratis controle",
-    newBody: (email: string) => `Vul de naam en plaats van het bedrijf in. Het rapport gaat naar ${email}. Controleer je hetzelfde bedrijf binnen een dag nog eens, dan laten we het rapport van die dag zien.`,
+    newBody: (email: string) => `Vul de naam en plaats van het bedrijf in, en de postcode met huisnummer of de website. Het rapport gaat naar ${email}. Controleer je hetzelfde bedrijf binnen een dag nog eens, dan laten we het rapport van die dag zien.`,
     newButton: "Start de controle",
     remove: "Verwijderen",
     removeLabel: (name: string, place: string) => `Verwijder de controle van ${name}, ${place}`,
@@ -1412,8 +1420,8 @@ export const copy = {
     retry: "Opnieuw proberen",
     toReport: "Bekijk het rapport",
     choose: {
-      title: "Welk bedrijf bedoel je?",
-      body: "We vonden meer dan één bedrijf met deze naam. Kies de juiste.",
+      title: "Welk bedrijf is van jou?",
+      body: "We kiezen nooit een bedrijf op naam alleen. Kies het jouwe aan de hand van het adres.",
       button: "Dit bedrijf",
       none: "We konden geen bedrijf vinden. Probeer de website of de plaatsnaam erbij.",
       placeLabel: "Plaats",
@@ -1423,6 +1431,12 @@ export const copy = {
       again: "Vul je bedrijf hier nog een keer in om verder te gaan.",
       /** POST /api/scan without a usable e-mail address: the field again, nothing looked up. */
       email: "Vul je e-mailadres in; daar sturen we het rapport naartoe.",
+      /** POST /api/scan without a usable postcode + house number or website: the field again, nothing looked up. */
+      identity: "Vul ook de postcode en het huisnummer of de website van je bedrijf in.",
+      /** The way out when none of the candidates is the visitor's business. */
+      unlistedTitle: "Staat je bedrijf er niet bij?",
+      unlistedBody: "Dan controleren we het als bedrijf dat niet op Google staat.",
+      unlistedButton: "Mijn bedrijf staat er niet bij",
       /** A business Google does not list: the visitor may give the website, which Vidalo reads (ADR-0007). */
       websiteTitle: "We vonden je bedrijf niet op Google.",
       websiteLabel: "Wat is je website?",

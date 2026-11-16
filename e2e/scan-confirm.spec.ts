@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { mockSite } from "./helpers";
 
 /**
  * Feature 004 (docs/features/004-scan-confirm): guarantees of the confirmation link
@@ -6,7 +7,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
  * /scan/mail?link= carries the token the mail would carry.
  */
 async function requestLink(request: APIRequestContext, name: string): Promise<string> {
-  const res = await request.post("/api/scan", { form: { q: name, place: "Haarlem", email: "e2e@example.nl" }, maxRedirects: 0 });
+  const res = await request.post("/api/scan", { form: { q: name, place: "Haarlem", identity: mockSite(name), email: "e2e@example.nl" }, maxRedirects: 0 });
   const mail = new URL(res.headers()["location"]!);
   expect(mail.pathname).toBe("/scan/mail");
   return mail.searchParams.get("link")!;

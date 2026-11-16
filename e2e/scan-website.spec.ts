@@ -16,6 +16,8 @@ async function toKies(page: Page, lang: "nl" | "en" = "nl") {
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Utrecht");
+  // A postcode: nothing in Google has it, so /scan/kies asks for the website (a website here would be the business at once).
+  await form.locator("input[name='identity']").fill("3511 AB 1");
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
   await page.waitForURL(/\/scan\/kies/);

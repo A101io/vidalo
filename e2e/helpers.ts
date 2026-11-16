@@ -88,11 +88,20 @@ export async function confirmCheck(page: Page) {
 }
 
 /**
+ * What mock mode's lookup lists as the business's website (scanner/resolve.ts mockCandidate): the form's
+ * postcode-or-website field must match a candidate, never the name alone (core/shared/business-identity.ts).
+ */
+export function mockSite(name: string): string {
+  const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return `www.${slug}.nl`;
+}
+
+/**
  * A free check through the API (no form): the post, then (unless signed in with this address) the confirmation link's button
  * (mock engines: /scan/mail?link=<token>). Returns the waiting room's URL.
  */
 export async function startCheckViaApi(page: Page, form: Record<string, string>): Promise<string> {
-  const res = await page.request.post("/api/scan", { form, maxRedirects: 0 });
+  const res = await page.request.post("/api/scan", { form: { identity: mockSite(form.q ?? ""), ...form }, maxRedirects: 0 });
   const mail = new URL(res.headers()["location"]!);
   // Signed in with this very address: the check started at once, no mail.
   if (mail.pathname !== "/scan/mail") return res.headers()["location"]!;
