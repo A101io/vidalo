@@ -119,6 +119,20 @@ describe("status body", () => {
     expect(body.reportUrl).toBeNull();
   });
 
+  it("nested objects carry only their named fields (V1-SEC-04)", () => {
+    const dirty = {
+      ...base,
+      profile: { mode: "online", offer: "brood", audience: "buren", category: "bakker", source: "auto", basis: ["website"], decidedAt: "x", competitors: ["Secret BV"] },
+      questions: [{ id: "p1", text: "Bestaat X nog?", businessId: "b1", templateKey: "online.what" }],
+      engines: [{ engine: "chatgpt", received: 1, expected: 5, costCents: 7, error: "boom" }],
+    } as unknown as ScanJobState;
+    const body = scanStatusBody(dirty);
+    expect(Object.keys(body.profile!).sort()).toEqual(["audience", "category", "mode", "offer", "source"]);
+    expect(Object.keys(body.questions[0]!).sort()).toEqual(["id", "text"]);
+    expect(Object.keys(body.engines[0]!).sort()).toEqual(["engine", "expected", "received"]);
+    expect(JSON.stringify(body)).not.toMatch(/Secret|boom|templateKey|costCents|decidedAt/);
+  });
+
   it("a failed scan does not leak its error either", () => {
     const body = scanStatusBody({ ...base, status: "failed" });
     expect(JSON.stringify(body)).not.toContain("boom");

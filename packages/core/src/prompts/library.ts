@@ -181,10 +181,11 @@ export async function recordScanUse(db: Db, businessId: string, scanRunId: strin
     const { category } = rows[0]!;
     const before = (await db.questionLibrary({ category, mode: "online" })).filter(retirableKey);
     await db.recordQuestionUse(rows);
-    const wasRetired: Set<string> = new Set(before.filter((r) => libraryStatus(r) === "retired" && !wasRetired.has(r.templateKey)).map((r) => r.templateKey));
+    const wasRetired = new Set(before.filter((r) => libraryStatus(r) === "retired").map((r) => r.templateKey));
     const after = (await db.questionLibrary({ category, mode: "online" })).filter(retirableKey);
     for (const r of after) {
-      if (libraryStatus(r) === "retired") await db.logEvent(null, "library.retired", { category: r.category, mode: r.mode, templateKey: r.templateKey });
+      // only what this scan moved into "retired": a template retired earlier was logged then
+      if (libraryStatus(r) === "retired" && !wasRetired.has(r.templateKey)) await db.logEvent(null, "library.retired", { category: r.category, mode: r.mode, templateKey: r.templateKey });
     }
   } catch {
     try {
