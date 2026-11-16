@@ -127,19 +127,16 @@ describe("QA 001: an honest name with an instruction word and no listing (V1-QA-
     expect(asked).toEqual(["Bestaat Plain Software nog?", "Wat doet Plain Software?", "Wat is de website van Plain Software?"]);
   });
 
-  it("observed today: 'Prompt Software' (no listing) is asked the shop-front set and gets a coloured dot", async () => {
+  it("'Prompt Software' (no listing) is asked the neutral set with its name, and gets no coloured dot (V1-QA-02)", async () => {
     const { prep, report, asked } = await freeCheck("Prompt Software");
     expect(prep.business.googlePlaceId).toBeNull();
     expect(report.profile).toMatchObject({ mode: "online", source: "fallback" });
-    expect(asked).toHaveLength(6);
-    expect(asked).toContain("Is Prompt Software in Utrecht op zondag open?");
-    expect(asked).toContain("Kan ik bij Prompt Software in Utrecht pinnen?");
-    expect(asked).toContain("Wat is het adres van Prompt Software in Utrecht?");
-    expect(report.stip).not.toBe("grijs");
+    expect(asked).toEqual(["Bestaat Prompt Software nog?", "Wat doet Prompt Software?", "Wat is de website van Prompt Software?"]);
+    expect(report.stip).toBe("grijs");
   });
 
   // AC-A3 (+ ADR-0007 point 4): no listing and an unsure step -> the online/neutral set, never the shop-front questions.
-  it.fails("AC-A3: no shop-front question for a business without a listing (fails today, V1-QA-02)", async () => {
+  it("AC-A3: no shop-front question for a business without a listing (V1-QA-02)", async () => {
     const { asked } = await freeCheck("Prompt Software");
     expect(asked.length).toBeGreaterThan(0);
     for (const q of asked) expect(q).not.toMatch(SHOP_FRONT);
