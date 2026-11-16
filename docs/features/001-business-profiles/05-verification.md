@@ -77,3 +77,58 @@ The ledger rows are in `findings.md` (status, owner, fix). Each lane works top t
 
 See `state.md` "Waiting on Julian". J-1 is the only item that holds up a fix. J-2 to J-4 are needed before SHIP,
 not before round 2 starts.
+
+---
+
+# Round 2 of 2 — 001 Business profiles
+
+*delivery-lead (Claude) · 2026-11-16, unattended stopgap run (03:30 verify slot) · branch
+`claude/fix-2026-11-16-001-business-profiles` (PR #137) with the round-1 reports (PR #135 branch) and current `main`
+(`b92675c`) merged in. Merges `reviews/qa-r2.md`, `reviews/security-r2.md`, `reviews/compliance-r2.md`.
+Verify rounds used: **2 of 2**.*
+
+## Verdict: SHIP
+
+No P0 from any lane. The two P1s that blocked in round 1 and were fixed (V1-QA-02, V1-QA-03) are closed, each
+proven by a control (fix reverted: its test red; restored: green). The third P1, V1-COMP-01, is customer copy that
+waits on Julian's word (J-1); by this run's rules it does not block the merge and stays an **open release gate** for
+the feature. PR #137 itself changes no customer string and does not touch that sentence (on `main` since #120).
+All other open items are P2.
+
+| Lane | P0 | P1 open | P2 open | Closed this round |
+|---|---|---|---|---|
+| qa | 0 | 0 | 2 (V1-QA-01, new V2-QA-01) | V1-QA-02, V1-QA-03, V1-QA-04 |
+| security | 0 | 0 | 6 (V1-SEC-01, -02, -03, -05, -06, -07) | V1-SEC-04; S-07/S-08 re-check passed |
+| compliance | 0 | 1 (V1-COMP-01, J-1 gate) | 5 (V1-COMP-02..06) | none (none was in scope of #137) |
+
+## Counts observed this round
+
+- `pnpm -r typecheck`: core, web, worker `Done` (branch alone and with `main`).
+- `pnpm -r test`, branch alone: core **96 files, 1433 passed, 23 skipped**; worker **52 passed**.
+- `pnpm -r test`, branch + `main`: core **102 files, 1478 passed, 23 skipped**; worker **7 files, 52 passed**.
+- `pnpm e2e:mock`: **OK** both times (60 jobs; baseline rood, 34 findings; online case mode online, 12 answers).
+- Feature tests by name: **12 files, 269 passed**, no `it.fails` left.
+- Controls: QA-03 3 red, QA-02 2 red, SEC-04 1 red, QA-04 1 red on the reverted code.
+- Playwright `qa-001-online.spec.ts` (desktop, mock): **4 passed, 1 fixme** after updating the spec to `main`'s
+  free-check flow (postcode field from #139, confirmation link from #121; test-only, commit `bbb6898`).
+
+## Surfaces (V1-COMP-04, for this PR)
+
+| Surface | Changed by #137 |
+|---|---|
+| Landing, FAQ, plan panel, `result.checkedAs`, `result.more`, mails | no |
+| Privacy (NL/EN), terms, cookie table, processors, records of processing | no |
+| CRITERIA.md, MESSAGING.md, ARCHITECTURE.md | no |
+| Pricing, checkout, Stripe | no |
+| Questions sent to AI systems | yes, internal: a business without a listing whose name the slot cleaner refuses gets the neutral 3 questions with its name instead of the shop-front 6 with the town |
+| Report "Wat AI over jou schreef" | fewer quotes: a line that is only the name is no longer quoted |
+| Waiting-page status JSON | same fields, nested objects rebuilt from named fields |
+
+## Open after this round (none blocks the merge)
+
+- **Release gate J-1 / V1-COMP-01 (P1):** the source line under "Gecontroleerd als". Feature 001 is not done until it
+  is closed.
+- P2s, routed as in round 1: backend V1-SEC-01, -02, -05, -06, V1-COMP-02, -05, -06 (a waits on J-4), V2-QA-01;
+  frontend V1-COMP-03, V1-SEC-03, V1-SEC-07, V1-QA-01. They go to a ticket, not a third round.
+- Not verified (carried): a real Sonable check, the hosted project (migration 0015, RLS), the client bundle, the
+  waiting page in a browser.
