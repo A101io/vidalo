@@ -5,7 +5,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | 4 verify, **round 2 of 2 done 2026-11-16: SHIP** (05-verification.md "Round 2"). V1-QA-02 and V1-QA-03 (P1) closed with controls; V1-SEC-04, V1-QA-04 closed. PR #137 merge: see the phase log (merged only on all-green CI, deploy skipped). Feature not done until release gate J-1 closes. Open P2s go to tickets (findings.md), no third round |
+| Phase | 4 verify, **round 2 of 2 done 2026-11-16: SHIP** (05-verification.md "Round 2"). V1-QA-02 and V1-QA-03 (P1) closed with controls; V1-SEC-04, V1-QA-04 closed. **PR #137 merged into `main` as `e808eec`** on 2026-11-16 after every CI check on head `0571a2c` was read green (check, postgres, cloudflare, browser, build) and `deploy` was skipped. Nothing deployed to vidalo.ai (`deploy.yml` is manual). PR #135 (round-1 reports) is now contained in `main`; the think run can close it. Feature not done until release gate J-1 closes. Open P2s go to tickets (findings.md), no third round |
 | Started | 2026-11-11 |
 | Design reviewed | none |
 | Design gate rounds used | 0 of 2 |
@@ -22,6 +22,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | 2026-11-12 | 4 verify | State brought in line with 04-build.md: shape and build were done on 2026-11-11 (12 tickets, merged in #120); waits for verify | think run |
 | 2026-11-15 | 4 verify | Round 1: compliance (36/47 pass, 1 P1) and security (32/40 pass, 7 P2) on 15 Nov night run; qa finished in the stopgap run (18 criteria: 10 pass, 2 as amended, 1 fail, 5 partly/not verifiable; 2 P1, 2 P2). Gate observed: core 1431 passed / 23 skipped, worker 52, e2e:mock OK, AC-3 snapshot 21/21 regenerated from 5a1a40e. Verdict FIX AND RE-VERIFY; PR for docs and tests opened against main, not merged | delivery-lead (unattended) |
 | 2026-11-16 | 4 verify | Round 2 of 2 (stopgap run): round-1 reports merged into the fix branch (PR #137), then current `main`. Gate observed on branch + main: typecheck clean; core 102 files 1478 passed / 23 skipped; worker 52; e2e:mock OK; feature tests 269 passed; controls red for all four fixes; Playwright qa-001-online 4 passed / 1 fixme after a test-only update to main's free-check flow. Verdict **SHIP**; 1 new P2 (V2-QA-01) | delivery-lead (unattended) |
+| 2026-11-16 | 4 verify | PR #137 merged into `main`: merge commit `e808eec` (head `0571a2c`, all CI checks green, `deploy` skipped). PR #135 contained in `main`, to be closed by the think run. Push to `main` runs only the GitHub Pages mock preview, not vidalo.ai | delivery-lead (unattended) |
 
 ## Skipped phases
 | Phase | Why skipping is safe here |
