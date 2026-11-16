@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { dismissNotice } from "./helpers";
+import { confirmCheck, dismissNotice } from "./helpers";
 
 /**
  * QA, feature 001, verify round 1 (2026-11-15), mock mode. AC-5 and AC-8 on a report the mock pipeline really built
@@ -20,12 +20,16 @@ async function onlineCheck(page: Page, lang: "nl" | "en") {
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Utrecht");
+  // Since #139 a free check needs a postcode or website; a postcode Google does not know leads to the website field (as scan-website.spec.ts).
+  await form.locator("input[name='identity']").fill("3511 AB 1");
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
   await page.waitForURL(/\/scan\/kies/);
   await dismissNotice(page);
   await page.getByLabel(lang === "nl" ? "Wat is je website?" : "What is your website?").fill("www.vloedlijn-music.example");
   await page.locator("main button[type='submit']").click();
+  // Since #121 the check starts from the confirmation link (mock: shown on /scan/mail).
+  await confirmCheck(page);
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 90_000 });
   await dismissNotice(page);
   return name;
