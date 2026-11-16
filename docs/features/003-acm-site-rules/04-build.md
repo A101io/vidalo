@@ -26,3 +26,15 @@ Deviations from the ticket text, for the PR reader:
 - The complaint and order-mail strings use `CONTACT.support` and `CONTACT.phone` (so `support@vidalo.ai`), not the `support@vidalo.io` the architecture table still shows; the repo moved to vidalo.ai on 15 Nov (CLAUDE.md). FE-01's e2e therefore expects `CONTACT.email`, not `hello@vidalo.io`.
 - `mails.order.termsMonthly` EN says ‘Subscription’ (the real EN name of the page, `billing.h1`), the architecture draft said ‘Plan’.
 - The ticket's control for rule 3 ("the old `monitor.limit`") would not go red: the old limit already contained €149. The old `bodyNone` is the real old string that does.
+
+## FE-01 — Company details on every page and on /contact
+
+Built: complaint heading and paragraph on `/contact` (`apps/web/app/contact/page.tsx`, h2.h3 + paragraph, no new button or colour); `e2e/company-details.spec.ts`. The footer needed no code change: the BE-01 copy flows through `SiteFooter` and `ComingSoonFooter`.
+
+| Claim | Evidence |
+|---|---|
+| Spec fails without the change | with `main`'s copy and contact page put back: 8 of 9 desktop tests red (6 footer pages, 2 complaint pages); the 375 px test passes there too, as it guards against widening |
+| Spec passes with it | normal mode, desktop: 9 passed; `E2E_MODE=gate`: 3 passed (`/binnenkort`, `/en/coming-soon` footer fields and contact details, 375 px) |
+| axe still green | `e2e/a11y.spec.ts`: 12 passed |
+
+Deviations: the spec expects `CONTACT.email` (`hello@vidalo.ai`) where the ticket says `hello@vidalo.io`; the gate tests were not run against `main` separately (same footer string). The btw number is asserted in the footer, not in `main` of `/contact`: the page text points to the footer ("staan onderaan"), which is what AC-2 needs to be true. Not done: the 375/1280 px footer screenshots (needs eyes; Julian's J-7 clean-browser check covers the live page). The sandbox browser is the pre-installed Chromium; the repo's pinned Playwright needed `executablePath` (local config, not committed).

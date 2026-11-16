@@ -69,6 +69,8 @@ export default async function ContactPage() {
               <li key={it}>{it}</li>
             ))}
           </ul>
+          <h2 className="h3 mt-8">{P.complaint.h}</h2>
+          <p className="mt-3 text-[16px] leading-relaxed text-ink-2">{P.complaint.p}</p>
           <p className="mt-4 text-[16px] leading-relaxed text-ink-2">{P.never}</p>
           <p className="mt-8 text-[15px] text-muted">{P.company}</p>
         </section>
