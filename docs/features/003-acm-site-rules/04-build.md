@@ -38,3 +38,18 @@ Built: complaint heading and paragraph on `/contact` (`apps/web/app/contact/page
 | axe still green | `e2e/a11y.spec.ts`: 12 passed |
 
 Deviations: the spec expects `CONTACT.email` (`hello@vidalo.ai`) where the ticket says `hello@vidalo.io`; the gate tests were not run against `main` separately (same footer string). The btw number is asserted in the footer, not in `main` of `/contact`: the page text points to the footer ("staan onderaan"), which is what AC-2 needs to be true. Not done: the 375/1280 px footer screenshots (needs eyes; Julian's J-7 clean-browser check covers the live page). The sandbox browser is the pre-installed Chromium; the repo's pinned Playwright needed `executablePath` (local config, not committed).
+
+## FE-02 — Monthly total, the sentence under the email fields, no pre-ticked box
+
+Built: `PriceBlock.tsx` renders `monitor.total` (15 px bold, white) under the figure; `ScanField.tsx` and `EmailCapture.tsx` render `scanField.reminders` with a privacy link under the email field, wired by `aria-describedby` (`{id}-email-note`, `report-email-note`); `packages/core/test/no-preticked-boxes.test.ts`; three spec pairs added to `e2e/forms.spec.ts` (scan form, report page, price card; NL and EN).
+
+| Claim | Evidence |
+|---|---|
+| Checkbox test red with `defaultChecked` on the marketing box | on the real `ScanField.tsx`: 1 failed, violation names `ScanField.tsx … name="marketing" value="ja" defaultChecked`; green again after restoring. Also red on a literal tick in an allow-listed file (`defaultChecked`, `defaultChecked={true}`); stored-choice expression passes |
+| Scan is not empty | test asserts at least 3 checkboxes found (found 5) |
+| e2e fails on `main` components | with the three components put back: 6 failed (sentence ×4, price total ×2) |
+| e2e passes with the change | `forms.spec.ts` desktop: 10 passed (4 old + 6 new) |
+| axe | `a11y.spec.ts` desktop: 12 passed; the field points at the sentence via `aria-describedby` (asserted in the spec) |
+| One primary button per view | no button added; link only |
+
+Not done: the price band / scan form / report field screenshots (need eyes; the sandbox can reach only the local server).

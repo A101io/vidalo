@@ -56,6 +56,7 @@ export async function PriceBlock() {
           <p className="text-[44px] font-extrabold leading-none sm:text-[52px]" style={{ letterSpacing: "-2px" }}>
             {P.monitor.price} <span className="text-[15px] font-medium" style={{ letterSpacing: 0 }}>{P.monitor.unit}</span>
           </p>
+          <p className="-mt-1 text-[15px] font-bold text-white">{P.monitor.total}</p>
           <ul className="flex flex-col gap-2 text-[15px] leading-[1.5]">
             {P.monitor.includes.map((t) => (
               <li key={t} className="flex gap-2.5">

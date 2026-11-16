@@ -34,3 +34,36 @@ for (const [lang, home, login, required, email] of [
     expect(await message(field)).toBe("");
   });
 }
+
+/**
+ * Feature 003 (FE-02, AC-7, AC-11): under every email field a sentence says two more
+ * messages follow and how to stop them, with the privacy link; the Monthly card shows the total.
+ */
+for (const [lang, home, privacy, pricing, sentence, total] of [
+  ["nl", "/", "/privacy", "/prijzen", "na 7 en 21 dagen nog een kort bericht", "€149 eenmalig + €49 per maand, excl. btw"],
+  ["en", "/en", "/en/privacy", "/en/pricing", "after 7 and 21 days about the outcome", "€149 once + €49 per month, excl. VAT"],
+] as const) {
+  test(`the scan form says what follows the report (${lang})`, async ({ page }) => {
+    await page.goto(home);
+    const form = page.locator("form[action='/api/scan']").first();
+    const note = form.locator("p[id$='-email-note']");
+    await expect(note).toContainText(sentence);
+    await expect(note.locator("a")).toHaveAttribute("href", privacy);
+    const describedBy = await form.locator("input[name='email']").getAttribute("aria-describedby");
+    expect(describedBy).toContain(await note.getAttribute("id"));
+  });
+
+  test(`the report page says what follows the report email (${lang})`, async ({ page }) => {
+    await page.goto(lang === "nl" ? "/r/voorbeeld" : "/en/r/voorbeeld");
+    const form = page.locator("form[action='/api/report-email']");
+    const note = form.locator("#report-email-note");
+    await expect(note).toContainText(sentence);
+    await expect(note.locator("a")).toHaveAttribute("href", privacy);
+    await expect(form.locator("#report-email")).toHaveAttribute("aria-describedby", "report-email-note");
+  });
+
+  test(`the Monthly card shows the whole price (${lang})`, async ({ page }) => {
+    await page.goto(pricing);
+    await expect(page.getByText(total, { exact: true }).first()).toBeVisible();
+  });
+}
