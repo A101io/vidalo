@@ -5,7 +5,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | **1 shape done 2026-11-15 → 3 build-ready** (phase 2 design gate skipped, see below). Next: BE-01 first, then FE-01, FE-02, BE-02, BE-03 (`tickets/README.md`), 2.75 d in all |
+| Phase | **3 build, night 1 done 2026-11-16** (BE-01, FE-01, FE-02, BE-03 built, PR #136 open as draft). **Left: BE-02** (complex, Opus night). Evidence: `04-build.md` |
 | Started | 2026-11-12 |
 | Design reviewed | none (no new layout; copy inside existing design G components) |
 | Design gate rounds used | 0 of 2 (skipped) |
@@ -35,6 +35,7 @@ Control Room rows: R4, R7, R8, R9
 | 2026-11-15 | 0 intake | Brief approved by the 48-hour silence rule (needs-you Q-20261112-01); Q1–Q6 stand as assumed | silence rule |
 | 2026-11-15 | 1 shape | 02-architecture.md (contract 003.1): copy keys NL/EN, `COMPANY` source, order mail from the webhook, interface contract, file ownership, test plan; ADR-0008, ADR-0009; tickets BE-01, FE-01, FE-02, BE-02 (complex), BE-03, 2.75 d; Julian items J-1…J-9; proposed complaints article for counsel. Code read at 1cf3de5 | architect (think run) |
 | 2026-11-15 | 1 shape | checklists/security.md (SEC-01…17, no P0 against the design; SEC-01/02/05/10/11 P0 if observed) and checklists/compliance.md (COMP-01…42; B2B position checked: holds on conditions; one P0 against the design, F-001; launch hard-stop candidates F-004, F-021) | security, compliance (think run) |
+| 2026-11-16 | 3 build | Night 1 (unattended build run): BE-01 copy keys, `COMPANY`, `copy-claims.test.ts`; FE-01 complaint paragraph + `company-details.spec.ts`; FE-02 card total, reminders sentence, `no-preticked-boxes.test.ts`; BE-03 price surfaces + checkout-consent tests. Core 1436 tests, worker 52, e2e:mock and mail:lab OK. BE-02 not started | build run |
 | 2026-11-15 | 1 shape | F-001…F-021 into findings.md; F-001 (P0) folded into ADR-0008/BE-02; F-002, F-003, F-005, F-009, F-010, F-017, F-018, F-020 folded into tickets (Amendment 1 of the architecture); F-004, F-006, F-008, F-013, F-021 to Julian | delivery-lead (think run) |
 
 ## Skipped phases

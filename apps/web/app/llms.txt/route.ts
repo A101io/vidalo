@@ -31,7 +31,7 @@ ${steps}
 
 ## Prijs
 - ${nl.landing.prijs.setup.name}: €${PRICES.setupEur} eenmalig, excl. btw. De eerste controle is gratis.
-- ${nl.landing.prijs.monitor.name}: €${PRICES.monitorEurPerMonth} per maand, excl. btw, maandelijks opzegbaar.
+- ${nl.landing.prijs.monitor.name}: €${PRICES.setupEur} eenmalig (${nl.landing.prijs.setup.name}) + €${PRICES.monitorEurPerMonth} per maand, excl. btw, maandelijks opzegbaar.
 
 ## Pagina's
 - [${nl.pages.home.title}](${u("/", "nl")}): gratis controle

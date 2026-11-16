@@ -100,7 +100,7 @@ export function mockAnswer(question: string, copy: CopyShape): { reply: string; 
   if (q.size === 0) return { reply: copy.chat.fallback, matched: false };
   const priceWords = ["kost", "kosten", "prijs", "prijzen", "price", "cost", "costs", "tarief", "euro", "betalen"];
   if ([...q].some((w) => priceWords.includes(w)) || /€|\bkost\b/i.test(question)) {
-    return { reply: `${L.prijs.setup.name}: €${PRICES.setupEur} ${L.prijs.setup.unit}. ${L.prijs.monitor.name}: €${PRICES.monitorEurPerMonth} ${L.prijs.monitor.unit}. ${L.prijs.exclVat}. ${L.prijs.sub}`, matched: true };
+    return { reply: `${L.prijs.setup.name}: €${PRICES.setupEur} ${L.prijs.setup.unit}. ${L.prijs.monitor.name}: ${L.prijs.monitor.total}. ${L.prijs.exclVat}. ${L.prijs.sub}`, matched: true };
   }
   const candidates = [...copy.pricing.faq, ...L.vragen.items];
   let best: { score: number; a: string } | null = null;

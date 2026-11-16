@@ -53,3 +53,23 @@ Built: `PriceBlock.tsx` renders `monitor.total` (15 px bold, white) under the fi
 | One primary button per view | no button added; link only |
 
 Not done: the price band / scan form / report field screenshots (need eyes; the sandbox can reach only the local server).
+
+## BE-03 — Monthly priced with its start fee everywhere; checkout consent pinned
+
+Built: assistant price reply (`chat/index.ts`) uses `monitor.total`; `/llms.txt` line built from `PRICES` ("€149 eenmalig (Vidalo Scan) + €49 per maand, excl. btw, maandelijks opzegbaar."); own facts record `unit` names the start; JSON-LD Monthly `Offer` gets a `description` (NL and EN, from `PRICES`); `price-surfaces.test.ts`, `checkout-consent.test.ts`.
+
+| Claim | Evidence |
+|---|---|
+| price-surfaces red on each old surface | `chat/index.ts` from `main`: 2 red (NL, EN reply); `own.ts` from `main`: 1 red; `llms.txt/route.ts` from `main`: 1 red; all green restored (7 passed) |
+| checkout-consent red on its control | `"required"` → `"none"`: 1 red; restored: green |
+| Gate | typecheck 0 errors; core 1436 passed / 23 skipped / 1 todo; worker 52 passed; `e2e:mock` OK; `mail:lab` OK |
+
+Deviations:
+- The first version of the chat check passed on the old code (the Scan sentence before it already holds 149). It now reads the Monthly sentence only; that is the version that went red.
+- The ticket's EN assertion `not for consumers` does not match the real copy (`en.checkout.consentSubmit` says "not consumers"); the test asserts the real string.
+- The `env.mock` assertion is an `it.todo` until BE-02 (F-009), as the ticket allows.
+- The llms.txt output is pinned by reading the route source (the route imports `@/` aliases core cannot resolve), not pasted from a running server.
+- `own.test.ts` and the facts-page render need no snapshot change (no snapshots touched).
+
+## What is left
+BE-02 (order confirmation from the webhook, F-001, F-009, F-020; mail lab; `order-mail.test.ts`) is for an Opus night. It uses `copy.mails.order` and `PRICES`, both present.
