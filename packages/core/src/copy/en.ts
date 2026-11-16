@@ -1,4 +1,6 @@
 import type { CopyShape } from "./index.js";
+import { PRICES } from "./prices.js";
+import { COMPANY, CONTACT } from "../shared/contact.js";
 import { ownerAreaEn } from "./owner-area.en.js";
 import { accountSecurityEn } from "./account-security.en.js";
 
@@ -46,6 +48,10 @@ export const en: CopyShape = {
     emailPlaceholder: "name@business.com",
     emailInvalid: "Enter a valid email address, such as name@business.com.",
     marketing: "I would like to receive occasional news about Vidalo. Every email has an unsubscribe link.",
+    reminders: {
+      text: "The report comes to your inbox, followed by a short message after 7 and 21 days about the outcome and what we can do for you. You can unsubscribe with one click.",
+      link: "See the privacy policy.",
+    },
   },
 
   /** Landing page, in the order of docs/DESIGN_G.md. */
@@ -119,7 +125,7 @@ export const en: CopyShape = {
     },
     snippers: {
       h2: "The answer is built from scraps. Half of them are wrong.",
-      body: "AI does not rely on your website alone. It combines Wikipedia, business directories, news articles and a business with the same name. In a check of 10,000 businesses, half had at least one wrong answer; for 1 in 3 the phone number was wrong.",
+      body: "AI does not rely on your website alone. It combines Wikipedia, business directories, news articles and a business with the same name. In a check of 10,000 US businesses, half had at least one wrong answer; for 1 in 3 the phone number was wrong.",
       examples: [
         { where: "Bakery, Centrum", wrong: "“open on Sunday”", right: "closed", source: "ChatGPT · source: directory listing from 2022" },
         { where: "Physiotherapy, Schalkwijk", wrong: "old number", right: "023 535…", source: "Perplexity · source: phone directory" },
@@ -558,7 +564,7 @@ export const en: CopyShape = {
         name: "Vidalo Scan",
         chip: "First check free",
         audience: "Everything right once: every error from your check taken to its source, and your details recorded in one place.",
-        price: "€149",
+        price: `€${PRICES.setupEur}`,
         unit: "one-off",
         includes: [
           "For every error the check found: a correction request to the source, or exactly what to change yourself.¹",
@@ -570,16 +576,17 @@ export const en: CopyShape = {
       },
       monitor: {
         name: "Vidalo Monthly",
-        chip: "Most chosen",
+        chip: "For checking every month",
         audience: "Vidalo Scan, then checked again every month. A new error lasts a month at most.",
-        price: "€49",
+        price: `€${PRICES.monitorEurPerMonth}`,
+        total: `€${PRICES.setupEur} once + €${PRICES.monitorEurPerMonth} per month, excl. VAT`,
         unit: "per month",
         includes: [
           "The same questions again every month with ChatGPT, Google AI, Gemini, Perplexity and Claude.",
           "For every new error: a correction request to the source, or exactly what to change yourself.¹",
           "A monthly report with proof of what was fixed.",
         ],
-        limit: "1 location · cancel any month · start with Vidalo Scan (€149 one-off)",
+        limit: "1 location · cancel any month · starts with Vidalo Scan",
         button: "Start with the free check",
       },
       footnote: "¹ Fixes at third-party sources usually take two to four weeks, sometimes longer. Your report shows where each one stands.",
@@ -665,7 +672,7 @@ export const en: CopyShape = {
         { title: "Information", links: [{ label: "What we check", href: "/hoe-het-werkt#criteria" }, { label: "Questions", href: "/#vragen" }, { label: "Facts about Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.ai" }] },
         { title: "Legal", links: [{ label: "Terms and conditions", href: "/voorwaarden" }, { label: "Privacy policy", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · +31 85 109 1393 · Prices excl. VAT",
+      legal: `Vidalo (part of ${COMPANY.legalName}) · ${COMPANY.street}, ${COMPANY.postcode} ${COMPANY.city}, the Netherlands · KvK ${COMPANY.kvk} · VAT ${COMPANY.vat} · ${CONTACT.phone} · Prices excl. VAT`,
       copyright: "© 2026 Vidalo. All rights reserved.",
       reportNote: "This report link works for 30 days.",
     },
@@ -720,7 +727,11 @@ export const en: CopyShape = {
       mail: { h: "Email", p: "For questions about Vidalo. About your account, a report or a payment, email support; we answer within two working days.", button: "Email us", supportLabel: "Support" },
       include: { h: "Useful to include", items: ["The name and town of your business.", "If it is about a report: the link to that report.", "What you expected, and what happened instead."] },
       never: "Never send a password or payment detail. We will never ask for those.",
-      company: "Our company details, our address and our KvK number are at the foot of this page. Post is welcome at that address; a message is faster.",
+      company: "Our company details are at the foot of this page: name, address, KvK number, VAT number and phone. Post is welcome at that address; a message is faster.",
+      complaint: {
+        h: "A complaint",
+        p: `Not happy with something? Email ${CONTACT.support} or call ${CONTACT.phone} on working days from 09:00 to 17:00, and say it is a complaint. You get an answer within 5 working days with what we will do about it.`,
+      },
     },
     home_crumb: "Vidalo",
   },
@@ -2512,7 +2523,7 @@ export const en: CopyShape = {
     scanOnly: {
       label: "A check every month",
       body: "You have Vidalo Scan. We check the fixed errors again. All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
-      bodyNone: "All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €49 per month excl. VAT, cancel any month.",
+      bodyNone: `All questions again every month, new errors dealt with straight away and a monthly report come with Vidalo Monthly: €${PRICES.monitorEurPerMonth} per month excl. VAT, cancel any month. If you have not had Vidalo Scan yet, €${PRICES.setupEur} once comes on top.`,
       cta: "Add Vidalo Monthly",
       pausedCta: "Go to your subscription",
     },
@@ -2751,7 +2762,7 @@ export const en: CopyShape = {
         followup: { label: "After the free check", body: "Two messages after your free check about what we can do for you." },
       },
       requiredH: "You always receive these",
-      required: "Your welcome email, your first report, steps only you can take, a message when we cannot fix an error, and emails about your plan and your login.",
+      required: "Your welcome email, the confirmation of your order, your first report, steps only you can take, a message when we cannot fix an error, and emails about your plan and your login.",
       save: "Save",
       saved: "Your choice has been saved.",
     },
@@ -3076,6 +3087,31 @@ export const en: CopyShape = {
   mails: {
     hi: "Hi,",
     regards: "Best,\nVidalo",
+    order: {
+      subject: (product: string) => `Your Vidalo order: ${product}`,
+      preheader: "What you ordered, what it costs and what happens next.",
+      headline: (business: string) => `Your order for ${business}`,
+      intro: "This confirms your order. Keep this email.",
+      orderTitle: "Your order",
+      orderedOn: (date: string) => `Ordered on ${date}`,
+      lineSetup: (amount: string) => `Vidalo Scan, once: ${amount} excl. VAT`,
+      lineMonthly: (amount: string) => `Vidalo Monthly, per month: ${amount} excl. VAT`,
+      subtotal: (amount: string) => `Together: ${amount} excl. VAT`,
+      vat: (amount: string, rate: string | null) => `VAT${rate ? ` (${rate})` : ""}: ${amount}`,
+      totalPaid: (amount: string) => `Paid: ${amount}`,
+      totalProcessing: (amount: string) => `To be debited: ${amount}`,
+      processing: "Your direct debit is still being processed; that can take a few working days. We start once it is in.",
+      termsTitle: "Term and cancelling",
+      termsSetup: "Vidalo Scan is a one-off job. Nothing renews.",
+      termsMonthly: "Vidalo Monthly renews by itself every month. You can cancel any month online under ‘Subscription’ in your account, with no notice period: the month you already paid runs out, after that you pay nothing more. You then get a confirmation with the end date straight away.",
+      startAfterProof: "We start as soon as you have shown that the business is yours, with your Google account. If that does not work within 30 days, you may dissolve the order and get back what you paid.",
+      startNow: "You have already shown that the business is yours, so we start straight away.",
+      docsTitle: "What applies",
+      terms: (version: string) => `Terms and conditions (${version.toLowerCase()})`,
+      privacy: "Privacy policy",
+      invoice: "Your invoice, with the VAT shown separately, comes from our payment provider Stripe.",
+      questions: `Questions about your order? Email ${CONTACT.support} or call ${CONTACT.phone}, on working days from 09:00 to 17:00.`,
+    },
     accountDeleted: (name: string, googleRevoked: boolean, loginDeleted = true) => ({
       subject: `Everything of ${name} is deleted`,
       body: `We deleted everything of ${name} at Vidalo, as you asked: your business's data, the reports, and your facts page and its address.${googleRevoked ? " We also revoked the connection with Google at Google." : ""} ${loginDeleted ? "If no other business belongs to your sign-in, your sign-in is deleted too." : "We delete your sign-in as soon as possible."}
