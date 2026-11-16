@@ -24,6 +24,7 @@ Each one stops one kind of damage without a deploy. Values in `wrangler.jsonc` `
 |---|---|---|---|
 | Everyone seeing the product | Dashboard → `vidalo-web` → Settings → Variables and Secrets → `VIDALO_COMING_SOON` = `1` → Deploy | Set it back to `0` | Marketing pages show `/binnenkort`; legal pages, reports, sign-in, account and facts pages keep working (`core/shared/gate.ts`) |
 | New free checks (AI spend from strangers) | Same place: `FREE_SCANS_PER_DAY` = `0` | Remove it or set the old number | Visitors land on `/scan/druk` |
+| Free checks by euros (second brake) | Same place: `FREE_AI_CAP_CENTS` (default `1500` a UTC day; `0` stops free checks) | Remove it or set the old number | Visitors land on `/scan/druk`; when a site-wide brake is hit, `hello@vidalo.ai` (`VIDALO_ALERT_EMAIL`, apps/web/wrangler.jsonc) gets one mail per brake per day, event `alert.free_check.*` |
 | Scans and jobs already queued | `wrangler queues pause-delivery vidalo-scans` | `wrangler queues resume-delivery vidalo-scans` | Messages wait in the queue; nothing is lost while paused |
 | The minute and ten-minute crons (paid jobs, rechecks, facts hosts) | Dashboard → `vidalo-worker` → Settings → Triggers → remove both Cron Triggers | The next deploy puts them back (`apps/worker/wrangler.jsonc`) | Paid customers' jobs wait |
 | All spend at one AI provider | Revoke the key at the provider (OpenAI → API keys; Google AI Studio; Perplexity; SerpAPI; Anthropic console) | New key → Worker secret | That system is skipped or its jobs fail and retry |
