@@ -144,6 +144,8 @@ describe("legal texts: recipients", () => {
     "api.indexnow.org": "receives only public facts-page URLs to recrawl (publisher/indexnow.ts)",
     "developers.cloudflare.com": "documentation link in a comment",
     "platform.openai.com": "documentation link in a comment",
+    "openai.com": "inside the ChatGPT-User user-agent string the own-website check sends to the owner's site; never fetched",
+    "perplexity.ai": "inside the Perplexity-User user-agent string the own-website check sends to the owner's site; never fetched",
     "bakkerijdevries.nl": "fictional demo business",
     "jouwbedrijf.nl": "example domain in copy",
     "yourbusiness.com": "example domain in copy",

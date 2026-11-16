@@ -94,7 +94,7 @@ paying customers.
 | Required | **Evidence per channel**: the screenshot or the API response that proves the sync | — | stored by the fixer; not shown |
 | Required | Manual channels: the instruction the owner must follow, and "Gedaan" | — | `manual` status exists; no instruction, no confirmation |
 | Required | Facts page status: published (date), indexed by Google (yes/no/date), the URL | ≈ | `google_index` table filled by the worker; the app never reads it |
-| Required | **Own-website check** result: robots.txt per answer robot, noindex, JSON-LD, phone, with the exact change | — | `sitecheck` job mails it; the app does not show it |
+| Required | **Own-website check** result: robots.txt per answer robot, noindex, JSON-LD, phone, phone in the page text, assistants turned away by a firewall, with the exact change | — | `sitecheck` job mails it; the app does not show it |
 | Later | Add a directory the owner knows about | — | |
 
 ### 7. Domein, Google

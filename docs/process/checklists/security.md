@@ -56,6 +56,7 @@ exploit path, not opinions about structure.
 
 ## Learned (Vidalo, 11 Nov 2026)
 - Every regex run on AI answer text, or on values extracted from it, gets a length cap before matching and a timing test on a long hostile input; no `\s*` or `.*` next to a repeated group under the `m` flag.
+- The same goes for HTML fetched from an owner's or third party's site (13 Nov 2026, own-website check): read the body with a byte cap, never `res.text()` unbounded; strip blocks with `indexOf`, not a lazy `[\s\S]*?` with a backreference; tag patterns exclude `<` (`<[^<>]*>`), since `<[^>]*>` is quadratic on a page of `<`.
 - A public page reachable by a guessable key (slug, name + town) shows nothing beyond what that key's owner chose to publish; private data only behind an unguessable id or the owner's session.
 - A single-use link or token that starts something costly is **claimed atomically before** the costly step (conditional update / unique insert / advisory lock), never marked "used" afterwards; and a cap counted from the event table (count, then insert) is not a cap under parallel requests. Test with N parallel presses: exactly one start (004 SEC-01: 60 presses of one confirmation link gave 60 free checks).
 - A redirect-target check (`next`, `returnTo`) runs again on the **normalised** result: `new URL("/.//evil.example", base).pathname` is `//evil.example`, which passes every check on the raw input (002 F-023).
