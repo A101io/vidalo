@@ -9,11 +9,11 @@ function secret(): string {
   return process.env.TURNSTILE_SECRET_KEY?.trim() || "vidalo-local";
 }
 
-export function checkCookieValue(r: { email: string; marketing: boolean }): string {
+export function checkCookieValue(r: { email: string; marketing: boolean; identity?: string | null }): string {
   return signCheckCookie(secret(), r);
 }
 
-export function checkFromCookie(req: Request): { email: string; marketing: boolean } | null {
+export function checkFromCookie(req: Request): { email: string; marketing: boolean; identity: string | null } | null {
   const m = (req.headers.get("cookie") ?? "").match(new RegExp(`(?:^|;\\s*)${CHECK_COOKIE}=([^;]*)`));
   return m ? readCheckCookie(secret(), decodeURIComponent(m[1]!)) : null;
 }

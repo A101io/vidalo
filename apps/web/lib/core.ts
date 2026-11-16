@@ -5,7 +5,7 @@
  */
 import { randomBytes } from "node:crypto";
 import { db as moduleDb, MemDb, runSummaries, type Db } from "@vidalo/core/db";
-import { resolveBusiness as coreResolveBusiness, draftProvisionalFacts, prepareBusiness as corePrepareBusiness, buildReport, SCAN_DEFAULTS, runScanWithProgress, persistScanState, readScanState, businessIdFromToken, type BusinessCandidate, type ScanProgressStep, type ScanJobState } from "@vidalo/core/scanner";
+import { resolveBusiness as coreResolveBusiness, unlistedCandidate, draftProvisionalFacts, prepareBusiness as corePrepareBusiness, buildReport, SCAN_DEFAULTS, runScanWithProgress, persistScanState, readScanState, businessIdFromToken, type BusinessCandidate, type ScanProgressStep, type ScanJobState } from "@vidalo/core/scanner";
 import { renderFactsPage } from "@vidalo/core/publisher";
 import { getDb as scopedDb, setBusinessStatus, setDb, REPORT_EMAIL_EVENT, runsRequested, FREE_REPORT_DAYS as FREE_DAYS } from "@vidalo/core/shared";
 import { ENGINE_LABEL, type BusinessStatus, type Engine, type ScanKind, type ScanReport } from "@vidalo/core/types";
@@ -77,6 +77,8 @@ export function parseQuery(raw: string): { query: string; place?: string } {
   if (inMatch) return { query: inMatch[1]!.trim(), place: inMatch[2]!.trim() };
   return { query: q };
 }
+
+export { unlistedCandidate };
 
 export async function resolveBusiness(query: string, place?: string): Promise<BusinessCandidate[]> {
   await ready();

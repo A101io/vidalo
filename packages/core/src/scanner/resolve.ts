@@ -332,8 +332,13 @@ export async function resolveBusiness(query: string, place?: string): Promise<Bu
     }
   }
   const merged = [...google, ...kvk.filter((k) => !google.some((g) => g.kvk === k.kvk))];
-  if (!merged.length) return [mockCandidate(query, place)].map((c) => ({ ...c, placeId: null, kvk: null, website: null, phone: null, address: null, postcode: null, hours: [], googleCategory: null, googleTypes: [], serviceAreaOnly: null }));
+  if (!merged.length) return [unlistedCandidate(query, place)];
   return merged.slice(0, 3);
+}
+
+/** A business Google and KvK do not list: only the typed name and place; the website comes from the visitor (ADR-0007). */
+export function unlistedCandidate(query: string, place?: string): BusinessCandidate {
+  return { ...mockCandidate(query, place), place: place ?? null, placeId: null, kvk: null, website: null, phone: null, address: null, postcode: null, hours: [], googleCategory: null, googleTypes: [], serviceAreaOnly: null };
 }
 
 // ---------------------------------------------------------------------------

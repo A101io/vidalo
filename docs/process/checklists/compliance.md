@@ -108,3 +108,8 @@ Tone, layout and feature value. Compliance blocks on law, and files P1s on the r
 - An owner's immediate deletion that falls back to a job is counted by the same overdue alarm as dated deletions (002, V-COMP-04).
 - The auth provider's own session and audit tables (IP, user agent, e-mail in audit payloads) are copies too: name them in the privacy text and remove or roll them off on deletion (002, V-COMP-06).
 - An erasure reaches every copy that serves a public surface, caches included: an in-isolate page cache and a `public, max-age` header kept a deleted business's facts page online for 10 minutes after the purge (002, V-QA-03). The design traces each "after deletion X answers not found" through every file and cache on its path, and none of those files may sit in a "not touched by either lane" list.
+
+## Learned (Vidalo, 16 Nov 2026, 005 phase 4)
+- A privacy sentence "we only compare it and do not keep it" is traced through every branch that reuses the value: on 005 a typed identity website became the checked, stored website (CMP-01).
+- A field that may hold a sole trader's home address (postcode + house number) carries, at the field, what it is for, that it is not kept, and a link to the privacy statement; the hint alone is not the art. 13 first layer (CMP-02).
+- An escape hatch that runs a check "as typed" says so on the result, so a namesake's answers are not presented as the requester's (CMP-04).

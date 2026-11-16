@@ -45,6 +45,11 @@ export const en: CopyShape = {
     emailLabel: "Email address",
     emailPlaceholder: "name@business.com",
     emailInvalid: "Enter a valid email address, such as name@business.com.",
+    identityLabel: "Postcode and house number, or website",
+    identityPlaceholder: "Postcode + house number, or website",
+    identityHint: "So we know for sure which business you mean. We only compare the postcode and house number; we do not keep them.",
+    privacy: ["What we do with your details is in our", "privacy statement"],
+    identityInvalid: "Enter the Dutch postcode and house number, such as 3071 AV 80, or the website, such as www.yourbusiness.com.",
     marketing: "I would like to receive occasional news about Vidalo. Every email has an unsubscribe link.",
   },
 
@@ -728,7 +733,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 16 November 2026",
+    updated: "Version of 17 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -985,6 +990,7 @@ export const en: CopyShape = {
             [
               "Data: the name, place and public details of the business, such as address, phone number, website and opening hours; a short description of what the business offers and for whom; the answers of AI assistants and the sources they name, with the names of other businesses they name; your email address, where we send the report. To limit abuse we turn your IP address and the date into a code and keep that code; we do not store your IP address itself.",
               "Confirming: the check starts only when you click the link we send to your email address. That way we keep malicious bots out and nobody can start a check in someone else's name. If you are signed in and ask for the check with your sign-in's email address, that address is already confirmed and the check starts at once. If you do not confirm within 24 hours, nothing starts; we then keep your request with your email address for at most 12 months, so we can trace abuse.",
+              "Recognising: besides the name you enter your business's postcode and house number, or its website, so we check the right business and not another with a similar name. If you work from home, that postcode and house number is your home address. We only compare the postcode and house number with the business details Google shows; we send them nowhere and do not keep them. They sit in the vidalo_check cookie for at most 15 minutes. If Google does not know your business and you enter a website, we check that website as your business's and keep it with the business.",
               "Origin: from you, and from public sources: Google (business details from Google Maps), the KvK Trade Register, the business's website (including a website you give us) and the sources AI assistants name.",
               "What we do with it: to see what the business offers and for whom, we send OpenAI the details from Google and the text of the business's homepage, from which we first remove email addresses and phone numbers; OpenAI turns that into a short description. We keep that description with the business, and the report shows it as how we read the business. The report also shows which other businesses AI assistants named and how often.",
               "Basis: our legitimate interest, and yours, in showing what AI assistants say about a business (article 6(1)(f) GDPR). These are business details that are already public.",
@@ -1192,7 +1198,7 @@ export const en: CopyShape = {
               ["sb-…-auth-token-code-verifier", "While signing in: links the sign-in link from your email to this browser.", "Removed once you are signed in, otherwise at most 90 days"],
               ["vidalo_google_state", "While connecting your Google account: protects that step against misuse.", "10 minutes"],
               ["vidalo_preview", "Only while the site is not yet open: shows you the site behind the ‘Coming soon’ page.", "Until you close the browser"],
-              ["vidalo_check", "During the free check: carries your email address from the form to the page where you pick your business, so it need not be in the link.", "15 minutes, or sooner once the check starts"],
+              ["vidalo_check", "During the free check: carries your email address and the postcode and house number or website you entered from the form to the page where you pick your business, so they need not be in the link.", "15 minutes, or sooner once the check starts"],
               ["vidalo_business", "If more than one business belongs to your account: remembers which business you chose in your account.", "90 days"],
             ],
           },
@@ -1328,7 +1334,7 @@ export const en: CopyShape = {
     newNav: "New check",
     newTitle: "New check",
     newH1: "A new free check",
-    newBody: (email: string) => `Enter the name and town of the business. The report goes to ${email}. Check the same business again within a day and we show you that day's report.`,
+    newBody: (email: string) => `Enter the name and town of the business, and its postcode and house number or website. The report goes to ${email}. Check the same business again within a day and we show you that day's report.`,
     newButton: "Start the check",
     remove: "Remove",
     removeLabel: (name: string, place: string) => `Remove the check of ${name}, ${place}`,
@@ -1377,8 +1383,8 @@ export const en: CopyShape = {
     retry: "Try again",
     toReport: "See the report",
     choose: {
-      title: "Which business do you mean?",
-      body: "We found more than one business with this name. Pick the right one.",
+      title: "Which business is yours?",
+      body: "We never pick a business by its name alone. Choose yours by its address.",
       button: "This business",
       none: "We could not find a business. Try adding the website or the town.",
       placeLabel: "Town",
@@ -1387,6 +1393,10 @@ export const en: CopyShape = {
       /** /scan/kies opened without a passed check (an old or shared link): start from the field. */
       again: "Enter your business here once more to continue.",
       email: "Enter your email address; that is where we send the report.",
+      identity: "Also enter your business's postcode and house number, or its website.",
+      unlistedTitle: "Is your business not listed?",
+      unlistedBody: "Then we check it as a business that is not on Google.",
+      unlistedButton: "My business is not listed",
       /** A business Google does not list: the visitor may give the website, which Vidalo reads (ADR-0007). */
       websiteTitle: "We did not find your business on Google.",
       websiteLabel: "What is your website?",

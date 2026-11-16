@@ -2,7 +2,8 @@ import { getI18n } from "@/lib/i18n";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 /**
- * Name + place in one bordered field, the e-mail address under it (the report
+ * Name + place in one bordered field, the postcode + house number or website under it (a name alone
+ * never picks a business, core/shared/business-identity.ts), the e-mail address under that (the report
  * goes there; nothing runs without it, core/shared/free-check.ts), an unticked
  * box for news about Vidalo, blue button underneath (docs/DESIGN_G.md).
  * Plain form POST to /api/scan so it works without JavaScript.
@@ -12,6 +13,7 @@ export async function ScanField({
   defaultPlace = "",
   defaultEmail,
   emailInvalid = false,
+  identityInvalid = false,
   namePlaceholder,
   button,
   note = true,
@@ -25,6 +27,8 @@ export async function ScanField({
   defaultEmail?: string;
   /** /scan/kies came back with ?fout=mail: say so under the address field. */
   emailInvalid?: boolean;
+  /** /scan/kies came back with ?fout=herken: say so under the postcode / website field. */
+  identityInvalid?: boolean;
   namePlaceholder?: string;
   button?: string;
   note?: boolean;
@@ -32,7 +36,7 @@ export async function ScanField({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const { copy } = await getI18n();
+  const { copy, href } = await getI18n();
   const s = copy.scanField;
   return (
     <form action="/api/scan" method="post" className={`flex w-full flex-col gap-2.5 ${className}`} style={style}>
@@ -63,6 +67,29 @@ export async function ScanField({
           className="h-[58px] w-[110px] border-0 border-l-[1.5px] border-ink bg-white px-4 text-[16px] placeholder:text-muted focus:outline-none sm:w-[130px]"
         />
       </div>
+      <label htmlFor={`${id}-identity`} className="sr-only">
+        {s.identityLabel}
+      </label>
+      <input
+        id={`${id}-identity`}
+        name="identity"
+        type="text"
+        required
+        autoCapitalize="none"
+        spellCheck={false}
+        placeholder={s.identityPlaceholder}
+        aria-invalid={identityInvalid || undefined}
+        aria-describedby={`${id}-identity-hint${identityInvalid ? ` ${id}-identity-error` : ""}`}
+        className="scan-box h-[58px] w-full rounded-btn border-[1.5px] border-ink bg-white px-4 text-[16px] placeholder:text-muted focus:outline-none"
+      />
+      {identityInvalid && (
+        <p id={`${id}-identity-error`} className="text-[14px] text-rood">
+          {s.identityInvalid}
+        </p>
+      )}
+      <p id={`${id}-identity-hint`} className="text-[13px] leading-[1.45] text-muted sm:text-[14px]">
+        {s.identityHint}
+      </p>
       <label htmlFor={`${id}-email`} className="sr-only">
         {s.emailLabel}
       </label>
@@ -92,6 +119,14 @@ export async function ScanField({
         {button ?? s.button}
       </button>
       {note && <p className="text-[14px] text-muted">{s.note}</p>}
+      {/* Always, also where the note is off: the form asks for an address and maybe a home address (art. 13 AVG). */}
+      <p className="text-[13px] text-muted sm:text-[14px]">
+        {s.privacy[0]}{" "}
+        <a href={href("/privacy")} className="underline underline-offset-2">
+          {s.privacy[1]}
+        </a>
+        .
+      </p>
     </form>
   );
 }
