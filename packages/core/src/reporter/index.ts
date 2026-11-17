@@ -439,6 +439,8 @@ export async function sendFollowUp(businessId: string, day: 7 | 21): Promise<Mai
       wrongAnswers: findings.length,
       totalAnswers,
       online: isOnlineProfile(lastRun?.profile),
+      notListed: !business.googlePlaceId,
+      profile: lastRun?.profile ?? null,
       example,
       links: { dashboardUrl: dashboardUrl(business), resultUrl: resultUrl({ ...business, scanRunId: lastRun?.id }), unsubscribeUrl: unsubscribeUrl(business) },
       priceSetupEur: PRICE_SETUP,

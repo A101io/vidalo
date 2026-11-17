@@ -47,3 +47,18 @@ Fixed in this round: CMP-04 (the line itself), CMP-09 (wording: "We vonden dit b
 Open: QA-R2-04 (P2) the day-7/21 follow-up mail quotes a wrong answer and could carry the line too; QA-R2-01 (P2) the mail lab has no local unlisted journey; QA-R2-02 the page reads today's business record, not the one at scan time.
 
 Checks: `pnpm -r typecheck`; `pnpm -r test` (core 1475, worker 52); `e2e:mock`; Playwright free-check + scan-identity, one worker, 20/20. Not checked: the line in a browser for a local unlisted business (mock mode cannot reach it; covered by the view and wiring tests), paid reports, PgDb.
+
+## Round 3: AC-10, the line in the follow-up mails (17 Nov 2026)
+
+Verdict: SHIP. QA, security, compliance (sections "Round 3" in qa.md, security.md, compliance.md). No P0.
+
+Fixed in this round:
+- AC-10: day-7 and day-21 follow-ups carry the namesake line under the quoted answer (`followUpEmail`, `sendFollowUp`); QA added ordering assertions (line after the quote, before the button).
+- CMP-10 (P1, older than 005): day 21 claimed "We hebben het vandaag opnieuw gecontroleerd. Het staat er nog." while no check runs before it (worker `cron.ts` only queues the mail). Copy no longer claims it, NL and EN: subject "Drie weken geleden: …", headline "… zei …", intro without the claim. Option (a), a real recheck before the mail, costs a scan per non-customer and is Julian's call.
+- CMP-11 (P1): for a business without a listing the wrong value stays out of subject, preview and headline; it stays in the body, right above the namesake line.
+- CMP-12 (P2): day-7 intro no longer says "Niet één keer, elke keer" above "(3 van de 10 keer)".
+- `docs/MESSAGING.md` day-21 subject updated.
+
+Open: QA-R3-01 (P2) the mail lab shows the line in no follow-up (with QA-R2-01); QA-R3-02 (P3) the follow-up reads today's place id (with QA-R2-02).
+
+Checks: `pnpm -r typecheck`; `pnpm -r test` (core 1537, worker 52; template snapshots updated for the new follow-up copy only); `e2e:mock`; `mail:lab`. Controls shown red: the wiring (`notListed` forced), the inbox rule (`quoted = w`) on day 7 and 21.

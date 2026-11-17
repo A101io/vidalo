@@ -114,3 +114,7 @@ Tone, layout and feature value. Compliance blocks on law, and files P1s on the r
 - A field that may hold a sole trader's home address (postcode + house number) carries, at the field, what it is for, that it is not kept, and a link to the privacy statement; the hint alone is not the art. 13 first layer (CMP-02).
 - An escape hatch that runs a check "as typed" says so on the result, so a namesake's answers are not presented as the requester's (CMP-04).
 - A qualifier on a result is scoped by the risk, not by where its first wording fits: on 005 the namesake line was left off online reports because it named Google, while online questions use the name alone and carry the larger risk; give that branch its own wording instead (CMP-08).
+
+## Learned (Vidalo, 17 Nov 2026, 005 round 3)
+- A qualifier a result needs also governs the inbox layer: a commercial mail's subject and preheader do not quote a value that only the body qualifies (namesake, CMP-11).
+- A sentence in an automated mail that says an action happened ("we checked it again today") is traced to the job that performs it; the day-21 follow-up claimed a re-check that never ran (CMP-10).

@@ -61,3 +61,24 @@ Checked and holding:
 - **Tests.** `namesake.test.ts` + `report-namesake.test.ts`: 6 passed (`DATABASE_URL=`).
 
 Standing list: nothing general learned; `docs/process/checklists/security.md` not amended.
+
+## Round 3: AC-10 (17 Nov 2026)
+
+Scope: the uncommitted diff on `claude/namesake-followup` that adds the namesake line to the day-7 and day-21
+follow-up mails (`reporter/index.ts` `sendFollowUp`, `reporter/templates.ts` `followUpEmail`).
+
+**No findings. No P0, nothing blocks the gate.**
+
+Checked and holding:
+
+- **No user-controlled text.** The new note is `namesakeLine(profile, copy.result)`, which returns one of two fixed
+  copy strings (`namesake` / `namesakeOnline`) or null; nothing from the profile, name, town or typed identity is
+  interpolated. It renders as a `note` block: `linkify` → `esc` in HTML (`layout.ts:56-57`), plain text in the text part.
+- **Recipient unchanged.** The diff adds only `notListed: !business.googlePlaceId` and `profile: lastRun?.profile ?? null`
+  to the template data; who `sendFollowUp` mails, and when, is untouched.
+- **Unsubscribe path unchanged.** `links.unsubscribeUrl` is built by `unsubscribeUrl(business)` exactly as before.
+- **Neutral/online rules.** `namesakeLine` returns null for a neutral profile and the online string for an online one,
+  the same rule as AC-9; it discloses only that Google does not list the business, which the report already says.
+- **Tests.** `namesake.test.ts` + `namesake-wiring.test.ts`: 10 passed (`DATABASE_URL=`).
+
+Standing list: nothing general learned; `docs/process/checklists/security.md` not amended.

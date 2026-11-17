@@ -157,3 +157,65 @@ during the round; that is the concurrent compliance/security work, not QA.)
   model would return.
 - **Paid (`kind: full`) reports and their baseline mail.** The line is kind-agnostic in both places; not run.
 - **PgDb.** `googlePlaceId` is mapped in `pg.ts:73`; not run against Postgres this round.
+
+## Round 3: AC-10 (17 Nov 2026)
+
+Scope: AC-10, the namesake line in the day-7 and day-21 follow-up mails. Branch `claude/namesake-followup`, uncommitted
+(`templates.ts` `followUpEmail` gets `notListed` + `profile` and adds `namesakeLine(...)` as a note after the example card;
+`reporter/index.ts` `sendFollowUp` passes `notListed: !business.googlePlaceId`, `profile: lastRun?.profile ?? null`).
+All runs with `DATABASE_URL=` (MemDb). Nothing committed, pushed or sent.
+
+### Acceptance
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-10 | **PASS** | Same signal: `sendFollowUp` uses `!business.googlePlaceId`, as `sendBaselineSummary` (`reporter/index.ts:283`) and the page (`notListedOf`, `page.tsx:54`). Same online/neutral rules: the template calls the shared `namesakeLine` (`shared/checked-as.ts:25`), the function the page (`report.ts:545`) and the first mail use. `namesake.test.ts` "the namesake line in the follow-up mails": day 7 and 21, local unlisted NL + EN carry `copy.result.namesake`, online carries `namesakeOnline` and not the Google sentence, listed and neutral carry none. `namesake-wiring.test.ts` "QA-R2-04 wiring": through `runScan` → `sendFollowUp` → the written .eml, the line is there without a place id and absent with one, day 7 and 21. Placement: the line comes after the quoted answer ("ChatGPT zei: …") and before "Bekijk je volledige resultaat" (assertion added this round). Rendered at 375 px, NL day 7 and 21, EN day 21: grey note directly under the example card, above the button; no overflow. `pnpm -r typecheck` green; `pnpm -r test` core 1533 passed / 23 skipped, worker 52 passed. |
+
+**The three never disagree on the profile.** `scan_run.profile` is written once, at insert (`scanner/index.ts:291`,
+`pg.ts:461`; no update path writes it). The report's `profile` is `profileSummary(scanRun.profile)` both when stored by the
+scan (`:411` → `:496`) and when rebuilt (`buildReport`, `:558`); `profileSummary` copies `mode` and `source`, the only
+two fields `namesakeLine` reads (`isNeutralProfile`, `mode === "online"`). The first mail reads the report's profile
+(`notFoundStats` → `r.profile`), the page reads the report, the follow-up reads `lastRun.profile` of the same run its
+button links to (`resultUrl({ scanRunId: lastRun.id })`). A run with no profile gives `null`/`undefined` in all three,
+which `namesakeLine` reads alike (the local sentence).
+
+### Controls
+
+Each change made to the source, the tests run, the file restored; `git diff` compared with a copy taken before: identical.
+
+| # | Guarantee | Went red | What I changed |
+|---|---|---|---|
+| K1 | Day-7 mail carries the line | `namesake.test.ts` day 7, `namesake-wiring.test.ts` day 7 | removed `...namesakeNote` from the day-7 blocks |
+| K2 | Day-21 mail carries the line | same, day 21 | removed `...namesakeNote` from the day-21 blocks |
+| K3 | Listed business gets no line | `namesake-wiring.test.ts` day 7 + 21 | `sendFollowUp` `notListed: true` |
+| K4 | Unlisted business gets the line | `namesake-wiring.test.ts` day 7 + 21 | `sendFollowUp` `notListed: false` |
+| K5 | Follow-up uses the run's profile | **not in the two namesake files (10/10 green)**; full core suite: `mail-online.test.ts:222` "the follow-ups of the same business say nothing about listings either" | `sendFollowUp` `profile: null` |
+| K6 | Template applies the online/neutral rules | `namesake.test.ts` day 7 + 21 | `namesakeLine(null, …)` in `followUpEmail` |
+| K7 | Line sits under the quoted answer | **nothing went red before this round (full suite 1534 green)**; red after the assertion added below (day 7 and day 21 each) | moved `...namesakeNote` above the example cards, day 7 and day 21 separately |
+
+### Tests added this round (keep them)
+
+- `packages/core/test/namesake-wiring.test.ts`, "QA-R2-04 wiring" loop: three assertions that the line comes after
+  "ChatGPT zei:" and before "Bekijk je volledige resultaat". Without them the placement half of AC-10 had no test (K7).
+
+### Findings
+
+None blocks. No new P0/P1.
+
+| ID | Sev | Claim | Evidence | Proposed fix | Cost |
+|---|---|---|---|---|---|
+| QA-R3-01 | P2 | QA-R2-01 now covers the follow-ups too: the mail lab shows the namesake line in no mail, so the day-7/21 layout with the line can only be seen by a hand render. | `out/mail-lab/mails.json` after `DATABASE_URL= pnpm mail:lab`: 12 `followup_7`/`followup_21` mails (NL + EN), 0 contain "We vonden dit bedrijf niet op Google" / "We did not find this business on Google". Layout checked instead from `followUpEmail` HTML rendered from a real mock run (unlisted, local profile) at 375 px. | With the QA-R2-01 journey (unlisted, local profile, free run) also enqueue `followup_7` and `followup_21` for it (`UNSUBSCRIBE_SECRET` set, a `REPORT_EMAIL_EVENT` row as in `namesake-wiring.test.ts`), and have the lab's check assert `copy.result.namesake` in those two. | 20 min on top of QA-R2-01 |
+| QA-R3-02 | P3 | QA-R2-02 (signal read at send time, not scan time) applies to the follow-ups as well: a business whose `googlePlaceId` is filled between the first mail and day 7 gets the line in the first mail and not in the follow-up. Page and follow-up agree with each other (both read the record now). | `reporter/index.ts:442` reads `business.googlePlaceId` when the job runs. | Part of the QA-R2-02 fix: use the run's stored `listed` in `sendFollowUp` too (`!lastRun.profile?.listed`, falling back to `!business.googlePlaceId`). | included in QA-R2-02 |
+
+Not a finding: the no-example branches of `followUpEmail` ("Nog steeds 1 fouten", "1 antwoorden … niet klopten") read
+wrong for one finding, but `sendFollowUp` skips when there are no findings and otherwise always picks an example, so
+those branches never reach a mail. The line placement there (under the intro, above the button) was checked anyway.
+
+### Not tested, and why
+
+- **A real sent follow-up in a mail client.** Mail is not sent from QA; checked as the written .eml (plain part) and
+  the rendered HTML in a browser at 375 px. Dark-mode mail clients not checked.
+- **EN day 7 rendered.** EN day 21 rendered and EN day 7/21 text asserted by `namesake.test.ts`; day-7 EN HTML not looked at.
+- **Online and neutral businesses through `sendFollowUp` in the namesake files.** Covered by `mail-online.test.ts:222`
+  (K5) and at template level by `namesake.test.ts`; the wiring test runs the local profile only.
+- **PgDb.** Not run against Postgres this round; `scan_run.profile` is inserted once (`pg.ts:461`) and mapped back.
