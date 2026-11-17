@@ -5,13 +5,13 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | **3 build, night 1 done 2026-11-16** (BE-01, FE-01, FE-02, BE-03 built, PR #136 open as draft). **Left: BE-02** (complex, Opus night). Evidence: `04-build.md` |
+| Phase | **3 build done 2026-11-17** (night 1: BE-01, FE-01, FE-02, BE-03; night 2: BE-02). PR #136 open, not merged. **Next: verify round 1** (phase 4). Evidence: `04-build.md` |
 | Started | 2026-11-12 |
 | Design reviewed | none (no new layout; copy inside existing design G components) |
 | Design gate rounds used | 0 of 2 (skipped) |
 | Verify rounds used | 0 of 2 |
-| Open P0s | none. F-001 (compliance, P0 against the design: order confirmation inside the welcome mail) is folded into the design (ADR-0008, BE-02). Two P1s are **P0 if observed** in phase 4: F-009 (free plan without a Stripe key), F-020 (add-on charged without a Scan); both fixed in BE-02 |
-| Waiting on Julian | J-1…J-9 below; none blocks the build. J-3 (F-004) and J-4 (F-021) can block **launch** |
+| Open P0s | none. F-001 built (order mail from the webhook, ADR-0008). F-009 and F-020 (P0 if observed) built in BE-02 with red→green tests; verify round 1 confirms. New: F-022 (P2, shared `mail.sent` log carries the address) |
+| Waiting on Julian | J-1…J-10 below; none blocks the build. J-3 (F-004) and J-4 (F-021) can block **launch** |
 
 Control Room rows: R4, R7, R8, R9
 
@@ -27,6 +27,7 @@ Control Room rows: R4, R7, R8, R9
 | J-7 | Clean-browser check on vidalo.ai after deploy (`/`, `/en`, `/binnenkort`, `/en/coming-soon`, `/contact`); phone answers on a working day | "Doe ik na de deploy" |
 | J-8 | Deploy (manual) and the launch gate | "Deploy na groen en J-1" |
 | J-9 | Ask the KvK number at checkout as B2B evidence? (F-008) | "Nee, als J-6 laat zien dat het btw-nummer verplicht is" |
+| J-10 | Order mail for Scan + Monthly: only "Vidalo Monthly verlengt elke maand vanzelf…", not also "Vidalo Scan is een eenmalige opdracht. Er verlengt niets." (the two contradict each other in one mail). Built that way in BE-02 | "Goed zo" |
 
 ## Phase log
 | Date | Phase | What happened | Who |
@@ -36,6 +37,7 @@ Control Room rows: R4, R7, R8, R9
 | 2026-11-15 | 1 shape | 02-architecture.md (contract 003.1): copy keys NL/EN, `COMPANY` source, order mail from the webhook, interface contract, file ownership, test plan; ADR-0008, ADR-0009; tickets BE-01, FE-01, FE-02, BE-02 (complex), BE-03, 2.75 d; Julian items J-1…J-9; proposed complaints article for counsel. Code read at 1cf3de5 | architect (think run) |
 | 2026-11-15 | 1 shape | checklists/security.md (SEC-01…17, no P0 against the design; SEC-01/02/05/10/11 P0 if observed) and checklists/compliance.md (COMP-01…42; B2B position checked: holds on conditions; one P0 against the design, F-001; launch hard-stop candidates F-004, F-021) | security, compliance (think run) |
 | 2026-11-16 | 3 build | Night 1 (unattended build run): BE-01 copy keys, `COMPANY`, `copy-claims.test.ts`; FE-01 complaint paragraph + `company-details.spec.ts`; FE-02 card total, reminders sentence, `no-preticked-boxes.test.ts`; BE-03 price surfaces + checkout-consent tests. Core 1436 tests, worker 52, e2e:mock and mail:lab OK. BE-02 not started | build run |
+| 2026-11-17 | 3 build | Night 2 (unattended, Opus): merged main (#137, two copy conflicts kept both); BE-02 built: order mail queued by the webhook for all plans (paid/processing, once per session), sender, template NL/EN, required kind, worker case, mail lab rules, F-009 and F-020 in the checkout route. Core 1518 passed, worker 52, e2e:mock OK, mail:lab OK (36/36 kinds). Build done | build run |
 | 2026-11-15 | 1 shape | F-001…F-021 into findings.md; F-001 (P0) folded into ADR-0008/BE-02; F-002, F-003, F-005, F-009, F-010, F-017, F-018, F-020 folded into tickets (Amendment 1 of the architecture); F-004, F-006, F-008, F-013, F-021 to Julian | delivery-lead (think run) |
 
 ## Skipped phases
