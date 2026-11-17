@@ -225,7 +225,7 @@ describe("email templates", () => {
 
   it("follow-ups use the brief's subjects", () => {
     expect(all.followup7!.subject).toBe("3 antwoorden over Bakkerij Jansen kloppen niet");
-    expect(all.followup21!.subject).toBe('Nog steeds "10:00 tot 14:00"');
+    expect(all.followup21!.subject).toBe('Drie weken geleden: "10:00 tot 14:00"');
     expect(all.followup7!.text).toContain("149 euro eenmalig");
     // Commercial mail: both follow-ups carry the opt-out link.
     for (const m of [all.followup7!, all.followup21!]) expect(m.text).toContain("Afmelden: https://vidalo.io/afmelden?b=b1&t=tok");
@@ -360,7 +360,7 @@ describe("email templates in English", () => {
     expect(allEn.baseline!.text).toContain("On 2 October 2026 we put 100 questions about Bakkerij Jansen to ChatGPT");
     expect(allEn.baseline!.text).toContain("€149 once, monitoring €49 a month");
     expect(allEn.baselinePaying!.text).toMatch(/- Around \d+ (October|November) 2026: Your next monthly check\./);
-    expect(allEn.followup21!.subject).toBe('Still "10:00 to 14:00"');
+    expect(allEn.followup21!.subject).toBe('Three weeks ago: "10:00 to 14:00"');
     expect(allEn.report!.subject).toBe("Bakkerij Jansen in October 2026: orange, 2 errors found, 1 fixed, 1 in progress");
     expect(allEn.baselineNotFound!.text).toContain("ChatGPT found nothing about the opening hours on Sunday (8 of 10 times)");
   });

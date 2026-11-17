@@ -225,7 +225,7 @@ Hoi,
 
 3 van de 12 antwoorden over Bakkerij Jansen kloppen niet
 
-Een week geleden controleerden we wat AI over Bakkerij Jansen zegt. Een klant die het vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert.
+Een week geleden controleerden we wat AI over Bakkerij Jansen zegt. Een klant die het vraagt, kan dit antwoord krijgen, tot de bron verandert. Hoe vaak, staat bij het antwoord.
 
 Bijvoorbeeld
 
@@ -253,13 +253,13 @@ Geen mails meer hierover? Afmelden: https://vidalo.io/afmelden?b=b1&t=tok
 `;
 
 exports[`email templates > snapshots > followup21 1`] = `
-"Nog steeds "10:00 tot 14:00"
+"Drie weken geleden: "10:00 tot 14:00"
 
 Hoi,
 
-ChatGPT zegt nog steeds "10:00 tot 14:00"
+ChatGPT zei "10:00 tot 14:00"
 
-Drie weken geleden zagen we dat ChatGPT "10:00 tot 14:00" zegt over de openingstijden op zondag van Bakkerij Jansen. We hebben het vandaag opnieuw gecontroleerd. Het staat er nog.
+Drie weken geleden zagen we dat ChatGPT "10:00 tot 14:00" zegt over de openingstijden op zondag van Bakkerij Jansen.
 
 Over: de openingstijden op zondag
 ChatGPT zei: 10:00 tot 14:00 (7 van de 10 keer)
@@ -673,7 +673,7 @@ Hi,
 
 3 of the 12 answers about Bakkerij Jansen are wrong
 
-A week ago we checked what AI says about Bakkerij Jansen. A customer who asks gets this answer. Not once, every time, until the source changes.
+A week ago we checked what AI says about Bakkerij Jansen. A customer who asks can get this answer, until the source changes. How often is shown with the answer.
 
 For example
 
@@ -701,13 +701,13 @@ No more emails about this? Unsubscribe: https://vidalo.io/en/unsubscribe?b=b1&t=
 `;
 
 exports[`email templates in English > snapshots > en followup21 1`] = `
-"Still "10:00 to 14:00"
+"Three weeks ago: "10:00 to 14:00"
 
 Hi,
 
-ChatGPT still says "10:00 to 14:00"
+ChatGPT said "10:00 to 14:00"
 
-Three weeks ago we saw that ChatGPT says "10:00 to 14:00" about the opening hours on Sunday for Bakkerij Jansen. We checked it again today. It is still there.
+Three weeks ago we saw that ChatGPT says "10:00 to 14:00" about the opening hours on Sunday for Bakkerij Jansen.
 
 About: the opening hours on Sunday
 ChatGPT said: 10:00 to 14:00 (7 of 10 times)

@@ -717,12 +717,20 @@ export interface FollowUpData {
   priceMonitorEur: number;
   online?: boolean;
   lang?: Lang;
+  /** Google does not list the business: the quoted answer may be about a namesake (shared/checked-as.ts namesakeLine). */
+  notListed?: boolean;
+  profile?: ProfileSummary | null;
 }
 
 export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
   const lang = d.lang ?? "nl";
   const M = copyFor(lang).mails;
+  // Under the quoted answer, like the report and the first mail (feature 005, AC-9, QA-R2-04).
+  const namesake = d.notListed ? namesakeLine(d.profile, copyFor(lang).result) : null;
+  const namesakeNote = namesake ? [{ kind: "note" as const, text: namesake }] : [];
   const w = d.example ? findingWords(d.example, lang) : null;
+  // In the inbox (subject, preview, headline) the line cannot follow the quote: for a possible namesake the value stays in the body (CMP-11).
+  const quoted = namesake ? null : w;
   const engine = d.example ? engineName(d.example.engine) : "ChatGPT";
   const example = d.example ? exampleCards([d.example], 1, lang) : [];
   const name = d.business.name;
@@ -732,11 +740,12 @@ export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
     return renderMail({
       lang,
       subject: F.subject(d.wrongAnswers, name),
-      preheader: w ? F.preheader(engine, w.wrong, w.what, w.correct) : F.preheaderPlain,
+      preheader: quoted ? F.preheader(engine, quoted.wrong, quoted.what, quoted.correct) : F.preheaderPlain,
       headline: F.headline(d.wrongAnswers, d.totalAnswers, name),
       blocks: [
         { kind: "p", text: F.intro(name) },
         ...(example.length ? [{ kind: "cards" as const, title: F.example, items: example }] : []),
+        ...namesakeNote,
         { kind: "p", text: F.selfFix },
         cta,
         howWeFix(lang, d.online === true),
@@ -747,12 +756,13 @@ export function followUpEmail(d: FollowUpData, day: 7 | 21): Mail {
   const F = M.followUp.day21;
   return renderMail({
     lang,
-    subject: w ? F.subject(w.wrong) : F.subjectPlain(d.wrongAnswers, name),
+    subject: quoted ? F.subject(quoted.wrong) : F.subjectPlain(d.wrongAnswers, name),
     preheader: F.preheader,
-    headline: w ? F.headline(engine, w.wrong) : F.headlinePlain(d.wrongAnswers, name),
+    headline: quoted ? F.headline(engine, quoted.wrong) : F.headlinePlain(d.wrongAnswers, name),
     blocks: [
       { kind: "p", text: F.intro(w ? F.seen(engine, w.wrong, w.what, name) : F.seenPlain(d.wrongAnswers, name)) },
       ...(example.length ? [{ kind: "cards" as const, items: example }] : []),
+      ...namesakeNote,
       cta,
       { kind: "note", text: F.last },
     ],

@@ -10,10 +10,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "../src/db";
-import { setDb } from "../src/shared";
+import { REPORT_EMAIL_EVENT, setDb } from "../src/shared";
 import { copy } from "../src/copy/index.js";
 import { buildReport, mockCandidate, prepareBusiness, runScan } from "../src/scanner";
-import { sendBaselineSummary } from "../src/reporter";
+import { sendBaselineSummary, sendFollowUp } from "../src/reporter";
 import { buildReportView } from "../../../apps/web/lib/report";
 
 const NAME = "Bakkerij Vloedlijn";
@@ -58,4 +58,30 @@ describe("AC-9 wiring: page and mail agree on the namesake line", () => {
     expect(view.namesake).toBeNull();
     expect(mail).not.toContain(LINE);
   });
+});
+
+describe("QA-R2-04 wiring: the follow-up mails carry the line on the same signal", () => {
+  async function followUp(placeId: string | null, day: 7 | 21) {
+    process.env.UNSUBSCRIBE_SECRET ??= "test-secret";
+    const { report } = await localRun(placeId);
+    // The free check's requester, as the form stores it (shared/free-check.ts): the follow-up goes there.
+    await db.logEvent(report.business.id, REPORT_EMAIL_EVENT, { email: "vraagt@example.nl", lang: "nl", marketing: false });
+    const res = await sendFollowUp(report.business.id, day);
+    return res?.file ? plain(await readFile(res.file, "utf8")) : null;
+  }
+  for (const day of [7, 21] as const) {
+    it(`day ${day}: with the line without a listing, without it with one`, async () => {
+      const without = await followUp(null, day);
+      expect(without, "the mock check found nothing to follow up on").not.toBeNull();
+      expect(without).toContain(LINE);
+      // AC-10: under the quoted wrong answer, before the button (QA round 3, control K7).
+      const quoted = without!.indexOf("ChatGPT zei:");
+      expect(quoted, "the example card quotes the answer").toBeGreaterThan(-1);
+      expect(without!.indexOf(LINE)).toBeGreaterThan(quoted);
+      expect(without!.indexOf(LINE)).toBeLessThan(without!.indexOf("Bekijk je volledige resultaat"));
+      db = new MemDb();
+      setDb(db);
+      expect(await followUp("ChIJ-test-place", day)).not.toContain(LINE);
+    });
+  }
 });

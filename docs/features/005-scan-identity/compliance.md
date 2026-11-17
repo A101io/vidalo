@@ -94,3 +94,42 @@ P3. Nothing needs a lawyer.**
 
 - `docs/process/checklists/compliance.md`, "Learned (Vidalo, 16 Nov 2026, 005 phase 4)": a
   qualifier is scoped by the risk, not by where its wording fits (CMP-08).
+
+## Round 3: AC-10
+
+Reviewer: compliance agent, 17 Nov 2026. Not legal advice. Scope: the uncommitted change on
+`claude/namesake-followup` (`reporter/index.ts` `sendFollowUp`, `reporter/templates.ts`
+`followUpEmail`, AC-10 in `01-brief.md`, the two test files), read with the day-7/day-21 copy
+(`copy/index.ts:3451-3471`, `en.ts:3342-3361`) and the cron that sends them (`apps/worker/src/cron.ts`
+`enqueueFollowUps`). Tests run: `DATABASE_URL= pnpm --filter @vidalo/core exec vitest run
+test/namesake.test.ts test/namesake-wiring.test.ts test/legal.test.ts` → 34/34 green. Both mails
+were also rendered as text for a local, unlisted business with an "existence" finding (temporary
+test, removed); nothing was sent.
+
+**Verdict: AC-10 met; closes QA-R2-04 as written. No P0 from this change. One line is enough in
+the body, not in the inbox: two P1s, one of them pre-existing and more serious than the namesake
+question (CMP-10, the day-21 mail claims a re-check that never runs). One P2. Nothing needs a
+lawyer; CMP-10 needs a fix, not an opinion.**
+
+| Check | Result | Evidence |
+|---|---|---|
+| Same signal as AC-9 | yes. `notListed: !business.googlePlaceId`, profile from the last finished run, both through `namesakeLine`, so local gets `namesake`, online `namesakeOnline` (no Google named, BE-08), neutral none. A run without a profile falls to the local wording, as in the report mail | `reporter/index.ts:442-443`; `templates.ts:729`; `shared/checked-as.ts:25-28` |
+| Placement | directly under the quoted answer card, before "Zelf oplossen" / the price CTA on day 7 and before the CTA on day 21: the reader meets it before the offer. Without an example card it follows the intro. Same `note` style (14px, muted) as in the report mail, accepted in round 2 | `templates.ts:745-746, 762-763`; `layout.ts:68-69` |
+| Wording | unchanged from AC-9 (round 2 and CMP-09 wording), NL and EN equal; fits the commercial context, no new claim | `copy/index.ts:1587-1589`, `en.ts:1542-1543` |
+| Commercial-mail rules (Tw 11.7, AVG) | untouched: the unsubscribe link, `List-Unsubscribe` one-click and the opt-out check still precede the send; no new data, no new recipient; the line is derived from `google_place_id`, already held. `copy.result` is outside the legal lock | `reporter/index.ts:415-424, 451-453`; `test/legal.test.ts` green |
+| BW 6:194, body | one line is enough in the body. The test is the overall impression on the addressee (a business owner who asked for this check); the qualifier sits under the very answer it qualifies, in the same mail as the result link | rendered text |
+| BW 6:194, inbox | not enough. Subject and preheader are read without the body, and they carry the quoted value with no qualifier. See CMP-11 | `templates.ts:740-741, 758-760` |
+
+| ID | Sev | Claim | Evidence | Proposed fix | Cost |
+|---|---|---|---|---|---|
+| CMP-10 | P1 | The day-21 mail says "We hebben het vandaag opnieuw gecontroleerd. Het staat er nog." (preheader and intro; EN "We checked it again today. It is still there."), and its subject and headline say "Nog steeds". No check runs: the cron enqueues only the mail, and `sendFollowUp` quotes the open findings of the free check from 21 days ago. A false statement of fact in a commercial mail that sells a €149 fix is misleading advertising (BW 6:194; 6:193c where the recipient is a consumer). With AC-10 it now also sits right above "Een antwoord kan … over een ander … gaan", which reads as a contradiction. Pre-existing since v0.1 (`acd8d04`), not introduced by AC-10, hence P1 and not a 005 gate. My one line of disagreement for Julian: I would treat this as a hard stop **for the day-21 mail itself**; if the production cron is sending follow-ups, fix it before the next day-21 run | `apps/worker/src/cron.ts:151-167` (no scan enqueued); `reporter/index.ts:425-434` (findings read, no scan); `copy/index.ts:3462-3467`, `en.ts:3353-3358` | Two readings: (a) make the claim true by running a recheck before the mail (costs a scan per non-customer; Julian's call), or (b) stop claiming it. I recommend (b), copy only, both languages. NL: `subject: (wrong) => \`Drie weken geleden: "${wrong}"\``, `subjectPlain: (n, name) => \`Drie weken geleden: ${n} ${n === 1 ? "fout" : "fouten"} over ${name}\``, `preheader: "Dit is de laatste mail hierover."`, `headline: (engine, wrong) => \`${engine} zei "${wrong}"\``, `headlinePlain: (n, name) => \`${n} ${n === 1 ? "fout" : "fouten"} over ${name}\``, `intro: (seen) => \`Drie weken geleden zagen we dat ${seen}.\``. EN: `Three weeks ago: "${wrong}"`, `Three weeks ago: ${n} error(s) about ${name}`, `"This is the last email about it."`, `${engine} said "${wrong}"`, `${n} error(s) about ${name}`, `Three weeks ago we saw that ${seen}.`. Adjust the test that matches the subject (`namesake-wiring.test.ts` mail file name only) | 20 min |
+| CMP-11 | P1 | For a business without a listing the inbox layer carries the quoted value unqualified: day-7 preheader "ChatGPT zegt "X" over … Het is Y.", day-21 subject `Nog steeds "X"` and headline `ChatGPT zegt nog steeds "X"`. The example is the finding with the highest frequency of any fact, so it can be "definitief gesloten" (rendered: subject `Nog steeds "definitief gesloten"` in `namesake-wiring.test.ts`'s mock run), which is the fact a closed namesake produces most readily. A sole trader who reads only the inbox line gets an alarming claim about their business from a seller, with the qualifier unseen. Not a hard stop: the body qualifies it, and the recipient asked for the check | `templates.ts:741` (day-7 preheader), `758-760` (day-21 subject, headline); `reporter/index.ts:436` (example by frequency) | In `followUpEmail`, when `namesake` is set, do not quote the value in the inbox layer: `const quoted = namesake ? null : w;` and use `quoted` for the day-7 `preheader` and the day-21 `subject` and `headline` (falls to `preheaderPlain`, `subjectPlain`, `headlinePlain`). Keep `w` for the card and the day-21 intro, which the line follows directly. Extend `namesake.test.ts`: with `notListed` and an example, subject and preheader do not contain the wrong value. Do it together with CMP-10, so `subjectPlain` no longer says "Nog steeds" | 15 min |
+| CMP-12 | P2 | Day-7 intro "Een klant die het vraagt, krijgt dit antwoord. Niet één keer, elke keer, tot de bron verandert." sits above a card that says "(3 van de 10 keer)"; the mail contradicts itself, and for a possible namesake "elke keer" overstates further. Pre-existing | `copy/index.ts:3456`, `en.ts:3347`; rendered text | NL: "Een week geleden controleerden we wat AI over ${name} zegt. Een klant die het vraagt, kan dit antwoord krijgen, tot de bron verandert. Hoe vaak, staat bij het antwoord." EN: "A week ago we checked what AI says about ${name}. A customer who asks can get this answer, until the source changes. How often is shown with the answer." | 5 min |
+
+### Checklist amendments made in this run
+
+- `docs/process/checklists/compliance.md`, "Learned (Vidalo, 17 Nov 2026, 005 round 3)": a
+  qualifier also governs the inbox layer (CMP-11); a mail's "we did X today" is traced to the job
+  that does X (CMP-10).
+- `A101/_OS/playbook/templates/pipeline/checklists/compliance.md`: the same two, general to every
+  venture.
