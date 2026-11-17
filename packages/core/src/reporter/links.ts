@@ -15,7 +15,7 @@ type Lang = "nl" | "en";
 type WithLang = { language?: Lang | null };
 
 /** The first segments a mail links to whose English URL differs (apps/web/lib/lang-paths.ts EN_SLUGS). */
-const EN_SEGMENTS: Record<string, string> = { inloggen: "login", afmelden: "unsubscribe" };
+const EN_SEGMENTS: Record<string, string> = { inloggen: "login", afmelden: "unsubscribe", voorwaarden: "terms" };
 
 /** A route as the code writes it (Dutch) → its URL path in `lang`. API routes have one URL. */
 export function mailPath(route: string, lang: Lang | null | undefined): string {

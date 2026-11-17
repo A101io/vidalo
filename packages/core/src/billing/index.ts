@@ -21,8 +21,10 @@
 import type { BusinessRecord } from "../db/types.js";
 import { getDb, setBusinessStatus } from "../shared/db.js";
 import { log } from "../shared/log.js";
+import { PAID_STATUSES as PAID, queueOrderConfirmation } from "./order-mail.js";
 
 export * from "./lifecycle.js";
+export * from "./order-mail.js";
 
 /** The parts of a Stripe event this module reads; no Stripe SDK needed in core. */
 export interface StripeEventLike {
@@ -44,8 +46,6 @@ export type BillingOutcome =
   | "duplicate"
   | "no_business"
   | "ignored";
-
-const PAID = new Set(["paid", "no_payment_required"]);
 
 function str(v: unknown): string | null {
   if (typeof v === "string" && v) return v;
@@ -158,6 +158,10 @@ async function apply(business: BusinessRecord, event: StripeEventLike): Promise<
   const o = event.data.object;
   switch (event.type) {
     case "checkout.session.completed": {
+      // The order is confirmed when it is placed, paid or still on its way
+      // (ADR-0008), once per session. async_payment_succeeded carries the same
+      // session and does not queue again.
+      await queueOrderConfirmation(business, o);
       if (PAID.has(String(o.payment_status))) {
         await activate(business, o);
         return "activated";

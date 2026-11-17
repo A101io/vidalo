@@ -14,5 +14,20 @@ export const CONTACT = {
   hours: "09:00–17:00",
 } as const;
 
+/**
+ * Who is behind Vidalo, once (feature 003, ADR-0009). Every company line outside
+ * `copy.legal` (footer, owner mails, support replies) is built from this and CONTACT;
+ * `copy.legal.contact` stays hand-written and a test holds the two together.
+ */
+export const COMPANY = {
+  legalName: "A101 B.V.",
+  tradeName: "Vidalo",
+  street: "Factorij 80",
+  postcode: "3071 AV",
+  city: "Rotterdam",
+  kvk: "42057858",
+  vat: "NL869514192B01",
+} as const;
+
 export const telHref = (n: string) => "tel:" + n.replace(/[^\d+]/g, "");
 export const waHref = (n: string) => "https://wa.me/" + n.replace(/\D/g, "");

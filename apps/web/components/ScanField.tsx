@@ -1,4 +1,5 @@
 import { getI18n } from "@/lib/i18n";
+import Link from "next/link";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 /**
@@ -102,7 +103,7 @@ export async function ScanField({
         defaultValue={defaultEmail}
         placeholder={s.emailPlaceholder}
         aria-invalid={emailInvalid || undefined}
-        aria-describedby={emailInvalid ? `${id}-email-error` : undefined}
+        aria-describedby={emailInvalid ? `${id}-email-note ${id}-email-error` : `${id}-email-note`}
         className="scan-box h-[58px] w-full rounded-btn border-[1.5px] border-ink bg-white px-4 text-[16px] placeholder:text-muted focus:outline-none"
       />
       {emailInvalid && (
@@ -110,6 +111,12 @@ export async function ScanField({
           {s.emailInvalid}
         </p>
       )}
+      <p id={`${id}-email-note`} className="text-[13px] leading-[1.45] text-ink-2">
+        {s.reminders.text}{" "}
+        <Link href={href("/privacy")} className="underline">
+          {s.reminders.link}
+        </Link>
+      </p>
       <label className="flex items-start gap-2.5 text-[13px] leading-[1.45] text-ink-2 sm:text-[14px]">
         <input type="checkbox" name="marketing" value="ja" className="mt-[2px] h-4 w-4 shrink-0 accent-[#111827]" />
         <span>{s.marketing}</span>

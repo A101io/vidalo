@@ -8,6 +8,8 @@
  */
 
 import { en } from "./en.js";
+import { PRICES } from "./prices.js";
+import { COMPANY, CONTACT } from "../shared/contact.js";
 import { ownerAreaNl } from "./owner-area.js";
 import { accountSecurityNl } from "./account-security.js";
 
@@ -16,12 +18,7 @@ function joinNl(items: string[]): string {
   return items.length > 1 ? `${items.slice(0, -1).join(", ")} en ${items[items.length - 1]}` : (items[0] ?? "");
 }
 
-export const PRICES = {
-  setupEur: 149,
-  monitorEurPerMonth: 49,
-  extraLocationSetupEur: 99,
-  extraLocationEurPerMonth: 39,
-} as const;
+export { PRICES };
 
 export const copy = {
   brand: "Vidalo",
@@ -69,6 +66,11 @@ export const copy = {
     identityInvalid: "Vul de postcode en het huisnummer in, zoals 3071 AV 80, of de website, zoals www.jouwbedrijf.nl.",
     /** Off by default; a free check is no purchase, so news needs this consent (core/shared/free-check.ts). */
     marketing: "Ik wil af en toe nieuws over Vidalo ontvangen. Afmelden kan in elke mail.",
+    /** Under the email field (ScanField, EmailCapture): the day-7/21 mails, what they are about (feature 003, AC-7, F-003). */
+    reminders: {
+      text: "Je krijgt het rapport in je mail, en na 7 en 21 dagen nog een kort bericht over de uitkomst en wat we voor je kunnen doen. Afmelden kan met één klik.",
+      link: "Zie het privacybeleid.",
+    },
   },
 
   /** Landing page, in the order of docs/DESIGN_G.md. Copy verbatim from docs/design-g/FullG.dc.html. */
@@ -142,7 +144,7 @@ export const copy = {
     },
     snippers: {
       h2: "Het antwoord is uit snippers gebouwd. De helft klopt niet.",
-      body: "AI vertrouwt niet op je website alleen. Het combineert Wikipedia, bedrijvengidsen, nieuwsberichten en een bedrijf met dezelfde naam. In een controle van 10.000 bedrijven klopte bij de helft minstens één antwoord niet; bij 1 op de 3 was het telefoonnummer verkeerd.",
+      body: "AI vertrouwt niet op je website alleen. Het combineert Wikipedia, bedrijvengidsen, nieuwsberichten en een bedrijf met dezelfde naam. In een controle van 10.000 Amerikaanse bedrijven klopte bij de helft minstens één antwoord niet; bij 1 op de 3 was het telefoonnummer verkeerd.",
       examples: [
         { where: "Bakkerij, Centrum", wrong: "“zondag open”", right: "gesloten", source: "ChatGPT · bron: gidsvermelding uit 2022" },
         { where: "Fysiotherapie, Schalkwijk", wrong: "oud nummer", right: "023 535…", source: "Perplexity · bron: telefoonboek" },
@@ -581,7 +583,7 @@ export const copy = {
         name: "Vidalo Scan",
         chip: "Eerste controle gratis",
         audience: "Eén keer alles recht: elke fout uit je controle aangepakt bij de bron, en je gegevens op één plek vastgelegd.",
-        price: "€149",
+        price: `€${PRICES.setupEur}`,
         unit: "eenmalig",
         includes: [
           "Voor elke fout uit de controle: een correctieverzoek aan de bron, of precies wat je zelf moet aanpassen.¹",
@@ -593,16 +595,18 @@ export const copy = {
       },
       monitor: {
         name: "Vidalo Monthly",
-        chip: "Meest gekozen",
+        chip: "Voor wie elke maand wil controleren",
         audience: "Vidalo Scan, en daarna elke maand opnieuw gecontroleerd. Zo duurt een nieuwe fout hooguit een maand.",
-        price: "€49",
+        price: `€${PRICES.monitorEurPerMonth}`,
+        /** The whole price in one line, next to the figure (feature 003, AC-11). */
+        total: `€${PRICES.setupEur} eenmalig + €${PRICES.monitorEurPerMonth} per maand, excl. btw`,
         unit: "per maand",
         includes: [
           "Elke maand dezelfde vragen opnieuw bij ChatGPT, Google AI, Gemini, Perplexity en Claude.",
           "Bij elke nieuwe fout: een correctieverzoek aan de bron, of precies wat je zelf moet aanpassen.¹",
           "Een maandelijks rapport met bewijs van wat er is hersteld.",
         ],
-        limit: "1 vestiging · maandelijks opzegbaar · start met Vidalo Scan (€149 eenmalig)",
+        limit: "1 vestiging · maandelijks opzegbaar · start met Vidalo Scan",
         button: "Begin met de gratis check",
       },
       footnote: "¹ Herstel bij bronnen van derden duurt meestal twee tot vier weken, soms langer. Je ziet in je rapport waar het staat.",
@@ -688,7 +692,7 @@ export const copy = {
         { title: "Informatie", links: [{ label: "Wat we controleren", href: "/hoe-het-werkt#criteria" }, { label: "Vragen", href: "/#vragen" }, { label: "Feiten over Vidalo", href: "/feiten" }, { label: "Contact", href: "/contact" }, { label: "Support", href: "mailto:support@vidalo.ai" }] },
         { title: "Juridisch", links: [{ label: "Algemene voorwaarden", href: "/voorwaarden" }, { label: "Privacybeleid", href: "/privacy" }, { label: "Cookies", href: "/cookies" }] },
       ],
-      legal: "Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · +31 85 109 1393 · Prijzen excl. btw",
+      legal: `Vidalo (onderdeel van ${COMPANY.legalName}) · ${COMPANY.street}, ${COMPANY.postcode} ${COMPANY.city}, Nederland · KvK ${COMPANY.kvk} · btw ${COMPANY.vat} · ${CONTACT.phone} · Prijzen excl. btw`,
       copyright: "© 2026 Vidalo. Alle rechten voorbehouden.",
       reportNote: "Deze rapportlink werkt 30 dagen.",
     },
@@ -741,7 +745,11 @@ export const copy = {
       mail: { h: "Mailen", p: "Voor vragen over Vidalo. Over je account, een rapport of een betaling mail je support; we antwoorden binnen twee werkdagen.", button: "Mail ons", supportLabel: "Support" },
       include: { h: "Handig om mee te sturen", items: ["De naam en plaats van je bedrijf.", "Als het over een rapport gaat: de link van dat rapport.", "Wat je verwachtte, en wat er in plaats daarvan gebeurde."] },
       never: "Stuur nooit een wachtwoord of betaalgegeven mee. Daar vragen we nooit om.",
-      company: "Onze bedrijfsgegevens, ons adres en ons KvK-nummer staan onderaan deze pagina. Post mag naar dat adres; een berichtje is sneller.",
+      company: "Onze bedrijfsgegevens staan onderaan deze pagina: naam, adres, KvK-nummer, btw-nummer en telefoon. Post mag naar dat adres; een berichtje is sneller.",
+      complaint: {
+        h: "Een klacht",
+        p: `Ben je ergens niet tevreden over? Mail ${CONTACT.support} of bel ${CONTACT.phone} op werkdagen van 09:00 tot 17:00, en zeg dat het om een klacht gaat. Je krijgt binnen 5 werkdagen een antwoord met wat we eraan doen.`,
+      },
     },
     home_crumb: "Vidalo",
   },
@@ -2612,7 +2620,7 @@ export const copy = {
       label: "Elke maand controleren",
       body: "Je hebt Vidalo Scan. De herstelde fouten controleren we opnieuw. Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €49 per maand excl. btw, maandelijks opzegbaar.",
       /** No running plan (nothing paid yet, or cancelled). */
-      bodyNone: "Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €49 per maand excl. btw, maandelijks opzegbaar.",
+      bodyNone: `Elke maand alle vragen opnieuw, nieuwe fouten direct aanpakken en een maandrapport hoort bij Vidalo Monthly: €${PRICES.monitorEurPerMonth} per maand excl. btw, maandelijks opzegbaar. Heb je nog geen Vidalo Scan gehad, dan komt daar €${PRICES.setupEur} eenmalig bij.`,
       cta: "Vidalo Monthly toevoegen",
       /** Vidalo Monthly, stopped because a payment failed. */
       pausedCta: "Naar je abonnement",
@@ -2861,7 +2869,7 @@ export const copy = {
         followup: { label: "Na de gratis controle", body: "Twee berichten na je gratis controle over wat we voor je kunnen doen." },
       },
       requiredH: "Deze krijg je altijd",
-      required: "Je welkomstmail, je eerste rapport, stappen die alleen jij kunt zetten, een bericht als we een fout niet kunnen oplossen, en mails over je abonnement en je inlog.",
+      required: "Je welkomstmail, de bevestiging van je bestelling, je eerste rapport, stappen die alleen jij kunt zetten, een bericht als we een fout niet kunnen oplossen, en mails over je abonnement en je inlog.",
       save: "Opslaan",
       saved: "Je keuze is opgeslagen.",
     },
@@ -3199,6 +3207,32 @@ export const copy = {
   mails: {
     hi: "Hoi,",
     regards: "Groet,\nVidalo",
+    /** Order confirmation (feature 003, ADR-0008, built by BE-02): sent from the payment webhook, required mail, no marketing. */
+    order: {
+      subject: (product: string) => `Je bestelling bij Vidalo: ${product}`,
+      preheader: "Wat je bestelde, wat het kost en wat er nu gebeurt.",
+      headline: (business: string) => `Je bestelling voor ${business}`,
+      intro: "Dit is de bevestiging van je bestelling. Bewaar deze mail.",
+      orderTitle: "Je bestelling",
+      orderedOn: (date: string) => `Besteld op ${date}`,
+      lineSetup: (amount: string) => `Vidalo Scan, eenmalig: ${amount} excl. btw`,
+      lineMonthly: (amount: string) => `Vidalo Monthly, per maand: ${amount} excl. btw`,
+      subtotal: (amount: string) => `Samen: ${amount} excl. btw`,
+      vat: (amount: string, rate: string | null) => `Btw${rate ? ` (${rate})` : ""}: ${amount}`,
+      totalPaid: (amount: string) => `Betaald: ${amount}`,
+      totalProcessing: (amount: string) => `Wordt afgeschreven: ${amount}`,
+      processing: "Je betaling per incasso wordt nog verwerkt; dat kan enkele werkdagen duren. We beginnen als ze binnen is.",
+      termsTitle: "Looptijd en opzeggen",
+      termsSetup: "Vidalo Scan is een eenmalige opdracht. Er verlengt niets.",
+      termsMonthly: "Vidalo Monthly verlengt elke maand vanzelf. Opzeggen kan elke maand online onder ‘Abonnement’ in je account, zonder opzegtermijn: de maand die je al betaalde loopt af, daarna betaal je niets meer. Je krijgt dan direct een bevestiging met de einddatum.",
+      startAfterProof: "We beginnen zodra je hebt laten zien dat het bedrijf van jou is, met je Google-account. Lukt dat niet binnen 30 dagen, dan mag je de bestelling ontbinden en krijg je terug wat je betaalde.",
+      startNow: "Je hebt al laten zien dat het bedrijf van jou is, dus we beginnen meteen.",
+      docsTitle: "Wat er geldt",
+      terms: (version: string) => `Algemene voorwaarden (${version.toLowerCase()})`,
+      privacy: "Privacybeleid",
+      invoice: "Je factuur, met de btw apart, krijg je van onze betaaldienst Stripe.",
+      questions: `Vragen over je bestelling? Mail ${CONTACT.support} of bel ${CONTACT.phone}, op werkdagen van 09:00 tot 17:00.`,
+    },
     /** The link that starts a free check (core/shared/scan-confirm.ts); goes to an address nobody has proven yet. */
     scanConfirm: {
       subject: (name: string) => `Bevestig je gratis controle van ${name}`,

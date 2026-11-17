@@ -16,7 +16,8 @@ import { findingWords } from "../shared/facts-en.js";
 import { copyFor, type Lang } from "../copy/index.js";
 import { fixPathForFinding, daysBetween } from "../fixer/paths.js";
 import { cnameTarget, isFallbackHost } from "../publisher/host.js";
-import { confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
+import { baseUrl, confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, mailPath, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
+import { orderLines, orderSubtotal, type OrderConfirmationJob } from "../billing/order-mail.js";
 import { canSignUnsubscribe } from "../shared/unsubscribe.js";
 import { mailAllowed } from "../shared/mail-prefs.js";
 import { sendMail, type MailResult } from "./mail.js";
@@ -26,6 +27,7 @@ import {
   followUpEmail,
   monthLabel,
   monthlyReportEmail,
+  orderConfirmationEmail,
   resolutionNoticeEmail,
   unfixableNoticeEmail,
   welcomeEmail,
@@ -72,6 +74,55 @@ async function deliver(business: BusinessRecord, m: Mail, type: string, extra: R
   // The log names who got it, never the address: an export to the owner must not carry a requester's address (review CMP-03).
   await getDb().logEvent(business.id, `email.${type}`, { to: business.ownerEmail ? "owner" : "requester", subject: m.subject, mode: res.mode, id: res.id, ...extra });
   return res;
+}
+
+/**
+ * As `deliver`, but to the address given, never `business.ownerEmail`: the
+ * order confirmation goes to whoever paid (feature 003, ADR-0008). The event
+ * says "payer", never the address. `lang` is the mail's language, which can
+ * differ from the owner's (the buyer's checkout language).
+ */
+async function deliverTo(business: BusinessRecord, m: Mail, type: string, to: string, lang: Lang, extra: Record<string, unknown> = {}): Promise<MailResult | null> {
+  if (!mailAllowed(business.mailPrefs, type)) {
+    await getDb().logEvent(business.id, "email.skipped", { type, reason: "mail_prefs", ...extra });
+    return null;
+  }
+  const res = await sendMail({ to, subject: m.subject, text: m.text, html: m.html, tags: { type, business: business.slug, lang } });
+  await getDb().logEvent(business.id, `email.${type}`, { to: "payer", subject: m.subject, mode: res.mode, id: res.id, ...extra });
+  return res;
+}
+
+/**
+ * The order confirmation, from the job the payment webhook queued. Once per
+ * Checkout session: a retried job after a send finds `email.order_confirmation`
+ * and stops. The per-line split comes from PRICES only when it adds up to what
+ * Stripe charged; otherwise Stripe's totals alone, and an event says why.
+ */
+export async function sendOrderConfirmation(job: OrderConfirmationJob): Promise<MailResult | null> {
+  const db = getDb();
+  const events = await db.listEvents(job.businessId, 1000);
+  if (events.some((e) => e.type === "email.order_confirmation" && e.payload.sessionId === job.sessionId)) return null;
+  const business = await requireBusiness(job.businessId);
+  const expected = orderSubtotal(job.plan);
+  const lines = job.amounts.subtotal === expected ? orderLines(job.plan) : null;
+  if (!lines) await db.logEvent(business.id, "order_mail.amount_mismatch", { sessionId: job.sessionId, plan: job.plan, expected, charged: job.amounts.subtotal });
+  const lang: Lang = job.lang === "en" ? "en" : "nl";
+  const m = orderConfirmationEmail({
+    lang,
+    business,
+    plan: job.plan,
+    amounts: job.amounts,
+    lines,
+    paid: job.paid,
+    orderedAt: job.orderedAt,
+    ownerVerified: Boolean(business.ownerVerifiedAt),
+    links: {
+      termsUrl: `${baseUrl()}${mailPath("/voorwaarden", lang)}`,
+      privacyUrl: `${baseUrl()}${mailPath("/privacy", lang)}`,
+      accountUrl: `${baseUrl()}${mailPath("/app/abonnement", lang)}`,
+    },
+  });
+  return deliverTo(business, m, "order_confirmation", job.to, lang, { sessionId: job.sessionId });
 }
 
 /** Event the free-check form (and the report page's mail form) logs, with the address and the page's language. */

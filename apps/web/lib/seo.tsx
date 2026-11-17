@@ -70,6 +70,8 @@ export function serviceLd(copy: CopyShape, lang: Lang) {
   const offer = (name: string, price: number, monthly: boolean) => ({
     "@type": "Offer",
     name,
+    // Monthly starts with Vidalo Scan: the start fee belongs to the offer (feature 003, F-002).
+    ...(monthly ? { description: lang === "en" ? `Starts with Vidalo Scan, €${PRICES.setupEur} once, excl. VAT` : `Start met Vidalo Scan, €${PRICES.setupEur} eenmalig, excl. btw` } : {}),
     price: price.toFixed(2),
     priceCurrency: "EUR",
     priceSpecification: {

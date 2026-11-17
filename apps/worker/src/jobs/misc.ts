@@ -11,6 +11,7 @@ import {
   sendFactsReconfirm,
   sendUnfixableNotice,
   sendWelcome,
+  sendOrderConfirmation,
   sendOwnerText,
   factsPageUrl,
   textToHtml,
@@ -85,6 +86,8 @@ export const email: Handler<"email"> = async (p) => {
       return { mode: (await sendUnfixableNotice(p.findingId, p.note))?.mode ?? null };
     case "welcome":
       return { mode: (await sendWelcome(p.businessId))?.mode ?? null };
+    case "order_confirmation":
+      return { mode: (await sendOrderConfirmation(p))?.mode ?? null };
     case "baseline":
       return { mode: (await sendBaselineSummary(p.scanRunId, p.to ? { email: p.to, lang: p.lang === "en" ? "en" : "nl" } : undefined))?.mode ?? null };
     case "report":
