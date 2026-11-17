@@ -19,7 +19,7 @@ import { ASKED_ENGINES, moreQuestionsView, questionSets } from "@vidalo/core/sca
 import { ready } from "@/lib/db";
 import { reportRequester } from "@vidalo/core/reporter";
 import { dateTimeLong } from "@/lib/format";
-import { buildReportView, type BuildViewOptions } from "@/lib/report";
+import { buildReportView, notListedOf, type BuildViewOptions } from "@/lib/report";
 import { DEMO_IDS, DEMO_DOMAIN, DEMO_GREY_DOMAIN, DEMO_ONLINE_DOMAIN, demoGreySources, demoGreyReport, demoOnlineReport, demoReport } from "@/lib/demo";
 import { EmailCapture } from "./EmailCapture";
 import { PrintButton } from "./PrintButton";
@@ -51,7 +51,7 @@ async function load(id: string, copy: CopyShape, viewerBusinessIds: readonly str
   // The domain comes from the Google listing and can be a directory (nlcompanies.org); name it only once the owner is proven.
   // A free report shows what a full check would ask on top (the business's real question set, not an estimate).
   const sets = report.kind === "free" && business && facts ? await questionSets(db, business, facts) : undefined;
-  return { report, opts: { domain: business?.ownerVerifiedAt ? business.domain : null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null }, demo: false, bySlug, sets };
+  return { report, opts: { domain: business?.ownerVerifiedAt ? business.domain : null, website: facts?.website ?? null, googlePlaceId: business?.googlePlaceId ?? null, kvk: business?.kvk ?? null, notListed: notListedOf(business) }, demo: false, bySlug, sets };
 }
 
 /** The businesses of the signed-in viewer (empty when signed out): the only source of "is this the owner's report". */
@@ -143,6 +143,11 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
                   )}
                 </p>
               </div>
+            )}
+            {v.namesake && (
+              <p className="enter max-w-[56ch] text-[14px] text-muted" style={{ "--d": "300ms" } as React.CSSProperties} data-testid="namesake">
+                {v.namesake}
+              </p>
             )}
             <div className="enter flex flex-wrap gap-x-6 gap-y-1 text-[14px] text-muted" style={{ "--d": "320ms" } as React.CSSProperties}>
               {v.engineLines.map((e) => (

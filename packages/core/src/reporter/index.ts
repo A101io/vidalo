@@ -229,6 +229,7 @@ export async function sendBaselineSummary(scanRunId: string, requester?: { email
   const m = baselineSummaryEmail({
     lang: langOf(business),
     business,
+    notListed: !business.googlePlaceId,
     checkedAt: run.finishedAt ?? run.startedAt,
     totalAnswers,
     // The report's own count of wrong answers, like the total and the unchecked answers around it.

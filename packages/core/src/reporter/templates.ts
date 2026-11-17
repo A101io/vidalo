@@ -17,7 +17,7 @@ import { findingWordsNl, hostOfUrl } from "../shared/facts-nl.js";
 import { findingWords } from "../shared/facts-en.js";
 import { FIX_PATHS, NOT_FOUND_PATH, RECOMMENDATION_PATH, fixPathForFinding, type FixPath } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
-import { checkedAsParts } from "../shared/checked-as.js";
+import { checkedAsParts, namesakeLine } from "../shared/checked-as.js";
 import { BRAND, renderMail } from "./layout.js";
 
 export interface Mail {
@@ -360,6 +360,8 @@ export function welcomeEmail(d: WelcomeData): Mail {
 export interface BaselineData {
   /** `plan`: only Vidalo Monthly ("monitor") is promised a monthly check (review CMP-01) */
   business: Pick<Business, "name" | "place"> & { plan?: Business["plan"] };
+  /** Google does not list the business: the mail says answers may be about a namesake (copy.result.namesake). */
+  notListed?: boolean;
   /** a paying customer: the button goes to the account, else to the report page (links.resultUrl) with the offer */
   paying?: boolean;
   offer?: { setupEur: number; monitorEur: number };
@@ -429,6 +431,7 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
   const mq = d.paying ? null : (d.moreQuestions ?? null);
   const K = C.result.competition;
   const checkedAs = online ? checkedAsParts(d.profile, C.result.checkedAs) : null;
+  const namesake = d.notListed ? namesakeLine(d.profile, C.result) : null;
   const per = (d.engineStips ?? []).map((e) => `${engineName(e.engine)}: ${C.stip[e.stip].toLowerCase()}`);
   const recheck = d.findings.map((f) => fixPathForFinding(f).recheckDays).filter((n) => n > 0);
   const headline =
@@ -452,6 +455,8 @@ export function baselineSummaryEmail(d: BaselineData): Mail {
     blocks: [
       { kind: "p", text: B.intro(formatMailDate(d.checkedAt, lang), d.totalAnswers, name, engines) },
       ...(checkedAs ? [{ kind: "note" as const, text: `${checkedAs.line}\n${d.profile?.source === "auto" ? M.online.reading : checkedAs.how}` }] : []),
+      // An online business gets the line without Google (BE-08); a neutral one none (shared/checked-as.ts namesakeLine).
+      ...(namesake ? [{ kind: "note" as const, text: namesake }] : []),
       ...(per.length ? [{ kind: "note" as const, text: M.perAi(per.join(", ")) }] : []),
       {
         kind: "stats",

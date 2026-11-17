@@ -42,6 +42,8 @@ test("AC-4: 'not listed' checks the business as typed, and uses the typed identi
   await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
   // The candidate's own website would say nothing; only the typed one reads as a music business.
   await expect(page.getByText(/Gecontroleerd als: aanbieder van achtergrondmuziek/)).toBeVisible();
+  // An online business without a listing: the namesake line without Google (CMP-08; the local case is in packages/core/test/report-namesake.test.ts).
+  await expect(page.getByTestId("namesake")).toContainText("alleen met de naam");
 });
 
 test("AC-3: the pick page lists street, postcode and website, and nothing starts without the click", async ({ page }) => {

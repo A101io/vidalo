@@ -12,7 +12,7 @@ import type { ReportRowData } from "@/components/ReportRow";
 import type { SourceStatusTone } from "@/components/SourceRow";
 import { questionFor, recommendationQuestionFor, wrongText, correctText, humanValue } from "./questions";
 import { competitionCountsOf, isNeutralProfile, isUncheckedGrey } from "@vidalo/core/types";
-import { checkedAsParts } from "@vidalo/core/shared";
+import { checkedAsParts, namesakeLine } from "@vidalo/core/shared";
 import { reportCounts } from "@vidalo/core/progress";
 import { hostOf } from "./format";
 
@@ -81,6 +81,8 @@ export interface ReportView {
   checkedAsNote: string | null;
   /** The business could not be read (ADR-0007): the note already says how to fix it. */
   checkedAsNeutral: boolean;
+  /** Google does not list the business: answers may be about a namesake (copy.result.namesake). */
+  namesake: string | null;
   /** Online businesses only (and only when there are category or alternative questions). */
   competition: CompetitionView | null;
   sources: SourceRowData[];
@@ -272,6 +274,13 @@ export interface BuildViewOptions {
   website?: string | null;
   googlePlaceId?: string | null;
   kvk?: string | null;
+  /** A real business without a Google listing (not a demo): the report says answers may be about a namesake. */
+  notListed?: boolean;
+}
+
+/** The report page's signal, kept here so a test can reach it: a real business record without a Google place id. */
+export function notListedOf(business: { googlePlaceId: string | null } | null | undefined): boolean {
+  return !!business && !business.googlePlaceId;
 }
 
 export function buildReportView(report: ScanReport, copy: CopyShape, opts: BuildViewOptions = {}): ReportView {
@@ -533,6 +542,7 @@ export function buildReportView(report: ScanReport, copy: CopyShape, opts: Build
     named: online ? [] : namedBlocks(report, copy),
     profile: report.comparedAs && !online ? R.named.profile(report.comparedAs, report.business.place) : null,
     ...checkedAsFor(report, copy),
+    namesake: opts.notListed ? namesakeLine(report.profile, R) : null,
     competition: online ? competitionFor(report, copy) : null,
     sources,
     sourcesTitle: state === "grijs" ? R.sources.h2Grey : R.sources.h2,

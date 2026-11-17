@@ -61,3 +61,36 @@ text, NL and EN dates agree). Any fix under CMP-01 changes `copy.legal` again: n
 - `docs/process/checklists/compliance.md`: "Learned (Vidalo, 16 Nov 2026, 005)".
 - `A101/_OS/playbook/templates/pipeline/checklists/compliance.md`: point-of-collection link and
   tracing a "not kept" sentence through every branch, both general to every venture.
+
+## Round 2: CMP-04 fix
+
+Reviewer: compliance agent, 17 Nov 2026. Not legal advice. Scope: the uncommitted change on
+`claude/namesake-line` (`copy.result.namesake` NL + EN, `apps/web/lib/report.ts`,
+`app/r/[id]/page.tsx`, `reporter/index.ts` + `templates.ts`, AC-9 in `01-brief.md`, the two new
+tests and the e2e lines). Tests run: `DATABASE_URL= pnpm --filter @vidalo/core exec vitest run
+test/legal.test.ts test/namesake.test.ts test/report-namesake.test.ts` → 30/30 green.
+
+**Verdict: CMP-04 fixed for the case it named (a local business without a Google listing). No P0,
+no P1. One P2 (CMP-08: the same risk on the online "not listed" path, left unqualified) and one
+P3. Nothing needs a lawyer.**
+
+| Check | Result | Evidence |
+|---|---|---|
+| CMP-04 met | yes for local businesses. The line shows when the business row has no `google_place_id` and the profile is not online, on the report page (under the hero, before the per-AI lines) and as a note right after the intro of the report mail, NL and EN. Old reports of such a business get it too, which is true of them | `report.ts` `namesake: opts.notListed && !online`; `r/[id]/page.tsx` `notListed: !!business && !business.googlePlaceId`; `templates.ts` note after `B.intro`; `reporter/index.ts` `notListed: !business.googlePlaceId` |
+| BW 6:194 (claims accuracy) | the qualifier sits where the result is read, not in a footnote, and says what could be wrong (another business or person with the same name). It removes the impression CMP-04 named. The demo and listed businesses do not get it, correctly: a demo is labelled fictional and a listed business is matched on its listing | `test/report-namesake.test.ts`, `test/namesake.test.ts`, `e2e/free-check.spec.ts:32` |
+| Wording | calm, no exclamation mark, none of GEO/AEO/LLM/prompt/credits/zichtbaarheid/platform/agent, no "u". It does not address the reader with "je" on purpose ("die zijn ingevuld"): a report link can be read by someone other than the person who typed. That is within the convention (informal register, not formal "u") and more accurate than "die je invulde" | `copy/index.ts:1579`, `en.ts` `namesake` |
+| NL and EN equal in substance | yes | same |
+| Leaving it out for the neutral case (no listing, no website) | defensible. That report already says "Google kent je bedrijf niet en we vonden geen website", asks three general questions and judges no answer ("je ziet wat AI zegt"), so no verdict can be pinned on a namesake. A second Google sentence would repeat the first | `copy/index.ts` `checkedAs.neutral.how`; `types.ts` `isNeutralProfile` (fallback + online); `e2e/free-check.spec.ts:163-168` |
+| Leaving it out for an online business | the stated reason holds for the *wording* (BE-08: an online report names no Google) but not for the *risk*. See CMP-08 | |
+| `copy.legal`, privacy statement, cookie table, processors | nothing needed. No new field, no new processing, no new recipient: the line is derived from `business.google_place_id`, already held. `copy.result` is outside the legal lock; `legal.test.ts` green, no version date needed | `test/legal.test.ts` 24/24 |
+
+| ID | Sev | Claim | Evidence | Proposed fix | Cost |
+|---|---|---|---|---|---|
+| CMP-04 | — | Status: **fixed** (local, not listed). The online remainder is split out as CMP-08 | above | — | — |
+| CMP-08 | P2 | An online business reached through "Mijn bedrijf staat er niet bij" with a typed website (AC-4, the path CMP-04 was about) carries no namesake line, yet its questions name the business by name alone, without town or website ("Bestaat {naam} nog?", "Wat doet {naam}?"), so the namesake risk is at least as high as for a local one. "Gecontroleerd als" says what kind of business Vidalo read, not who the answers were about. Not P1: the website-led profile and criterium 11 (`other_entity`, one sample is enough) catch part of it, and the wrong-Google wording was rightly avoided | `prompts/online.ts:35-44`; `scanner/extract.ts:72-76` (online: place not required); `scanner/compare.ts:273-274`; `report.ts` `!online`; `templates.ts` `!online` | Second key without Google, shown when `notListed && online && !checkedAsNeutral` (page) / `notListed && online && !isNeutralProfile(profile)` (mail). NL `namesakeOnline`: "We stelden de vragen over dit bedrijf alleen met de naam, dus een antwoord kan over een ander bedrijf of iemand anders met dezelfde naam gaan." EN: "We asked about this business by its name alone, so an answer may be about another business or someone else with the same name." Same placement; extend both tests. Satisfies BE-08 (no Google named) | 30 min |
+| CMP-09 | P3 | Two small accuracy nuances in the line. (a) "Google kent dit bedrijf niet" states a fact about Google; what Vidalo knows is that its lookup found no listing. (b) A business picked from the KvK register on `/scan/kies` has no `google_place_id` too, and its name and place came from the register, not from what "zijn ingevuld". Neither misleads on the point that matters (a namesake is possible) | `scanner/resolve.ts:186-211` (KvK candidates, `placeId` null); `scanner/onboard.ts:55` | NL: "We vonden dit bedrijf niet op Google en controleerden het op zijn naam en plaats. Een antwoord kan daardoor over een ander bedrijf of iemand anders met dezelfde naam gaan." EN: "We did not find this business on Google and checked it by its name and town. An answer may therefore be about another business or someone else with the same name." | 10 min |
+
+### Checklist amendment made in this run
+
+- `docs/process/checklists/compliance.md`, "Learned (Vidalo, 16 Nov 2026, 005 phase 4)": a
+  qualifier is scoped by the risk, not by where its wording fits (CMP-08).

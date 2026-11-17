@@ -36,3 +36,28 @@ than P1 anyway, and it is not a live exploit of data or money.
 ## Standing list
 
 Amended `docs/process/checklists/security.md` (Learned, 16 Nov 2026) with the general rule behind SEC-01.
+
+## Round 2: AC-9 (17 Nov 2026)
+
+Scope: the uncommitted diff on `claude/namesake-line` that adds `copy.result.namesake` to the report page
+(`apps/web/app/r/[id]/page.tsx`, `apps/web/lib/report.ts`) and the free-check report mail
+(`reporter/index.ts`, `reporter/templates.ts`) for a local business without `googlePlaceId`.
+
+**No findings. No P0, nothing blocks the gate.**
+
+Checked and holding:
+
+- **Report access unchanged.** `load()` still resolves the report, business, facts and viewer exactly as before; the
+  diff only adds the boolean `notListed: !!business && !business.googlePlaceId` to the view options. No new query,
+  no new route, no change to the 30-day expiry or the owner check.
+- **No new exposure on the public page.** The line is a fixed copy string with no interpolation. What it reveals
+  (Google does not list this business) was already on the page: the sources row for the Business Profile reads
+  `opts.googlePlaceId ? S.known : S.unclaimed` (`report.ts:438`). The place id itself is not rendered.
+- **No user-controlled text.** Neither the page line nor the mail note carries a name, town or identity; the business
+  name in the mail is unchanged. Page: rendered as a React text child (escaped). Mail: `note` blocks go through
+  `linkify` → `esc` (`layout.ts:56-57`) in HTML and as plain text in the text part.
+- **Demo and online reports** get no line (`notListed` is unset for demos; `!online` guard on both surfaces), so no
+  claim about a namesake on a page that names no Google.
+- **Tests.** `namesake.test.ts` + `report-namesake.test.ts`: 6 passed (`DATABASE_URL=`).
+
+Standing list: nothing general learned; `docs/process/checklists/security.md` not amended.

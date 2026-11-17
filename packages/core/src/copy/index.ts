@@ -1575,6 +1575,10 @@ export const copy = {
       note: "We tellen alleen of AI je noemt en wie het daarnaast noemt, nooit in welke volgorde. De stip gaat over of wat AI over je zegt klopt; of je genoemd wordt verandert zijn kleur niet. Of AI je noemt, bepalen wij niet.",
       demoCaption: "Fictief voorbeeld: het bedrijf en alle namen zijn verzonnen.",
     },
+    /** A business Google does not list was checked on what the visitor typed: answers may be about a namesake (feature 005, CMP-04). */
+    namesake: "We vonden dit bedrijf niet op Google en controleerden het op zijn naam en plaats. Een antwoord kan daardoor over een ander bedrijf of iemand anders met dezelfde naam gaan.",
+    /** The same risk for an online business, without naming Google (BE-08; CMP-08). */
+    namesakeOnline: "We stelden de vragen over dit bedrijf alleen met de naam, dus een antwoord kan over een ander bedrijf of iemand anders met dezelfde naam gaan.",
     /** "Gecontroleerd als": how Vidalo read the business, never a statement about it (compliance C-20, C-21). */
     checkedAs: {
       line: (what: string) => `Gecontroleerd als: ${what}`,
