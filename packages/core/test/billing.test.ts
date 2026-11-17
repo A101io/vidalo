@@ -63,6 +63,67 @@ describe("checkout", () => {
   });
 });
 
+describe("order confirmation from the webhook (feature 003, BE-02, ADR-0008)", () => {
+  const orders = async () => (await jobs("email")).filter((j) => (j.payload as { template?: string }).template === "order_confirmation");
+  const session = (bId: string, over: Record<string, unknown> = {}) => ({
+    id: `cs_o${++n}`,
+    payment_status: "paid",
+    customer: "cus_1",
+    metadata: { businessId: bId, plan: "setup" },
+    customer_details: { email: "koper@voorbeeld.nl" },
+    amount_subtotal: 14900,
+    amount_total: 18029,
+    total_details: { amount_tax: 3129 },
+    currency: "eur",
+    locale: "nl",
+    created: 1_794_000_000,
+    ...over,
+  });
+
+  it("a paid checkout queues one order mail", async () => {
+    const b = await business();
+    await handleStripeEvent(evt("checkout.session.completed", session(b.id)));
+    const o = await orders();
+    expect(o).toHaveLength(1);
+    expect(o[0]!.payload).toMatchObject({ plan: "setup", paid: true, to: "koper@voorbeeld.nl" });
+  });
+
+  it("a processing debit queues one with paid:false; its later success queues none", async () => {
+    const b = await business();
+    const s = session(b.id, { payment_status: "unpaid", metadata: { businessId: b.id, plan: "monitor" }, amount_subtotal: 19800, amount_total: 23958, total_details: { amount_tax: 4158 } });
+    expect(await handleStripeEvent(evt("checkout.session.completed", s))).toBe("payment_processing");
+    expect(await handleStripeEvent(evt("checkout.session.async_payment_succeeded", { ...s, payment_status: "paid" }))).toBe("activated");
+    const o = await orders();
+    expect(o).toHaveLength(1);
+    expect(o[0]!.payload).toMatchObject({ plan: "monitor", paid: false });
+  });
+
+  it("a replayed event, or the same session in a new event, queues no second mail", async () => {
+    const b = await business();
+    const s = session(b.id);
+    const e = evt("checkout.session.completed", s, "evt_order_same");
+    await handleStripeEvent(e);
+    expect(await handleStripeEvent(e)).toBe("duplicate");
+    await handleStripeEvent(evt("checkout.session.completed", s));
+    expect(await orders()).toHaveLength(1);
+  });
+
+  it("adding Monthly later queues one too", async () => {
+    const b = await business("trial");
+    await handleStripeEvent(evt("checkout.session.completed", session(b.id, { metadata: { businessId: b.id, plan: "monitor_addon" }, amount_subtotal: 4900, amount_total: 5929, total_details: { amount_tax: 1029 } })));
+    const o = await orders();
+    expect(o).toHaveLength(1);
+    expect(o[0]!.payload).toMatchObject({ plan: "monitor_addon" });
+  });
+
+  it("no payer address: no mail, and the payment is still handled", async () => {
+    const b = await business();
+    expect(await handleStripeEvent(evt("checkout.session.completed", session(b.id, { customer_details: null })))).toBe("activated");
+    expect(await orders()).toHaveLength(0);
+    expect((await db.getBusiness(b.id))?.status).toBe("trial");
+  });
+});
+
 describe("subscription life", () => {
   it("first renewal makes a trial customer active", async () => {
     const b = await business("trial");

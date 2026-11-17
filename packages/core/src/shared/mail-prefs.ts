@@ -30,8 +30,8 @@ export const OPTIONAL_MAIL_KINDS: Record<string, MailPrefKey> = {
   followup_21: "followup",
 };
 
-/** Owner mails that always go: welcome, baseline, site_instruction, owner_instruction, unfixable (and anything not optional). */
-export const REQUIRED_MAIL_KINDS = ["welcome", "baseline", "site_instruction", "owner_instruction", "unfixable"] as const;
+/** Owner mails that always go: welcome, baseline, site_instruction, owner_instruction, unfixable, order_confirmation (and anything not optional). */
+export const REQUIRED_MAIL_KINDS = ["welcome", "baseline", "site_instruction", "owner_instruction", "unfixable", "order_confirmation"] as const;
 
 export function mailAllowed(prefs: MailPrefs | null | undefined, kind: string): boolean {
   const key = OPTIONAL_MAIL_KINDS[kind];

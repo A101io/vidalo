@@ -354,6 +354,75 @@ export function welcomeEmail(d: WelcomeData): Mail {
 }
 
 // ---------------------------------------------------------------------------
+// 1b. Order confirmation (feature 003, ADR-0008): sent from the payment webhook
+// ---------------------------------------------------------------------------
+
+export interface OrderData {
+  lang: Lang;
+  business: Pick<Business, "name">;
+  plan: "setup" | "monitor" | "monitor_addon";
+  /** minor units, as Stripe charged them */
+  amounts: { subtotal: number; tax: number; total: number; currency: "eur" };
+  /** per line excl. btw in cents from PRICES; null when they do not add up to Stripe's subtotal */
+  lines: { setup?: number; monthly?: number } | null;
+  paid: boolean;
+  orderedAt: string;
+  ownerVerified: boolean;
+  links: { termsUrl: string; privacyUrl: string; accountUrl: string };
+}
+
+/** "€ 149,00" / "€149.00". */
+function orderEur(centsValue: number, lang: Lang): string {
+  return new Intl.NumberFormat(lang === "en" ? "en-IE" : "nl-NL", { style: "currency", currency: "EUR" }).format(centsValue / 100);
+}
+
+/** The product as the price card names it: "Vidalo Scan", "Vidalo Scan + Vidalo Monthly", "Vidalo Monthly". */
+export function orderProduct(plan: OrderData["plan"], lang: Lang): string {
+  const P = copyFor(lang).landing.prijs;
+  return plan === "setup" ? P.setup.name : plan === "monitor" ? `${P.setup.name} + ${P.monitor.name}` : P.monitor.name;
+}
+
+export function orderConfirmationEmail(d: OrderData): Mail {
+  const lang = d.lang;
+  const C = copyFor(lang);
+  const O = C.mails.order;
+  const eur = (c: number) => orderEur(c, lang);
+  const monthly = d.plan !== "setup";
+  // The rate is named only when it is exactly 21%; Stripe Tax and reverse charge produce other numbers.
+  const rate = d.amounts.subtotal > 0 && d.amounts.tax * 100 === d.amounts.subtotal * 21 ? "21%" : null;
+  const order = [
+    O.orderedOn(formatMailDate(d.orderedAt, lang)),
+    ...(d.lines?.setup != null ? [O.lineSetup(eur(d.lines.setup))] : []),
+    ...(d.lines?.monthly != null ? [O.lineMonthly(eur(d.lines.monthly))] : []),
+    O.subtotal(eur(d.amounts.subtotal)),
+    O.vat(eur(d.amounts.tax), rate),
+    d.paid ? O.totalPaid(eur(d.amounts.total)) : O.totalProcessing(eur(d.amounts.total)),
+    ...(d.paid ? [] : [O.processing]),
+  ];
+  // A pure Scan order: "nothing renews". With Monthly the whole renews, so that sentence would
+  // contradict the next one; the order lines already say the Scan part is once.
+  const term = [
+    ...(monthly ? [O.termsMonthly, d.links.accountUrl] : [O.termsSetup]),
+    d.ownerVerified || d.plan === "monitor_addon" ? O.startNow : O.startAfterProof,
+  ];
+  const m = renderMail({
+    lang,
+    subject: O.subject(orderProduct(d.plan, lang)),
+    preheader: O.preheader,
+    headline: O.headline(d.business.name),
+    blocks: [
+      { kind: "p", text: O.intro },
+      { kind: "cards", items: [{ title: O.orderTitle, lines: order }] },
+      { kind: "cards", items: [{ title: O.termsTitle, lines: term }] },
+      { kind: "cards", items: [{ title: O.docsTitle, lines: [`${O.terms(C.legal.updated)}: ${d.links.termsUrl}`, `${O.privacy}: ${d.links.privacyUrl}`, O.invoice] }] },
+      { kind: "note", text: O.questions },
+    ],
+  });
+  // The HTML footer carries the company line; the plain-text part has no footer, and this mail must name who sold (AC-14).
+  return { ...m, text: `${m.text}\n${C.landing.footer.legal}\n` };
+}
+
+// ---------------------------------------------------------------------------
 // 2. Baseline summary (day 2)
 // ---------------------------------------------------------------------------
 
