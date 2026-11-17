@@ -5,6 +5,7 @@
  */
 import type { Engine, ScanKind } from "@vidalo/core/types";
 import type { Job } from "@vidalo/core/db";
+import type { OrderConfirmationJob } from "@vidalo/core/billing";
 
 export interface ScanJob {
   businessId: string;
@@ -62,6 +63,8 @@ export type EmailJob =
   | { template: "resolution"; findingId: string; businessId?: string }
   | { template: "unfixable"; findingId: string; note: string; businessId?: string }
   | { template: "welcome"; businessId: string }
+  /** feature 003, ADR-0008: queued by the payment webhook (core/billing/order-mail.ts) */
+  | OrderConfirmationJob
   | { template: "baseline"; scanRunId: string; businessId?: string; /** the address that asked on the report page */ to?: string; lang?: "nl" | "en" }
   | { template: "report"; businessId: string; scanRunId?: string }
   | { template: "followup"; businessId: string; day: 7 | 21 }

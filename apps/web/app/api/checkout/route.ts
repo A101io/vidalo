@@ -9,6 +9,7 @@ import { getSession } from "@/lib/session";
 import { listMyBusinesses } from "@/lib/active-business";
 import { HOME_COUNTRY, isVerifiedOwner, onlyOwnerMayBuy } from "@vidalo/core/shared";
 import { copyFor, PRICES } from "@vidalo/core/copy";
+import { mockCheckoutSession, queueOrderConfirmation } from "@vidalo/core/billing";
 import { localizeHref } from "@/lib/lang-paths";
 import { langFromReferer } from "@/lib/request-lang";
 
@@ -24,7 +25,9 @@ export const runtime = "nodejs";
  * charge, none outside the EU). Without it every line carries the 21% NL tax
  * rate, a live checkout without one refuses rather than undercharge by 21%,
  * and a business outside the Netherlands cannot pay yet: 21% would be wrong.
- * Mock mode (no STRIPE_SECRET_KEY): marks the business paid and goes to /welkom.
+ * Mock mode only (VIDALO_MOCK=1 or no database, and no STRIPE_SECRET_KEY): marks
+ * the business paid, queues the order mail and goes to /welkom. Outside mock
+ * mode a missing key refuses the checkout (F-009).
  *
  * The session is set up as for Sonable (playbook/STRIPE.md): the customer
  * ticks the terms (consent_collection; this needs the Terms URL set on the
@@ -53,6 +56,13 @@ export async function POST(req: Request) {
     // Adding monitoring changes an existing customer's bill: owner only.
     const session = await getSession();
     if (!session || !isVerifiedOwner(business, session.userId)) return NextResponse.redirect(page(`/app/google?eerst=1`), 303);
+    // Monthly is added to a paid, running Scan only (the same rule as canAdd on
+    // /app/abonnement); otherwise a business could pay €49 a month without the
+    // Scan it builds on (F-020).
+    if (business.plan !== "setup" || (business.status !== "trial" && business.status !== "active")) {
+      await db.logEvent(business.id, "checkout.refused", { reason: "addon_without_scan", plan });
+      return NextResponse.redirect(page(`/app/abonnement`), 303);
+    }
   } else if (onlyOwnerMayBuy(business)) {
     // Paid before: a stranger's checkout would be fresh proof for claimBusiness (review SEC-01).
     // "Owner" = a member of THIS business, whichever business the login has open (not "the active business").
@@ -65,6 +75,12 @@ export async function POST(req: Request) {
   }
 
   const stripe = await getStripe();
+  if (!stripe && !env.mock) {
+    // A live site without a Stripe key must not hand out a plan for free (F-009).
+    console.error("checkout refused: no Stripe key outside mock mode");
+    await db.logEvent(business.id, "checkout.refused", { reason: "no_stripe", plan });
+    return NextResponse.redirect(`${back}?betaling=fout`, 303);
+  }
   if (!stripe) {
     const storedPlan = plan === "setup" ? "setup" : "monitor";
     await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, plan: storedPlan });
@@ -73,6 +89,9 @@ export async function POST(req: Request) {
       await db.enqueueJob("setup", { businessId: business.id });
     }
     await db.logEvent(business.id, "checkout.mock", { plan });
+    // Mock mode stands in for the webhook: the same order mail, from a session-shaped object (ADR-0008).
+    const buyer = business.ownerEmail ?? (await getSession())?.email ?? null;
+    await queueOrderConfirmation(business, mockCheckoutSession(plan, lang, buyer));
     return NextResponse.redirect(plan === "monitor_addon" ? page(`/app/abonnement?toegevoegd=1`) : page(`/welkom?mock=1&business=${business.id}`), 303);
   }
 

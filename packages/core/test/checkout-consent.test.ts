@@ -22,6 +22,20 @@ describe("checkout consent", () => {
     expect(copy.checkout.consentSubmit("t", "p")).toContain("niet voor consumenten");
     expect(en.checkout.consentSubmit("t", "p")).toContain("not consumers");
   });
-  // F-009: the no-Stripe branch must test env.mock. That is BE-02's change (route.ts is its file).
-  it.todo("the no-Stripe branch tests env.mock (pins F-009; arrives with BE-02)");
+  // F-009 (BE-02): without a Stripe key, only mock mode may mark a business paid.
+  it("the no-Stripe branch refuses outside mock mode, before any status change", () => {
+    const refuse = route.search(/if \(!stripe && !env\.mock\) \{[\s\S]*?reason: "no_stripe"[\s\S]*?betaling=fout/);
+    expect(refuse).toBeGreaterThan(-1);
+    const paidMock = route.indexOf('transitionStatus(business.id, "trial"');
+    expect(paidMock).toBeGreaterThan(refuse);
+  });
+  it("the mock path queues the same order mail as the webhook (ADR-0008)", () => {
+    expect(route).toMatch(/queueOrderConfirmation\(business, mockCheckoutSession\(plan, lang,/);
+  });
+  // F-020 (BE-02): Monthly is added only to a paid, running Scan.
+  it("an add-on without a paid Scan is refused before Stripe is asked", () => {
+    const refuse = route.search(/business\.plan !== "setup" \|\| \(business\.status !== "trial" && business\.status !== "active"\)\) \{[\s\S]*?reason: "addon_without_scan"[\s\S]*?\/app\/abonnement/);
+    expect(refuse).toBeGreaterThan(-1);
+    expect(route.indexOf("getStripe()")).toBeGreaterThan(refuse);
+  });
 });
