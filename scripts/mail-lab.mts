@@ -54,6 +54,7 @@ const { runRecheck, correctionRequestEmail, correctionFollowUpEmail, ownerWebsit
 const reporter = await import("@vidalo/core/reporter");
 const { sendMail, sendFollowUp, sendWelcome, sendMonthlyReport, sendResolutionNotice, sendUnfixableNotice, dashboardUrl, factsPageUrl, textToHtml } = reporter;
 const { fromUrl } = await import("../apps/web/lib/lang-paths.ts");
+const { queueOrderConfirmation, mockCheckoutSession } = await import("@vidalo/core/billing");
 
 type Lang = "nl" | "en";
 const LANGS: Lang[] = ["nl", "en"];
@@ -76,6 +77,8 @@ const KINDS: Record<string, { label: string; to: "owner" | "third_party" }> = {
   followup_7: { label: "Follow-up, day 7 (commercial)", to: "owner" },
   followup_21: { label: "Follow-up, day 21 (commercial)", to: "owner" },
   welcome: { label: "Welcome after checkout", to: "owner" },
+  // Feature 003 (BE-02, ADR-0008): from the payment webhook; here through the mock checkout path.
+  order_confirmation: { label: "Order confirmation after payment", to: "owner" },
   site_instruction: { label: "Own-website check", to: "owner" },
   owner_instruction: { label: "Fix on the owner's website", to: "owner" },
   owner_reminder: { label: "Reminder about that fix", to: "owner" },
@@ -137,7 +140,12 @@ async function journeys(lang: Lang) {
     await setBusinessStatus(on.business.id, "scanned", { via: "mail-lab" });
     await sendFollowUp(on.business.id, 7);
     await sendFollowUp(on.business.id, 21);
-    if (o === HOSTILE) continue;
+    if (o === HOSTILE) {
+      // Security S-34 for the order mail too: the name with markup, escaped (BE-02).
+      await queueOrderConfirmation((await db.getBusiness(on.business.id))!, mockCheckoutSession("setup", HOSTILE.lang, HOSTILE.owner));
+      await drain();
+      continue;
+    }
     await db.upsertBusiness({ id: on.business.id, slug: on.business.slug, name: on.business.name, place: on.business.place, plan: "monitor" });
     await sendWelcome(on.business.id);
     await sendMonthlyReport(on.business.id, { scanRunId: onRun.scanRunId });
@@ -149,6 +157,8 @@ async function journeys(lang: Lang) {
   const paidRun = await runScan({ businessId: b.id, kind: "free", db });
   await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerEmail: J.paid.owner, plan: "monitor", language: lang });
   await db.upsertBusiness({ id: b.id, slug: b.slug, name: b.name, place: b.place, ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "google_business_profile" });
+  // The order mail, as the mock checkout path queues it (apps/web/app/api/checkout/route.ts); drained below.
+  await queueOrderConfirmation((await db.getBusiness(b.id))!, mockCheckoutSession("monitor", lang, J.paid.owner));
   await db.enqueueJob("email", { template: "baseline", scanRunId: paidRun.scanRunId, businessId: b.id });
   await setBusinessStatus(b.id, "trial", { via: "mail-lab" });
   await db.enqueueJob("setup", { businessId: b.id });
@@ -305,6 +315,14 @@ for (const f of (await readdir(mailDir)).sort()) {
     if (!routes.some((r) => r.test(route))) m.problems.push(`link to a page that does not exist: ${u.pathname}`);
     if (want?.to === "owner" && !p.startsWith("/api/") && linkLang !== m.lang) m.problems.push(`link in ${linkLang} in a mail in ${m.lang}: ${u.pathname}`);
   }
+  if (m.kind === "order_confirmation") {
+    // AC-15: who sold, the terms in the mail's language, the btw, and no way to unsubscribe from a required mail.
+    for (const need of ["A101 B.V.", "NL869514192B01"]) if (!m.text.includes(need)) m.problems.push(`order mail without "${need}"`);
+    if (!m.links.some((l) => /\/(voorwaarden|en\/terms)$/.test(new URL(l).pathname))) m.problems.push("order mail without a link to the terms");
+    if (!/\b(btw|VAT)\b/.test(m.text)) m.problems.push("order mail without btw/VAT");
+    if (m.headers["List-Unsubscribe"]) m.problems.push("order mail carries List-Unsubscribe; it is a required mail");
+    if (/cs_(test|live)_|session_id|invoice\.stripe\.com/.test(`${m.text}\n${m.html ?? ""}`)) m.problems.push("order mail shows a Stripe identifier");
+  }
   if (m.kind.startsWith("followup") && !m.headers["List-Unsubscribe"]) m.problems.push("commercial mail without List-Unsubscribe");
   if (m.kind.startsWith("followup") && m.headers["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") m.problems.push("commercial mail without one-click List-Unsubscribe-Post");
   // Vidalo speaks: the branded HTML (logo + company line). A letter to a third party is signed by the owner: plain text.
@@ -315,12 +333,14 @@ for (const f of (await readdir(mailDir)).sort()) {
   if (on) {
     // What a reader sees: subject, text, and the HTML without tags, entities or links (a facts-page link carries the business's slug).
     const seen = `${m.subject}\n${m.text}\n${(m.html ?? "").replace(/<[^>]*>/g, " ").replace(/&#\d+;/g, "")}`.replace(/https?:\/\/\S+/g, "").replace(/\S*\.(com|io|nl|org|example)\b\S*/g, "");
+    if (m.kind !== "order_confirmation") {
     if (seen.toLowerCase().includes(on.place.toLowerCase())) m.problems.push(`online mail names the town ${on.place}`);
     const local = /openingstijd|opening hours|vestiging|branch\b|\bBing\b|\bApple\b|Google(?! AI)|\bgids|directories|directory|bedrijfsprofiel|business profile|Adres, telefoon|Address, phone/i.exec(seen);
     if (local) m.problems.push(`online mail has local wording: "${local[0]}"`);
     if (/Voorbeeld |\bDe Wit\b|\bVan der Berg\b/.test(seen)) m.problems.push("online mail names another business");
     const score = /%|score|ranking|share of voice|\bplek\b|positie|\bposition\b|we make sure|zorgen dat/i.exec(seen);
     if (score) m.problems.push(`online mail has a score, position or promise: "${score[0]}"`);
+    }
     if (m.kind === "baseline") {
       if (!/(Gecontroleerd als|Checked as): /.test(m.text)) m.problems.push("online report mail without the Gecontroleerd-als line");
       if (!/(Genoemd in|Named in) \d+ (van|of) \d+ (antwoord|answer)/.test(m.text)) m.problems.push("online report mail without the competition counts");
@@ -345,7 +365,7 @@ const missing = LANGS.flatMap((l) => Object.keys(KINDS).filter((k) => !mails.som
 /** The online journey must reach these in both languages (the hostile name is Dutch, baseline and follow-ups only). */
 const ONLINE_KINDS = ["baseline", "followup_7", "followup_21", "welcome", "report"];
 const onlineMissing = LANGS.flatMap((l) => ONLINE_KINDS.filter((k) => !mails.some((m) => m.kind === k && m.to === ONLINE[l].owner)).map((k) => `online ${k}:${l}`));
-const hostileMissing = ["baseline", "followup_7", "followup_21"].filter((k) => !mails.some((m) => m.kind === k && m.to === HOSTILE.owner)).map((k) => `hostile ${k}`);
+const hostileMissing = ["baseline", "followup_7", "followup_21", "order_confirmation"].filter((k) => !mails.some((m) => m.kind === k && m.to === HOSTILE.owner)).map((k) => `hostile ${k}`);
 const failing = mails.filter((m) => m.problems.length);
 
 // The page: one card per kind (the first of each; the rest counted), then the full list.
