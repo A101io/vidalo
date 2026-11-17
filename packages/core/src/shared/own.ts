@@ -32,8 +32,8 @@ export const OWN_BUSINESS: Business = {
   createdAt: "2026-10-13T00:00:00.000Z",
 };
 
-/** The twelve criteria answered for Vidalo. Confirmed by the owner: see `OWN_FACTS_VERIFIED_AT`. */
-export const OWN_FACTS_VERIFIED_AT: string | null = null;
+/** The twelve criteria answered for Vidalo. Confirmed by Julian in chat on 15 Nov 2026 (go-live A-01). */
+export const OWN_FACTS_VERIFIED_AT: string | null = "2026-11-15T00:00:00.000Z";
 
 export const OWN_FACTS: Facts = {
   businessId: OWN_BUSINESS.id,
@@ -70,9 +70,9 @@ export const OWN_FACTS: Facts = {
     { label: "Vidalo Monthly", amount: PRICES.monitorEurPerMonth, unit: `per maand, excl. btw; start met Vidalo Scan (€${PRICES.setupEur} eenmalig)` },
     { label: "Extra vestiging (2 t/m 10)", amount: PRICES.extraLocationEurPerMonth, unit: `per maand plus €${PRICES.extraLocationSetupEur} eenmalig, excl. btw` },
   ],
-  policies: ["De eerste controle is gratis, zonder account", "Geen opzegtermijn, maandelijks opzegbaar", "Prijzen exclusief btw", "Voor bedrijven in Nederland en daarbuiten; buiten Nederland in het Engels"],
-  paymentMethods: [],
-  notConfusedWith: [],
+  policies: ["De eerste controle is gratis, zonder account", "Geen opzegtermijn, maandelijks opzegbaar", "Prijzen exclusief btw", "Betalen kan voor bedrijven in Nederland; de gratis controle werkt ook daarbuiten, in het Engels"],
+  paymentMethods: ["iDEAL", "creditcard", "SEPA-incasso (alleen bij Monthly)"],
+  notConfusedWith: ["Vidado (gegevens uit documenten halen met AI, ander bedrijf)", "Vidyo (videobellen, ander bedrijf)"],
   serviceArea: { places: ["Nederland"], radiusKm: null },
   urgency: { available: false, hoursNl: null },
   credentials: [],

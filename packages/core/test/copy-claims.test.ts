@@ -123,6 +123,8 @@ describe("copy claims", () => {
         "nl:account.mails.optional.followup.label",
         "nl:account.mails.optional.followup.body",
         "nl:account.runKind.free",
+        "nl:mails.scanConfirm.subject()",
+        "nl:mails.scanConfirm.intro()",
         "nl:mails.deletionScheduled().body",
         "nl:ownerArea.archive.kind.free",
         "en:scanField.button",
@@ -161,6 +163,8 @@ describe("copy claims", () => {
         "en:account.mails.optional.followup.label",
         "en:account.mails.optional.followup.body",
         "en:account.runKind.free",
+        "en:mails.scanConfirm.subject()",
+        "en:mails.scanConfirm.intro()",
         "en:mails.deletionScheduled().body",
         "en:ownerArea.archive.kind.free",
       ]

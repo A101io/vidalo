@@ -35,7 +35,7 @@ describe("the free check's address and news box", () => {
     const now = 1_700_000_000_000;
     const v = signCheckCookie("s", { email: "a@b.nl", marketing: true }, now);
     expect(v).not.toContain("a@b.nl");
-    expect(readCheckCookie("s", v, now + 1000)).toEqual({ email: "a@b.nl", marketing: true });
+    expect(readCheckCookie("s", v, now + 1000)).toEqual({ email: "a@b.nl", marketing: true, identity: null });
     expect(readCheckCookie("other", v, now)).toBeNull();
     expect(readCheckCookie("s", v + "x", now)).toBeNull();
     expect(readCheckCookie("s", v, now + CHECK_COOKIE_TTL_MS + 1)).toBeNull();

@@ -209,6 +209,9 @@ export interface SignInRow {
   os: OsFamily;
 }
 
+/** What one free check is counted as while it runs (docs/cost-per-client.md: €0.40–0.60). */
+export const FREE_SCAN_ESTIMATE_CENTS = 60;
+
 export interface Db {
   readonly kind: "pg" | "mem";
 
@@ -299,6 +302,12 @@ export interface Db {
   countEventsSince(type: string, since: Date): Promise<number>;
   /** Engine cost of every scan run started at or after `since`, free checks excluded (the daily ceiling, review R-11). */
   paidScanCentsSince(since: Date): Promise<number>;
+  /**
+   * Engine cost of the free checks started at or after `since` (their own euro ceiling, apps/web/lib/free-check-start.ts).
+   * A run that has not finished counts at least FREE_SCAN_ESTIMATE_CENTS: its cost is written only when it ends, and a
+   * burst of running checks must count before it is spent (security review, 14 Nov 2026).
+   */
+  freeScanCentsSince(since: Date): Promise<number>;
 
   // --- coming-soon list ---
   /**
@@ -334,6 +343,14 @@ export interface Db {
   getGoogleIndex(businessId: string): Promise<GoogleIndexState | null>;
   /** Insert or merge: fields left out keep their value; pass null to clear one. */
   upsertGoogleIndex(input: GoogleIndexUpsert): Promise<GoogleIndexState>;
+
+  /**
+   * Runs `fn` while holding a lock named `key`, across every Worker and process on this
+   * database (PgDb: pg_advisory_xact_lock in a transaction; MemDb: a queue per key).
+   * For count-then-insert limits and single-use links that must hold under parallel
+   * requests. `fn` uses the ordinary handle; keep it short.
+   */
+  withLock<T>(key: string, fn: () => Promise<T>): Promise<T>;
 
   // --- sign-ins (feature 002, migration 0018) ---
   /**

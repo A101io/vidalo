@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { collectErrors, dismissNotice, expectNoErrors } from "./helpers";
+import { collectErrors, confirmCheck, dismissNotice, expectNoErrors, mockSite } from "./helpers";
 
 /**
  * The customer path in mock mode: free check from the landing page, the
@@ -12,9 +12,12 @@ async function runFreeCheck(page: Page, name: string, lang: "nl" | "en" = "nl") 
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill(name);
   await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='identity']").fill(mockSite(name));
   // Nothing runs without an address: the report is mailed there (core/shared/free-check.ts).
   await form.locator("input[name='email']").fill("e2e@example.nl");
   await form.locator("button[type='submit']").click();
+  // Nothing runs before the address is confirmed: follow the mail's link.
+  await confirmCheck(page);
   // Waiting room, then the report (mock engines answer in seconds).
   await page.waitForURL(/\/(en\/)?(scan|r)\//);
   await page.waitForURL(/\/(en\/)?r\/[^/?#]+/, { timeout: 60_000 });
@@ -60,12 +63,52 @@ for (const plan of ["monitor", "setup"] as const) {
   });
 }
 
+test("nothing starts before the mail link is pressed, and the link works once", async ({ page }) => {
+  await page.goto("/");
+  await dismissNotice(page);
+  const form = page.locator("form[action='/api/scan']").first();
+  const name = `Slager E2E ${Date.now()}`;
+  await form.locator("input[name='q']").fill(name);
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='identity']").fill(mockSite(name));
+  await form.locator("input[name='email']").fill("e2e@example.nl");
+  await form.locator("button[type='submit']").click();
+  await page.waitForURL(/\/scan\/mail\?/);
+  await expect(page.getByText(/kwaadaardige bots/)).toBeVisible();
+  // Opening the link starts nothing; only the button does.
+  await page.getByTestId("confirm-link").click();
+  await page.waitForURL(/\/scan\/bevestigen\?t=/);
+  const link = page.url();
+  await expect(page.locator("h1")).toContainText("Start de controle van");
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+  await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
+  const report = page.url();
+  // A second press goes where the first went; it starts nothing new.
+  await page.goto(link);
+  await page.locator("main form[action='/api/scan/bevestigen'] button[type='submit']").click();
+  await page.waitForURL(/\/(scan|r)\//);
+  await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
+  expect(page.url()).toBe(report);
+});
+
+test("another site cannot press the confirm button (SEC-07)", async ({ page }) => {
+  const res = await page.request.post("/api/scan/bevestigen", { form: { t: `x.${"a".repeat(32)}` }, headers: { origin: "https://evil.example" }, maxRedirects: 0 });
+  expect(res.status()).toBe(403);
+});
+
+test("a made-up link starts nothing", async ({ page }) => {
+  await page.goto(`/scan/bevestigen?t=${encodeURIComponent(`nope.${"a".repeat(32)}`)}`);
+  await expect(page.locator("main form[action='/api/scan/bevestigen']")).toHaveCount(0);
+  await expect(page.getByText(/Deze link klopt niet/)).toBeVisible();
+});
+
 test("an empty check goes back to the form", async ({ page }) => {
   await page.goto("/");
   await dismissNotice(page);
   // Bypass the browser's required check: the server must refuse too. The address is filled, so the empty name is what is refused.
   await page.evaluate(() => document.querySelectorAll("input[name='q']").forEach((i) => i.removeAttribute("required")));
   await page.locator("form[action='/api/scan'] input[name='email']").first().fill("e2e@example.nl");
+  await page.locator("form[action='/api/scan'] input[name='identity']").first().fill("www.leeg.nl");
   await page.locator("form[action='/api/scan'] button[type='submit']").first().click();
   await expect(page).toHaveURL(/fout=leeg/);
 });
@@ -77,7 +120,43 @@ test("a check without an address comes back to the field, nothing started", asyn
   const form = page.locator("form[action='/api/scan']").first();
   await form.locator("input[name='q']").fill("Bakkerij Zonder Adres");
   await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='identity']").fill(mockSite("Bakkerij Zonder Adres"));
   await form.locator("button[type='submit']").click();
   await expect(page).toHaveURL(/\/scan\/kies\?.*fout=mail/);
   await expect(page.locator("input[name='email'][aria-invalid='true']")).toBeVisible();
+});
+
+test("a check without postcode or website comes back to the field, nothing looked up", async ({ page }) => {
+  await page.goto("/");
+  await dismissNotice(page);
+  await page.evaluate(() => document.querySelectorAll("input[name='identity']").forEach((i) => i.removeAttribute("required")));
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill("Bakkerij Zonder Postcode");
+  await form.locator("input[name='place']").fill("Haarlem");
+  await form.locator("input[name='email']").fill("e2e@example.nl");
+  await form.locator("button[type='submit']").click();
+  await expect(page).toHaveURL(/\/scan\/kies\?.*fout=herken/);
+  await expect(page.locator("input[name='identity'][aria-invalid='true']")).toBeVisible();
+  await expect(page.locator("h1")).toContainText("postcode en het huisnummer of de website");
+});
+
+test("a name alone never picks a business: another postcode goes to /scan/kies, and 'not listed' is a way on", async ({ page }) => {
+  const name = `Kapsalon Naamgenoot ${Date.now()}`;
+  await page.goto("/");
+  await dismissNotice(page);
+  const form = page.locator("form[action='/api/scan']").first();
+  await form.locator("input[name='q']").fill(name);
+  await form.locator("input[name='place']").fill("Haarlem");
+  // Mock mode lists this name with its own website and a made-up postcode; this one is not it.
+  await form.locator("input[name='identity']").fill("1011 AA 1");
+  await form.locator("input[name='email']").fill("e2e@example.nl");
+  await form.locator("button[type='submit']").click();
+  await page.waitForURL(/\/scan\/kies\?/);
+  await expect(page.locator("h1")).toHaveText("Welk bedrijf is van jou?");
+  await expect(page.locator("main li")).toHaveCount(1);
+  await expect(page.locator("main li")).toContainText(name);
+  await dismissNotice(page);
+  await page.getByRole("button", { name: "Mijn bedrijf staat er niet bij" }).click();
+  // Checked as the business the visitor typed, after the mail like every other check.
+  await page.waitForURL(/\/scan\/mail\?/);
 });

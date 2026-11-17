@@ -61,12 +61,13 @@ function checkSig(secret: string, body: string): string {
   return createHmac("sha256", secret).update(`check\n${body}`).digest("base64url");
 }
 
-export function signCheckCookie(secret: string, r: { email: string; marketing: boolean }, now = Date.now()): string {
-  const body = Buffer.from(JSON.stringify({ e: r.email, m: r.marketing, x: now + CHECK_COOKIE_TTL_MS })).toString("base64url");
+export function signCheckCookie(secret: string, r: { email: string; marketing: boolean; identity?: string | null }, now = Date.now()): string {
+  const body = Buffer.from(JSON.stringify({ e: r.email, m: r.marketing, ...(r.identity ? { i: r.identity } : {}), x: now + CHECK_COOKIE_TTL_MS })).toString("base64url");
   return `${body}.${checkSig(secret, body)}`;
 }
 
-export function readCheckCookie(secret: string, value: unknown, now = Date.now()): { email: string; marketing: boolean } | null {
+/** The address, the news box and the postcode + house number or website the visitor typed (shared/business-identity.ts), if any. */
+export function readCheckCookie(secret: string, value: unknown, now = Date.now()): { email: string; marketing: boolean; identity: string | null } | null {
   if (typeof value !== "string") return null;
   const [body, sig, extra] = value.split(".");
   if (!body || !sig || extra !== undefined) return null;
@@ -74,10 +75,10 @@ export function readCheckCookie(secret: string, value: unknown, now = Date.now()
   const given = Buffer.from(sig);
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
   try {
-    const p = JSON.parse(Buffer.from(body, "base64url").toString()) as { e?: unknown; m?: unknown; x?: unknown };
+    const p = JSON.parse(Buffer.from(body, "base64url").toString()) as { e?: unknown; m?: unknown; i?: unknown; x?: unknown };
     if (typeof p.e !== "string" || typeof p.x !== "number" || p.x < now || p.x > now + CHECK_COOKIE_TTL_MS) return null;
     const parsed = parseFreeCheckRequest({ email: p.e, marketing: p.m === true ? "ja" : "" });
-    return parsed.ok ? { email: parsed.email, marketing: parsed.marketing } : null;
+    return parsed.ok ? { email: parsed.email, marketing: parsed.marketing, identity: typeof p.i === "string" ? p.i : null } : null;
   } catch {
     return null;
   }

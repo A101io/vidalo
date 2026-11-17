@@ -12,7 +12,9 @@ import { OWN_BUSINESS, OWN_FACTS, OWN_FACTS_PATH, ownFactsFingerprint } from "..
 import type { FactKey } from "../src/types.js";
 
 /** Criteria the owner still has to fill in; listed here so the gap is visible, not hidden. */
-const OPEN: ReadonlySet<FactKey> = new Set<FactKey>(["payment", "identity", "credential"]);
+const OPEN: ReadonlySet<FactKey> = new Set<FactKey>([]);
+/** Criteria the owner confirmed Vidalo has nothing for (15 Nov 2026: no erkenningen), so they stay empty. */
+const NONE: ReadonlySet<FactKey> = new Set<FactKey>(["credential"]);
 
 function answered(key: FactKey): boolean {
   const f = OWN_FACTS;
@@ -50,14 +52,14 @@ describe("Vidalo as its own first customer", () => {
   it("answers every criterium that is not an open item", () => {
     for (const c of CRITERIA) {
       for (const key of c.factKeys) {
-        if (OPEN.has(key)) continue;
+        if (OPEN.has(key) || NONE.has(key)) continue;
         expect(answered(key), `criterium ${c.id} ${c.key} (${key})`).toBe(true);
       }
     }
   });
 
   it("names the open items honestly", () => {
-    for (const key of OPEN) expect(answered(key), `${key} is listed as open but is answered; take it off the list`).toBe(false);
+    for (const key of [...OPEN, ...NONE]) expect(answered(key), `${key} is listed as open or none but is answered; take it off the list`).toBe(false);
   });
 
   it("renders the facts page in three forms from the one record", () => {
@@ -66,7 +68,11 @@ describe("Vidalo as its own first customer", () => {
     expect(page.html).toContain("Vidalo in Rotterdam");
     expect(page.html).toContain("Factorij 80, 3071 AV Rotterdam");
     expect(page.html).toContain("KvK-nummer: 42057858");
-    expect(page.html).toContain(OWN_FACTS.verifiedAt ? "Laatst bevestigd door de eigenaar" : "Nog niet bevestigd door de eigenaar");
+    expect(OWN_FACTS.verifiedAt).not.toBeNull();
+    expect(page.html).toContain("Laatst bevestigd door de eigenaar");
+    expect(page.html).not.toContain("Nog niet bevestigd door de eigenaar");
+    expect(page.html).toContain("iDEAL, creditcard, SEPA-incasso (alleen bij Monthly)");
+    expect(page.html).toContain("Vidyo (videobellen, ander bedrijf)");
     expect(page.jsonLd["@type"]).toBe("LocalBusiness");
     expect(page.jsonLd.name).toBe("Vidalo");
     expect(page.llmsTxt).toContain("# Vidalo (Rotterdam)");

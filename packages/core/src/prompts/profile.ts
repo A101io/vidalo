@@ -137,6 +137,29 @@ function build(t: OnlineTemplate, text: string): PromptTemplate {
   }
 }
 
+/**
+ * The neutral set (exists, what, website) with the name as door questions send it (V1-QA-02). Used when
+ * sanitizeSlot refused an honest name ("Prompt Software") and no online template survived: the business
+ * must not fall back to the shop-front questions with the town. The name is only stripped of control and
+ * hidden characters and capped; a name with markup or a link is still refused (null), as is one with bidi controls.
+ */
+export function neutralNameQuestions(facts: Facts): PromptTemplate[] {
+  const lang = scanLang(facts.country);
+  const templates = lang === "nl" ? ONLINE_TEMPLATES : ONLINE_TEMPLATES_EN;
+  const raw = facts.name.slice(0, 320);
+  if (/[\u202a-\u202e\u2066-\u2069<>]/.test(raw) || raw.includes("://") || /www\./i.test(raw)) return [];
+  const plain = raw.normalize("NFKC").replace(/[\p{Cc}\p{Cf}\u00ad\u200b-\u200f\u2060-\u2064\ufeff]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+  if ((plain.match(/\p{L}/gu) ?? []).length < 2) return [];
+  const name = plain as SlotValue; // door questions send the name unsanitised too; the brand is the only thing missing
+  const out: PromptTemplate[] = [];
+  for (const key of ["online.existence.exists", "online.what", "online.website"]) {
+    const t = templates.find((x) => x.key === key)!;
+    const text = fillTemplate(t.text, valuesFor(lang, { name, category: null, audience: null }));
+    if (text) out.push(build(t, text));
+  }
+  return out;
+}
+
 /** The questions of an online business, in template order. A template whose slot was refused is left out. */
 export function onlineQuestions(profile: BusinessProfile, facts: Facts, kind: ScanKind, library: QuestionLibrary = {}): PromptTemplate[] {
   const lang = scanLang(facts.country);
