@@ -70,3 +70,90 @@ copy taken before (`cmp`), and matched.
 - **Double submit / back button on `/scan/kies`.** Unchanged by this feature (same lock and token as before); not re-run.
 - **Concurrency.** Nothing here allocates capacity or money beyond the existing caps under `FREE_CHECK_LOCK`.
 - **Gate mode** (`E2E_MODE=gate`). Not re-run; `route.ts` still returns `/binnenkort` before reading the form.
+
+## Round 2: AC-9 (17 Nov 2026)
+
+Scope: AC-9 only (namesake line, `copy.result.namesake`), uncommitted diff on `claude/namesake-line`.
+
+**Result: AC-9 passes.** No P0. One test gap closed in this round (the mail's wiring had no test that could go red,
+see C3/C4); one remaining wiring gap on the page loader (QA-R2-05), and smaller findings.
+
+### Acceptance
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-9 line on the report page and the free-check report mail of a local business Google does not list, NL + EN; not for a listed business, a demo, or an online business | **pass** | Page: `apps/web/lib/report.ts:541` `namesake: opts.notListed && !online`, `page.tsx:54` `notListed: !!business && !business.googlePlaceId`, rendered at `page.tsx:147` (`data-testid="namesake"`). Mail: `templates.ts:458` `d.notListed && !online`, `reporter/index.ts:232` `notListed: !business.googlePlaceId`. Tests: `report-namesake.test.ts` (local unlisted NL + EN shown; listed, demo, online not), `namesake.test.ts` (mail NL + EN shown; online, listed not), `namesake-wiring.test.ts` (new this round: a stored local unlisted business through `runScan` → `buildReport` → view, and through `sendBaselineSummary` → .eml, both carry the line; the same business with a place id, neither does), e2e `free-check.spec.ts` smoke (listed → 0), "a name alone…" (neutral unlisted → grey note, 0 namesake), `scan-identity.spec.ts` AC-4 (online unlisted → 0). Runs: core 102 files / 1472 tests green, `pnpm -r typecheck` green, Playwright `free-check` + `scan-identity` 20/20. |
+
+### The questions asked
+
+- **Is `business.googlePlaceId` the right signal?** Yes, and it is the same signal the scan itself uses:
+  `understandInputFor` sets `listing: business.googlePlaceId != null` (`understand.ts:362`), so "not listed" for the
+  line means what it meant for the questions. Page and mail both read the current business record. Caveat
+  QA-R2-02: it is today's record, not the record at scan time.
+- **Is the page's `online` the mail's `nf.online`?** Yes. Page: `report.profile?.mode === "online"` on
+  `getScanReport` = `buildReport(scanRunId)` (`apps/web/lib/core.ts:147`). Mail: `isOnlineProfile(r.profile)` on
+  `buildReport(scanRunId)` in `notFoundStats` (`reporter/index.ts:126`); `isOnlineProfile` is the same comparison
+  (`types.ts:342`). Both rebuild from `scan_run.profile`. They differ only when `notFoundStats` throws (QA-R2-03).
+- **Duplicate with the grey "Google kent je bedrijf niet en we vonden geen website" note?** No. That note is
+  `checkedAs.neutral`, shown for `isNeutralProfile` = `source "fallback" && mode "online"` (`types.ts:193`), and the
+  `!online` guard drops the namesake line in exactly that case, on page and in mail. Seen in e2e "a name alone…"
+  (grey note visible, `namesake` count 0).
+- **KvK-only businesses?** A KvK candidate has `placeId: null` (`resolve.ts:205`), so `notListed` is true. But KvK
+  candidates never carry a website (`resolve.ts:207`) and a typed website is refused for them (`onboard.ts`
+  `listed … || candidate.kvk`), so their profile is the neutral fallback (`decideMode`: no listing, no model → online)
+  and they get the grey note, not the namesake line. Only a KvK-only business with an earlier grounded
+  `profile_auto` would show it. Right by the AC's letter (Google does not list it). KvK is not live (`KVK_API_KEY`
+  unset).
+- **Other mails that summarise a report?** Follow-up day 7/21: yes, it should (QA-R2-04). Monthly report: no; it goes
+  to a verified owner, and verification needs a Google place id (`shared/ownership.ts`), so an unlisted monthly
+  customer exists only through manual support verification.
+- **Mail lab** (`DATABASE_URL= pnpm mail:lab`: OK, 0 problems): 9 baseline mails in `out/mail-lab/mails.json`, none
+  carries the line. Correct for all of them (listed locals, and the online `vloedlijn`/`tonic`/`zeilmaker` journeys,
+  which are unlisted and must not show it). The lab has no local unlisted journey, so the line is never seen there
+  (QA-R2-01).
+
+### Controls (each guarantee broken on purpose, then restored)
+
+| # | Guarantee | Test that went red | What I did to break it |
+|---|---|---|---|
+| C1 | Mail shows the line | `namesake.test.ts` "is there…", `namesake-wiring.test.ts` "a local business…" | `templates.ts:458` → `false && d.notListed && !online` |
+| C2 | Mail drops it for online | `namesake.test.ts` "is not there for an online business", `mail-online.test.ts` "the free-check mail goes to the asker…" (LOCAL_WORDS hits "Google") | removed `&& !online` |
+| C3 | Mail wiring passes "not listed" | `namesake-wiring.test.ts` "a local business…". **Without the new test: 30/30 green** | `reporter/index.ts:232` → `notListed: false` |
+| C4 | Mail wiring drops it for listed | `namesake-wiring.test.ts` "the same business with a Google listing". **Without the new test: 30/30 green** | → `notListed: true` |
+| C5 | Page shows the line | `report-namesake.test.ts` "is there…", `namesake-wiring.test.ts` | `report.ts:541` → `namesake: null` |
+| C6 | Page drops it for online | `report-namesake.test.ts` "is not there for an online business" | removed `&& !online` |
+| C7 | NL copy | `namesake.test.ts`, `namesake-wiring.test.ts` | NL namesake text → "Kent dit bedrijf niet. …" |
+| C8 | EN copy is English | `namesake.test.ts`, `report-namesake.test.ts` | `en.ts` namesake → the Dutch sentence |
+| C10 | Page loader drops it for listed | e2e `free-check.spec.ts` smoke: `getByTestId("namesake")` expected 0, received 1 | `page.tsx:54` → `notListed: true` (two runs first failed on a cold dev server, `ERR_CONNECTION_REFUSED`; the third failed on the assertion) |
+| C11 | Page loader passes "not listed" | **nothing went red** (3/3 green) | `page.tsx:54` → `notListed: false`. See QA-R2-05 |
+
+After the controls, `git diff -- apps packages e2e docs/features/005-scan-identity/01-brief.md` was compared with a copy
+taken before (`cmp`): identical. (`compliance.md`, `security.md` and `docs/process/checklists/compliance.md` changed
+during the round; that is the concurrent compliance/security work, not QA.)
+
+### Findings
+
+| ID | Sev | Claim | Evidence | Proposed fix | Cost |
+|---|---|---|---|---|---|
+| QA-R2-01 | P2 | The mail lab never shows the namesake line, so nobody reviewing mails sees it. | `out/mail-lab/mails.json`: 9 `baseline` mails, 0 with "Google kent dit bedrijf niet" / "Google does not know this business". `scripts/mail-lab.mts` journeys: listed free, online, paid. | Add a journey in `scripts/mail-lab.mts` `journeys()`: `prepareBusiness({ name, place, candidate: { ...mockCandidate(name, place), placeId: null, kvk: null }, website: "https://www.<slug>.example", db })`, then `db.setAutoProfile(id, { mode: "door", …, basis: ["website"], source: "auto", grounded: true })` (as `namesake-wiring.test.ts` does), `runScan` free, enqueue `baseline`; card label "Report after the free check, not on Google"; the lab's own check asserts `copy.result.namesake` in its text. | 30 min |
+| QA-R2-02 | P2 | The signal is the business record now, not at scan time. A business first checked as "not listed" whose slug is later checked through a Google candidate gets `googlePlaceId` set (`onboard.ts:55` `existing?.googlePlaceId ?? candidate.placeId`); from then on the old report page drops the line while the mail sent for it carried it. | `onboard.ts:55`; `page.tsx:54` and `reporter/index.ts:232` read `business.googlePlaceId` at render/send time. | Keep the scan-time fact with the run: add `listed: boolean` to the profile summary stored on `scan_run.profile` (from `understandInputFor(...).listing` in `ensureProfile`), expose it on `ScanReport`, use `!report.listed` in `page.tsx` load and in `sendBaselineSummary`; runs without it fall back to `!business.googlePlaceId`. | 1–2 h |
+| QA-R2-03 | P3 | If `notFoundStats` throws, the mail gets `online: undefined` → false, so an online unlisted business's mail shows the namesake line (and the other local wording) while its page does not. Existing degraded path, logged as `reporter.not_found_stats_failed`. | `reporter/index.ts:127-130` returns `null`; `:246` `online: nf?.online`. | `online: nf?.online ?? isOnlineProfile(run.profile)` in `sendBaselineSummary` (same in `sendMonthlyReport`). | 10 min |
+| QA-R2-04 | P2 | The day-7/21 follow-up quotes one wrong answer as an example to a free-check business; for an unlisted local business that example may be about a namesake and the mail does not say so. Outside AC-9's letter (it names the report mail only). | `reporter/index.ts:355-395` `sendFollowUp` builds `example` from findings and passes no `notListed`; `followUpEmail` has no such field. | Pass `notListed: !business.googlePlaceId` (with the existing `online: isOnlineProfile(lastRun?.profile)`); in `followUpEmail` add `...(d.notListed && !d.online ? [{ kind: "note", text: C.result.namesake }] : [])` after the example block; one case each way in `namesake.test.ts`. Monthly report: not needed (verified owners have a place id). | 30 min |
+| QA-R2-05 | P2 | The page loader's `notListed` has no test that goes red when it is switched off (C11 green). The positive case cannot be reached in e2e: `mockUnderstand` returns the neutral fallback for every unlisted business without an online keyword (`understand.ts:228-231`), so in mock mode an unlisted local business is always neutral and the line is always (rightly) suppressed. The spec comments point at each other: `scan-identity.spec.ts` says the local case "is in free-check.spec", `free-check.spec.ts` says it is in `report-namesake.test.ts`; neither runs the page loader for it. | C11 above. | Move the expression into `apps/web/lib/report.ts` as `export const notListedOf = (b: { googlePlaceId: string \| null } \| null) => !!b && !b.googlePlaceId;`, call it from `page.tsx:54`, use it in `namesake-wiring.test.ts` instead of the copied expression; point the `scan-identity.spec.ts` comment at `namesake-wiring.test.ts`. | 15 min |
+| QA-R2-06 | P3 | The grey neutral note does not mention namesakes, though an unlisted business with no website is the case most exposed to them (answers shown unjudged). Not a duplicate problem; a wording choice for Julian. | `copy/index.ts` `checkedAs.neutral.how`. | If wanted, one clause in `neutral.how` NL + EN: "… je ziet wat AI zegt, en dat kan over een naamgenoot gaan." | 10 min |
+
+### Tests added this round (keep them)
+
+- `packages/core/test/namesake-wiring.test.ts` (untracked, not committed): the line through `runScan` → `buildReport`
+  → `buildReportView` and through `sendBaselineSummary` → the written .eml, for the same local business without and
+  with a place id. The only test that goes red for C3 and C4.
+
+### Not tested, and why
+
+- **The line on a real report page for an unlisted local business** (browser, NL/EN, 375 px). Not reachable in mock
+  mode (QA-R2-05); copy, element and placement checked at view level and by reading `page.tsx:147`. The paragraph is
+  `max-w-[56ch]` text with no fixed width.
+- **Real understanding of a typed local website** (OpenAI). Mock only; the wiring test stores the profile the real
+  model would return.
+- **Paid (`kind: full`) reports and their baseline mail.** The line is kind-agnostic in both places; not run.
+- **PgDb.** `googlePlaceId` is mapped in `pg.ts:73`; not run against Postgres this round.

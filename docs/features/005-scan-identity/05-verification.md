@@ -37,3 +37,13 @@ The one P0 (QA-01) and every P1 except CMP-04-adjacent wording are fixed and re-
 ## Not checked
 
 Real Google Places answers (mock only; the street-line format is read from `resolve.ts`), Turnstile switched on, gate mode, PgDb, the Workers build.
+
+## Round 2: AC-9, the namesake line (17 Nov 2026)
+
+Verdict: SHIP. QA, security and compliance ran concurrently (sections "Round 2" in qa.md, security.md, compliance.md). No P0, no P1.
+
+Fixed in this round: CMP-04 (the line itself), CMP-09 (wording: "We vonden dit bedrijf niet op Google…", true for KvK-only businesses too), CMP-08 (an online business gets the line without naming Google, `copy.result.namesakeOnline`), QA-R2-05 (`notListedOf` in `apps/web/lib/report.ts`, tested). One function decides page and mail alike: `namesakeLine` in `core/shared/checked-as.ts`; a business read by nothing gets no line (its report already judges no answer). QA added `namesake-wiring.test.ts` (runScan → page view and mail).
+
+Open: QA-R2-04 (P2) the day-7/21 follow-up mail quotes a wrong answer and could carry the line too; QA-R2-01 (P2) the mail lab has no local unlisted journey; QA-R2-02 the page reads today's business record, not the one at scan time.
+
+Checks: `pnpm -r typecheck`; `pnpm -r test` (core 1475, worker 52); `e2e:mock`; Playwright free-check + scan-identity, one worker, 20/20. Not checked: the line in a browser for a local unlisted business (mock mode cannot reach it; covered by the view and wiring tests), paid reports, PgDb.

@@ -29,6 +29,8 @@ test("@smoke a free check reaches its report", async ({ page }) => {
   await expect(page.locator("main")).toBeVisible();
   await expect(page.locator("form[action='/api/checkout']")).toHaveCount(2);
   await expect(page.getByText(/excl\.? btw/i).first()).toBeVisible();
+  // A business Google lists: no namesake line.
+  await expect(page.getByTestId("namesake")).toHaveCount(0);
   await expectNoErrors(errors);
 });
 
@@ -158,5 +160,10 @@ test("a name alone never picks a business: another postcode goes to /scan/kies, 
   await dismissNotice(page);
   await page.getByRole("button", { name: "Mijn bedrijf staat er niet bij" }).click();
   // Checked as the business the visitor typed, after the mail like every other check.
-  await page.waitForURL(/\/scan\/mail\?/);
+  await confirmCheck(page);
+  await page.waitForURL(/\/r\/[^/?#]+/, { timeout: 60_000 });
+  // Nothing to read it by (no listing, no website): the report already says Google does not know it and judges no answer,
+  // so no second namesake line (CMP-04; the local case with a profile is in packages/core/test/report-namesake.test.ts).
+  await expect(page.getByText(/Google kent je bedrijf niet/)).toBeVisible();
+  await expect(page.getByTestId("namesake")).toHaveCount(0);
 });

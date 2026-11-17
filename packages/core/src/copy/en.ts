@@ -1539,6 +1539,8 @@ export const en: CopyShape = {
       note: "We only count whether AI names you and who else it names, never in what order. The dot is about whether what AI says about you is right; being named does not change its colour. Whether AI names you is not ours to decide.",
       demoCaption: "Fictional example: the business and every name are made up.",
     },
+    namesake: "We did not find this business on Google and checked it by its name and town. An answer may therefore be about another business or someone else with the same name.",
+    namesakeOnline: "We asked about this business by its name alone, so an answer may be about another business or someone else with the same name.",
     /** "Checked as": how Vidalo read the business, never a statement about it (compliance C-20, C-21). */
     checkedAs: {
       line: (what: string) => `Checked as: ${what}`,
