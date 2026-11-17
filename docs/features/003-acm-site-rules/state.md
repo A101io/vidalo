@@ -5,7 +5,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | **4 verify, round 1 done 2026-11-17: SHIP** (`05-verification.md`). PR #136 merge: see the phase log (only after every CI check on the head is green and `deploy` is skipped). Nothing deployed; vidalo.ai unchanged |
+| Phase | **4 verify, round 1 done 2026-11-17: SHIP** (`05-verification.md`). **PR #136 merged into `main` as `ad979c6`** (2026-11-17, after all 5 CI check runs on head `9574e0b` read green and `deploy` skipped). Nothing deployed; vidalo.ai unchanged. J-1 (legal text, `legal:lock`) and J-8 (deploy) stay Julian's |
 | Started | 2026-11-12 |
 | Design reviewed | none (no new layout; copy inside existing design G components) |
 | Design gate rounds used | 0 of 2 (skipped) |
@@ -38,11 +38,11 @@ Control Room rows: R4, R7, R8, R9
 | 2026-11-15 | 1 shape | checklists/security.md (SEC-01…17, no P0 against the design; SEC-01/02/05/10/11 P0 if observed) and checklists/compliance.md (COMP-01…42; B2B position checked: holds on conditions; one P0 against the design, F-001; launch hard-stop candidates F-004, F-021) | security, compliance (think run) |
 | 2026-11-16 | 3 build | Night 1 (unattended build run): BE-01 copy keys, `COMPANY`, `copy-claims.test.ts`; FE-01 complaint paragraph + `company-details.spec.ts`; FE-02 card total, reminders sentence, `no-preticked-boxes.test.ts`; BE-03 price surfaces + checkout-consent tests. Core 1436 tests, worker 52, e2e:mock and mail:lab OK. BE-02 not started | build run |
 | 2026-11-17 | 3 build | Night 2 (unattended, Opus): merged main (#137, two copy conflicts kept both); BE-02 built: order mail queued by the webhook for all plans (paid/processing, once per session), sender, template NL/EN, required kind, worker case, mail lab rules, F-009 and F-020 in the checkout route. Core 1518 passed, worker 52, e2e:mock OK, mail:lab OK (36/36 kinds). Build done | build run |
-| 2026-11-17 | 4 verify | Round 1 (unattended, 03:30 stand-in): qa, security, compliance reviews in `reviews/*-r1.md`; gate observed (core 1518/23 skipped, worker 52, e2e:mock OK, mail:lab 36/36, Playwright 19 + 3 gate); F-009/F-020 refused on a real route; verdict **SHIP** (`05-verification.md`); findings F-023…F-027 | verify run |
+| 2026-11-17 | 4 verify | Round 1 (unattended, 03:30 stand-in): qa, security, compliance reviews in `reviews/*-r1.md`; gate observed (core 1518/23 skipped, worker 52, e2e:mock OK, mail:lab 36/36, Playwright 19 + 3 gate); F-009/F-020 refused on a real route; verdict **SHIP** (`05-verification.md`); findings F-023…F-027; CI on `9574e0b`: check, browser, cloudflare, postgres, build success, deploy skipped → merged as `ad979c6` | verify run |
 | 2026-11-15 | 1 shape | F-001…F-021 into findings.md; F-001 (P0) folded into ADR-0008/BE-02; F-002, F-003, F-005, F-009, F-010, F-017, F-018, F-020 folded into tickets (Amendment 1 of the architecture); F-004, F-006, F-008, F-013, F-021 to Julian | delivery-lead (think run) |
 
 ## Skipped phases
-| Phase | **4 verify, round 1 done 2026-11-17: SHIP** (`05-verification.md`). PR #136 merge: see the phase log (only after every CI check on the head is green and `deploy` is skipped). Nothing deployed; vidalo.ai unchanged |
+| Phase | **4 verify, round 1 done 2026-11-17: SHIP** (`05-verification.md`). **PR #136 merged into `main` as `ad979c6`** (2026-11-17, after all 5 CI check runs on head `9574e0b` read green and `deploy` skipped). Nothing deployed; vidalo.ai unchanged. J-1 (legal text, `legal:lock`) and J-8 (deploy) stay Julian's |
 |---|---|
 | 2 design gate | No new page, layout or component: one chip text, one price line inside the existing card, one sentence under two existing fields, one paragraph on /contact, one mail in the existing mail layout. Every string is reviewed by Julian line by line in the PR, and FE-01/FE-02 attach screenshots at 375 and 1280 px. If Julian wants a design pass on the price card, it re-enters at phase 2 |
 
