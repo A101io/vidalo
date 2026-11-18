@@ -387,3 +387,14 @@ Then (both) the findings, "Wie AI noemt bij jouw soort bedrijf / Who AI names fo
 | Vidalo | example.com (does not name it) | fallback `not_grounded`, 0¢ |
 
 Not run: a local business with a real Google listing (needs the Places key path end to end).
+
+## J-4 fix (18 Nov)
+
+Q-20261116-02 fell due 18 Nov by the 48-hour silence rule (default J-4 "Stop", J-3 "Ja"). Finding V1-COMP-06(a). No copy or legal-text change; `legal.test.ts` stays green without a new version date.
+
+- **Code** (`packages/core/src/scanner/understand.ts`, commit 88eab66): `namesBusiness` (the existing `normalizeName` match, case- and accent-insensitive) already decided `siteNamed`; before, with a listing and a page that did not name the business, `site.text` still went to the classifier. Now only a naming page sends host and text; otherwise `{ host: null, text: "" }`, the step continues from Google alone, and `log.info("profile.site_skipped_not_naming_business", { host })` records the skip. The page text is never logged or stored.
+- **Test** `test/understand.test.ts` "J-4: a directory site's text is not sent to OpenAI; a site that names the business is": a directory fixture (does not name Bakkerij De Vries) yields `website: { host: null, tekst: "" }` and no "Bedrijvengids" anywhere in the request; a page that names it sends its text and host; the log line carries no text.
+- **Red** (change absent): `× grounded or nothing (ADR-0007) > J-4: a directory site's text is not sent to OpenAI ... → expected { host: null, …(1) } to deeply equal { host: null, tekst: '' }`; `Tests 1 failed | 60 passed (61)`.
+- **Green** (change present): `Tests 61 passed (61)`.
+- **Gates**: baseline on main `pnpm -r typecheck` clean, core 110 files 1537 passed / 23 skipped, worker 52. After: typecheck clean, core 110 files 1538 passed / 23 skipped, worker 7 files 52 passed, `pnpm e2e:mock` printed `OK e2e-mock`.
+- Not verified: a real OpenAI call (no key or network here).
