@@ -11,7 +11,7 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 | Design gate rounds used | 0 of 2 (skipped) |
 | Verify rounds used | 1 of 2 |
 | Open P0s | **none**. F-009 and F-020 tried on a real route (Postgres, mock off, no Stripe key) and refused. Verify r1 added F-023 (P2), F-024…F-027 (P3); F-022 confirmed P2. All follow-ups, none blocks |
-| Waiting on Julian | J-1…J-10 below: release gates, not merge blockers (also row L3 of `docs/go-live-checklist.md`). J-3 (F-004) and J-4 (F-021) can block **launch**. J-1 (legal text, `legal:lock`) and J-8 (deploy) stay Julian's |
+| Waiting on Julian | J-1…J-9 below (J-10 decided 19 Nov 2026 by the silence rule): release gates, not merge blockers (also row L3 of `docs/go-live-checklist.md`). J-3 (F-004) and J-4 (F-021) can block **launch**. J-1 (legal text, `legal:lock`) and J-8 (deploy) stay Julian's |
 
 Control Room rows: R4, R7, R8, R9
 
@@ -27,7 +27,7 @@ Control Room rows: R4, R7, R8, R9
 | J-7 | Clean-browser check on vidalo.ai after deploy (`/`, `/en`, `/binnenkort`, `/en/coming-soon`, `/contact`); phone answers on a working day | "Doe ik na de deploy" |
 | J-8 | Deploy (manual) and the launch gate | "Deploy na groen en J-1" |
 | J-9 | Ask the KvK number at checkout as B2B evidence? (F-008) | "Nee, als J-6 laat zien dat het btw-nummer verplicht is" |
-| J-10 | Order mail for Scan + Monthly: only "Vidalo Monthly verlengt elke maand vanzelf…", not also "Vidalo Scan is een eenmalige opdracht. Er verlengt niets." (the two contradict each other in one mail). Built that way in BE-02 | "Goed zo" |
+| J-10 | Order mail for Scan + Monthly: only "Vidalo Monthly verlengt elke maand vanzelf…", not also "Vidalo Scan is een eenmalige opdracht. Er verlengt niets." (the two contradict each other in one mail). Built that way in BE-02 | "Goed zo" **Decided 19 Nov 2026 by the silence rule** (Q-20261117-02, asked 17 Nov, no answer within 48 hours; `_OS/AUTHORITY.md` §2): as built. |
 
 ## Phase log
 | Date | Phase | What happened | Who |
@@ -40,6 +40,7 @@ Control Room rows: R4, R7, R8, R9
 | 2026-11-17 | 3 build | Night 2 (unattended, Opus): merged main (#137, two copy conflicts kept both); BE-02 built: order mail queued by the webhook for all plans (paid/processing, once per session), sender, template NL/EN, required kind, worker case, mail lab rules, F-009 and F-020 in the checkout route. Core 1518 passed, worker 52, e2e:mock OK, mail:lab OK (36/36 kinds). Build done | build run |
 | 2026-11-17 | 4 verify | Round 1 (unattended, 03:30 stand-in): qa, security, compliance reviews in `reviews/*-r1.md`; gate observed (core 1518/23 skipped, worker 52, e2e:mock OK, mail:lab 36/36, Playwright 19 + 3 gate); F-009/F-020 refused on a real route; verdict **SHIP** (`05-verification.md`); findings F-023…F-027 | verify run |
 | 2026-11-15 | 1 shape | F-001…F-021 into findings.md; F-001 (P0) folded into ADR-0008/BE-02; F-002, F-003, F-005, F-009, F-010, F-017, F-018, F-020 folded into tickets (Amendment 1 of the architecture); F-004, F-006, F-008, F-013, F-021 to Julian | delivery-lead (think run) |
+| 2026-11-19 | 4 verify | Q-20261117-02 took its default under the silence rule: J-10 as built (only the Monthly renewal sentence in the Scan + Monthly order mail). Nothing mailed, nothing deployed. | think run (unattended) |
 
 ## Skipped phases
 | Phase | **4 verify, round 1 done 2026-11-17: SHIP** (`05-verification.md`). PR #136 merge: see the phase log (only after every CI check on the head is green and `deploy` is skipped). Nothing deployed; vidalo.ai unchanged |
