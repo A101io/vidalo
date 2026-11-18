@@ -11,7 +11,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "workers_dev": true,
-  "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io" },
+  // PUBLIC_BASE_URL: every link in the mails this worker sends (report, follow-ups,
+  // their unsubscribe link) starts with it (core/reporter/links.ts). Without it
+  // they pointed at http://localhost:3000 (18 Nov 2026). Same value as vidalo-web.
+  "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io", "PUBLIC_BASE_URL": "https://vidalo.ai" },
   // Facts pages (docs/go-live-checklist.md D5, D6). Production only: env.staging
   // sets "routes": [] so it never touches vidalo.io.
   //   feiten.vidalo.io      the CNAME target and Cloudflare for SaaS fallback
@@ -48,7 +51,7 @@
       "workers_dev": true,
       // routes inherit from the top level; staging never answers on vidalo.io.
       "routes": [],
-      "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io" },
+      "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io", "PUBLIC_BASE_URL": "https://vidalo-web-staging.julian-devriend.workers.dev" },
       "triggers": { "crons": ["* * * * *", "*/10 * * * *"] },
       "queues": {
         "consumers": [{ "queue": "vidalo-scans-staging", "max_batch_size": 1, "max_retries": 2 }]
