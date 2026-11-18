@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { withMockDb, type Db } from "../src/db";
 import { sanitizeSlot } from "../src/prompts/slots";
+import { log } from "../src/shared/log.js";
 import { copy } from "../src/copy";
 import {
   buildReport, classifyRequest, classifySystem, CLASSIFICATION_JSON_SCHEMA, decideMode, ensureProfile, isGroundedProfile, loadPrompts, mockUnderstand, profileSummary, redactContacts, runScan,
@@ -466,6 +467,29 @@ describe("grounded or nothing (ADR-0007)", () => {
     expect(out.profile).toMatchObject({ source: "auto", basis: ["google"], grounded: true, website: null });
     const user = JSON.parse((rec.classifies[0]!.messages as { content: string }[])[1]!.content) as { website: { host: string | null } };
     expect(user.website.host).toBeNull();
+  });
+
+  it("J-4: a directory site's text is not sent to OpenAI; a site that names the business is (Q-20261116-02)", async () => {
+    const directory = "<html><body><h1>Bedrijvengids Nederland</h1><p>Vind bakkerijen, kappers en loodgieters bij jou in de buurt. Mooi brood en gebak bij Bakkerij Anders.</p></body></html>";
+    const own = "<html><body><h1>Bakkerij De Vries</h1><p>Vers brood en gebak, elke dag.</p></body></html>";
+    const base = input({ name: "Bakkerij De Vries", place: "Haarlem", listing: true, googleTypes: ["bakery"] });
+    const classification = { ...SONABLE_CLASSIFICATION, mode: "door", offer: "brood en gebak", category: "bakkerij" };
+    const sent = (rec: Recorded) => (JSON.parse((rec.classifies[0]!.messages as { content: string }[])[1]!.content) as { website: { host: string | null; tekst: string } }).website;
+
+    const skipped = fakeAi({ classify: classification });
+    const warn = vi.spyOn(log, "info").mockImplementation(() => {});
+    const out = await understandBusiness({ ...base, website: "https://gids.example" }, { openai: skipped.ai, fetchImpl: fakePages(directory).fetchImpl, now: NOW });
+    expect(skipped.rec.classifies).toHaveLength(1); // Google alone still lets the step continue
+    expect(sent(skipped.rec)).toEqual({ host: null, tekst: "" }); // nothing of the directory page leaves
+    expect(JSON.stringify(skipped.rec.classifies[0])).not.toContain("Bedrijvengids");
+    expect(out.profile).toMatchObject({ source: "auto", basis: ["google"], grounded: true, website: null });
+    expect(warn).toHaveBeenCalledWith("profile.site_skipped_not_naming_business", expect.not.objectContaining({ text: expect.anything() }));
+
+    const named = fakeAi({ classify: classification });
+    await understandBusiness({ ...base, website: "https://bakkerijdevries.example" }, { openai: named.ai, fetchImpl: fakePages(own).fetchImpl, now: NOW });
+    expect(named.rec.classifies).toHaveLength(1);
+    expect(sent(named.rec).tekst).toContain("Vers brood en gebak");
+    expect(sent(named.rec).host).toBe("bakkerijdevries.example");
   });
 
   it("the profile's competitors stay an empty array whatever the model says, and basis is only google, website or owner", async () => {

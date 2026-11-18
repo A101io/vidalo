@@ -300,8 +300,10 @@ export async function understandBusiness(input: UnderstandInput, deps: Understan
     const siteNamed = pageText !== "" && namesBusiness(pageText, name);
     // Grounded or nothing: no listing and no own page that names the business means no call at all.
     if (!input.listing && !siteNamed) return fail("not_grounded");
-    // With a listing but a page that does not name the business, the page is still Google's own website for it.
-    const site = { host: siteNamed ? knownHost : null, text: redactContacts(pageText).slice(0, TEXT_LIMIT) };
+    // J-4 (Q-20261116-02): a page that does not name the business (a directory site) is not sent to OpenAI; the step
+    // continues from Google alone. The line carries no text from the page.
+    if (pageText !== "" && !siteNamed) log.info("profile.site_skipped_not_naming_business", { host: knownHost });
+    const site = siteNamed ? { host: knownHost, text: redactContacts(pageText).slice(0, TEXT_LIMIT) } : { host: null, text: "" };
 
     let raw: ChatResult;
     try {
