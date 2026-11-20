@@ -3,8 +3,10 @@
  * so answers are grounded like a user of claude.ai sees them. Citations are
  * the `web_search_result_location` entries on the text blocks.
  *
- * Model from CLAUDE_MODEL (default claude-opus-5-5). Thinking is always on for
- * this model family; effort "low" keeps a plain factual answer cheap. The
+ * Model from CLAUDE_MODEL (default claude-haiku-5-5: about a tenth of Opus per
+ * answer, see docs/cost-per-client.md). Thinking is always on for this model
+ * family; effort "low" keeps a plain factual answer cheap. Haiku has no
+ * dynamic-filtering search, so it gets the basic web_search tool. The
  * model has no temperature parameter. A safety refusal (stop_reason
  * "refusal") is reported as a skipped sample, as that is what a user would see.
  */
@@ -13,7 +15,7 @@ import type { EngineClient, AskContext, EngineAnswer } from "./types";
 import { SYSTEM_NL, ENGINE_TIMEOUT_MS } from "./types";
 import { withTimeout } from "../util";
 
-const MODEL = () => process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
+const MODEL = () => process.env.CLAUDE_MODEL ?? "claude-haiku-5-5";
 
 /** USD cents per 1M tokens (Anthropic list prices, Oct 2026) + web search per request. */
 const PRICE: Record<string, { inCents: number; outCents: number }> = {
@@ -22,6 +24,8 @@ const PRICE: Record<string, { inCents: number; outCents: number }> = {
   "claude-haiku-5-5": { inCents: 10, outCents: 50 },
 };
 const WEB_SEARCH_CENTS = 1; // $10 / 1k searches
+/** One search per answer: each search adds 1¢ plus its results as input tokens. */
+const MAX_SEARCHES = 1;
 
 export function estimateClaudeCost(model: string, inputTokens: number, outputTokens: number, webSearches = 0): number {
   const p = PRICE[model] ?? PRICE["claude-opus-5-5"]!;
@@ -58,7 +62,7 @@ export const claudeEngine: EngineClient = {
           max_tokens: 4096,
           system: SYSTEM_NL,
           output_config: { effort: "low" },
-          tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3, user_location: { type: "approximate", country: "NL" } }],
+          tools: [{ type: model.startsWith("claude-haiku") ? "web_search_20250305" : "web_search_20260209", name: "web_search", max_uses: MAX_SEARCHES, user_location: { type: "approximate", country: "NL" } }],
           messages,
         }),
         ENGINE_TIMEOUT_MS,

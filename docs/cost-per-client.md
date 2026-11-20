@@ -43,6 +43,20 @@ The margin at €49 is 2–45% depending on Gemini's allowance and on how often 
 
 Savings 1–3 below are in the code (`FIRST_SAMPLES`, `SAMPLES_CAP`, `samplesFor` in `scanner/index.ts`; `web_search` in `engines/chatgpt.ts`): every (prompt, engine) cell is asked 5 times, and goes to 10 only when a first answer was wrong, not found, about a namesake or did not name the business; `google_ai` gets 1 sample; ChatGPT uses the current search tool and its price. Verified with the unit tests and `pnpm e2e:mock`; not yet with a paid scan. The copy now says "tot tien keer" / "up to ten times"; the landing scene still draws ten boxes per engine as an illustration.
 
+## Built 3 Nov 2026: cheaper engines
+
+Sections 1–3 left out Claude, the sixth engine since 24 Oct, which ran on `claude-opus-5-5` with up to 3 searches: about 8¢ an answer, €15 of a €27 check. Prices below were read on the providers' pages on 2 Nov 2026.
+
+| Engine | Before | Now | Per answer |
+|---|---|---|---|
+| Claude | `claude-opus-5-5`, ≤ 3 searches | `claude-haiku-5-5` ($0.10 / $0.50 per 1M), 1 search (`web_search_20250305`: Haiku has no dynamic filtering) | ~8¢ → ~1.3¢ |
+| Gemini | `gemini-2.0-flash`, shut down | `gemini-3.1-flash-lite` ($0.25 / $1.50 per 1M); grounding $14 per 1k search queries after 5,000 free a month per account | 3.5¢ → ~1.4¢, $0 inside the allowance |
+| Perplexity | sonar chat completions, support ended 27 Sep 2026 | Agent API, effort `fast`, `search_type: "fast"` ($1 per 1k); cost read from `usage.cost` | ~0.7¢ → ~0.2¢ |
+
+One full check (~34 questions, 5 answers, 10 where one was off, assumed for a third of the questions; Google AI 1): ChatGPT ~$3.2, Gemini ~$3.2 (or $0), Perplexity ~$0.5, Google AI ~$0.5–1, Claude ~$3, extraction ~$0.5: **about $11 (≈ €10)**, down from about €27. Not yet measured: no paid scan has run. Gemini's `costCents` is the list price; the free allowance is not subtracted.
+
+Left as a choice: `GEMINI_MODEL=gemini-2.5-flash-lite` is cheaper per token and grounds 1,500 prompts a day free (enough for ~180 clients), but it is an older model than the Gemini app runs and Google may retire it. Next saving with the most left in it: carry-over sampling (2 answers for a question that was right every time last check), about 35–40% fewer answers.
+
 ## 4. Savings, biggest first
 
 | # | Change | Saves per client per month | Where |
