@@ -486,7 +486,7 @@ Adres, telefoon, openingstijden, wat je wel en niet doet. We hebben ze alvast in
 
 2. Eén DNS-regel
 Maak bij je domeinbeheerder een CNAME aan:
-feiten.bakkerijjansen.nl  →  feiten.vidalo.io
+feiten.bakkerijjansen.nl  →  feiten.vidalo.ai
 Wij controleren elke 10 minuten of hij er staat. Lukt het niet, dan zetten we de pagina op ons eigen adres.
 
 3. Log één keer in bij Google
@@ -936,7 +936,7 @@ Address, phone, opening hours, what you do and do not do. We have filled them in
 
 2. One DNS record
 Create a CNAME record with your domain provider:
-feiten.bakkerijjansen.nl  →  feiten.vidalo.io
+feiten.bakkerijjansen.nl  →  feiten.vidalo.ai
 We check every 10 minutes whether it is there. If it does not work, we put the page on our own address.
 
 3. Log in to Google once

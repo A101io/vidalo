@@ -136,7 +136,7 @@ describe("free-check mail of an online business", () => {
 describe("the other mails of an online business", () => {
   it("welcome: three steps, no address, opening hours or Google login", () => {
     for (const lang of ["nl", "en"] as const) {
-      const m = welcomeEmail({ lang, online: true, business: { name: NAME, place: PLACE, domain: "vloedlijn.example" }, links: { ...links, confirmFactsUrl: "https://vidalo.ai/app/gegevens", googleConnectUrl: "https://vidalo.ai/api/google/connect" }, cname: { host: "feiten.vloedlijn.example", target: "feiten.vidalo.io" } });
+      const m = welcomeEmail({ lang, online: true, business: { name: NAME, place: PLACE, domain: "vloedlijn.example" }, links: { ...links, confirmFactsUrl: "https://vidalo.ai/app/gegevens", googleConnectUrl: "https://vidalo.ai/api/google/connect" }, cname: { host: "feiten.vloedlijn.example", target: "feiten.vidalo.ai" } });
       expect(all(m)).not.toMatch(LOCAL_WORDS);
       expect(all(m)).not.toContain(PLACE);
       expect(m.subject).toMatch(/3/);

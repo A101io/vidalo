@@ -58,7 +58,7 @@ async function seed(db: MemDb, sourceType: SourceType, extra: Partial<Finding> =
     ownerEmail: "eigenaar@bakkerijjansen.nl",
     status: "active",
     plan: "monitor",
-    factsHost: "bakkerij-jansen-haarlem-feiten.vidalo.io",
+    factsHost: "bakkerij-jansen-haarlem-feiten.vidalo.ai",
     factsHostVerifiedAt: new Date().toISOString(),
   });
   await db.insertFacts(business.id, { ...baseFacts, businessId: business.id }, { provisional: false, verifiedAt: new Date().toISOString() });
@@ -127,11 +127,11 @@ describe("openFixForFinding", () => {
     expect(job.payload.replyTo).toBe(business.ownerEmail);
     expect(String(job.payload.text)).toContain("10:00 tot 14:00");
     expect(String(job.payload.text)).toContain("gesloten");
-    expect(String(job.payload.text)).toContain("feiten.vidalo.io");
+    expect(String(job.payload.text)).toContain("feiten.vidalo.ai");
   });
 
   it("owned_facts_page → republish immediately", async () => {
-    const { finding, business } = await seed(db, "owned_facts_page", { sourceUrl: "https://bakkerij-jansen-haarlem-feiten.vidalo.io/" });
+    const { finding, business } = await seed(db, "owned_facts_page", { sourceUrl: "https://bakkerij-jansen-haarlem-feiten.vidalo.ai/" });
     const out = await openFixForFinding(finding);
     expect(out.action).toBe("republish");
     expect(out.executed).toBe(true);

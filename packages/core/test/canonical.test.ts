@@ -26,6 +26,6 @@ describe("canonicalRedirect", () => {
   it("does not redirect a host it does not know (control: a lookalike is not ours)", () => {
     expect(canonicalRedirect("https://vidalo.ai.example.com/", "GET")).toBeNull();
     expect(canonicalRedirect("https://vidalo.io.example.com/", "GET")).toBeNull();
-    expect(canonicalRedirect("https://feiten.vidalo.io/", "GET")).toBeNull();
+    expect(canonicalRedirect("https://feiten.vidalo.ai/", "GET")).toBeNull();
   });
 });

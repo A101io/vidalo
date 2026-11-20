@@ -1,7 +1,7 @@
 /**
  * The Origin check for route handlers that change something (feature 002, ADR-0003, SEC-35).
  * Server actions carry Next's own check; route handlers do not. The own hosts are an exact list:
- * never "ends with vidalo.io", because facts hosts (*.feiten.vidalo.io, owners' own domains) serve
+ * never "ends with vidalo.ai", because facts hosts ({slug}-feiten.vidalo.ai, owners' own domains) serve
  * pages an owner controls.
  */
 import { CANONICAL_HOST, REDIRECT_HOSTS } from "./canonical.js";

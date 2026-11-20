@@ -62,7 +62,7 @@ export async function getBusinessByFactsHost(host: string): Promise<BusinessReco
     for (const b of anyDb.businesses.values()) if (b.factsHost?.toLowerCase() === h) return { ...b };
   }
   // Fallback host "{slug}-feiten.{suffix}" → derive slug.
-  const suffix = (process.env.FACTS_HOST_SUFFIX || "vidalo.io").toLowerCase();
+  const suffix = (process.env.FACTS_HOST_SUFFIX || "vidalo.ai").toLowerCase();
   const tail = `-feiten.${suffix}`;
   if (h.endsWith(tail)) {
     const slug = h.slice(0, -tail.length);

@@ -3,13 +3,14 @@
  *
  * Preferred: `feiten.{domain}` on the owner's own domain, pointed at Vidalo with
  * one CNAME record. Fallback: `{slug}-feiten.{FACTS_HOST_SUFFIX}` (one level deep,
- * so Universal SSL's `*.vidalo.io` covers it).
+ * so Universal SSL's `*.vidalo.ai` covers it).
  *
  * Serving: `vidalo-worker` answers on the routes in apps/worker/wrangler.jsonc
- * (`feiten.vidalo.io/*`, `*-feiten.vidalo.io/*`) and on one route per custom
+ * (`feiten.vidalo.ai/*`, `*-feiten.vidalo.ai/*`) and on one route per custom
  * hostname, which `ensureCustomHostname` adds next to the hostname. No `*\/*`
  * catch-all: a route beats a Custom Domain on the same hostname, so it would
- * take `vidalo.io` and `www.vidalo.io` away from `vidalo-web`.
+ * take `vidalo.ai` and `www.vidalo.ai` away from `vidalo-web`. The facts hosts
+ * moved from vidalo.io to vidalo.ai on 20 Nov 2026, before any business had one.
  *
  * Cloudflare for SaaS (custom hostnames) is used when CLOUDFLARE_API_TOKEN and
  * CLOUDFLARE_ZONE_ID are set; otherwise every call is a logged no-op so the
@@ -25,7 +26,7 @@ import { FALLBACK_LABEL_END, defaultFactsHost } from "./render.js";
 export { defaultFactsHost };
 
 export function factsHostSuffix(): string {
-  return process.env.FACTS_HOST_SUFFIX || "vidalo.io";
+  return process.env.FACTS_HOST_SUFFIX || "vidalo.ai";
 }
 
 /** The CNAME target an owner must point `feiten.{domain}` at. */
@@ -55,8 +56,8 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * The label before `-feiten` in a fallback host `{slug}-feiten.{suffix}`, or
  * null when `host` is not exactly one such name: one DNS label (lowercase
  * letters, digits, hyphens, at most 63) directly under the suffix. So
- * `x-feiten.vidalo.io.evil.com`, `a.b-feiten.vidalo.io`, `feiten.vidalo.io`,
- * `www.vidalo.io` and customer domains are not.
+ * `x-feiten.vidalo.ai.evil.com`, `a.b-feiten.vidalo.ai`, `feiten.vidalo.ai`,
+ * `www.vidalo.ai` and customer domains are not.
  */
 export function fallbackSlug(host: string): string | null {
   const inner = 63 - FALLBACK_LABEL_END.length - 2;
@@ -69,11 +70,13 @@ export function isFallbackHost(host: string): boolean {
   return fallbackSlug(host) !== null;
 }
 
-/** `host` is the suffix itself or any name under it: ours, never claimable by a CNAME. */
+/** Domains that are ours besides the suffix: vidalo.io held the facts hosts until 20 Nov 2026 and keeps the mail. */
+const OUR_DOMAINS = [CANONICAL_HOST, "vidalo.io"];
+
+/** `host` is the suffix, one of our domains, or any name under them: ours, never claimable by a CNAME. */
 export function isOurName(host: string): boolean {
   const h = host.toLowerCase();
-  const suffix = factsHostSuffix().toLowerCase();
-  return h === suffix || h.endsWith(`.${suffix}`);
+  return [factsHostSuffix().toLowerCase(), ...OUR_DOMAINS].some((d) => h === d || h.endsWith(`.${d}`));
 }
 
 /**

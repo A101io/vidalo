@@ -109,7 +109,7 @@ describe.each(backends)("%s: AC-5(d) a deletion leaves nothing of the business, 
       deleteCustomHostname: async (h) => void calls.push(`cloudflare:${h}`),
       deleteLogin: async (u) => void calls.push(`login:${u}`),
       sendDeletedMail: async (to) => void calls.push(`mail:${to.email ?? "?"}`),
-      isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.io"),
+      isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.ai"),
     };
     const out = await purgeBusiness(deps, target.id, "no_subscription");
     expect(out).toMatchObject({ done: true, loginsDeleted: 1 });

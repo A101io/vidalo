@@ -38,7 +38,7 @@ describe("classifyHost", () => {
   });
 
   it("falls back to the {slug}-feiten.* fallback host when no facts host is known", () => {
-    expect(classifyHost("https://bakkerij-de-vries-haarlem-feiten.vidalo.io/", { ...ctx, factsHost: "bakkerij-de-vries-haarlem-feiten.vidalo.io" })).toBe("owned_facts_page");
+    expect(classifyHost("https://bakkerij-de-vries-haarlem-feiten.vidalo.ai/", { ...ctx, factsHost: "bakkerij-de-vries-haarlem-feiten.vidalo.ai" })).toBe("owned_facts_page");
   });
 });
 

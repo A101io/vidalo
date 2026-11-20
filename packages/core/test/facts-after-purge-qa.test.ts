@@ -15,7 +15,7 @@ import { facts } from "./worker-fixtures";
  * V-QA-03 is open: vitest then reports it as passing BECAUSE it fails, and as failing the day the fix lands.
  * Whoever fixes V-QA-03 changes `it.fails` to `it`. The second case pins today's upper bound (10 minutes).
  */
-const HOST = "bakkerij-weg-haarlem-feiten.vidalo.io";
+const HOST = "bakkerij-weg-haarlem-feiten.vidalo.ai";
 
 describe("AC-5(d): a deleted business's facts host", () => {
   let db: MemDb;
@@ -43,7 +43,7 @@ describe("AC-5(d): a deleted business's facts host", () => {
       deleteCustomHostname: async () => {},
       deleteLogin: async () => {},
       sendDeletedMail: async () => {},
-      isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.io"),
+      isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.ai"),
     };
     expect((await purgeBusiness(deps, b.id, "no_subscription")).done).toBe(true);
     expect(await db.getBusiness(b.id)).toBeNull();

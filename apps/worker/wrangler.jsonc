@@ -14,20 +14,21 @@
   // PUBLIC_BASE_URL: every link in the mails this worker sends (report, follow-ups,
   // their unsubscribe link) starts with it (core/reporter/links.ts). Without it
   // they pointed at http://localhost:3000 (18 Nov 2026). Same value as vidalo-web.
-  "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io", "PUBLIC_BASE_URL": "https://vidalo.ai" },
+  "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.ai", "PUBLIC_BASE_URL": "https://vidalo.ai" },
   // Facts pages (docs/go-live-checklist.md D5, D6). Production only: env.staging
-  // sets "routes": [] so it never touches vidalo.io.
-  //   feiten.vidalo.io      the CNAME target and Cloudflare for SaaS fallback
+  // sets "routes": [] so it never touches vidalo.ai. On vidalo.ai since 20 Nov 2026
+  // (before: vidalo.io), so customers see one domain.
+  //   feiten.vidalo.ai      the CNAME target and Cloudflare for SaaS fallback
   //                         origin (its proxied DNS record is set by hand)
-  //   *-feiten.vidalo.io    fallback hosts {slug}-feiten.vidalo.io (wildcard
+  //   *-feiten.vidalo.ai    fallback hosts {slug}-feiten.vidalo.ai (wildcard
   //                         DNS record `*`, proxied, set by hand)
   // Customers' own feiten.{domain} hosts each get a route `{host}/*` from
   // publisher/host.ts when their custom hostname is created. No `*/*`: a route
-  // beats a Custom Domain on the same hostname and would take vidalo.io and
-  // www.vidalo.io from vidalo-web.
+  // beats a Custom Domain on the same hostname and would take vidalo.ai and
+  // www.vidalo.ai from vidalo-web.
   "routes": [
-    { "pattern": "feiten.vidalo.io/*", "zone_name": "vidalo.io" },
-    { "pattern": "*-feiten.vidalo.io/*", "zone_name": "vidalo.io" }
+    { "pattern": "feiten.vidalo.ai/*", "zone_name": "vidalo.ai" },
+    { "pattern": "*-feiten.vidalo.ai/*", "zone_name": "vidalo.ai" }
   ],
   "triggers": {
     // Every minute: run queued jobs. Every ten minutes: the cron tick
@@ -49,9 +50,9 @@
     "staging": {
       "name": "vidalo-worker-staging",
       "workers_dev": true,
-      // routes inherit from the top level; staging never answers on vidalo.io.
+      // routes inherit from the top level; staging never answers on vidalo.ai.
       "routes": [],
-      "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.io", "PUBLIC_BASE_URL": "https://vidalo-web-staging.julian-devriend.workers.dev" },
+      "vars": { "VIDALO_MOCK": "0", "FACTS_HOST_SUFFIX": "vidalo.ai", "PUBLIC_BASE_URL": "https://vidalo-web-staging.julian-devriend.workers.dev" },
       "triggers": { "crons": ["* * * * *", "*/10 * * * *"] },
       "queues": {
         "consumers": [{ "queue": "vidalo-scans-staging", "max_batch_size": 1, "max_retries": 2 }]

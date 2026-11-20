@@ -29,6 +29,9 @@ interface CacheEntry {
 
 const cache = new Map<string, CacheEntry>();
 
+/** The facts page: inline CSS only, a JSON-LD data block (not run as script), no forms, no frames. */
+const FACTS_CSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+
 export function clearServeCache(host?: string): void {
   if (host) cache.delete(host.toLowerCase());
   else cache.clear();
@@ -136,7 +139,9 @@ export function createFactsHandler(opts: ServeOptions = {}): (req: Request) => P
     switch (path) {
       case "/":
       case "/index.html":
-        return text(entry.page.html, "text/html; charset=utf-8", headers);
+        // Facts hosts share a site with vidalo.ai since 20 Nov 2026: the page runs no script and
+        // loads nothing, and this keeps it that way even if escaping ever slips.
+        return text(entry.page.html, "text/html; charset=utf-8", { ...headers, "content-security-policy": FACTS_CSP, "x-content-type-options": "nosniff" });
       case "/llms.txt":
         return text(entry.page.llmsTxt, "text/plain; charset=utf-8", headers);
       case "/sitemap.xml":
