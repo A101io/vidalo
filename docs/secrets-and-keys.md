@@ -34,7 +34,7 @@ Permissions, exactly these seven rows (the form has three dropdowns per row: sco
 
 Resources:
 - Account Resources: **Include · Julian.devriend@a101.io's Account** (`37c9615a0d7d9629154eca03d7de59a6`), not "All accounts".
-- Zone Resources: **Include · Specific zone · vidalo.io**. Not "All zones": the same account holds Sitty's and Sonable's zones.
+- Zone Resources: **Include · Specific zone · vidalo.io** and **vidalo.ai** (the worker's facts-host routes are on vidalo.ai since 20 Nov 2026). Not "All zones": the same account holds Sitty's and Sonable's zones.
 - Client IP Address Filtering: leave empty (GitHub's runner IPs change).
 - TTL: leave empty; rotate by hand when a deploy fails authentication.
 
@@ -46,7 +46,7 @@ Cloudflare has moved to Workers *roles* (Admin / Editor / Metadata Read-Only) ne
 
 ### The runtime token (facts hosts, later)
 
-`CLOUDFLARE_API_TOKEN` as a **Worker secret** on `vidalo-worker` is a different token from the deploy token: it verifies customers' facts hosts through Cloudflare for SaaS. Permissions: *Zone · SSL and Certificates · Edit* (custom hostnames), *Zone · Workers Routes · Edit* (since 5 Nov 2026: each customer's `feiten.{domain}` gets a route `feiten.{domain}/*` → `vidalo-worker`, `packages/core/src/publisher/host.ts`) and *Zone · DNS · Edit*, zone `vidalo.io` only, with `CLOUDFLARE_ZONE_ID` = `5d39e2dacc81b8603d5dc69a163b6bca`. Nothing from the deploy token. A token made before 5 Nov 2026 lacks Workers Routes: edit it at https://dash.cloudflare.com/profile/api-tokens → the token's `…` → Edit → + Add more → `Zone` · `Workers Routes` · `Edit` → Continue to summary → Update token (the value stays the same, so the Worker secret needs no change). Without it a custom hostname is created but its first poll fails with `cloudflare /workers/routes failed: 403`.
+`CLOUDFLARE_API_TOKEN` as a **Worker secret** on `vidalo-worker` is a different token from the deploy token: it verifies customers' facts hosts through Cloudflare for SaaS. Permissions: *Zone · SSL and Certificates · Edit* (custom hostnames), *Zone · Workers Routes · Edit* (since 5 Nov 2026: each customer's `feiten.{domain}` gets a route `feiten.{domain}/*` → `vidalo-worker`, `packages/core/src/publisher/host.ts`) and *Zone · DNS · Edit*, zone `vidalo.ai` only (facts hosts moved there from vidalo.io on 20 Nov 2026), with `CLOUDFLARE_ZONE_ID` = `ca5408a780a2fe22dbd982f01458e23a`. Nothing from the deploy token. A token made before 5 Nov 2026 lacks Workers Routes: edit it at https://dash.cloudflare.com/profile/api-tokens → the token's `…` → Edit → + Add more → `Zone` · `Workers Routes` · `Edit` → Continue to summary → Update token (the value stays the same, so the Worker secret needs no change). Without it a custom hostname is created but its first poll fails with `cloudflare /workers/routes failed: 403`.
 
 ## On the Workers (`wrangler secret put NAME --name vidalo-web` / `--name vidalo-worker`)
 
@@ -68,7 +68,7 @@ Production refuses to serve without `DATABASE_URL` or a Hyperdrive binding (503,
 | `RESEND_API_KEY` | Resend | Worker + web env | A report mail arrives |
 | `UNSUBSCRIBE_SECRET` | `openssl rand -hex 32` | Worker + web env | Unsubscribe link works; without it follow-ups are not sent |
 | `SUPPORT_RELAY_SECRET` | `openssl rand -hex 32`; the same value as `RELAY_SECRET_VIDALO` in the mailbox relay's script properties (`docs/mail.md`) | Web env (`vidalo-web`) | `POST /api/support-autoreply` answers 401 to a wrong secret and 503 while unset; a test mail to support@vidalo.ai gains a `Vidalo/…` label and a `support_autoreply_log` row |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca` (active since 16 Oct 2026, account `37c9615a0d7d9629154eca03d7de59a6`) | Worker env | A facts host verifies |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID` | Cloudflare; zone id of `vidalo.ai` is `ca5408a780a2fe22dbd982f01458e23a` (facts hosts since 20 Nov 2026; `vidalo.io` is `5d39e2dacc81b8603d5dc69a163b6bca`), account `37c9615a0d7d9629154eca03d7de59a6` | Worker env | A facts host verifies |
 | `INDEXNOW_KEY` | Any random string | Worker env | `/indexnow-key.txt` on a facts host |
 | `GA4_MEASUREMENT_ID` (public, `G-…`) | analytics.google.com → Admin → Data streams → Web stream "vidalo.ai" → Measurement ID | `apps/web/wrangler.jsonc` production `vars` | Unset: no GA4, no "Statistieken" choice in the cookie notice |
 | `META_PIXEL_ID` (public, digits) | business.facebook.com → Events Manager → Data sources → the "Vidalo" dataset → Dataset ID | `apps/web/wrangler.jsonc` production `vars` | Unset: no pixel, no "Advertenties" choice |
@@ -90,7 +90,7 @@ One row per step of the customer journey. "Have" means it exists and was checked
 | E-mail | Resend account + `RESEND_API_KEY`, vidalo.io verified (SPF, DKIM, DMARC), `UNSUBSCRIBE_SECRET` (`openssl rand -hex 32`), mailboxes hello@ and support@ (`docs/mail.md`) | Open |
 | Payment | Vidalo's own Stripe account (test mode first), then `pnpm stripe:setup --apply`: prices, 21% tax rate, webhook, portal; Terms and Privacy URLs in Stripe settings | Open |
 | Ownership proof | Google Cloud OAuth client (`GOOGLE_OAUTH_CLIENT_ID/SECRET`) and Google's approval for Business Profile API access (days to weeks; every paid job waits for proof) | Open; the longest lead time |
-| Facts pages | Runtime Cloudflare token (Zone: SSL and Certificates Edit, DNS Edit), `CLOUDFLARE_ZONE_ID` (have: `5d39e2dacc81b8603d5dc69a163b6bca`), Cloudflare for SaaS on the zone, `INDEXNOW_KEY`, decision on the fallback host scheme (go-live D5) | Open |
+| Facts pages | Runtime Cloudflare token (Zone: SSL and Certificates Edit, DNS Edit), `CLOUDFLARE_ZONE_ID` (`ca5408a780a2fe22dbd982f01458e23a`, vidalo.ai), Cloudflare for SaaS on the zone, `INDEXNOW_KEY`, decision on the fallback host scheme (go-live D5) | Open |
 | Directories | No keys: forms and correction e-mails, done through the operator queue | Process |
 | Google index check (#23) | `GOOGLE_SERVICE_ACCOUNT_JSON`; without it the check is skipped | Optional |
 | Legal | Terms and privacy from the De Boer masters, NL + EN (checkout requires them; the coming-soon list links the privacy page) | Open |

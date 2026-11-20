@@ -16,7 +16,7 @@ function deps(db: MemDb, over: Partial<PurgeDeps> = {}) {
     deleteCustomHostname: async (h) => void calls.push(`cloudflare:${h}`),
     deleteLogin: async (u) => void calls.push(`login:${u}`),
     sendDeletedMail: async (to) => void calls.push(`mail:${to.language}:${to.businessName}`),
-    isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.io"),
+    isOwnFactsHost: (h) => h.endsWith("-feiten.vidalo.ai"),
     ...over,
   };
   return { d, calls };
@@ -103,7 +103,7 @@ describe("purgeBusiness", () => {
     const db = new MemDb();
     const y = await scanOwner(db, { factsHost: "feiten.klant.nl", factsHostVerifiedAt: new Date().toISOString() });
     const x = await scanOwner(db, { factsHost: "feiten.klant.nl", factsHostVerifiedAt: null });
-    const own = await scanOwner(db, { factsHost: "bakkerij-feiten.vidalo.io", factsHostVerifiedAt: new Date().toISOString() });
+    const own = await scanOwner(db, { factsHost: "bakkerij-feiten.vidalo.ai", factsHostVerifiedAt: new Date().toISOString() });
     for (const b of [x.b, own.b]) {
       const { d, calls } = deps(db);
       expect((await purgeBusiness(d, b.id, "no_subscription")).done).toBe(true);
@@ -172,7 +172,7 @@ describe("purgeBusiness", () => {
 describe("deleteCustomHostname (SEC-48)", () => {
   it("refuses our own names and anything that is not a hostname, before any call", async () => {
     const { deleteCustomHostname } = await import("../src/publisher/host");
-    for (const h of ["vidalo.io", "www.vidalo.io", "x-feiten.vidalo.io", "vidalo.ai", "www.vidalo.ai", "*", "a/b", "*.klant.nl"]) await expect(deleteCustomHostname(h), h).rejects.toThrow(/refusing/);
+    for (const h of ["vidalo.io", "www.vidalo.io", "x-feiten.vidalo.io", "x-feiten.vidalo.ai", "feiten.vidalo.ai", "vidalo.ai", "www.vidalo.ai", "*", "a/b", "*.klant.nl"]) await expect(deleteCustomHostname(h), h).rejects.toThrow(/refusing/);
     const mock = process.env.VIDALO_MOCK;
     process.env.VIDALO_MOCK = "1";
     try {

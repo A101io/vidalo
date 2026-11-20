@@ -21,7 +21,7 @@ export interface ScanJob {
 
 export interface SetupJob {
   businessId: string;
-  /** "domain" = feiten.{domain} via CNAME (default when the business has a domain), "fallback" = {slug}-feiten.vidalo.io */
+  /** "domain" = feiten.{domain} via CNAME (default when the business has a domain), "fallback" = {slug}-feiten.vidalo.ai */
   hostChoice?: "domain" | "fallback";
   /** skip the welcome mail (e.g. re-run) */
   skipWelcome?: boolean;

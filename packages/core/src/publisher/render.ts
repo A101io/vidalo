@@ -195,11 +195,11 @@ const MAX_LABEL = 63;
 /**
  * Fallback facts host for a business without a domain of its own:
  * `{slug}-feiten.{FACTS_HOST_SUFFIX}`. One level under the suffix, so the
- * zone's Universal SSL certificate (`*.vidalo.io`) covers it. A slug too long
+ * zone's Universal SSL certificate (`*.vidalo.ai`) covers it. A slug too long
  * for one label is cut and given a short hash, so two long slugs stay apart.
  */
 export function defaultFactsHost(business: Pick<Business, "slug">): string {
-  const suffix = process.env.FACTS_HOST_SUFFIX || "vidalo.io";
+  const suffix = process.env.FACTS_HOST_SUFFIX || "vidalo.ai";
   const max = MAX_LABEL - FALLBACK_LABEL_END.length;
   const slug = business.slug.length <= max ? business.slug : `${business.slug.slice(0, max - 7).replace(/-+$/, "")}-${shortHash(business.slug)}`;
   return `${slug}${FALLBACK_LABEL_END}.${suffix}`;

@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (!isVerifiedOwner(business, session.userId)) return NextResponse.redirect(`${env.baseUrl}/app/google?eerst=1`, 303);
   const host = String(form.get("host") ?? "").trim().toLowerCase();
   if (!host) return NextResponse.redirect(`${env.baseUrl}/app/domein`, 303);
-  // Names under vidalo.io are ours (no CNAME proves them), and a host another
+  // Names under vidalo.ai and vidalo.io are ours (no CNAME proves them), and a host another
   // business already verified stays theirs.
   const db = await ready();
   if (isOurName(host) || (await factsHostTaken(host, business.id))) {

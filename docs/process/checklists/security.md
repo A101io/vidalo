@@ -75,3 +75,6 @@ exploit path, not opinions about structure.
 ## Learned (Vidalo, 16 Nov 2026, 005 verify)
 - A path that builds a record from what the visitor typed (no outside id: "not listed", "as typed") must not attach to, or write into, an existing record found by a guessable key (slug of name + town) that came from a verified source (a Google place id, a KvK number, an owner). Decide on the **stored** record, not only on the incoming candidate (005 SEC-01: one click put a stranger's website into a listed business's provisional facts).
 - A privacy sentence "we only compare it and do not keep it" is checked against every branch the value reaches; a value that doubles as an input elsewhere (a website identity that becomes the checked website) is stored and fetched there (005 SEC-02).
+
+## Learned (Vidalo, 20 Nov 2026, facts hosts to vidalo.ai)
+- Hosts that serve owner-influenced pages under the main site's domain (`{slug}-feiten.vidalo.ai`) are same-site with the owner area: no cookie with a `Domain` attribute, no wildcard subdomain in any sign-in redirect allowlist (Supabase Redirect URLs, OAuth redirect URIs), an exact-list Origin check, and a strict CSP on the page (`default-src 'none'`).

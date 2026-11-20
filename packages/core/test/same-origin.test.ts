@@ -10,6 +10,8 @@ describe("refuseCrossSite", () => {
     { origin: "https://evil.example" },
     { origin: "null" },
     { origin: "https://x-feiten.vidalo.io" },
+    { origin: "https://x-feiten.vidalo.ai" },
+    { origin: "https://feiten.vidalo.ai" },
     { origin: "https://feiten.klant.nl" },
     { origin: "https://vidalo.ai.evil.example" },
     { origin: "https://evilvidalo.ai" },

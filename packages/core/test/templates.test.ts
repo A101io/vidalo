@@ -45,7 +45,7 @@ const all: Record<string, Mail | { subject: string; text: string }> = {
   welcome: welcomeEmail({
     business,
     plan: "monitor",
-    cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" },
+    cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.ai" },
     links: { ...links, confirmFactsUrl: "https://vidalo.io/dashboard/feiten", googleConnectUrl: "https://vidalo.io/dashboard/google" },
   }),
   baseline: baselineSummaryEmail({ business, checkedAt: "2026-10-02T03:00:00Z", totalAnswers: 100, wrongAnswers: 1, findings: [finding], engines: ["chatgpt", "gemini", "perplexity", "google_ai", "copilot"], links }),
@@ -138,7 +138,7 @@ describe("email templates", () => {
     expect(t).toMatch(/2\. Eén DNS-regel/);
     expect(t).toMatch(/3\. Log één keer in bij Google/);
     expect(t).toMatch(/4\. Wij doen de rest/);
-    expect(t).toContain("feiten.bakkerijjansen.nl  →  feiten.vidalo.io");
+    expect(t).toContain("feiten.bakkerijjansen.nl  →  feiten.vidalo.ai");
   });
 
   it("welcome promises a check every month only with Vidalo Monthly (review CMP-01)", () => {
@@ -277,7 +277,7 @@ const linksEn = { dashboardUrl: "https://vidalo.io/en/app", factsPageUrl: "https
 const en = "en" as const;
 
 const allEn: Record<string, Mail | { subject: string; text: string }> = {
-  welcome: welcomeEmail({ lang: en, business, plan: "monitor", cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.io" }, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
+  welcome: welcomeEmail({ lang: en, business, plan: "monitor", cname: { host: "feiten.bakkerijjansen.nl", target: "feiten.vidalo.ai" }, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
   welcomeNoDomain: welcomeEmail({ lang: en, business, plan: "monitor", cname: null, links: { ...linksEn, confirmFactsUrl: "https://vidalo.io/en/app/gegevens", googleConnectUrl: "https://vidalo.io/en/app/google" } }),
   baseline: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, offer: { setupEur: 149, monitorEur: 49 } }),
   baselinePaying: baselineSummaryEmail({ ...baselineStipData, lang: en, links: linksEn, paying: true }),

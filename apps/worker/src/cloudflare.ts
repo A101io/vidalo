@@ -3,8 +3,8 @@
  * The Node entry (index.ts) runs the same work in loops; here Cloudflare
  * invokes it:
  *
- *   fetch      facts pages (core's handleFactsRequest) on feiten.vidalo.io,
- *              {slug}-feiten.vidalo.io and customers' feiten.{domain}
+ *   fetch      facts pages (core's handleFactsRequest) on feiten.vidalo.ai,
+ *              {slug}-feiten.vidalo.ai and customers' feiten.{domain}
  *              (routes: wrangler.jsonc and publisher/host.ts)
  *   scheduled  every minute: run queued jobs for up to 10 minutes;
  *              every 10 minutes also the cron tick (cron.ts)

@@ -3,8 +3,10 @@
  * (before that vidalo.io, registered 14 Oct 2026; vidalo.nl and vidalo.com are
  * held by others). www.vidalo.ai, vidalo.io and www.vidalo.io are bound to the
  * same web Worker and answer with a permanent redirect to the same path on
- * vidalo.ai, so search engines and AI crawlers see one site. Mail and the
- * facts-page hosts (*.feiten.vidalo.io) stay on vidalo.io.
+ * vidalo.ai, so search engines and AI crawlers see one site. Mail stays on
+ * vidalo.io. The facts-page hosts (feiten.vidalo.ai, {slug}-feiten.vidalo.ai)
+ * moved to vidalo.ai on 20 Nov 2026; they are served by vidalo-worker routes,
+ * never by this redirect.
  *
  * Only GET and HEAD are redirected. A POST to the old host (the Stripe webhook
  * registered on vidalo.io, the support mailbox relay) is served where it

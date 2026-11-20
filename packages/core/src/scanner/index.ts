@@ -21,6 +21,7 @@ import { getEngines, type EngineClient } from "./engines";
 import { ENGINE_TIMEOUT_MS } from "./engines/types";
 import { defaultExtractMode, extractClaims } from "./extract";
 import { normalizeWebsite } from "./normalize";
+import { defaultFactsHost } from "../publisher/render";
 import { createLimiter, retry, withTimeout } from "./util";
 import { effectiveProfile } from "./understand";
 import { promotionCandidates, summarizeRecommendations } from "./recommendations";
@@ -209,10 +210,9 @@ async function sampleAll(
 }
 
 function attributionContext(business: { domain: string | null; slug: string; name: string; factsHost?: string | null }, facts: Facts): AttributionContext {
-  const suffix = process.env.FACTS_HOST_SUFFIX ?? "vidalo.io";
   return {
     business,
-    factsHost: business.factsHost ?? `${business.slug}.feiten.${suffix}`,
+    factsHost: business.factsHost ?? defaultFactsHost(business),
     websiteHost: normalizeWebsite(facts.website),
   };
 }
