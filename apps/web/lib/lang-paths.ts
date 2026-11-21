@@ -27,12 +27,26 @@ const EN_SLUGS: Record<string, string> = {
 };
 const NL_SLUGS = Object.fromEntries(Object.entries(EN_SLUGS).map(([nl, en]) => [en, nl]));
 
+/**
+ * The one nested segment that is translated: under /app, "productlijnen" is "product-lines" in English (the brief names the
+ * path). Every other /app page keeps its Dutch segment under /en.
+ */
+const EN_APP_SLUGS: Record<string, string> = { productlijnen: "product-lines" };
+const NL_APP_SLUGS = Object.fromEntries(Object.entries(EN_APP_SLUGS).map(([nl, en]) => [en, nl]));
+
+/** Swap the second segment of /app/... through `map`; other paths come back as they were. */
+function mapAppSegment(segments: string[], map: Record<string, string>): string[] {
+  const [first, second, ...rest] = segments;
+  if (first !== "app" || second === undefined || !Object.hasOwn(map, second)) return segments;
+  return [first, map[second]!, ...rest];
+}
+
 /** A public URL path → the language and the route that renders it. */
 export function fromUrl(pathname: string): { lang: Lang; route: string } {
   if (pathname !== "/en" && !pathname.startsWith("/en/")) return { lang: "nl", route: pathname };
   const rest = pathname.slice(3) || "/";
   const [, first = "", ...more] = rest.split("/");
-  const route = "/" + [NL_SLUGS[first] ?? first, ...more].filter((s, i) => s !== "" || i > 0).join("/");
+  const route = "/" + mapAppSegment([NL_SLUGS[first] ?? first, ...more], NL_APP_SLUGS).filter((s, i) => s !== "" || i > 0).join("/");
   return { lang: "en", route: route === "/" ? "/" : route.replace(/\/$/, "") };
 }
 
@@ -43,6 +57,6 @@ export function localizeHref(href: string, lang: Lang): string {
   const path = cut === -1 ? href : href.slice(0, cut);
   const tail = cut === -1 ? "" : href.slice(cut);
   const [, first = "", ...more] = path.split("/");
-  const out = "/en" + (first ? "/" + [EN_SLUGS[first] ?? first, ...more].join("/") : "");
+  const out = "/en" + (first ? "/" + mapAppSegment([EN_SLUGS[first] ?? first, ...more], EN_APP_SLUGS).join("/") : "");
   return out + tail;
 }

@@ -8,7 +8,10 @@
  * deterministic synthetic answers.
  */
 import { withCountry } from "../shared/country";
-import { ENGINES, visibilityFor, type BusinessProfile, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type ProfileSummary, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
+import { lineScanRefusal } from "../shared/product-lines";
+import { loadLinePrompts } from "../prompts/line";
+import { lineFacts } from "./line";
+import { ENGINES, visibilityFor, type BusinessProfile, type Claim, type Engine, type Facts, type Finding, type InstableFinding, type ProductLine, type ProductLineVersion, type ProfileSummary, type Prompt, type ScanKind, type ScanReport, type Sample, type SectorSlug } from "../types";
 import { listRunsToSummarize, saveRunSummary, summarizeRun, type Db, type FindingInput } from "../db";
 import { getDb } from "../shared/db.js";
 import { errorMessage, log } from "../shared/log.js";
@@ -41,6 +44,8 @@ export * from "./recommendations";
 export * from "./progress";
 export * from "./question-sets";
 export * from "./understand";
+export * from "./line";
+export { generateLinePrompts } from "../prompts/line";
 
 /**
  * Engines a scan asks. Copilot stays out until its adapter ships
@@ -95,6 +100,9 @@ export interface RunScanOptions {
   samplesPerPrompt?: number;
   /** Samples asked before deciding whether a cell needs all of them (default FIRST_SAMPLES). */
   firstSamples?: number;
+  /** Feature 006: scan this product line in this market (both or neither). Throws `line_not_scannable:<reason>` when the line may not be scanned. */
+  productLineId?: string;
+  market?: string;
   /** Restrict to these stored prompt ids (rechecks). */
   promptIds?: string[];
   /** Engine clients to use instead of the registry (tests, worker-injected adapters). */
@@ -256,20 +264,35 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   const withCountryFacts = withCountry(stored, business);
   let profile: BusinessProfile | null = null;
   let understandCents = 0;
-  if (opts.kind === "recheck") {
+  // Feature 006 (ADR-0010): a line run differs from a business run in seven places, marked "line:" below.
+  let lineRun: { line: ProductLine; version: ProductLineVersion; market: string } | null = null;
+  if (opts.productLineId || opts.market) {
+    if (!opts.productLineId || !opts.market) throw new Error("line_not_scannable:needs_line_and_market");
+    const line = await db.getProductLine(opts.productLineId);
+    const refusal = lineScanRefusal(line, business.id, opts.market, opts.kind);
+    if (refusal || !line) throw new Error(`line_not_scannable:${refusal ?? "no_line"}`);
+    lineRun = { line, version: line.current, market: opts.market };
+  }
+  if (lineRun) {
+    // line: no understanding step; the profile stays null
+  } else if (opts.kind === "recheck") {
     profile = effectiveProfile(business);
   } else {
     const understood = await ensureProfile(db, business, withCountryFacts, opts.kind, opts.understand);
     profile = understood.profile;
     understandCents = understood.costCents;
   }
-  const facts = withProfile(withCountryFacts, profile);
+  // line: the facts are the in-memory view of this version of the line in this market
+  const facts = lineRun ? lineFacts(business, stored, lineRun.version, lineRun.market) : withProfile(withCountryFacts, profile);
   opts.onProgress?.({ type: "profile", profile: profile ? profileSummary(profile) : (opts.profile ?? DOOR_PROFILE_SUMMARY) });
-  let prompts = await loadPrompts(db, business.id, facts, opts.kind, business.sector, opts.promptIds, undefined, profile);
+  // line: the questions come from loadLinePrompts, never loadPrompts
+  let prompts = lineRun
+    ? await loadLinePrompts(db, business.id, lineRun.version, lineRun.market, opts.kind, opts.promptIds)
+    : await loadPrompts(db, business.id, facts, opts.kind, business.sector, opts.promptIds, undefined, profile);
   // Never blocks (AC-A3): an online profile whose name no template may carry (the sanitiser refused it) is asked the
   // neutral set with the name as it was typed, never the shop-front questions with the town (V1-QA-02). Only a name
   // that is not usable even there (markup, a link) still gets today's questions.
-  if (!prompts.length && profile?.mode === "online") {
+  if (!prompts.length && !lineRun && profile?.mode === "online") {
     const neutral = neutralNameQuestions(facts);
     if (neutral.length) {
       const stored = new Set((await db.listPrompts(business.id)).map((p) => p.textNl));
@@ -288,8 +311,14 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   const active = clients.filter((c) => c.available());
   const unavailable = new Set(clients.filter((c) => !c.available()).map((c) => c.engine));
 
-  const scanRun = await db.createScanRun({ businessId: business.id, kind: opts.kind, engines, samplesPerPrompt, status: "running", profile });
-  await db.logEvent(business.id, "scan.started", { scanRunId: scanRun.id, kind: opts.kind, engines, samplesPerPrompt, firstSamples, prompts: prompts.length, skippedEngines: [...unavailable] });
+  const lineScope = lineRun ? { productLineId: lineRun.line.id, market: lineRun.market } : null;
+  const scanRun = await db.createScanRun({
+    businessId: business.id, kind: opts.kind, engines, samplesPerPrompt, status: "running", profile,
+    ...(lineRun ? { productLineId: lineRun.line.id, productLineVersion: lineRun.version.version, market: lineRun.market } : {}),
+  });
+  await db.logEvent(business.id, "scan.started", { scanRunId: scanRun.id, kind: opts.kind, engines, samplesPerPrompt, firstSamples, prompts: prompts.length, skippedEngines: [...unavailable], ...(lineScope ?? {}) });
+  // line: the engines are asked as a user in the market (country = market, no town); counts and keys only in the event
+  const askBusiness = lineRun ? { ...business, country: lineRun.market, place: "" } : business;
   const firstRound: Cell[] = active.flatMap((client) => prompts.map((prompt) => ({ client, prompt, from: 0, to: Math.min(firstSamples, samplesFor(client.engine, samplesPerPrompt)) })));
   const progress = { total: firstRound.reduce((n, c) => n + (c.to - c.from), 0), done: 0 };
   const countPerEngine = (plan: Cell[]) => {
@@ -300,7 +329,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
   opts.onProgress?.({ type: "start", scanRunId: scanRun.id, total: progress.total, perEngine: countPerEngine(firstRound) });
 
   // Previous open findings, loaded before we upsert so we can diff afterwards.
-  const previousOpen = await db.listFindings(business.id, ["open", "fixing", "recheck"]);
+  const previousOpen = await db.listFindings(business.id, ["open", "fixing", "recheck"], lineScope ?? undefined);
 
   // Outside the try: a scan that fails after paid calls still records what it spent (security review, 14 Nov 2026).
   let costCents = 0;
@@ -313,7 +342,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
 
     // Ask the cells in the plan, store the usable answers (skipped ones carry no evidence) and extract their claims.
     const round = async (plan: Cell[]) => {
-      const asked = await sampleAll(plan, { business, facts }, concurrency, progress, opts.onProgress, (engine, prompt, err) => {
+      const asked = await sampleAll(plan, { business: askBusiness, facts }, concurrency, progress, opts.onProgress, (engine, prompt, err) => {
         void db.logEvent(business.id, "scan.sample_failed", { scanRunId: scanRun.id, engine, prompt: prompt.textNl, error: String((err as Error)?.message ?? err) });
       });
       costCents += asked.reduce((sum, a) => sum + a.costCents, 0);
@@ -374,6 +403,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
       evidenceBefore: f.wrongSampleIds[0] ?? null,
       evidenceKind: f.evidenceKind,
       criterium: f.criterium,
+      ...(lineScope ?? {}),
     }));
     const findings = await db.upsertFindings(inputs);
 
@@ -401,14 +431,18 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
       cells: firstRound.length,
       costCents,
       mode: profile?.mode ?? "door",
+      ...(lineScope ?? {}),
     });
     // The question library: what each template was asked and how often it gave a usable answer. Never fails the scan.
-    await recordScanUse(db, business.id, scanRun.id, () =>
-      useRows({ scanRunId: scanRun.id, profile, facts, prompts, samples, claimsPerSample, verdicts: result.verdicts }),
-    );
+    // line: never writes to the shared question library
+    if (!lineRun) {
+      await recordScanUse(db, business.id, scanRun.id, () =>
+        useRows({ scanRunId: scanRun.id, profile, facts, prompts, samples, claimsPerSample, verdicts: result.verdicts }),
+      );
+    }
     opts.onProgress?.({ type: "phase", phase: "done" });
 
-    const report = assembleReport({ business, facts, prompts, scanRun: { ...scanRun, costCents }, engines, samples, result, findings, unavailable, profile });
+    const report = assembleReport({ business, facts, prompts, scanRun: { ...scanRun, costCents }, engines, samples, result, findings, unavailable, profile, line: lineRun ? { id: lineRun.line.id, name: lineRun.version.name, version: lineRun.version.version, market: lineRun.market, category: lineRun.version.category } : null });
     // The run's summary for the archive, the progress view and the dashboard (ADR-0007). Never fails the scan:
     // a check without a summary only shows no counts until scripts/backfill-run-summaries.mts has seen it.
     if (opts.kind !== "recheck") {
@@ -420,7 +454,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanReport> {
       }
     }
     // A bank question where the business is mostly not named becomes a fixed question.
-    if (opts.kind === "monthly" || opts.kind === "baseline") {
+    if (!lineRun && (opts.kind === "monthly" || opts.kind === "baseline")) {
       const promote = promotionCandidates(report.recommendations ?? []);
       for (const id of promote) await db.setPromptPool(id, "core");
       if (promote.length) await db.logEvent(business.id, "prompts.promoted", { scanRunId: scanRun.id, promptIds: promote });
@@ -446,6 +480,8 @@ function assembleReport(args: {
   unavailable: Set<Engine>;
   /** The profile the scan was asked with; null reads as door. */
   profile?: BusinessProfile | null;
+  /** Feature 006: the line and market of a line run; the report is "compared as" the line's category. */
+  line?: { id: string; name: string; version: number; market: string; category: string } | null;
 }): ScanReport {
   const { business, facts, prompts, scanRun, engines, samples, result, findings, unavailable } = args;
   const verdictOf = (s: Sample) => result.verdicts.get(s.id);
@@ -491,7 +527,8 @@ function assembleReport(args: {
     instable,
     criteriaNotFound,
     recommendations: summarizeRecommendations({ samples, prompts, verdicts: result.verdicts, facts }),
-    comparedAs: businessNoun(facts, business.sector ?? null),
+    comparedAs: args.line ? args.line.category : businessNoun(facts, business.sector ?? null),
+    ...(args.line ? { productLine: { id: args.line.id, name: args.line.name, version: args.line.version, market: args.line.market } } : {}),
     asked: result.asked.map((a) => ({ ...a })),
     profile: args.profile ? profileSummary(args.profile) : null,
   };
@@ -512,10 +549,12 @@ export async function buildSnapshot(scanRunId: string, dbOverride?: Db): Promise
   const stored = await db.latestFacts(scanRun.businessId);
   if (!business || !stored) return null;
   // Judged with the profile the scan was asked with, not the business's current one.
-  const facts = withProfile(withCountry(stored, business), scanRun.profile ?? null);
+  const lineCtx = await lineOfRun(db, scanRun);
+  if (scanRun.productLineId && !lineCtx) return null;
+  const facts = lineCtx ? lineFacts(business, stored, lineCtx.version, lineCtx.market, new Date(scanRun.startedAt)) : withProfile(withCountry(stored, business), scanRun.profile ?? null);
   const samples = await db.listSamples(scanRunId);
   const claims = await db.listClaims(samples.map((s) => s.id));
-  const prompts = await db.listPrompts(scanRun.businessId);
+  const prompts = await db.listPrompts(scanRun.businessId, lineCtx ? { line: { productLineId: lineCtx.version.productLineId, market: lineCtx.market } } : {});
   const promptById = new Map(prompts.map((p) => [p.id, p]));
   const comparable: ComparableSample[] = samples
     .filter((s) => promptById.has(s.promptId))
@@ -544,10 +583,12 @@ export async function buildReport(scanRunId: string, dbOverride?: Db): Promise<S
   if (!business) throw new Error(`business ${scanRun.businessId} not found`);
   const stored = await db.latestFacts(business.id);
   if (!stored) throw new Error(`business ${business.id} has no facts`);
-  const facts = withProfile(withCountry(stored, business), scanRun.profile ?? null);
+  const lineCtx = await lineOfRun(db, scanRun);
+  if (scanRun.productLineId && !lineCtx) throw new Error(`scan_run ${scanRunId}: product line version not found`);
+  const facts = lineCtx ? lineFacts(business, stored, lineCtx.version, lineCtx.market, new Date(scanRun.startedAt)) : withProfile(withCountry(stored, business), scanRun.profile ?? null);
   const samples = await db.listSamples(scanRunId);
   const claims = await db.listClaims(samples.map((s) => s.id));
-  const prompts = await db.listPrompts(business.id);
+  const prompts = await db.listPrompts(business.id, lineCtx ? { line: { productLineId: lineCtx.version.productLineId, market: lineCtx.market } } : {});
   const promptById = new Map(prompts.map((p) => [p.id, p]));
   const comparable: ComparableSample[] = samples
     .filter((s) => promptById.has(s.promptId))
@@ -555,7 +596,14 @@ export async function buildReport(scanRunId: string, dbOverride?: Db): Promise<S
   const result = compare(comparable, facts);
   const findings = await db.listFindingsByScanRun(scanRunId);
   const unavailable = new Set(scanRun.engines.filter((e) => !samples.some((s) => s.engine === e)));
-  return assembleReport({ business, facts, prompts, scanRun, engines: scanRun.engines, samples, result, findings, unavailable, profile: scanRun.profile ?? null });
+  return assembleReport({ business, facts, prompts, scanRun, engines: scanRun.engines, samples, result, findings, unavailable, profile: scanRun.profile ?? null, line: lineCtx ? { id: lineCtx.version.productLineId, name: lineCtx.version.name, version: lineCtx.version.version, market: lineCtx.market, category: lineCtx.version.category } : null });
+}
+
+/** A stored line run read back with the exact version it was asked with (never the latest). Null for a business run. */
+async function lineOfRun(db: Db, run: { productLineId?: string | null; productLineVersion?: number | null; market?: string | null }): Promise<{ version: ProductLineVersion; market: string } | null> {
+  if (!run.productLineId || run.productLineVersion == null || !run.market) return null;
+  const version = await db.getProductLineVersion(run.productLineId, run.productLineVersion);
+  return version ? { version, market: run.market } : null;
 }
 
 /**

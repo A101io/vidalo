@@ -58,6 +58,16 @@ Savings 1–3 below are in the code (`FIRST_SAMPLES`, `SAMPLES_CAP`, `samplesFor
 
 After 1–5 the monthly scan is roughly €5–7, rechecks about €2, and the on-demand check about €1. The client costs **€8–12 a month** including infra at 10 clients, against €49.
 
+## 4b. Product lines (feature 006): cost to us, not a customer price
+
+A (product line, market) asks at most 14 questions a month (3 use cases + 5 specifications + 3 certificates + 1 place to buy + 2 old names; `PRODUCT_LINE_LIMITS`), under the same sampling rules as above. At today's rate of roughly €0.18-0.29 per question per month that is the row below. Line runs count towards the daily AI ceiling. What a line costs the customer is undecided (D1); this table sizes the limits only.
+
+| Case | Per month |
+|---|---|
+| One (line, market) at the cap | about €2.50-4.10 |
+| The provisional limits: 2 lines x 2 markets | about €10-16 on top of the business's €7-11 |
+| If D2 were 5 lines x 3 markets | about €38-62 |
+
 ## 5. What not to touch
 
 - The cron that fires every minute (`wrangler.jsonc`): 43k Worker invocations a month sit inside the $5 plan and the queries are trivial.

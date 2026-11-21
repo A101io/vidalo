@@ -186,6 +186,15 @@ async function journeys(lang: Lang) {
   // 31 days after the first sync: each directory still wrong gets its one reminder.
   await syncAllChannels(b.id, { now: new Date(Date.now() + 31 * DAY) });
   await drain();
+  // Feature 006: the demo's two product lines (Dutch and Belgian markets). One market has no finished run this month, so the
+  // mail says it is not checked yet. The business's own counts above are not touched by them.
+  {
+    const { seedDemoLines } = await import("../apps/web/lib/demo.ts");
+    await seedDemoLines(db, b.id);
+    const spelt = (await db.listProductLines(b.id)).find((l) => l.current.name === "Haarlems Speltbrood")!;
+    const [beRun] = await db.listScanRuns(b.id, 20, { productLineId: spelt.id, market: "BE" });
+    await db.updateScanRun(beRun!.id, { status: "failed" });
+  }
   await sendMonthlyReport(b.id);
   const [first, second] = findings;
   if (first) await sendResolutionNotice(first.id);
@@ -322,6 +331,17 @@ for (const f of (await readdir(mailDir)).sort()) {
     if (!/\b(btw|VAT)\b/.test(m.text)) m.problems.push("order mail without btw/VAT");
     if (m.headers["List-Unsubscribe"]) m.problems.push("order mail carries List-Unsubscribe; it is a required mail");
     if (/cs_(test|live)_|session_id|invoice\.stripe\.com/.test(`${m.text}\n${m.html ?? ""}`)) m.problems.push("order mail shows a Stripe identifier");
+  }
+  if (m.kind === "report" && m.journey && m.to === JOURNEY[m.journey].paid.owner) {
+    // Feature 006 (AC5): a section per product line in the owner's language, a market without a run this month says when it was last checked, and the checked ones name the AI systems asked,
+    // and the section holds no score, position, price or percentage.
+    const words = m.lang === "en" ? { head: "Product line: Haarlems Speltbrood", second: "Product line: Grote Houtstraat Kerststol", not: "not checked this month. Last check:", named: "Named as a recommendation:", asked: "Asked to " } : { head: "Productlijn: Haarlems Speltbrood", second: "Productlijn: Grote Houtstraat Kerststol", not: "deze maand niet gecontroleerd. Laatste controle:", named: "Genoemd als aanrader:", asked: "Gevraagd aan " };
+    for (const need of [words.head, words.second, words.not, words.named, words.asked]) if (!m.text.includes(need)) m.problems.push(`monthly mail without "${need}"`);
+    const from = m.text.indexOf(words.head);
+    const to = Math.max(m.text.lastIndexOf("/app/productlijnen/"), m.text.lastIndexOf("/app/product-lines/"));
+    const section = from >= 0 && to > from ? m.text.slice(from, to) : "";
+    const bad = /%|\bscore\b|ranking|positie|\bposition\b|€|gratis|\bfree\b|inbegrepen|included/i.exec(section);
+    if (bad) m.problems.push(`product line section has "${bad[0]}"`);
   }
   if (m.kind.startsWith("followup") && !m.headers["List-Unsubscribe"]) m.problems.push("commercial mail without List-Unsubscribe");
   if (m.kind.startsWith("followup") && m.headers["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") m.problems.push("commercial mail without one-click List-Unsubscribe-Post");

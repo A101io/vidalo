@@ -137,6 +137,7 @@ describe("legal texts: recipients", () => {
   /** Hosts in the code that receive no personal data from us, with the reason. Re-read on every legal review. */
   const NOT_RECIPIENTS: Record<string, string> = {
     "schema.org": "vocabulary URL inside JSON-LD, never fetched",
+    "example": "reserved TLD (RFC 2606) in the mock seed, never resolves",
     "www.sitemaps.org": "XML namespace in the sitemap, never fetched",
     "vidalo.io": "our own domain",
     "vidalo.ai": "our own domain",

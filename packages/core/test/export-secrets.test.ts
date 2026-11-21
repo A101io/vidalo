@@ -61,7 +61,7 @@ describe.each(backends)("%s: the download", (_n, makeDb) => {
       expect(text).toContain("pendingDiff");
     }
     expect(parsed.events).toHaveLength(503);
-    expect(Object.keys(parsed)).toEqual(["exportedAt", "signedInAs", "business", "profiles", "facts", "prompts", "scans", "findings", "fixes", "channels", "googleIndex", "signIns", "events"]);
+    expect(Object.keys(parsed)).toEqual(["exportedAt", "signedInAs", "business", "profiles", "facts", "prompts", "productLines", "scans", "findings", "fixes", "channels", "googleIndex", "signIns", "events"]);
   });
 
   it("pages 36 runs of 50 answers in ceil(36/6) sample reads, every answer once, only its own business", async () => {

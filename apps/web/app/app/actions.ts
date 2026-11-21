@@ -42,6 +42,8 @@ export async function dispute(formData: FormData) {
   if (!finding) redirect(href("/app"));
   await disputeFinding(finding);
   revalidatePath(`/app/fouten/${finding.id}`);
+  // A line finding is corrected in the line, not in the business facts (feature 006).
+  if (finding.productLineId) redirect(href(`/app/productlijnen/${finding.productLineId}?bewerken=1&betwist=${finding.id}`));
   redirect(href(`/app/gegevens?betwist=${finding.id}#${finding.factKey}`));
 }
 

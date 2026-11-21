@@ -5,7 +5,8 @@
  * read through the service handle and filter on the owner's business
  * themselves. loadDashboard (lib/reads.ts) stays the RLS path for the rest.
  */
-import type { Channel, Claim, Engine, Finding, Fix, Prompt, Sample, ScanReport, ScanRun } from "@vidalo/core/types";
+import type { Channel, Claim, Engine, Finding, Fix, ProductLine, Prompt, Sample, ScanReport, ScanRun } from "@vidalo/core/types";
+import { lineScopeOf } from "@vidalo/core/shared";
 import { overviewExtras, type BusinessRecord, type EventRow } from "@vidalo/core/db";
 import { affectedPrompts, fixPathForFinding } from "@vidalo/core/fixer";
 import { pendingDiffOf } from "@vidalo/core/publisher";
@@ -81,6 +82,8 @@ export interface FindingDetail {
   others: { engine: Engine; verdict: "correct" | "wrong" | "not_found" }[];
   prompts: Prompt[];
   events: EventRow[];
+  /** Feature 006: the product line a line finding belongs to; null for a finding of the business itself. */
+  line: ProductLine | null;
 }
 
 /** One finding with its evidence, or null when it is not this business's. */
@@ -91,21 +94,25 @@ export async function loadFinding(id: string, business: BusinessRecord): Promise
   const fixes = (await db.listFixes(finding.id)).sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
   const fix = fixes.find((x) => x.resolvedAt === null) ?? fixes[fixes.length - 1] ?? null;
   const run = await db.getScanRun(finding.scanRunId);
-  const prompts = affectedPrompts(finding, await db.listPrompts(business.id));
+  // A line finding reads the prompts and the other findings of its own line and market only (the scope default is the business).
+  const scope = lineScopeOf(finding);
+  const line = scope ? await db.getProductLine(scope.productLineId) : null;
+  if (scope && (!line || line.businessId !== business.id)) return null;
+  const prompts = affectedPrompts(finding, await db.listPrompts(business.id, scope ? { line: scope } : undefined));
   const promptIds = new Set(prompts.map((p) => p.id));
   const all = run ? await db.listSamples(run.id) : [];
   const onQuestion = all.filter((s) => promptIds.has(s.promptId));
   const samples = onQuestion.filter((s) => s.engine === finding.engine);
   const claims = samples.length ? await db.listClaims(onQuestion.map((s) => s.id)) : [];
   // Other engines: the business's findings on the same fact in the same run say who was wrong or found nothing; the rest answered right.
-  const sameFact = (await db.listFindings(business.id)).filter((f) => f.scanRunId === finding.scanRunId && f.factKey === finding.factKey && f.subject === finding.subject && f.engine !== finding.engine);
+  const sameFact = (await db.listFindings(business.id, undefined, scope)).filter((f) => f.scanRunId === finding.scanRunId && f.factKey === finding.factKey && f.subject === finding.subject && f.engine !== finding.engine);
   const engines = [...new Set(onQuestion.map((s) => s.engine))].filter((e) => e !== finding.engine);
   const others = engines.map((engine) => {
     const f = sameFact.find((x) => x.engine === engine);
     return { engine, verdict: f ? (f.verdict === "not_found" ? ("not_found" as const) : ("wrong" as const)) : ("correct" as const) };
   });
   const events = (await db.listEvents(business.id, 500)).filter((e) => e.payload.findingId === finding.id);
-  return { finding, fix, fixes, run, samples, claims, others, prompts, events };
+  return { finding, fix, fixes, run, samples, claims, others, prompts, events, line };
 }
 
 /** Open findings grouped per question (fact + subject): the same error on five AI systems is one line to the owner. */

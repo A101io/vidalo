@@ -14,6 +14,11 @@ import type {
   FindingStatus,
   Fix,
   BusinessProfile,
+  LineScope,
+  ProductLine,
+  ProductLineData,
+  ProductLineStatus,
+  ProductLineVersion,
   Prompt,
   PromptPool,
   ProfileMode,
@@ -139,6 +144,9 @@ export type FindingInput = Omit<Finding, "id" | "status" | "firstSeenAt" | "reso
   status?: FindingStatus;
   /** defaults to "wrong" */
   verdict?: Finding["verdict"];
+  /** Feature 006: the line and market of the scan run (the database derives them from it; the input must agree). */
+  productLineId?: string | null;
+  market?: string | null;
 };
 export type FixInput = Omit<Fix, "id" | "scheduledAt" | "sentAt" | "recheckAt" | "resolvedAt" | "evidence"> &
   Partial<Pick<Fix, "scheduledAt" | "sentAt" | "recheckAt" | "resolvedAt" | "evidence">>;
@@ -153,7 +161,14 @@ export interface ScanRunCreate {
   status?: ScanRun["status"];
   /** The effective profile this scan is asked with (scan_run.profile). */
   profile?: BusinessProfile | null;
+  /** Feature 006: all three or none. A line run is asked with one exact version of one line in one market. */
+  productLineId?: string | null;
+  productLineVersion?: number | null;
+  market?: string | null;
 }
+
+/** Result of saving or changing a product line (feature 006, ADR-0012). */
+export type SaveLineResult = { ok: true; line: ProductLine; created: boolean } | { ok: false; reason: "limit" | "not_found" };
 
 /**
  * One question template's use in one scan (ADR-0004: an append-only ledger). Holds only the template
@@ -211,6 +226,8 @@ export interface SignInRow {
 
 /** What one free check is counted as while it runs (docs/cost-per-client.md: €0.40–0.60). */
 export const FREE_SCAN_ESTIMATE_CENTS = 60;
+/** What a product-line run in flight counts for in the daily AI ceiling until it reports its cost (about one (line, market) at the cap, see 02-architecture.md Cost). */
+export const LINE_RUN_ESTIMATE_CENTS = 250;
 
 export interface Db {
   readonly kind: "pg" | "mem";
@@ -243,8 +260,10 @@ export interface Db {
   insertFacts(businessId: string, data: Omit<Facts, "businessId" | "version" | "provisional" | "verifiedAt"> & Partial<Facts>, opts?: { provisional?: boolean; verifiedAt?: string | null }): Promise<Facts>;
 
   // --- prompts ---
-  listPrompts(businessId: string, opts?: { activeOnly?: boolean }): Promise<Prompt[]>;
-  insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]>;
+  /** Absent `line` = the business's own questions (product_line_id is null); with `line`, only that line (and market when given). */
+  listPrompts(businessId: string, opts?: { activeOnly?: boolean; line?: LineScope }): Promise<Prompt[]>;
+  /** `line` stores the prompts for that line and market; absent = the business's own. */
+  insertPrompts(businessId: string, prompts: PromptInput[], line?: { productLineId: string; market: string }): Promise<Prompt[]>;
   /** Move a prompt between the fixed set and the rotating bank. */
   setPromptPool(id: string, pool: PromptPool): Promise<void>;
 
@@ -259,9 +278,9 @@ export interface Db {
    * Returns false when the run does not exist, or `moveFindingsTo` is not another run of the same business.
    */
   deleteScanRun(id: string, opts: { moveFindingsTo: string | null }): Promise<boolean>;
-  /** Scan runs for a business, newest first. */
-  listScanRuns(businessId: string, limit?: number): Promise<ScanRun[]>;
-  /** When the business's latest scan run of this kind started; null if it never had one. */
+  /** Scan runs for a business, newest first. Absent `line` = business runs only; with `line`, that line (and market when given). */
+  listScanRuns(businessId: string, limit?: number, line?: LineScope): Promise<ScanRun[]>;
+  /** When the business's latest scan run of this kind started (business runs only, not line runs); null if it never had one. */
   lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null>;
   insertSamples(samples: SampleInput[]): Promise<Sample[]>;
   listSamples(scanRunId: string): Promise<Sample[]>;
@@ -274,11 +293,28 @@ export interface Db {
   /** Ledger summed per (category, mode, templateKey). */
   questionLibrary(filter?: { category?: string; mode?: ProfileMode }): Promise<LibraryRow[]>;
 
+  // --- product lines (feature 006, migration 0020) ---
+  /** The business's lines with their current version: active first, then by name. */
+  listProductLines(businessId: string): Promise<ProductLine[]>;
+  getProductLine(id: string): Promise<ProductLine | null>;
+  /** Oldest first. */
+  listProductLineVersions(productLineId: string): Promise<ProductLineVersion[]>;
+  getProductLineVersion(productLineId: string, version: number): Promise<ProductLineVersion | null>;
+  /**
+   * New line (productLineId null): the row and version 1. Existing line: version n+1 (any status).
+   * Under withLock("product_line:<businessId>"): a new line is refused with "limit" when the business
+   * already has `maxActive` active lines. "not_found": the id is not a line of this business.
+   */
+  saveProductLine(input: { businessId: string; productLineId: string | null; data: ProductLineData; maxActive: number }): Promise<SaveLineResult>;
+  /** Same lock; discontinued -> active is refused with "limit" as above. Sets updated_at. */
+  setProductLineStatus(input: { businessId: string; productLineId: string; status: ProductLineStatus; maxActive: number }): Promise<SaveLineResult>;
+
   // --- findings ---
-  listFindings(businessId: string, status?: FindingStatus | FindingStatus[]): Promise<Finding[]>;
+  /** Absent `line` = business findings only; with `line`, that line (and market when given). */
+  listFindings(businessId: string, status?: FindingStatus | FindingStatus[], line?: LineScope): Promise<Finding[]>;
   listFindingsByScanRun(scanRunId: string): Promise<Finding[]>;
   getFinding(id: string): Promise<Finding | null>;
-  /** Match on business_id + fact_key + subject + engine + verdict (non-resolved rows); update frequency/sample_count/values/source/scan_run, else insert. */
+  /** Match on business_id + line + market + fact_key + subject + engine + verdict (non-resolved rows); update frequency/sample_count/values/source/scan_run, else insert. */
   upsertFindings(findings: FindingInput[]): Promise<Finding[]>;
   updateFindingStatus(id: string, status: FindingStatus): Promise<Finding>;
   markFindingResolved(id: string, evidenceAfter?: string | null): Promise<Finding>;
@@ -293,7 +329,8 @@ export interface Db {
 
   // --- events ---
   logEvent(businessId: string | null, type: string, payload?: Record<string, unknown>): Promise<EventRow>;
-  listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
+  /** Newest first. With `type`, only events of that type: the newest `limit` of them, so other event types cannot push them out of the window. */
+  listEvents(businessId: string, limit?: number, type?: string): Promise<EventRow[]>;
   /** Events of this type on a business whose payload.email is this address (case-insensitive), latest first. */
   listEventsByEmail(type: string, email: string, limit?: number): Promise<EventRow[]>;
   /** Deletes events by id (a removed check's own events). Unknown ids are ignored. */

@@ -6,6 +6,7 @@
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Finding } from "../types.js";
 import { findingWordsNl, type FindingWordsNl } from "./facts-nl.js";
 import { displayAddress } from "../scanner/normalize.js";
+import { countryName } from "./country.js";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -53,6 +54,15 @@ export function factLabelEn(factKey: FactKey, subject: string | null): string {
       return subject ? `the accreditation ${subject}` : "the accreditations";
     case "identity":
       return subject ? `whether this is the same business as ${subject}` : "whether this is the same business";
+    // Product lines (feature 006).
+    case "spec":
+      return subject ? `the specification ${subject}` : "the specifications";
+    case "certificate":
+      return subject ? `whether ${subject} is (still) valid` : "the certificates";
+    case "outlet":
+      return subject ? `where your product is sold in ${countryName(subject, "en")}` : "where your product is sold";
+    case "successor":
+      return subject ? `the successor of ${subject}` : "the successor";
     default:
       return "the details";
   }
@@ -89,6 +99,14 @@ export function factFieldEn(factKey: FactKey, subject: string | null): string {
       return subject ? `Accreditation: ${subject}` : "Accreditations";
     case "identity":
       return "Same name";
+    case "spec":
+      return subject ? `Specification: ${subject}` : "Specifications";
+    case "certificate":
+      return subject ? `Certificate: ${subject}` : "Certificates";
+    case "outlet":
+      return subject ? `Where to buy: ${subject}` : "Where to buy";
+    case "successor":
+      return subject ? `Successor of ${subject}` : "Successor";
     default:
       return "Details";
   }
@@ -111,6 +129,10 @@ export function valueEn(factKey: FactKey, value: string): string {
     if (["temporarily_closed", "temporarily closed"].includes(lower)) return "temporarily closed";
     if (["open", "exists", "yes"].includes(lower)) return "open";
   }
+  if (factKey === "certificate") {
+    if (lower === "yes" || lower === "ja") return "certified";
+    if (lower === "no" || lower === "nee") return "not (or no longer) certified";
+  }
   if (lower === "closed" || lower === "gesloten") return "closed";
   if (lower === "yes" || lower === "ja") return "yes";
   if (lower === "no" || lower === "nee") return "no";
@@ -127,7 +149,7 @@ export function findingWordsEn(f: Parameters<typeof findingWordsNl>[0]): Finding
   return {
     what,
     field: factFieldEn(f.factKey, f.subject),
-    wrong: nl.notFound ? "not found" : nl.recommendation ? "not named" : valueEn(f.factKey, f.wrongValue),
+    wrong: nl.notFound ? "not found" : nl.recommendation ? "not named" : f.factKey === "outlet" ? (f.wrongValue.trim() ? `${f.wrongValue.trim()}, not in your list` : "not in your list") : valueEn(f.factKey, f.wrongValue),
     correct: nl.recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? (ONLINE_INTENT.has(f.subject) ? "you are active" : "you are open and work in this town") : valueEn(f.factKey, f.correctValue),
     frequency: `${f.frequency} of ${f.sampleCount} times`,
     notFound: nl.notFound,

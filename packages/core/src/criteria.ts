@@ -52,10 +52,22 @@ export const CRITERIA: Criterium[] = [
   { id: 12, key: "erkenningen", labelNl: "Erkenningen en kwalificaties", questionNl: "Is X erkend installateur? Heeft X een BIG-registratie?", severity: "verwarring", threshold: ratio, instableBelow: INSTABLE_BELOW, factKeys: ["credential"] },
 ];
 
+/**
+ * Product-line criteria 13-16 (feature 006, ADR-0013). Kept off CRITERIA: the public pages render that list.
+ * Severities are defaults for Julian; all four use the ratio threshold, so one stray answer is never an error.
+ */
+export const LINE_CRITERIA: Criterium[] = [
+  { id: 13, key: "specificaties", labelNl: "Specificaties", questionNl: "Wat is de drukklasse van X? Hoeveel weegt X?", severity: "misleider", threshold: ratio, instableBelow: INSTABLE_BELOW, factKeys: ["spec"] },
+  { id: 14, key: "certificaten", labelNl: "Certificaten", questionNl: "Is X gecertificeerd?", severity: "misleider", threshold: ratio, instableBelow: INSTABLE_BELOW, factKeys: ["certificate"] },
+  { id: 15, key: "verkooppunten", labelNl: "Waar te koop", questionNl: "Waar koop ik X in Z?", severity: "misleider", threshold: ratio, instableBelow: INSTABLE_BELOW, factKeys: ["outlet"] },
+  { id: 16, key: "opvolger", labelNl: "Opvolger en oude namen", questionNl: "Wat is de opvolger van oude naam Y?", severity: "verwarring", threshold: ratio, instableBelow: INSTABLE_BELOW, factKeys: ["successor"] },
+];
+
+/** The twelve public criteria only. */
 export const CRITERIUM_IDS: CriteriumId[] = CRITERIA.map((c) => c.id);
 
 export function criterium(id: CriteriumId): Criterium {
-  return CRITERIA.find((c) => c.id === id)!;
+  return [...CRITERIA, ...LINE_CRITERIA].find((c) => c.id === id)!;
 }
 
 export function criteriumByKey(key: string): Criterium | undefined {
@@ -77,6 +89,10 @@ export const FACT_KEY_CRITERIUM: Record<FactKey, CriteriumId> = {
   payment: 10,
   identity: 11,
   credential: 12,
+  spec: 13,
+  certificate: 14,
+  outlet: 15,
+  successor: 16,
 };
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();

@@ -18,6 +18,7 @@ import { duePauseMail } from "@vidalo/core/billing";
 import { reportRequester, sendSubscriptionMail } from "@vidalo/core/reporter";
 import { getDb as sharedDb, listBusinessesByStatus, setBusinessStatus, UNSUBSCRIBED_EVENT, SCAN_GOOGLE_DAYS, SCAN_RETENTION_MONTHS, scanRetentionDate, LOGIN_WITHOUT_BUSINESS_DAYS } from "@vidalo/core/shared";
 import type { BusinessRecord, EventRow } from "@vidalo/core/db";
+import { PRODUCT_LINE_LIMITS, productLineAccess, scannableLineMarkets } from "@vidalo/core/shared";
 import { getDb } from "./compat.js";
 import { errorMessage, log } from "./log.js";
 
@@ -75,15 +76,36 @@ export async function enqueueMonthlyScans(now = new Date()): Promise<number> {
   const due = await db.businessesDueForMonthlyScan(d);
   let n = 0;
   for (const b of due) {
-    const evs = await events(b.id);
+    // Only this type: an owner writes other events (mail preferences, saved lines) without limit, and those must not push
+    // this month's scan.enqueued out of a 500-event window (SEC-V01). Only the cron and setup write scan.enqueued.
+    const evs = await db.listEvents(b.id, 500, "scan.enqueued");
     // one full scan per month: a baseline in the setup month counts
-    const already = lastEvent(evs, (e) => e.type === "scan.enqueued" && (e.payload.kind === "monthly" || e.payload.kind === "baseline") && sameAmsterdamMonth(e.at, now));
-    if (already) continue;
+    const already = lastEvent(evs, (e) => e.type === "scan.enqueued" && (e.payload.kind === "monthly" || e.payload.kind === "baseline") && sameAmsterdamMonth(e.at, now) && !e.payload.productLineId);
     const runAt = monthlySlot(b, now);
-    const job = await db.enqueueJob("scan", { businessId: b.id, kind: "monthly" }, runAt);
-    await db.logEvent(b.id, "scan.enqueued", { kind: "monthly", jobId: job.id, runAt: runAt.toISOString() });
-    log.info("cron.monthly.enqueued", { businessId: b.id, runAt: runAt.toISOString() });
-    n++;
+    if (!already) {
+      const job = await db.enqueueJob("scan", { businessId: b.id, kind: "monthly" }, runAt);
+      await db.logEvent(b.id, "scan.enqueued", { kind: "monthly", jobId: job.id, runAt: runAt.toISOString() });
+      log.info("cron.monthly.enqueued", { businessId: b.id, runAt: runAt.toISOString() });
+      n++;
+    }
+    // Feature 006: one job per (active line, market) for a business that may have lines, after the business's own, two
+    // minutes apart. Once per month per (line, market): an event of this month holds the slot, so a second pass or a
+    // retried cron enqueues nothing. The worker checks access again when the job runs (jobs/paid.ts).
+    if (productLineAccess(b, b.ownerUserId).ok) {
+      const lineMarkets = scannableLineMarkets(await db.listProductLines(b.id));
+      // A budget per business per month (SEC-V02): lines discontinued and re-added between ticks have new ids, so the
+      // per-(line, market) check alone would enqueue them again.
+      let lineBudget = PRODUCT_LINE_LIMITS.lines * PRODUCT_LINE_LIMITS.marketsPerLine - evs.filter((e) => e.payload.productLineId && sameAmsterdamMonth(e.at, now)).length;
+      for (const [i, lm] of lineMarkets.entries()) {
+        if (lineBudget <= 0) break;
+        const queued = lastEvent(evs, (e) => e.type === "scan.enqueued" && e.payload.productLineId === lm.productLineId && e.payload.market === lm.market && sameAmsterdamMonth(e.at, now));
+        if (queued) continue;
+        lineBudget--;
+        const at = new Date(Math.max(runAt.getTime(), now.getTime()) + (i + 1) * 120_000);
+        const job = await db.enqueueJob("scan", { businessId: b.id, kind: "monthly", productLineId: lm.productLineId, market: lm.market, then: ["fixes"] }, at);
+        await db.logEvent(b.id, "scan.enqueued", { kind: "monthly", jobId: job.id, runAt: at.toISOString(), productLineId: lm.productLineId, market: lm.market });
+      }
+    }
   }
   return n;
 }

@@ -17,6 +17,8 @@ import {
   textToHtml,
   sendDeletionReminder,
 } from "@vidalo/core/reporter";
+import { scannableLineMarkets } from "@vidalo/core/shared";
+import { amsterdamParts } from "../cron.js";
 import { getDb, runScan } from "../compat.js";
 import { log } from "../log.js";
 import type { Handler } from "./types.js";
@@ -51,7 +53,40 @@ export const recheck: Handler<"recheck"> = async (p) => {
   return { result: out.result, step: out.step ?? null, scanRunId: out.scanRunId, nextRecheckAt: out.nextRecheckAt };
 };
 
+/** Feature 006: the monthly mail waits for the month's line runs, a bounded number of times (ADR-0010). */
+export const LINE_REPORT_WAIT_MINUTES = 15;
+export const LINE_REPORT_MAX_WAITS = 8;
+
+/** The expected (line, market) runs of this month that are not finished yet (missing, queued or running). */
+async function missingLineRuns(p: { businessId: string; lines?: { productLineId: string; market: string }[] }, now: Date): Promise<number> {
+  const db = getDb();
+  // Never wider than what the business may have now: the list is narrowed to today's active lines within the limits.
+  const allowed = new Set(scannableLineMarkets(await db.listProductLines(p.businessId)).map((l) => `${l.productLineId}|${l.market}`));
+  const month = amsterdamParts(now);
+  let missing = 0;
+  for (const want of (p.lines ?? []).slice(0, 40)) {
+    if (typeof want?.productLineId !== "string" || typeof want.market !== "string" || !allowed.has(`${want.productLineId}|${want.market}`)) continue;
+    const run = (await db.listScanRuns(p.businessId, 50, { productLineId: want.productLineId, market: want.market })).find((r) => {
+      const at = amsterdamParts(new Date(r.startedAt));
+      return r.kind === "monthly" && at.y === month.y && at.m === month.m;
+    });
+    if (!run || (run.status !== "done" && run.status !== "failed")) missing++;
+  }
+  return missing;
+}
+
 export const report: Handler<"report"> = async (p) => {
+  // `waited` is ours to count, never the payload's to set: at most LINE_REPORT_MAX_WAITS, then the mail goes with what exists.
+  const waited = Math.min(LINE_REPORT_MAX_WAITS, Math.max(0, Math.floor(Number(p.waited) || 0)));
+  if (p.lines?.length && waited < LINE_REPORT_MAX_WAITS) {
+    const missing = await missingLineRuns(p, new Date());
+    if (missing > 0) {
+      const db = getDb();
+      await db.enqueueJob("report", { ...p, waited: waited + 1 }, new Date(Date.now() + LINE_REPORT_WAIT_MINUTES * 60_000));
+      await db.logEvent(p.businessId, "report.waiting", { waited: waited + 1, missing });
+      return { sent: false, waiting: true, waited: waited + 1, missing };
+    }
+  }
   const r = await sendMonthlyReport(p.businessId, { scanRunId: p.scanRunId });
   return { sent: r !== null, mode: r?.mode ?? null };
 };

@@ -11,6 +11,7 @@ import { en } from "./en.js";
 import { PRICES } from "./prices.js";
 import { COMPANY, CONTACT } from "../shared/contact.js";
 import { ownerAreaNl } from "./owner-area.js";
+import { productLinesNl } from "./product-lines.js";
 import { accountSecurityNl } from "./account-security.js";
 
 /** "ChatGPT, Copilot en Gemini" */
@@ -766,7 +767,7 @@ export const copy = {
   legal: {
     draft: false,
     draftNotice: "Concept. Deze tekst is nog niet juridisch gecontroleerd en kan veranderen.",
-    updated: "Versie van 17 november 2026",
+    updated: "Versie van 21 november 2026",
     contact: "A101 B.V., handelend onder de naam Vidalo · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Algemene voorwaarden",
@@ -783,7 +784,7 @@ export const copy = {
             "Plan: ‘Vidalo Scan’ (eenmalig) of ‘Vidalo Monthly’ (een abonnement per maand), zoals beschreven op vidalo.ai/prijzen op het moment dat je bestelt.",
             "AI-assistent: een dienst van een andere partij die vragen beantwoordt met kunstmatige intelligentie, zoals ChatGPT, Google AI, Gemini of Perplexity.",
             "Bron: een website, gids, profiel of ander openbaar gegeven waaruit een AI-assistent zijn antwoord haalt.",
-            "Gegevens: de gegevens over je bedrijf die jij aan ons bevestigt, zoals naam, adres, openingstijden, telefoonnummer, diensten en prijzen.",
+            "Gegevens: de gegevens over je bedrijf die jij aan ons bevestigt, zoals naam, adres, openingstijden, telefoonnummer, diensten en prijzen, en de gegevens van je productlijnen, zoals naam, specificaties, certificaten en verkooppunten.",
             "Feitenpagina: de pagina die wij met jouw bevestigde gegevens publiceren, in een vorm die mensen en AI-assistenten kunnen lezen.",
             "Account: je eigen omgeving op vidalo.ai, waar je inlogt met een link per e-mail.",
             "Overeenkomst: de afspraken tussen jou en Vidalo over de Dienst, met deze voorwaarden.",
@@ -1071,8 +1072,8 @@ export const copy = {
           h: "Een betaald plan",
           p: [
             [
-              "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel, en de beschrijving van wat je bedrijf aanbiedt en voor wie, met je eigen aanpassing daarvan.",
-              "Wat we ermee doen: we publiceren je bevestigde gegevens op je feitenpagina, die voor iedereen te zien is. We sturen ze naar bronnen met een fout om herstel te vragen, en naar je Google-bedrijfsprofiel als je dat koppelt. AI-assistenten krijgen alleen bedrijfsgegevens, nooit je e-mailadres.",
+              "Gegevens: de gegevens van je bedrijf die je bevestigt, met elke eerdere versie; daarin kunnen persoonsgegevens staan, zoals een naam of telefoonnummer. Ook de productlijnen die je invoert, met elke eerdere versie. Verder de uitkomsten van de controles, de fouten die we vonden, de correctieverzoeken die we stuurden en het bewijs van herstel, en de beschrijving van wat je bedrijf aanbiedt en voor wie, met je eigen aanpassing daarvan.",
+              "Wat we ermee doen: we publiceren de bevestigde gegevens van je bedrijf op je feitenpagina, die voor iedereen te zien is. We sturen ze naar bronnen met een fout om herstel te vragen, en naar je Google-bedrijfsprofiel als je dat koppelt. We stellen AI-assistenten vragen over je productlijnen, per land dat je kiest, in de taal van dat land (Nederlands voor Nederland, anders Engels). Productlijnen publiceren we niet op je feitenpagina; bij een fout kunnen we de bron om herstel vragen. AI-assistenten krijgen alleen bedrijfs- en productgegevens, nooit je e-mailadres.",
               "Klopt onze beschrijving van je bedrijf niet, dan pas je die aan bij je gegevens in je account, zodra je hebt aangetoond dat je het bedrijf beheert. De controles in je plan gebruiken dan jouw versie; een automatische controle overschrijft die niet.",
               "Namen van andere bedrijven die AI-assistenten noemen, kunnen we in een controle in je plan ook gebruiken in een vraag aan AI-assistenten, zoals ‘Wat is een goed alternatief voor [naam]?’.",
               "Grondslag: de uitvoering van de overeenkomst met jou. Voor de namen van andere bedrijven: ons gerechtvaardigd belang, en dat van jou, om te zien wie AI noemt als iemand een alternatief zoekt (artikel 6 lid 1 onder f AVG).",
@@ -1162,7 +1163,7 @@ export const copy = {
               "Meta (Facebook, Instagram): het meten van onze advertenties, alleen met je toestemming; EU en Verenigde Staten.",
               "Perplexity en SerpAPI (voor de antwoorden van Google AI), wanneer we die AI-assistenten vragen; Verenigde Staten.",
               "De KvK: we zoeken een bedrijf op in het Handelsregister met naam en plaats.",
-              "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens van je bedrijf als we om herstel vragen.",
+              "Bronnen met een fout, zoals een website of gids: die krijgen de bevestigde gegevens als we om herstel vragen, ook buiten Nederland als je productlijn daar verkocht wordt.",
             ],
             "Verder geven we gegevens alleen aan anderen als je daar toestemming voor geeft, of als de wet ons dat verplicht.",
           ],
@@ -2154,6 +2155,10 @@ export const copy = {
     urgency: "Spoed en beschikbaarheid",
     credential: "Erkenningen",
     identity: "Naamgenoot",
+    spec: "Specificaties",
+    certificate: "Certificaten",
+    outlet: "Waar te koop",
+    successor: "Opvolger en oude namen",
   },
 
   /** The twelve criteria (docs/CRITERIA.md), by id. */
@@ -2170,6 +2175,10 @@ export const copy = {
     10: "Afspraken en voorwaarden",
     11: "Identiteit en naamgenoot",
     12: "Erkenningen en kwalificaties",
+    13: "Specificaties",
+    14: "Certificaten",
+    15: "Waar te koop",
+    16: "Opvolger en oude namen",
   },
 
   /** Severity classes: one wrong answer and the customer does not come / comes for the wrong thing / confuses you with another. */
@@ -3446,6 +3455,17 @@ Toch bewaren? Dat kan tot ${date} met één klik: ${url}`,
       moreOpen: (n: number) => `En nog ${n} open. Bij elk staat in je overzicht wat we doen en wanneer we opnieuw kijken.`,
       nothing: "Er is niets te herstellen. Fijn.",
       cta: "Bekijk alles in je overzicht",
+      /** Feature 006: one section per product line. No price, no score, no position: counts, the colour word and "genoemd als aanrader n van m keer". */
+      lines: {
+        title: (name: string) => `Productlijn: ${name}`,
+        market: (marketName: string, stipWord: string, open: number, named: { named: number; answers: number } | null) =>
+          `${marketName}: ${stipWord}. ${open === 0 ? "Geen fouten open." : open === 1 ? "1 fout open." : `${open} fouten open.`}${named ? ` Genoemd als aanrader: ${named.named} van ${named.answers} keer.` : ""}`,
+        notChecked: (marketName: string) => `${marketName}: nog niet gecontroleerd.`,
+        notCheckedThisMonth: (marketName: string, lastDate: string) => `${marketName}: deze maand niet gecontroleerd. Laatste controle: ${lastDate}.`,
+        askedTo: (names: string[]) => `Gevraagd aan ${names.length > 1 ? `${names.slice(0, -1).join(", ")} en ${names[names.length - 1]}` : names[0]}.`,
+        more: (n: number) => `En nog ${n} open bij deze productlijn.`,
+        cta: "Bekijk de productlijn",
+      },
       weeks: { title: "De komende weken", meanwhile: { when: "Tussendoor", what: "Een mail zodra een antwoord weer klopt, met het antwoord van voor en na." } },
     },
     followUp: {
@@ -3492,6 +3512,8 @@ Toch bewaren? Dat kan tot ${date} met één klik: ${url}`,
       intro: (what: string, name: string) => `AI-assistenten halen ${what} van ${name} van je eigen website, en daar staat iets anders dan je bij ons hebt bevestigd.`,
       onPage: (page: string, wrong: string) => `Op pagina ${page} staat: ${wrong}`,
       shouldBe: (correct: string) => `Dit moet zijn: ${correct}`,
+      /** Feature 006: the mail is about a product line, not the business. */
+      forLine: (line: string) => `Dit gaat over je productlijn ${line}.`,
       change: "Pas je dit aan? Daarna controleren wij over 14 dagen opnieuw of het antwoord klopt. Je hoeft ons niets te laten weten.",
       forward: "Lukt het niet of heb je hulp nodig van je websitebouwer? Stuur deze mail door, dit is alles wat er moet gebeuren.",
       reminderSubject: (wrong: string) => `Nog steeds "${wrong}" op je website`,
@@ -3536,6 +3558,7 @@ Toch bewaren? Dat kan tot ${date} met één klik: ${url}`,
     },
   },
   ownerArea: ownerAreaNl,
+  productLines: productLinesNl,
   accountSecurity: accountSecurityNl,
 } as const;
 

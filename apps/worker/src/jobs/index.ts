@@ -47,6 +47,8 @@ export function validatePayload(kind: JobKind, payload: Record<string, unknown>)
   const missing = (() => {
     switch (kind) {
       case "scan":
+        // A product-line scan names its line and market together (feature 006).
+        if ((payload.productLineId == null) !== (payload.market == null)) return payload.productLineId == null ? "productLineId" : "market";
         return need(["businessId", "kind"]);
       case "setup":
       case "publish":

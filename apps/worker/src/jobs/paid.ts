@@ -1,6 +1,8 @@
 import type { BusinessStatus } from "@vidalo/core/types";
 // The same handle the publisher and fixer use, so the guard sees what they act on.
-import { getDb, ondemandRefusal } from "@vidalo/core/shared";
+import { getDb, lineScanRefusal, ondemandRefusal, productLineAccess } from "@vidalo/core/shared";
+import type { BusinessRecord } from "@vidalo/core/db";
+import type { ScanKind } from "@vidalo/core/types";
 import { log } from "../log.js";
 import type { JobKind } from "./types.js";
 
@@ -30,11 +32,42 @@ async function businessFor(kind: JobKind, payload: Record<string, unknown>) {
   return db.getBusiness(String(payload.businessId));
 }
 
+/**
+ * Feature 006: a product line's scan or recheck. Checked at run time, not only at enqueue (an owner may stop paying between
+ * the cron and the job): the plan and the switch (productLineAccess), then the line itself: it exists, is this business's,
+ * is active (a recheck may run on a discontinued line) and the market is one of its current markets (lineScanRefusal).
+ * A refused job calls no engine.
+ */
+async function lineBlock(kind: JobKind, payload: Record<string, unknown>, business: BusinessRecord): Promise<string | null> {
+  let line: { id: string | null; market: string | null; scanKind: ScanKind } | null = null;
+  if (kind === "scan" && (payload.productLineId !== undefined || payload.market !== undefined)) {
+    line = { id: typeof payload.productLineId === "string" ? payload.productLineId : null, market: typeof payload.market === "string" ? payload.market : null, scanKind: payload.kind as ScanKind };
+  } else if (kind === "recheck") {
+    const fix = await getDb().getFix(String(payload.fixId));
+    const finding = fix ? await getDb().getFinding(fix.findingId) : null;
+    if (finding?.productLineId) line = { id: finding.productLineId, market: finding.market ?? null, scanKind: "recheck" };
+  }
+  if (!line) return null;
+  const db = getDb();
+  const skip = async (reason: string) => {
+    await db.logEvent(business.id, "job.skipped", { kind, reason });
+    log.warn("job.skipped.line", { kind, businessId: business.id, reason });
+    return reason;
+  };
+  if (!line.id || !line.market) return skip("line_needs_line_and_market");
+  const access = productLineAccess(business, business.ownerUserId);
+  if (!access.ok) return skip(`line_${access.reason}`);
+  const refusal = lineScanRefusal(await db.getProductLine(line.id), business.id, line.market, line.scanKind);
+  return refusal ? skip(`line_${refusal}`) : null;
+}
+
 /** null when the job may run; otherwise the reason it is skipped. */
 export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unknown>): Promise<string | null> {
   // "Controleer nu" spends a full check: same guard, and only on the monthly plan (review R-02).
   const ondemand = kind === "scan" && payload.kind === "ondemand";
-  if (!PAID_ONLY.has(kind) && !ondemand) return null;
+  // A product line's monthly scan is a paid run too (feature 006): same guard as an on-demand check.
+  const lineScan = kind === "scan" && (payload.productLineId !== undefined || payload.market !== undefined);
+  if (!PAID_ONLY.has(kind) && !ondemand && !lineScan) return null;
   const business = await businessFor(kind, payload);
   if (!business) {
     // Fail closed: a job whose business cannot be found must not publish anything.
@@ -66,5 +99,5 @@ export async function paidOnlyBlock(kind: JobKind, payload: Record<string, unkno
     log.warn("job.skipped.owner_not_verified", { kind, businessId: business.id });
     return "owner_not_verified";
   }
-  return null;
+  return lineBlock(kind, payload, business);
 }

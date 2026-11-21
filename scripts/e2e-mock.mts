@@ -59,7 +59,7 @@ assert.ok(askerBodies.some((x) => /^To: vraagt@example\.nl/m.test(x)), "the base
 // What the Stripe webhook does: the payer's address becomes the owner's.
 await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerEmail: "eigenaar@bakkerijdevries.nl", plan: "monitor" });
 // What /api/google/callback does once the owner's Business Profile matches the place id.
-await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "google_business_profile" });
+await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, ownerUserId: "00000000-0000-4000-8000-0000000000e2", ownerVerifiedAt: new Date().toISOString(), ownerVerifiedVia: "google_business_profile" });
 await db.enqueueJob("email", { template: "baseline", scanRunId: free.scanRunId, businessId: business.id });
 await setBusinessStatus(business.id, "trial", { via: "e2e" });
 await db.enqueueJob("setup", { businessId: business.id });
@@ -158,6 +158,73 @@ assert.ok(!bodies.some((x) => /\b\d{1,3}\s*\/\s*100\b|score/i.test(x)), "mails n
 console.log(`mails: ${mails.length} in ${path.join(out, "mail")}`);
 console.log(`facts page: ${pageDir}`);
 console.log(`findings: ${findings.length}, fixes: ${fixes}, channels: ${channels.length}`);
+
+// 5b. A product line (feature 006, AC7): two markets, the cron enqueues one run per market, the line runs ask in the market's
+// language, a line finding gets a fix that needs no page of ours, and the monthly mail waits for the line runs and names the line.
+step("product line: Haarlems Speltbrood, NL + BE");
+const { PRODUCT_LINE_LIMITS } = await import("@vidalo/core/shared");
+const { enqueueMonthlyScans } = await import("@vidalo/worker/src/cron.ts");
+const lineSaved = await db.saveProductLine({
+  businessId: business.id,
+  productLineId: null,
+  maxActive: PRODUCT_LINE_LIMITS.lines,
+  data: {
+    name: "Haarlems Speltbrood", category: "speltbrood", useCases: ["ontbijt"], markets: ["NL", "BE"],
+    specs: [{ label: "Gewicht", value: "800 g" }, { label: "Houdbaarheid", value: "4 dagen" }],
+    certificates: [{ name: "EKO", number: "EKO-0000", validUntil: "2099-06-30" }],
+    outlets: [{ market: "NL", name: "Versmarkt Haarlem", url: "https://versmarkt-haarlem.example" }, { market: "BE", name: "Broodhuys Gent", url: "https://broodhuys-gent.example" }],
+    replaces: ["Speltbrood Classic"], replacedBy: null,
+  },
+});
+assert.ok(lineSaved.ok, "the line is saved");
+const lineId = lineSaved.ok ? lineSaved.line.id : "";
+// The cron of a fixed past day (7 October, Amsterdam: no event of the run sits in that month): its jobs are due now, whatever the clock says.
+await db.upsertBusiness({ id: business.id, slug: business.slug, name: business.name, place: business.place, anniversaryDay: 7 });
+assert.equal(await enqueueMonthlyScans(new Date("2026-10-07T10:00:00Z")), 1, "the cron enqueued the month's check");
+const lineRuns: string[] = [];
+let monthlyRunId = "";
+for (let i = 0; i < 200; i++) {
+  const job = await db.claimJob();
+  if (!job) break;
+  const invalid = JOB_KINDS.includes(job.kind as never) ? validatePayload(job.kind as never, job.payload) : null;
+  assert.equal(invalid, null, `payload valid for ${job.kind}`);
+  const result = await handlerFor(job.kind)!(job.payload, job);
+  await db.completeJob(job.id);
+  const r = result as { scanRunId?: string } | void;
+  if (job.kind === "scan" && r?.scanRunId) {
+    if ((job.payload as { productLineId?: string }).productLineId) lineRuns.push(r.scanRunId);
+    else if ((job.payload as { kind?: string }).kind === "monthly") monthlyRunId = r.scanRunId;
+  }
+}
+assert.equal(lineRuns.length, 2, "one line run per market");
+const runsOfLine = await db.listScanRuns(business.id, 50, { productLineId: lineId });
+assert.deepEqual(runsOfLine.map((r) => r.market).sort(), ["BE", "NL"], "the line runs carry their market");
+assert.ok(runsOfLine.every((r) => r.kind === "monthly" && r.status === "done" && r.productLineVersion === 1), "line runs finished, asked with version 1");
+assert.ok((await db.listScanRuns(business.id, 200)).every((r) => !r.productLineId), "the business's own runs never include a line run");
+const lineQuestions = await db.listPrompts(business.id, { line: { productLineId: lineId } });
+assert.ok(lineQuestions.some((q) => /^Welk gewicht heeft Haarlems Speltbrood/.test(q.textNl)) && lineQuestions.some((q) => /^What gewicht does Haarlems Speltbrood/.test(q.textNl)), "the NL questions are Dutch, the BE questions English");
+assert.ok((await db.listPrompts(business.id)).every((q) => !q.productLineId), "line questions are not the business's");
+const lineFindings = await db.listFindings(business.id, undefined, { productLineId: lineId });
+assert.ok(lineFindings.length > 0 && lineFindings.every((f) => f.productLineId === lineId && [13, 14, 15, 16].includes(f.criterium!)), "line findings exist, on criteria 13-16, in the line's scope");
+let lineFixes = 0;
+for (const f of lineFindings) for (const fx of await db.listFixes(f.id)) {
+  lineFixes++;
+  assert.ok(["email", "manual", "none"].includes(fx.action), `a line fix needs no page of ours (${fx.action})`);
+}
+assert.ok(lineFixes > 0, "a line finding has a fix");
+assert.ok(!(await db.listFindings(business.id)).some((f) => f.productLineId), "the business's findings never include a line finding");
+// The monthly mail: its report job carries the two line runs to wait for; with both done it goes out at once and names the line.
+const memJobs = (db as unknown as { jobs?: Map<number, { kind: string; payload: Record<string, unknown> }> }).jobs;
+const reportPayload = memJobs ? [...memJobs.values()].find((j) => j.kind === "report" && (j.payload as { lines?: unknown[] }).lines)?.payload : { businessId: business.id, scanRunId: monthlyRunId, lines: lineRuns.map((_, i) => ({ productLineId: lineId, market: ["NL", "BE"][i]! })) };
+assert.equal((reportPayload?.lines as unknown[] | undefined)?.length, 2, "the business's monthly check queued a report that waits for both line runs");
+const reported = await handlerFor("report")!(reportPayload, { id: 0, kind: "report", payload: reportPayload } as never);
+assert.deepEqual(reported && "sent" in reported ? reported.sent : null, true, "the monthly mail was sent");
+const newest = (await readdir(path.join(out, "mail"))).sort().map((m) => path.join(out, "mail", m));
+const lineMail = (await Promise.all(newest.map((f) => readFile(f, "utf8")))).find((x) => x.includes("Productlijn: Haarlems Speltbrood"));
+assert.ok(lineMail, "the monthly mail has a section for the product line");
+assert.ok(lineMail!.includes("Nederland:") && lineMail!.includes("België:"), "both markets are in the section");
+assert.ok(!/\bscore\b|ranking|positie/i.test(lineMail!.slice(lineMail!.indexOf("Productlijn:"))), "the section shows no score or position");
+console.log(`line: ${runsOfLine.length} runs, ${lineFindings.length} findings, ${lineFixes} fixes; mail with a product line section written`);
 
 // 6. Not found: a business the mock AI has never heard of reads as "niet gevonden", not as "nothing wrong".
 step("not found: Polyvale Nieuw, Haarlem");

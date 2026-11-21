@@ -16,11 +16,16 @@ import { z } from "zod";
 import { ABSENT_VALUE, FACT_KEYS, NOT_FOUND_VALUE, PRESENT_VALUE, type Claim, type FactKey, type Facts, type Prompt } from "../types";
 import {
   DAY_NAMES_NL,
+  factValue,
+  lineKey,
   normalizeAddress,
+  normalizeLabel,
   normalizePhone,
   normalizePrice,
+  normalizeSpecValue,
   normalizeTime,
   normalizeWebsite,
+  outletKey,
 } from "./normalize";
 import { retry } from "./util";
 
@@ -66,14 +71,15 @@ function nameTokens(name: string): string[] {
  * most of its distinctive words (and, when the name is a single common word,
  * the place as well). Never looks at position or count.
  */
-export function mentionsBusiness(answerText: string, facts: Pick<Facts, "name" | "place"> & Partial<Pick<Facts, "profile">>): boolean {
+export function mentionsBusiness(answerText: string, facts: Pick<Facts, "name" | "place"> & Partial<Pick<Facts, "profile" | "productLine">>): boolean {
   const answer = ` ${normalizeName(answerText)} `;
   const full = normalizeName(facts.name);
   if (!full) return false;
   const tokens = nameTokens(facts.name);
   // One distinctive word only ("Jansen"): ask for the place too so a namesake elsewhere does not count.
-  // An online business has no town: its name stands alone, so the place is not asked for.
-  const placeOk = tokens.length > 1 || facts.profile?.mode === "online" || answer.includes(` ${normalizeName(facts.place)} `);
+  // An online business has no town: its name stands alone, so the place is not asked for. A product line is the same:
+  // it has no town (feature 006), its name and the product's own words identify it.
+  const placeOk = tokens.length > 1 || facts.profile?.mode === "online" || Boolean(facts.productLine) || answer.includes(` ${normalizeName(facts.place)} `);
   if (answer.includes(` ${full} `)) return placeOk;
   if (!tokens.length) return false;
   const hits = tokens.filter((t) => answer.includes(` ${t} `) || answer.includes(` ${t}s `)).length;
@@ -252,6 +258,8 @@ export function namesOnlyAnotherBusiness(answer: string, name: string): boolean 
 
 /** Does the answer talk about the same-named business in another town, or lead with another business? */
 export function detectOtherEntity(answer: string, facts: Facts): boolean {
+  // A product line has no namesake judging (ADR-0010): no town, and no criterium 11 finding for it.
+  if (facts.productLine) return false;
   const place = facts.place.toLowerCase();
   const lower = answer.toLowerCase();
   if (namesOnlyAnotherBusiness(answer, facts.name)) return true;
@@ -365,6 +373,112 @@ function withoutHedges(answerText: string): string {
     .join(" ");
 }
 
+
+// ---------------------------------------------------------------------------
+// Product lines (feature 006): spec, certificate, outlet, successor
+// ---------------------------------------------------------------------------
+
+/** A number with a unit; a bounded window of an answer is searched, the pattern holds no owner text. */
+const SPEC_VALUE_RE = /(\d{1,6}(?:[.,]\d{1,3})?)\s?(mg|kg|g|gr|grams?|kilo(?:gram)?s?|mm|cm|m|meters?|metres?|ml|cl|l|liters?|litres?|bar|mbar|w|kw|watt|v|volt|%|°c|dagen|days?|weken|weeks?|maanden|months?|jaar|years?|uur|hours?|stuks|pieces)(?![a-zA-Z])/i;
+const SPEC_CODE_RE = /\b([A-Za-z]{1,4})[ -]?(\d{1,4})\b/;
+const LINE_WINDOW = 200;
+const NOT_AN_OUTLET = new Set(["tip", "tips", "let op", "conclusie", "samenvatting", "bronnen", "bron", "online", "offline", "note", "sources", "source", "summary", "options", "opties", "waar te koop", "where to buy", "webshop", "website", "winkels", "stores", "retailers"]);
+
+/** The owner's spec value for a label in the line view, normalised, or null. */
+function expectedSpec(facts: Facts, label: string): string | null {
+  return factValue(facts, "spec", label);
+}
+
+/** What the answer says the value of `label` is: the owner's own value when the answer holds it, else a number with unit, a code, or the phrase after the label. */
+export function specValueFromAnswer(answer: string, facts: Facts, label: string): { value: string; quote: string } | null {
+  const text = answer.slice(0, MATCH_LIMIT);
+  const lower = text.toLowerCase();
+  const key = label.toLowerCase();
+  const at = key ? lower.indexOf(key) : -1;
+  const window = at >= 0 ? text.slice(at + key.length, at + key.length + LINE_WINDOW) : text.slice(0, LINE_WINDOW * 2);
+  const expected = expectedSpec(facts, label);
+  const numeric = expected != null && /^-?\d/.test(expected);
+  if (expected != null && !numeric && normalizeSpecValue(lower.slice(0, LINE_WINDOW * 4)).includes(expected)) return { value: expected, quote: window.trim().slice(0, 200) };
+  const m = SPEC_VALUE_RE.exec(window);
+  if (m) return { value: normalizeSpecValue(`${m[1]} ${m[2]}`), quote: m[0] };
+  if (!numeric) {
+    const c = SPEC_CODE_RE.exec(window);
+    if (c) return { value: normalizeSpecValue(`${c[1]}${c[2]}`), quote: c[0] };
+    const phrase = window.replace(/^[\s:=,-]*(?:is|van|of|bedraagt|are|equals|heeft|has)\b[\s:=,-]*/i, "").split(/[.\n;]/)[0]!.trim().slice(0, 60);
+    if (phrase.length >= 2 && at >= 0) return { value: normalizeSpecValue(phrase), quote: phrase };
+  }
+  return null;
+}
+
+/** Outlet names and hosts an answer names, ordered: those not in the owner's list first (the claim compare() judges), then the listed ones in the owner's spelling. */
+export function outletValuesFromAnswer(answer: string, facts: Facts): string[] {
+  const pl = facts.productLine;
+  if (!pl) return [];
+  const text = answer.slice(0, MATCH_LIMIT);
+  const owners = pl.outlets.filter((o) => o.market === pl.market).map((o) => ({ name: o.name, key: outletKey(o.name), host: o.url ? normalizeWebsite(o.url) : null }));
+  const own = new Set([outletKey(pl.brand), outletKey(facts.name), normalizeWebsite(facts.website) ?? ""].filter(Boolean));
+  const found: { raw: string; host: boolean }[] = [];
+  for (const line of text.split(/\r?\n/).slice(0, 200)) {
+    const item = /^\s*(?:\d+[.)]|[-*•])\s+(.{1,300})$/.exec(line);
+    const raw = (item ? item[1]! : line).replace(/\[([^\]]{1,100})\]\([^)]{0,300}\)/g, "$1");
+    const hadUrl = /https?:\/\//.test(raw);
+    const body = raw.replace(/https?:\/\/\S{1,300}/g, " ");
+    const bold = /\*\*([^*]{2,80})\*\*/.exec(body);
+    // a plain list item that carries an address is read by its host below, not by the words around it
+    const name = bold ? bold[1]! : item && !hadUrl ? body.split(/\s[–—-]\s|:|\(|,/)[0]! : null;
+    if (name) found.push({ raw: name.replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim().replace(/[.:;,–—-]+$/, "").trim(), host: false });
+  }
+  for (const m of text.matchAll(/https?:\/\/(?:www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)+)/gi)) found.push({ raw: m[1]!.toLowerCase(), host: true });
+  const unlisted: string[] = [];
+  const listed: string[] = [];
+  const seen = new Set<string>();
+  for (const f of found) {
+    const key = outletKey(f.raw);
+    if (f.raw.length < 2 || f.raw.length > 80 || !key || f.raw.split(" ").length > 7 || NOT_AN_OUTLET.has(f.raw.toLowerCase()) || own.has(key) || seen.has(key)) continue;
+    const brand = outletKey(pl.brand);
+    if (brand && key.includes(brand)) continue;
+    seen.add(key);
+    const hit = owners.find((o) => (f.host ? o.host === normalizeWebsite(f.raw) : o.key === key || (key.length >= 4 && o.key.length >= 4 && (key.includes(o.key) || o.key.includes(key)))) || (o.host != null && o.host === normalizeWebsite(f.raw)));
+    if (hit) listed.push(hit.name);
+    else unlisted.push(f.raw);
+  }
+  return [...new Set([...unlisted, ...listed])].slice(0, 8);
+}
+
+/** The product an answer names as the successor of `old`; PRESENT_VALUE when it names the line itself, ABSENT_VALUE when it names none. */
+export function successorValueFromAnswer(answer: string, facts: Facts, old: string): string {
+  const text = answer.slice(0, MATCH_LIMIT);
+  // The old name shares words with the new one (Tigris K3, Tigris K5): look for the line with the old name taken out.
+  const oldAt = text.toLowerCase().split(old.toLowerCase());
+  const without = oldAt.length > 1 ? oldAt.join(" ") : text;
+  if (mentionsBusiness(without, facts)) return PRESENT_VALUE;
+  const cue = /(?:opvolger(?: van [^.:\n]{0,80})? (?:is|=|:)|opgevolgd door|vervangen door|vervangen is door|replaced by|succeeded by|successor(?: to [^.:\n]{0,80})? (?:is|:)|superseded by)\s*(?:de |het |een |the |a |an )?\**\[?([^*\n.,;:()\]\[]{2,60})/i.exec(text);
+  const named = cue?.[1]?.trim();
+  return named && outletKey(named) !== outletKey(old) ? named : ABSENT_VALUE;
+}
+
+/** The claims of a product-line probe, by rules. */
+function lineClaimsRules(answerText: string, facts: Facts, factKey: FactKey, subject: string | null): { value: string; quote: string }[] {
+  const pl = facts.productLine;
+  if (!pl || !subject) return [];
+  switch (factKey) {
+    case "spec": {
+      const v = specValueFromAnswer(answerText, facts, subject);
+      return v ? [v] : [];
+    }
+    case "certificate": {
+      const v = yesNo(withoutHedges(answerText));
+      return v ? [{ value: v, quote: answerText }] : [];
+    }
+    case "outlet":
+      return outletValuesFromAnswer(answerText, facts).map((value) => ({ value, quote: answerText }));
+    case "successor":
+      return [{ value: successorValueFromAnswer(answerText, facts, subject), quote: answerText }];
+    default:
+      return [];
+  }
+}
+
 export function extractClaimsRules(answerText: string, facts: Facts, prompt: PromptLike, sampleId = ""): Claim[] {
   if (isRecommendationPrompt(prompt)) return extractRecommendation(answerText, facts, prompt, sampleId);
   if (looksNotFound(answerText)) return [notFoundClaim(prompt, sampleId, 0.9, answerText)];
@@ -465,6 +579,16 @@ export function extractClaimsRules(answerText: string, facts: Facts, prompt: Pro
         if (norm && subject) push("price", subject, norm, m![0]);
         break;
       }
+      case "spec":
+      case "certificate":
+      case "outlet":
+      case "successor": {
+        // One claim per outlet named; compare() judges the first, so the ones not in the owner's list come first.
+        for (const c of lineClaimsRules(answerText, facts, factKey, subject)) {
+          claims.push({ sampleId, factKey, subject, value: c.value, confidence: 0.7, otherEntity: false, rawQuote: c.quote.trim().slice(0, 300) });
+        }
+        break;
+      }
     }
   }
   if (!answersProbe(claims, prompt) && looksSoftNotFound(answerText)) return [notFoundClaim(prompt, sampleId, 0.8, answerText)];
@@ -503,7 +627,7 @@ const EXTRACTION_JSON_SCHEMA = {
           value: {
             type: "string",
             description:
-              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone in E.164 ("+31201234567", "+442079460000"); address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); identity with subject "kind": same (the answer describes the business as the kind of business in profiel.aanbod / profiel.categorie) | other (it describes it as a different kind of business); price decimal number.',
+              'Normalised: existence open|temporarily_closed|permanently_closed; hours "HH:MM-HH:MM" or "closed"; phone in E.164 ("+31201234567", "+442079460000"); spec the value the answer gives for the label as "<number> <unit>" or the short text; certificate yes|no; outlet one shop or webshop the answer names (its name or host), one claim per outlet; successor the product named as successor, "__present__" when that is the product in productlijn.naam, "__absent__" when none is named; address "straat nummer postcode plaats"; website hostname; service/policy/payment/area/urgency/credential yes|no; identity yes (same business) | no (different business); identity with subject "kind": same (the answer describes the business as the kind of business in profiel.aanbod / profiel.categorie) | other (it describes it as a different kind of business); price decimal number.',
           },
           confidence: { type: "number" },
           otherEntity: { type: "boolean", description: "True when the answer is about a business with the same name in a different place." },
@@ -517,7 +641,8 @@ const EXTRACTION_JSON_SCHEMA = {
 const EXTRACTION_SYSTEM = `Je haalt atomaire feitelijke beweringen over een bedrijf uit het antwoord van een AI-assistent.
 Geef alleen beweringen die over de gevraagde feiten (probes) gaan en die controleerbaar zijn. Geen beweringen verzinnen.
 Normaliseer waarden precies volgens het schema. Als het antwoord zegt dat het geen informatie heeft, geef dan geen bewering.
-Als het antwoord over een ander bedrijf met dezelfde naam in een andere plaats gaat, zet otherEntity op true.`;
+Als het antwoord over een ander bedrijf met dezelfde naam in een andere plaats gaat, zet otherEntity op true.
+Staat er een veld productlijn bij de vraag, dan gaan spec, certificate, outlet en successor over dat product, niet over het bedrijf.`;
 
 export async function extractClaimsLlm(answerText: string, facts: Facts, prompt: PromptLike, sampleId = ""): Promise<Claim[]> {
   const { openaiClient } = await import("./engines/chatgpt");
@@ -528,6 +653,8 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
       vraag: prompt.textNl,
       probes: prompt.probes,
       ...(facts.profile && (facts.profile.offer || facts.profile.category) ? { profiel: { aanbod: facts.profile.offer, categorie: facts.profile.category } } : {}),
+      // Product line: only the names the answer is about, capped; no owner values, no outlet list (S-16, L-21).
+      ...(facts.productLine ? { productlijn: { naam: facts.name.slice(0, 80), merk: facts.productLine.brand.slice(0, 80), categorie: facts.productLine.category.slice(0, 60), markt: facts.productLine.market } } : {}),
       antwoord: answerText,
     },
     null,
@@ -558,11 +685,34 @@ export async function extractClaimsLlm(answerText: string, facts: Facts, prompt:
     sampleId,
     factKey: c.factKey,
     subject: c.subject,
-    value: postNormalise(c.factKey, c.value, facts.country),
+    value: postNormaliseLine(c.factKey, c.value, answerText, facts, c.subject) ?? postNormalise(c.factKey, c.value, facts.country),
     confidence: c.confidence,
     otherEntity: c.otherEntity || otherEntityHint,
     rawQuote: c.rawQuote.slice(0, 300),
   }));
+}
+
+/** Line keys of an LLM claim in the same value space as the rules: units, the owner's outlet spelling, the successor sentinel. */
+function postNormaliseLine(factKey: FactKey, value: string, answer: string, facts: Facts, subject: string | null): string | null {
+  const pl = facts.productLine;
+  if (!pl) return null;
+  switch (factKey) {
+    case "spec":
+      return normalizeSpecValue(value);
+    case "certificate": {
+      const v = value.toLowerCase().trim();
+      return v === "ja" ? "yes" : v === "nee" ? "no" : v;
+    }
+    case "outlet": {
+      const key = outletKey(value);
+      const hit = pl.outlets.find((o) => o.market === pl.market && (outletKey(o.name) === key || (o.url != null && normalizeWebsite(o.url) === normalizeWebsite(value))));
+      return hit ? hit.name : value.trim().slice(0, 80);
+    }
+    case "successor":
+      return subject ? successorValueFromAnswer(answer, facts, subject) === PRESENT_VALUE ? PRESENT_VALUE : value.trim().slice(0, 80) || ABSENT_VALUE : value.trim().slice(0, 80);
+    default:
+      return null;
+  }
 }
 
 /** Second pass over LLM values so they land in the same value space as facts. */

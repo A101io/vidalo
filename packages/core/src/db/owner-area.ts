@@ -9,7 +9,7 @@
 import type { MemDb } from "./mem";
 import type { PgDb } from "./pg";
 import type { BusinessRecord, Db, EventRow } from "./types";
-import type { Channel, Facts, Finding, Fix, ScanKind, ScanReport, ScanRun, Stip } from "../types";
+import type { Channel, Facts, Finding, Fix, LineScope, ScanKind, ScanReport, ScanRun, Stip } from "../types";
 import { reportCounts, type ScanSnapshot } from "../progress";
 
 // Not `instanceof`: `next dev` and OpenNext bundle core once per route, so the Db a request holds can come from
@@ -105,6 +105,11 @@ export interface RunSummary {
   /** Of those, the questions every AI system answered right. */
   correct: number;
   snapshot: ScanSnapshot;
+  /**
+   * Feature 006: how often the business or line was named over the recommendation questions of the run, out of how
+   * many answers, and the five others named most often (by answers; never a position). Absent on summaries saved earlier.
+   */
+  recommend?: { named: number; answers: number; others: { name: string; answers: number }[] };
 }
 
 export interface ArchiveRow {
@@ -117,7 +122,15 @@ export interface ArchiveRow {
 
 export function summarizeRun(report: ScanReport, snapshot: ScanSnapshot): RunSummary {
   const c = reportCounts(report);
-  return { v: 1, stip: report.stip, answered: c.questions, correct: c.correct, snapshot };
+  const recs = report.recommendations ?? [];
+  const others = new Map<string, number>();
+  for (const r of recs) for (const o of r.others) others.set(o.name, (others.get(o.name) ?? 0) + o.answers);
+  const recommend = {
+    named: recs.reduce((n, r) => n + r.named, 0),
+    answers: recs.reduce((n, r) => n + r.answers, 0),
+    others: [...others].map(([name, answers]) => ({ name, answers })).sort((a, b) => b.answers - a.answers || a.name.localeCompare(b.name)).slice(0, 5),
+  };
+  return { v: 1, stip: report.stip, answered: c.questions, correct: c.correct, snapshot, recommend };
 }
 
 // MemDb keeps summaries on the instance itself (a Symbol.for key), not in a module-level WeakMap: `next dev` and
@@ -171,13 +184,13 @@ export async function listReportArchive(db: Db, businessId: string, opts: { limi
       select id, kind, status, created_at, summary,
              to_char(created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at
       from scan_run
-      where business_id = ${businessId} and kind <> 'recheck' ${after}
+      where business_id = ${businessId} and kind <> 'recheck' and product_line_id is null ${after}
       order by created_at desc, id desc limit ${limit + 1}`;
     all = rows.map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.createdAt.toISOString(), cursorAt: r.cursorAt, summary: r.summary }));
   } else if (isMem(db)) {
     const sums = memSummaries(db);
     all = [...db.scanRuns.values()]
-      .filter((r) => r.businessId === businessId && r.kind !== "recheck")
+      .filter((r) => r.businessId === businessId && r.kind !== "recheck" && !r.productLineId)
       .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, cursorAt: r.startedAt, summary: sums.get(r.id) ?? null }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
       .filter((r) => !cursor || r.createdAt < cursor.at || (r.createdAt === cursor.at && r.id < cursor.id));
@@ -191,21 +204,26 @@ export async function listReportArchive(db: Db, businessId: string, opts: { limi
   };
 }
 
-/** Finished, non-recheck checks that have a summary, newest first (the progress view and the dashboard read these). */
-export async function runSummaries(db: Db, businessId: string, limit: number): Promise<ArchiveRow[]> {
+/**
+ * Finished, non-recheck checks that have a summary, newest first (the progress view and the dashboard read these).
+ * Without `line`: the business's own checks; with it, only that product line's (and market's when given).
+ */
+export async function runSummaries(db: Db, businessId: string, limit: number, line?: LineScope): Promise<ArchiveRow[]> {
   const n = Math.max(1, Math.min(200, Math.floor(limit)));
   if (isPg(db)) {
     if (!UUID.test(businessId)) return [];
+    if (line && !UUID.test(line.productLineId)) return [];
+    const scope = !line ? db.sql`and product_line_id is null` : line.market === undefined ? db.sql`and product_line_id = ${line.productLineId}::uuid` : db.sql`and product_line_id = ${line.productLineId}::uuid and market = ${line.market}`;
     const rows = await db.sql<{ id: string; kind: ScanKind; status: ScanRun["status"]; createdAt: Date; summary: RunSummary }[]>`
       select id, kind, status, created_at, summary from scan_run
-      where business_id = ${businessId} and status = 'done' and kind <> 'recheck' and summary is not null
+      where business_id = ${businessId} and status = 'done' and kind <> 'recheck' and summary is not null ${scope}
       order by created_at desc, id desc limit ${n}`;
     return rows.map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.createdAt.toISOString(), summary: r.summary }));
   }
   if (isMem(db)) {
     const sums = memSummaries(db);
     return [...db.scanRuns.values()]
-      .filter((r) => r.businessId === businessId && r.status === "done" && r.kind !== "recheck" && sums.has(r.id))
+      .filter((r) => r.businessId === businessId && r.status === "done" && r.kind !== "recheck" && sums.has(r.id) && (!line ? !r.productLineId : r.productLineId === line.productLineId && (line.market === undefined || r.market === line.market)))
       .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, summary: structuredClone(sums.get(r.id)!) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
       .slice(0, n);
@@ -267,14 +285,18 @@ export function capFindings<T extends { id: string; status: string; firstSeenAt:
   return list.filter((f) => keep.has(f.id));
 }
 
-/** The open (unresolved) fix of each finding of a business, by finding id: one query, not one per finding. */
-export async function openFixesByFinding(db: Db, businessId: string): Promise<Map<string, Fix>> {
+/**
+ * The open (unresolved) fix of each finding of a business, by finding id: one query, not one per finding.
+ * Without `line`: the business's own findings; with it, only that product line's (and market's when given).
+ */
+export async function openFixesByFinding(db: Db, businessId: string, line?: LineScope): Promise<Map<string, Fix>> {
   const out = new Map<string, Fix>();
   if (isPg(db)) {
-    if (!UUID.test(businessId)) return out;
+    if (!UUID.test(businessId) || (line && !UUID.test(line.productLineId))) return out;
+    const scope = !line ? db.sql`and finding.product_line_id is null` : line.market === undefined ? db.sql`and finding.product_line_id = ${line.productLineId}::uuid` : db.sql`and finding.product_line_id = ${line.productLineId}::uuid and finding.market = ${line.market}`;
     const rows = await db.sql<Record<string, unknown>[]>`
       select fix.* from fix join finding on finding.id = fix.finding_id
-      where finding.business_id = ${businessId} and fix.resolved_at is null
+      where finding.business_id = ${businessId} and fix.resolved_at is null ${scope}
       order by fix.finding_id, fix.scheduled_at`;
     const at = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
     for (const r of rows) {
@@ -285,16 +307,16 @@ export async function openFixesByFinding(db: Db, businessId: string): Promise<Ma
     return out;
   }
   if (isMem(db)) {
-    const own = new Set([...db.findings.values()].filter((f) => f.businessId === businessId).map((f) => f.id));
+    const own = new Set([...db.findings.values()].filter((f) => f.businessId === businessId && (!line ? !f.productLineId : f.productLineId === line.productLineId && (line.market === undefined || f.market === line.market))).map((f) => f.id));
     for (const f of db.fixes.values()) if (own.has(f.findingId) && f.resolvedAt === null && !out.has(f.findingId)) out.set(f.findingId, { ...f });
     return out;
   }
   return unsupported();
 }
 
-/** What loadDashboard reads from the database (the service path): bounded, a fixed number of queries. */
-export async function dashboardRows(db: Db, businessId: string): Promise<{ facts: Facts | null; findings: Finding[]; channels: Channel[]; scanRuns: ScanRun[] }> {
-  const [facts, findings, channels, scanRuns] = await Promise.all([db.latestFacts(businessId), db.listFindings(businessId), db.listChannels(businessId), db.listScanRuns(businessId, OVERVIEW_LIMITS.runs)]);
+/** What loadDashboard reads from the database (the service path): bounded, a fixed number of queries. Business only unless `line` is given. */
+export async function dashboardRows(db: Db, businessId: string, line?: LineScope): Promise<{ facts: Facts | null; findings: Finding[]; channels: Channel[]; scanRuns: ScanRun[] }> {
+  const [facts, findings, channels, scanRuns] = await Promise.all([db.latestFacts(businessId), db.listFindings(businessId, undefined, line), db.listChannels(businessId), db.listScanRuns(businessId, OVERVIEW_LIMITS.runs, line)]);
   return { facts, findings: capFindings(findings), channels, scanRuns };
 }
 

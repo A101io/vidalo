@@ -45,7 +45,8 @@ export async function spendBlock(kind: JobKind, payload: Record<string, unknown>
   const spent = await db.paidScanCentsSince(today);
   const cap = dailyAiCapCents();
   if (spent < cap) return null;
-  const key = String(payload.businessId ?? payload.fixId ?? "") + String(payload.kind ?? kind);
+  // A business's line jobs would all land on the same second: its line and market are part of the key (feature 006).
+  const key = String(payload.businessId ?? payload.fixId ?? "") + String(payload.kind ?? kind) + String(payload.productLineId ?? "") + String(payload.market ?? "");
   const retryAt = spreadOverNextDay(today, key);
   // A recheck comes back by itself: the cron pushed its fix's recheck_at a day ahead when it queued it.
   if (kind === "scan") await db.enqueueJob(kind, DEFER_ONCE.has(String(payload.kind)) ? { ...payload, deferredOnce: true } : payload, retryAt);

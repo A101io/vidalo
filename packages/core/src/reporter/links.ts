@@ -21,7 +21,14 @@ const EN_SEGMENTS: Record<string, string> = { inloggen: "login", afmelden: "unsu
 export function mailPath(route: string, lang: Lang | null | undefined): string {
   if (lang !== "en" || route.startsWith("/api/")) return route;
   const [, first = "", ...rest] = route.split("/");
+  // The one nested segment (feature 006, apps/web/lib/lang-paths.ts): /app/productlijnen is /en/app/product-lines.
+  if (first === "app" && rest[0] === "productlijnen") rest[0] = "product-lines";
   return `/en${first ? `/${[EN_SEGMENTS[first] ?? first, ...rest].join("/")}` : ""}`;
+}
+
+/** A product line's page on the dashboard (feature 006): origin and the line's uuid only. */
+export function productLineUrl(business: WithLang | undefined, productLineId: string): string {
+  return `${baseUrl()}${mailPath(`/app/productlijnen/${encodeURIComponent(productLineId)}`, business?.language)}`;
 }
 
 export function baseUrl(): string {

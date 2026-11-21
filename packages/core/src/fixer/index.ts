@@ -24,6 +24,8 @@ import {
   type CorrectionContext,
 } from "./email-templates.js";
 import { addDays, daysBetween, fixPathForFinding, isFindabilityFinding, type FixPath } from "./paths.js";
+import { lineScopeOf } from "../shared/product-lines.js";
+import { lineFacts } from "../scanner/line.js";
 
 export * from "./paths.js";
 export * from "./email-templates.js";
@@ -38,6 +40,9 @@ export interface RunScanOptions {
   engines?: Engine[];
   samplesPerPrompt?: number;
   promptIds?: string[];
+  /** Feature 006: re-ask a product line's question in its market (both or neither). */
+  productLineId?: string;
+  market?: string;
   /** share the fixer's db handle with the scanner */
   db?: Db;
 }
@@ -90,6 +95,16 @@ function channelForFinding(finding: Finding, channels: Channel[]): Channel | nul
 
 function correctionContext(business: BusinessRecord): CorrectionContext {
   return { business: { name: business.name, place: business.place, ownerEmail: business.ownerEmail, kvk: business.kvk }, factsPageUrl: factsPageUrl(business) };
+}
+
+/** The product line a finding is about, for the words of a mail: its name, and what the owner confirmed about the certificate asked. */
+async function lineContextOf(db: Db, business: BusinessRecord, finding: Finding): Promise<CorrectionContext["line"] | undefined> {
+  if (!finding.productLineId) return undefined;
+  const line = await db.getProductLine(finding.productLineId);
+  if (!line || line.businessId !== business.id) return undefined;
+  const v = line.current;
+  const cert = finding.factKey === "certificate" && finding.subject ? lineFacts(business, { businessId: business.id } as never, v, finding.market ?? v.markets[0] ?? "NL").productLine?.certificates.find((c) => c.name.toLowerCase() === finding.subject!.toLowerCase()) : undefined;
+  return { name: v.name, certificate: cert ? { number: cert.number, validUntil: cert.validUntil, valid: cert.valid } : null };
 }
 
 /** Where a correction request for a third-party source goes. */
@@ -170,7 +185,9 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
   const w = findingWordsNl(finding);
   // not_found, or not named in a recommendation without a cited source: make the fact findable.
   const notFound = isFindabilityFinding(finding);
-  const target = finding.sourceUrl ?? (notFound || finding.sourceType === "owned_facts_page" || finding.sourceType === "other_entity" ? factsPageUrl(business) : finding.sourceType);
+  // A product line has no facts page: its fix never points at one (ADR-0014).
+  const target = finding.sourceUrl ?? ((notFound || finding.sourceType === "owned_facts_page" || finding.sourceType === "other_entity") && !finding.productLineId ? factsPageUrl(business) : finding.sourceType);
+  const line = await lineContextOf(db, business, finding);
 
   let fix = await db.insertFix({
     findingId: finding.id,
@@ -256,7 +273,7 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
       }
       case "email": {
         const { to, guessed } = thirdPartyAddress(finding);
-        const m = correctionRequestEmail(finding, correctionContext(business));
+        const m = correctionRequestEmail(finding, { ...correctionContext(business), line });
         if (!to) {
           await escalateToOperator(fix, "lookup_contact_address", { sourceUrl: finding.sourceUrl, draft: m });
           note = "No contact address known; operator looks it up.";
@@ -280,7 +297,7 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
       case "manual": {
         // owned_website: instruct the owner
         if (business.ownerEmail) {
-          const m = ownerWebsiteInstructionEmail(finding, business, dashboardUrl(business), business.language);
+          const m = ownerWebsiteInstructionEmail(finding, business, dashboardUrl(business), business.language, line?.name);
           await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, lang: business.language, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_instruction" });
           ev.ownerMail = { subject: m.subject, queuedAt: now.toISOString(), remindersSent: [] };
           fix = await db.updateFix(fix.id, { sentAt: now.toISOString() });
@@ -293,8 +310,8 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
       }
       case "none":
       default: {
-        ev.note = "uit het geheugen van het model";
-        note = "Model memory: nothing to fix at the source; recheck after the window.";
+        ev.note = finding.productLineId ? "we blijven controleren" : "uit het geheugen van het model";
+        note = finding.productLineId ? "Product line: no page of ours can change this; keep checking." : "Model memory: nothing to fix at the source; recheck after the window.";
         executed = true;
         break;
       }
@@ -324,8 +341,27 @@ export async function openFixForFinding(finding: Finding, deps: FixerDeps = {}):
  */
 export async function markFixedByOwner(finding: Finding, now = new Date()): Promise<Fix | null> {
   const db = getDb();
-  const fix = (await db.listFixes(finding.id)).find((x) => x.resolvedAt === null);
-  if (!fix) return null;
+  // An outlet "not in your list" has no source to change, so nothing is re-asked on the owner's word (CMP-607): adding the
+  // outlet to the list is the answer, and the monthly check sees it.
+  if (finding.productLineId && finding.factKey === "outlet") return null;
+  const first = (await db.listFixes(finding.id)).find((x) => x.resolvedAt === null);
+  if (!first) return null;
+  // A recheck is a paid run on the AI systems: one press per fix per day claims it, the rest find it claimed (S-25).
+  // Business findings keep today's behaviour; a product-line finding is claimed under a lock, in one read-check-write.
+  if (!finding.productLineId) return pullRecheckForward(db, finding, first, now);
+  return db.withLock(`recheck:${first.id}`, async () => {
+    const fix = (await db.listFixes(finding.id)).find((x) => x.resolvedAt === null);
+    if (!fix) return null;
+    const last = typeof fix.evidence.ownerMarkedFixedAt === "string" ? Date.parse(fix.evidence.ownerMarkedFixedAt) : NaN;
+    if (Number.isFinite(last) && now.getTime() - last < OWNER_RECHECK_WINDOW_MS && now.getTime() >= last) return fix;
+    return pullRecheckForward(db, finding, fix, now);
+  });
+}
+
+/** The owner may pull a line finding's recheck forward once per this window. */
+export const OWNER_RECHECK_WINDOW_MS = 24 * 3_600_000;
+
+async function pullRecheckForward(db: Db, finding: Finding, fix: Fix, now: Date): Promise<Fix> {
   const at = now.toISOString();
   const updated = await db.updateFix(fix.id, { recheckAt: at, evidence: { ...fix.evidence, ownerMarkedFixedAt: at } });
   await db.enqueueJob("recheck", { fixId: fix.id, businessId: finding.businessId });
@@ -376,7 +412,9 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
   if (!business) throw new Error(`business ${finding.businessId} not found`);
   const path = fixPathForFinding(finding);
 
-  const prompts = affectedPrompts(finding, await db.listPrompts(business.id, { activeOnly: true }));
+  // A product-line finding is re-asked as a line run: its own questions, in its market, on its engine.
+  const scope = lineScopeOf(finding);
+  const prompts = affectedPrompts(finding, await db.listPrompts(business.id, { activeOnly: true, ...(scope ? { line: scope } : {}) }));
   const report = await runScan({
     businessId: business.id,
     kind: "recheck",
@@ -384,6 +422,7 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
     engines: [finding.engine],
     samplesPerPrompt: 10,
     db,
+    ...(scope?.market ? { productLineId: scope.productLineId, market: scope.market } : {}),
   });
   const ev: Record<string, unknown> = { ...fix.evidence, recheckScanRunId: report.scanRunId, lastRecheckAt: now.toISOString() };
   const history = Array.isArray(ev.rechecks) ? (ev.rechecks as unknown[]) : [];
@@ -436,7 +475,7 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
       const sent = mail.followUpsSent ?? [];
       const due = (path.followUpDays ?? []).find((d) => sinceSent >= d && !sent.includes(String(d)));
       if (due != null && mail.to) {
-        const m = correctionFollowUpEmail(finding, correctionContext(business), fix.sentAt ?? finding.firstSeenAt);
+        const m = correctionFollowUpEmail(finding, { ...correctionContext(business), line: await lineContextOf(db, business, finding) }, fix.sentAt ?? finding.firstSeenAt);
         await db.enqueueJob("email", { to: mail.to, subject: m.subject, text: m.text, replyTo: business.ownerEmail ?? undefined, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "correction_followup" });
         ev.email = { ...mail, followUpsSent: [...sent, String(due)] };
         step = `followup_email_${due}`;
@@ -450,7 +489,7 @@ export async function runRecheck(fixId: string, deps: FixerDeps = {}): Promise<R
       const sent = mail.remindersSent ?? [];
       const due = (path.followUpDays ?? []).find((d) => sinceSent >= d && !sent.includes(String(d)));
       if (due != null && business.ownerEmail) {
-        const m = ownerWebsiteReminderEmail(finding, business, dashboardUrl(business), due, business.language);
+        const m = ownerWebsiteReminderEmail(finding, business, dashboardUrl(business), due, business.language, (await lineContextOf(db, business, finding))?.name);
         await db.enqueueJob("email", { to: business.ownerEmail, subject: m.subject, text: m.text, lang: business.language, businessId: business.id, findingId: finding.id, fixId: fix.id, kind: "owner_reminder" });
         ev.ownerMail = { ...mail, remindersSent: [...sent, String(due)] };
         step = `owner_reminder_${due}`;
