@@ -544,8 +544,8 @@ export class MemDb implements Db {
     return { ...row };
   }
 
-  async listEvents(businessId: string, limit = 100): Promise<EventRow[]> {
-    return this.events.filter((e) => e.businessId === businessId).slice(-limit).reverse();
+  async listEvents(businessId: string, limit = 100, type?: string): Promise<EventRow[]> {
+    return this.events.filter((e) => e.businessId === businessId && (type === undefined || e.type === type)).slice(-limit).reverse();
   }
 
   async listEventsByEmail(type: string, email: string, limit = 50): Promise<EventRow[]> {

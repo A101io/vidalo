@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { MemDb } from "@vidalo/core/db";
 import { setDb } from "@vidalo/core/shared";
 import { REPORT_EMAIL_EVENT } from "@vidalo/core/reporter";
-import { amsterdamParts, amsterdamToUtc, enqueueFollowUps, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
+import { amsterdamParts, amsterdamToUtc, enqueueFollowUps, enqueueMonthlyScans, enqueueIndexChecks, enqueueReconfirmations, enqueueSiteChecks, monthlySlot, ownerSubscriptionChanges } from "../src/cron";
 
 describe("cron time helpers", () => {
   it("converts Amsterdam wall-clock to UTC across DST", () => {
@@ -26,6 +26,22 @@ describe("cron time helpers", () => {
     // when the window has passed the slot is "now"
     const late = new Date("2026-10-07T12:00:00Z");
     expect(monthlySlot({ id: "11111111-aaaa" }, late).getTime()).toBe(late.getTime());
+  });
+});
+
+describe("monthly check", () => {
+  // SEC-V01: the once-a-month guard read the newest 500 events of any type, so an
+  // owner who wrote 500 other events pushed this month's scan.enqueued out of the
+  // window and the */10 cron queued the paid check again on the anniversary day.
+  it("queues one monthly job even when 600 unrelated events follow it", async () => {
+    const db = new MemDb();
+    setDb(db);
+    const now = new Date(); // MemDb stamps events with the real clock
+    const b = await db.upsertBusiness({ name: "Bakkerij Maand", place: "Haarlem", status: "active", plan: "monitor", anniversaryDay: amsterdamParts(now).d });
+    expect(await enqueueMonthlyScans(now)).toBe(1);
+    for (let i = 0; i < 600; i++) await db.logEvent(b.id, "owner.mail_prefs", { i });
+    expect(await enqueueMonthlyScans(now)).toBe(0);
+    expect([...db.jobs.values()].filter((j) => j.kind === "scan" && j.payload.kind === "monthly")).toHaveLength(1);
   });
 });
 

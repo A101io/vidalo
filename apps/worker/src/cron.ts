@@ -75,7 +75,8 @@ export async function enqueueMonthlyScans(now = new Date()): Promise<number> {
   const due = await db.businessesDueForMonthlyScan(d);
   let n = 0;
   for (const b of due) {
-    const evs = await events(b.id);
+    // Only scan.enqueued, so other events (an owner can write many) cannot push it out of the window (SEC-V01).
+    const evs = await db.listEvents(b.id, 500, "scan.enqueued");
     // one full scan per month: a baseline in the setup month counts
     const already = lastEvent(evs, (e) => e.type === "scan.enqueued" && (e.payload.kind === "monthly" || e.payload.kind === "baseline") && sameAmsterdamMonth(e.at, now));
     if (already) continue;
