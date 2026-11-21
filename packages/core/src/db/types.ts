@@ -293,7 +293,8 @@ export interface Db {
 
   // --- events ---
   logEvent(businessId: string | null, type: string, payload?: Record<string, unknown>): Promise<EventRow>;
-  listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
+  /** Latest first. With `type`, only events of that type (filtered before the limit). */
+  listEvents(businessId: string, limit?: number, type?: string): Promise<EventRow[]>;
   /** Events of this type on a business whose payload.email is this address (case-insensitive), latest first. */
   listEventsByEmail(type: string, email: string, limit?: number): Promise<EventRow[]>;
   /** Deletes events by id (a removed check's own events). Unknown ids are ignored. */

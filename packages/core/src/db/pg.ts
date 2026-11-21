@@ -653,8 +653,10 @@ export class PgDb implements Db {
     return mapEvent(rows[0]!);
   }
 
-  async listEvents(businessId: string, limit = 100): Promise<EventRow[]> {
-    const rows = await this.sql`select * from event where business_id = ${businessId} order by at desc limit ${limit}`;
+  async listEvents(businessId: string, limit = 100, type?: string): Promise<EventRow[]> {
+    const rows = type === undefined
+      ? await this.sql`select * from event where business_id = ${businessId} order by at desc limit ${limit}`
+      : await this.sql`select * from event where business_id = ${businessId} and type = ${type} order by at desc limit ${limit}`;
     return rows.map(mapEvent);
   }
 
