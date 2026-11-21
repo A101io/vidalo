@@ -5,18 +5,20 @@ An unattended run re-reads it at the start of every run; Julian edits it between
 
 | | |
 |---|---|
-| Phase | **4 verify, DECISION NEEDED** after round 2 (21 Nov 2026): no P0 left in code; AC8 timing waits on Julian. PR open for review, not merged |
+| Phase | **4 verify done** (2 of 2 rounds, 21 Nov 2026): no open P0. AC8 amended by Julian. PR A101io/vidalo#148 open for review, not merged |
 | Started | 2026-11-21 (Julian's request, verbatim in `00-request.md`; the brief was written as "005" on another branch, this repo numbers it 006) |
 | Branch | `claude/005-productlijnen` (worktree `.claude/worktrees/005-productlijnen`), cut from origin/main; build uncommitted on top of 8fdd35e |
 | Design reviewed | none; phase 2 skipped (below) |
 | Design gate rounds used | 0 of 2 (skipped) |
 | Verify rounds used | **2 of 2** |
-| Open P0s | **QA-01** (AC8; waits on Julian, not a build item). SEC-V01 fixed on this branch (round 2); the same hole is still on main |
-| Waiting on Julian | **AC8 timing (memo below)**, D1, D2, D5 (incl. CMP-606), CMP-608 EAA confirmation, SEC-V01 hotfix deploy to production, CMP-609 lawyer question; D3/D4 as before; PR approval before merge (AC8, L-74) |
+| Open P0s | none. QA-01 closed by Julian amending AC8 (21 Nov). SEC-V01 fixed here; main gets its own hotfix (separate session) |
+| Waiting on Julian | D1, D2, D5 (incl. CMP-606), CMP-608 EAA confirmation, SEC-V01 hotfix deploy to production, CMP-609 lawyer question; D3/D4 as before; PR approval before merge (AC8, L-74) |
 
 Ledger: `findings.md`. Round detail and per-lane lists: `05-verification.md`.
 
-## DECISION NEEDED — 006 productlijnen (AC8 timing)
+## DECIDED 21 Nov 2026 — AC8 timing: Julian chose B ("Yes, with the price"); the public surfaces ship with D1 and the switch
+
+### The memo as it was
 ```
 DECISION NEEDED — 006 productlijnen
 Disagreement:  AC8 wants FAQ, assistant, pricing, /organisaties and the terms line "what a line includes" in this PR; compliance B3 forbids any public line wording while VIDALO_PRODUCT_LINES is off and D1 is open.

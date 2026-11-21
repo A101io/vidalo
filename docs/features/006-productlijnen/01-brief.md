@@ -57,6 +57,7 @@ Sampling follows the existing rules (`FIRST_SAMPLES`, escalation; docs/cost-per-
 - AC6: RLS is proven with a rolled-back DO block: the owner sees their lines; another owner and anon see none.
 - AC7: `pnpm -r typecheck`, `pnpm -r test` and `pnpm e2e:mock` stay green. The mock pipeline includes a line.
 - AC8: Every surface is updated in the same PR, and Julian approves before merge: `/organisaties` (then it may say "in je dashboard"), pricing, FAQ, terms (what a line includes), mails, docs.
+  - **Amended 21 Nov 2026 (Julian: "Yes, with the price"):** this PR carries the owner pages, mails, legal texts and docs. The public surfaces (FAQ, assistant, `/prijzen`, `/organisaties`, the terms line "what a line includes") ship in one later change together with the price (D1) and `VIDALO_PRODUCT_LINES=1` in production.
 
 ## Decisions for Julian
 - **D1 Price:** included in an enterprise plan, or a price per line per month? This drives the cost model.
