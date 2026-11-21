@@ -15,7 +15,7 @@ import { ENGINE_NL_USAGE, engineCounts, overallStip } from "@vidalo/core/criteri
 import { PRODUCT_LINE_LIMITS } from "@vidalo/core/shared";
 import { saveRunSummary, type PromptInput, type RunSummary } from "@vidalo/core/db";
 import type { ProgressCell } from "@vidalo/core/progress";
-import { prepareBusiness, runScan, groupBySeverity, createMockEngine } from "@vidalo/core/scanner";
+import { prepareBusiness, runScan, groupBySeverity, createMockEngine, generateLinePrompts } from "@vidalo/core/scanner";
 import { ENGINES } from "@vidalo/core/types";
 import { openFixesForScan } from "@vidalo/core/fixer";
 import type { SourceRowData } from "./report";
@@ -335,29 +335,12 @@ const RECOMMEND: Record<string, { named: number; answers: number; others: { name
 };
 
 type PlannedPrompt = PromptInput & { spec?: string };
-function linePrompts(key: LineKey, market: string, v: ProductLineData, brand: string): PlannedPrompt[] {
-  const nl = market === "NL";
-  const named = v.name.toLowerCase().includes(brand.toLowerCase());
-  const of = named ? "" : nl ? ` van ${brand}` : ` by ${brand}`;
-  const country = nl ? "Nederland" : market === "BE" ? "Belgium" : market;
-  const out: PlannedPrompt[] = [];
-  for (const use of v.useCases) {
-    out.push({ category: "existence", textNl: nl ? `Welk ${v.category} is het beste voor ${use}?` : `Which ${v.category} is best for ${use}?`, probes: [`existence:${use}`], active: true, kind: "recommendation", criterium: 6, templateKey: "line.rec.use" });
-  }
-  for (const sp of v.specs) {
-    out.push({ category: "spec", textNl: nl ? `Welke ${sp.label.toLowerCase()} heeft ${v.name}${of}?` : `What ${sp.label.toLowerCase()} does ${v.name}${of} have?`, probes: [`spec:${sp.label}`], active: true, kind: "about", criterium: 13, templateKey: "line.spec", spec: sp.label });
-  }
-  for (const c of v.certificates) {
-    out.push({ category: "certificate", textNl: nl ? `Is ${v.name}${of} ${c.name}-gecertificeerd?` : `Is ${v.name}${of} ${c.name} certified?`, probes: [`certificate:${c.name}`], active: true, kind: "about", criterium: 14, templateKey: "line.cert" });
-  }
-  if (v.outlets.some((o) => o.market === market)) {
-    out.push({ category: "outlet", textNl: nl ? `Waar koop ik ${v.name}${of} in ${country}?` : `Where can I buy ${v.name}${of} in ${country}?`, probes: [`outlet:${market}`], active: true, kind: "about", criterium: 15, templateKey: "line.outlet" });
-  }
-  for (const old of v.replaces) {
-    out.push({ category: "successor", textNl: nl ? `Wat is de opvolger van ${old}${of}?` : `What is the successor of ${old}${of}?`, probes: [`successor:${old}`], active: true, kind: "about", criterium: 16, templateKey: "line.successor" });
-  }
-  void key;
-  return out;
+/** The questions the scanner itself asks for this version and market (prompts/line.ts), so the seed reads the same. */
+function linePrompts(id: string, version: number, market: string, v: ProductLineData, brand: string): PlannedPrompt[] {
+  return generateLinePrompts({ ...v, productLineId: id, version, confirmedAt: new Date().toISOString() }, market, brand).map((p) => ({
+    ...p,
+    spec: p.category === "spec" ? p.probes[0]!.slice("spec:".length) : undefined,
+  }));
 }
 
 export async function seedDemoLines(db: Db, businessId: string): Promise<void> {
@@ -388,7 +371,7 @@ export async function seedDemoLines(db: Db, businessId: string): Promise<void> {
     const id = lineIds.get(l.key)!;
     const current = l.versions[l.versions.length - 1]!;
     for (const market of current.markets) {
-      const promptsPlanned = linePrompts(l.key, market, current, business.name);
+      const promptsPlanned = linePrompts(id, l.versions.length, market, current, business.name);
       const prompts = await db.insertPrompts(businessId, promptsPlanned, { productLineId: id, market });
       const pk = `${l.key}|${market}`;
       for (const [mi, month] of LINE_MONTHS.entries()) {
@@ -468,13 +451,18 @@ export async function seedDemoLines(db: Db, businessId: string): Promise<void> {
   const held = rows.get(seen.get("speltbrood|NL|chatgpt|spec:Gewicht")!)!;
   held.firstSeenAt = monthAt(2);
   await db.updateFindingStatus(held.id, "fixing");
-  await db.insertFix({ findingId: held.id, action: "email", target: "redactie@broodwiki.example", scheduledAt: monthAt(0), recheckAt: new Date(Date.now() + 30 * 86_400_000).toISOString(), evidence: { sourceType: "third_party", verdict: "wrong", wrong: "500 g", correct: "800 g", path: "email" } });
+  // What the fixer writes when it queues the correction mail (fixer/index.ts, "email" case): the page shows "queued" from it.
+  const subject = `Correctie gegevens ${business.name}, ${business.place}`;
+  await db.insertFix({
+    findingId: held.id, action: "email", target: "redactie@broodwiki.example", scheduledAt: monthAt(0), sentAt: monthAt(0), recheckAt: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    evidence: { sourceType: "third_party", verdict: "wrong", wrong: "500 g", correct: "800 g", path: "email", email: { to: "redactie@broodwiki.example", guessed: false, subject, queuedAt: monthAt(0), followUpsSent: [] } },
+  });
   const fixed = rows.get(seen.get("kerststol|NL|perplexity|spec:Gewicht")!)!;
   fixed.firstSeenAt = monthAt(2);
   const after = evidence.get("kerststol|NL|perplexity|spec:Gewicht")?.after ?? null;
   await db.markFindingResolved(fixed.id, after);
   fixed.resolvedAt = monthAt(1);
-  await db.insertFix({ findingId: fixed.id, action: "email", target: "info@broodwiki.example", scheduledAt: monthAt(2), sentAt: monthAt(2), resolvedAt: monthAt(1), evidence: { sourceType: "third_party", verdict: "wrong", wrong: "750 g", correct: "1 kg", path: "email" } });
+  await db.insertFix({ findingId: fixed.id, action: "email", target: "info@broodwiki.example", scheduledAt: monthAt(2), sentAt: monthAt(2), resolvedAt: monthAt(1), evidence: { sourceType: "third_party", verdict: "wrong", wrong: "750 g", correct: "1 kg", path: "email", email: { to: "info@broodwiki.example", guessed: false, subject, queuedAt: monthAt(2), followUpsSent: [] } } });
   const open = rows.get(seen.get("speltbrood|BE|google_ai|outlet:BE")!)!;
   open.firstSeenAt = monthAt(1);
 }

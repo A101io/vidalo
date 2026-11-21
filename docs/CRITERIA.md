@@ -245,6 +245,36 @@ De twaalf criteria gelden overal, maar per vak verschilt welke vraag de klant st
 | Makelaar / hypotheek | Courtage, lidmaatschap, werkgebied | Oude pagina | Verkeerde prijs |
 | Kinderopvang / sportschool / rijschool | Beschikbaarheid, tijden | Oud bericht | "Vol" terwijl plek |
 
+## Productlijnen (feature 006)
+
+Een productlijn is een tweede onderwerp naast het bedrijf: een product of productfamilie die de eigenaar zelf invoert en bevestigt (naam, soort product, toepassingen, landen, specificaties, certificaten, verkooppunten, oude namen). Per productlijn en per land waarin de eigenaar het verkoopt, stellen we elke maand vragen aan de AI-systemen, met dezelfde steekproefregels als bij het bedrijf (5 antwoorden per vraag en systeem, 10 waar een eerste antwoord afweek; `google_ai` 1, zie `FIRST_SAMPLES` en `SAMPLES_CAP`). De vragen staan in de taal van het land: Nederlands voor Nederland, voor elk ander land Engels (`scanLang`). Een productlijn raakt de stip van het bedrijf nooit: het zijn aparte controles.
+
+**Criteria 13 tot en met 16** staan naast de twaalf openbare criteria en komen alleen op de pagina's van de eigenaar. De ernstklassen zijn standaardwaarden die Julian mag veranderen (`LINE_CRITERIA` in `criteria.ts`, ADR-0013); alle vier gebruiken de verhoudingsdrempel van 30% (`RATIO_MIN`), zodat één afwijkend antwoord nooit een fout is.
+
+| # | Criterium | Ernst (standaard) | Drempel | Fact key |
+|---|---|---|---|---|
+| 13 | Specificaties | misleider | 30% | `spec` |
+| 14 | Certificaten | misleider | 30% | `certificate` |
+| 15 | Waar te koop | misleider | 30% | `outlet` |
+| 16 | Opvolger en oude namen | verwarring | 30% | `successor` |
+
+**De vragen per (productlijn, land)**, hoogstens 14 met de huidige grenzen (`PRODUCT_LINE_LIMITS`: 3 toepassingen, 5 specificaties, 3 certificaten, 1 verkooppuntvraag, 2 oude namen, 3 + 5 + 3 + 1 + 2):
+
+| Vraag (NL) | Soort | Criterium | Hoeveel |
+|---|---|---|---|
+| Welke {soort} is het beste voor {toepassing}? | aanbeveling | 6 | één per toepassing |
+| Wat is de beste {soort}? | aanbeveling | 6 | alleen zonder toepassingen |
+| Welke {specificatie} heeft {naam}? | over het product | 13 | één per specificatie |
+| Is {naam} {certificaat}-gecertificeerd? | over het product | 14 | één per certificaat |
+| Waar koop ik {naam} in {land}? | over het product | 15 | één, als het land een verkooppunt heeft |
+| Wat is de opvolger van {oude naam}? | over het product | 16 | één per oude naam |
+
+**Hoe we oordelen.** Een specificatie klopt als het antwoord dezelfde waarde geeft na normalisatie (of hetzelfde getal met dezelfde eenheid). Een certificaat klopt als het antwoord ja zegt terwijl het certificaat op de controledatum geldig is, of nee terwijl het verlopen is. Een verkooppunt dat de AI noemt en dat niet in de lijst van de eigenaar staat, melden we als "niet in je lijst": dat is geen bewijs dat het fout is, want de AI kan een echte verkoper noemen die de eigenaar niet opschreef. De eigenaar voegt hem dan toe, of we blijven controleren. Een opvolger klopt als het antwoord de productlijn zelf noemt. Op naamgenoten beoordelen we productlijnen niet (geen criterium 11).
+
+**Genoemd als aanrader** is per land het aantal antwoorden op de aanbevelingsvragen van die maand waarin de productlijn genoemd wordt, uit het totaal ("3 van 10 keer"), met de andere namen die de AI noemde als aantallen. Nooit een positie, percentage of score, en we beloven niet dat het verandert.
+
+**Wat we kunnen herstellen.** Alleen wat via de website van de eigenaar of een correctieverzoek aan een bron kan. Niet gevonden, niet genoemd, antwoorden uit het geheugen van het model en alles waarvoor we een pagina zouden moeten publiceren, worden "we blijven elke maand controleren": voor productlijnen publiceren we geen pagina (ADR-0014). Een verkooppunt "niet in je lijst" krijgt geen correctiebrief aan een derde.
+
 ## Wat de scan bewust niet beoordeelt
 
 - **Reviews en sentiment.** "De AI zegt dat je service matig is." Dat is een mening uit reviews, geen feit dat je kunt corrigeren zonder de reviews zelf te veranderen. Reputatiebeheer is een ander vak, met een andere ethiek.

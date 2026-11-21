@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getI18n } from "@/lib/i18n";
 import { ENGINE_LABEL } from "@vidalo/core/types";
+import { countryName } from "@vidalo/core/shared";
 import type { Claim, Fix, FindingStatus, Sample, Stip as StipColour } from "@vidalo/core/types";
 import { BlueLink, Dot, LogRow, MarkGrey, MarkOk, MarkWrong, QuietLink, RailLabel, Ring, Section, SmallButton } from "@/components/OwnerUi";
 import { requireOwnerOf } from "@/lib/owner";
@@ -78,12 +80,14 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
   const { business } = await requireOwnerOf(owner, `/app/fouten/${id}`);
   const detail = await loadFinding(id, business);
   if (!detail) notFound();
-  const { copy, href } = await getI18n();
+  const { copy, lang, href } = await getI18n();
   const F = copy.findingPage;
-  const { finding: f, fix, run, samples, claims, others } = detail;
+  const { finding: f, fix, run, samples, claims, others, line } = detail;
 
   const engine = ENGINE_LABEL[f.engine];
-  const question = questionFor(f.factKey, f.subject, business.name, business.place, copy);
+  // A line finding is asked about the line, in its market: the line's name stands where the business's does.
+  const marketName = f.market ? countryName(f.market, lang) : "";
+  const question = line ? questionFor(f.factKey, f.subject, line.current.name, marketName, copy) : questionFor(f.factKey, f.subject, business.name, business.place, copy);
   const wrong = wrongText(f, copy);
   const correct = correctText(f, copy);
   const notFoundVerdict = f.verdict === "not_found";
@@ -96,9 +100,13 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
   const claimFor = (s: Sample) => claims.find((c) => c.sampleId === s.id && c.factKey === f.factKey && (c.subject ?? null) === (f.subject ?? null));
   const cited = host ? samples.filter((s) => s.citations.some((c) => hostOf(c) === host)).length : 0;
   const names = (v: "correct" | "wrong" | "not_found") => others.filter((o) => o.verdict === v).map((o) => ENGINE_LABEL[o.engine]);
-  const did = fix ? evidenceLines(fix, copy, href) : [];
+  // A line run has no public report page (/r/ answers 404 for it), so no proof link points there.
+  const did = (fix ? evidenceLines(fix, copy, href) : []).map((l) => (line && l.proof?.href.includes("/r/") ? { ...l, proof: undefined } : l));
   const done = f.status === "resolved" || f.status === "unfixable";
   const supportRef = `${copy.factKey[f.factKey]}, ${dateShort(f.firstSeenAt)}`;
+
+  const backHref = line ? href(`/app/productlijnen/${line.id}?markt=${f.market ?? ""}`) : href("/app");
+  const backLabel = line ? line.current.name : F.back;
 
   const steps: { key: string; label: string; date: string | null; tone: StipColour | null; current: boolean }[] = [
     { key: "found", label: F.rail.steps.found, date: dateShort(f.firstSeenAt), tone: "rood", current: f.status === "open" },
@@ -111,15 +119,31 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
 
   return (
     <div className="flex flex-col gap-12">
-      <QuietLink href={href("/app")}>← {F.back}</QuietLink>
+      <QuietLink href={backHref}>← {backLabel}</QuietLink>
 
       <header className="flex max-w-[760px] flex-col gap-3">
         <p className="m-0 text-[14px] text-muted">
           <Dot tone={statusTone[f.status]} />
           {F.meta(copy.findingStatus[f.status], dateShort(fix?.scheduledAt ?? f.firstSeenAt), dateShort(f.firstSeenAt), copy.factKey[f.factKey])}
         </p>
-        <h1 className="h1-sm">{notFoundVerdict ? F.h1NotFound(engine) : F.h1(engine, wrong)}</h1>
-        <p className="m-0 text-[19px] leading-[1.5] text-ink-2">{notFoundVerdict ? F.introNotFound(question, engine, f.frequency, f.sampleCount, correct) : F.intro(question, engine, f.frequency, f.sampleCount, wrong, correct, sourceName)}</p>
+        {line && (
+          <p className="m-0 text-[15px] font-semibold">
+            <Link href={href(`/app/productlijnen/${line.id}?markt=${f.market ?? ""}`)} className="hover:text-blue">
+              {copy.productLines.finding.line(line.current.name, marketName)}
+            </Link>
+          </p>
+        )}
+        {line && f.factKey === "outlet" && !notFoundVerdict ? (
+          <>
+            <h1 className="h1-sm">{copy.productLines.finding.outletH1(engine, wrong)}</h1>
+            <p className="m-0 text-[19px] leading-[1.5] text-ink-2">{copy.productLines.finding.outletIntro(question, engine, f.frequency, f.sampleCount, wrong)}</p>
+          </>
+        ) : (
+          <>
+            <h1 className="h1-sm">{notFoundVerdict ? F.h1NotFound(engine) : F.h1(engine, wrong)}</h1>
+            <p className="m-0 text-[19px] leading-[1.5] text-ink-2">{notFoundVerdict ? F.introNotFound(question, engine, f.frequency, f.sampleCount, correct) : F.intro(question, engine, f.frequency, f.sampleCount, wrong, correct, sourceName)}</p>
+          </>
+        )}
         {sp.hercontrole && <p className="m-0 rounded-xl bg-panel px-4 py-3 text-[15px]">{sp.hercontrole === "ingepland" ? F.flash.scheduled : F.flash.none}</p>}
       </header>
 
@@ -205,7 +229,7 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
               <LogRow date={dayMonth(f.firstSeenAt)}>
                 <Dot tone="rood" />
                 {F.found(engine, f.frequency, f.sampleCount)}
-                {run && (
+                {run && !line && (
                   <>
                     {" "}
                     <QuietLink href={href(`/r/${run.id}`)}>{F.proof.report}</QuietLink>
@@ -241,14 +265,19 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
           {!done && (
             <div className="card flex flex-col gap-3.5 p-6">
               <RailLabel>{F.rail.you}</RailLabel>
-              <p className="m-0 text-[15px] text-ink-2">{you ? F.rail.youWebsite(recheckDate) : F.rail.youOther}</p>
-              <form action={markFixed} className="m-0 flex">
-                <input type="hidden" name="business" value={business.id} />
-                <input type="hidden" name="finding" value={f.id} />
-                <button type="submit" className="btn-primary h-[52px] w-full">
-                  {F.rail.markFixed}
-                </button>
-              </form>
+              {/* An outlet not in the owner's list has no recheck to pull forward (CMP-607): only "Dit klopt wél". */}
+              {!(f.productLineId && f.factKey === "outlet") && (
+                <>
+                  <p className="m-0 text-[15px] text-ink-2">{you ? F.rail.youWebsite(recheckDate) : F.rail.youOther}</p>
+                  <form action={markFixed} className="m-0 flex">
+                    <input type="hidden" name="business" value={business.id} />
+                    <input type="hidden" name="finding" value={f.id} />
+                    <button type="submit" className="btn-primary h-[52px] w-full">
+                      {F.rail.markFixed}
+                    </button>
+                  </form>
+                </>
+              )}
               <form action={dispute} className="m-0 flex">
                 <input type="hidden" name="business" value={business.id} />
                 <input type="hidden" name="finding" value={f.id} />
@@ -276,7 +305,7 @@ export default async function FindingPage({ params, searchParams }: { params: Pr
             <RailLabel>{F.rail.questions}</RailLabel>
             <p className="m-0 text-[14px] text-muted">{F.rail.support(supportRef)}</p>
           </div>
-          <BlueLink href={href("/app")}>← {F.back}</BlueLink>
+          <BlueLink href={backHref}>← {backLabel}</BlueLink>
         </aside>
       </div>
     </div>

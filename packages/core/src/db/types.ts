@@ -226,6 +226,8 @@ export interface SignInRow {
 
 /** What one free check is counted as while it runs (docs/cost-per-client.md: €0.40–0.60). */
 export const FREE_SCAN_ESTIMATE_CENTS = 60;
+/** What a product-line run in flight counts for in the daily AI ceiling until it reports its cost (about one (line, market) at the cap, see 02-architecture.md Cost). */
+export const LINE_RUN_ESTIMATE_CENTS = 250;
 
 export interface Db {
   readonly kind: "pg" | "mem";
@@ -327,7 +329,8 @@ export interface Db {
 
   // --- events ---
   logEvent(businessId: string | null, type: string, payload?: Record<string, unknown>): Promise<EventRow>;
-  listEvents(businessId: string, limit?: number): Promise<EventRow[]>;
+  /** Newest first. With `type`, only events of that type: the newest `limit` of them, so other event types cannot push them out of the window. */
+  listEvents(businessId: string, limit?: number, type?: string): Promise<EventRow[]>;
   /** Events of this type on a business whose payload.email is this address (case-insensitive), latest first. */
   listEventsByEmail(type: string, email: string, limit?: number): Promise<EventRow[]>;
   /** Deletes events by id (a removed check's own events). Unknown ids are ignored. */

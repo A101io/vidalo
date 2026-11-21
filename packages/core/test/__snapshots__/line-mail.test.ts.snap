@@ -1,0 +1,89 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`monthly mail: product line sections > a business without lines renders exactly the mail it always did (snapshot), also with an empty list 1`] = `
+{
+  "html": "<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>Bakkerij De Vries in november 2026: groen, 30 van 30 antwoorden kloppen</title></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff">30 van 30 antwoorden kloppen. Wat er hersteld is en wat er nu gebeurt.&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<tr><td data-brand="vidalo" style="padding:0 0 20px;border-bottom:1.5px solid #e7e3dc"><span style="font-size:22px;line-height:1;font-weight:800;letter-spacing:-0.02em;color:#111827"><span style="display:inline-block;width:17px;height:17px;background:#2563eb;border-radius:999px 999px 999px 2px;vertical-align:-1px;margin-right:6px"></span>vidalo</span></td></tr>
+<tr><td style="padding:28px 0 8px">
+<p style="margin:0 0 8px;font-size:16px;line-height:1.55;color:#374151">Hoi,</p>
+<h1 style="margin:0 0 10px;font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;color:#111827">November 2026: 30 van 30 antwoorden kloppen</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#374151"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#2b7a53;vertical-align:0"></span>&nbsp;&nbsp;Stip: groen. Klopt. Alles wat we controleerden klopt.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#374151">Controle van 7 november 2026. We stelden 30 vragen over Bakkerij De Vries aan ChatGPT.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border:1.5px solid #e7e3dc;border-radius:12px"><tr><td style="padding:14px 16px;vertical-align:top"><div style="font-size:28px;line-height:1.1;font-weight:800;color:#111827">0</div><div style="margin-top:4px;font-size:13px;line-height:1.35;color:#666d7b">hersteld</div></td><td style="padding:14px 16px;border-left:1.5px solid #e7e3dc;vertical-align:top"><div style="font-size:28px;line-height:1.1;font-weight:800;color:#111827">0</div><div style="margin-top:4px;font-size:13px;line-height:1.35;color:#666d7b">in behandeling</div></td></tr></table>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#374151">Er is niets te herstellen. Fijn.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr><td style="border-radius:10px;background:#2563eb"><a href="https://vidalo.ai/app" style="display:inline-block;padding:14px 22px;font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px">Bekijk alles in je overzicht</a></td></tr></table>
+<p style="margin:8px 0 10px;font-size:17px;font-weight:700;color:#111827">De komende weken</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td width="22" style="padding:6px 0;vertical-align:top"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;border:2px solid #666d7b;vertical-align:1px"></span></td><td style="padding:3px 0;font-size:15px;line-height:1.5;color:#374151"><strong style="color:#111827">Tussendoor</strong> &nbsp;Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.</td></tr><tr><td width="22" style="padding:6px 0;vertical-align:top"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;border:2px solid #666d7b;vertical-align:1px"></span></td><td style="padding:3px 0;font-size:15px;line-height:1.5;color:#374151"><strong style="color:#111827">Rond 7 december 2026</strong> &nbsp;Je volgende maandcontrole.</td></tr></table>
+<p style="margin:8px 0 16px;font-size:16px;line-height:1.55;color:#374151">Groet,<br>Vidalo</p></td></tr>
+<tr><td style="padding:16px 0 0;border-top:1.5px solid #e7e3dc;font-size:13px;line-height:1.5;color:#666d7b">Vidalo (onderdeel van A101 B.V.) · Factorij 80, 3071 AV Rotterdam, Nederland · KvK 42057858 · btw NL869514192B01 · +31 85 109 1393 · Prijzen excl. btw</td></tr>
+</table></td></tr></table></body></html>",
+  "subject": "Bakkerij De Vries in november 2026: groen, 30 van 30 antwoorden kloppen",
+  "text": "Hoi,
+
+November 2026: 30 van 30 antwoorden kloppen
+
+Stip: groen. Klopt. Alles wat we controleerden klopt.
+
+Controle van 7 november 2026. We stelden 30 vragen over Bakkerij De Vries aan ChatGPT.
+
+0 hersteld · 0 in behandeling
+
+Er is niets te herstellen. Fijn.
+
+Bekijk alles in je overzicht: https://vidalo.ai/app
+
+De komende weken
+- Tussendoor: Een mail zodra een antwoord weer klopt, met het antwoord van voor en na.
+- Rond 7 december 2026: Je volgende maandcontrole.
+
+Groet,
+Vidalo
+",
+}
+`;
+
+exports[`monthly mail: product line sections > a business without lines renders exactly the mail it always did (snapshot), also with an empty list 2`] = `
+{
+  "html": "<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>Bakkerij De Vries in november 2026: green, 30 of 30 answers are right</title></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff">30 of 30 answers are right. What was fixed and what happens now.&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<tr><td data-brand="vidalo" style="padding:0 0 20px;border-bottom:1.5px solid #e7e3dc"><span style="font-size:22px;line-height:1;font-weight:800;letter-spacing:-0.02em;color:#111827"><span style="display:inline-block;width:17px;height:17px;background:#2563eb;border-radius:999px 999px 999px 2px;vertical-align:-1px;margin-right:6px"></span>vidalo</span></td></tr>
+<tr><td style="padding:28px 0 8px">
+<p style="margin:0 0 8px;font-size:16px;line-height:1.55;color:#374151">Hi,</p>
+<h1 style="margin:0 0 10px;font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;color:#111827">November 2026: 30 of 30 answers are right</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#374151"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#2b7a53;vertical-align:0"></span>&nbsp;&nbsp;Dot: green. Right. Everything we checked is right.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#374151">Check of 7 November 2026. We put 30 questions about Bakkerij De Vries to ChatGPT.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border:1.5px solid #e7e3dc;border-radius:12px"><tr><td style="padding:14px 16px;vertical-align:top"><div style="font-size:28px;line-height:1.1;font-weight:800;color:#111827">0</div><div style="margin-top:4px;font-size:13px;line-height:1.35;color:#666d7b">fixed</div></td><td style="padding:14px 16px;border-left:1.5px solid #e7e3dc;vertical-align:top"><div style="font-size:28px;line-height:1.1;font-weight:800;color:#111827">0</div><div style="margin-top:4px;font-size:13px;line-height:1.35;color:#666d7b">in progress</div></td></tr></table>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#374151">There is nothing to fix. Good.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr><td style="border-radius:10px;background:#2563eb"><a href="https://vidalo.ai/app" style="display:inline-block;padding:14px 22px;font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px">See everything in your overview</a></td></tr></table>
+<p style="margin:8px 0 10px;font-size:17px;font-weight:700;color:#111827">The coming weeks</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td width="22" style="padding:6px 0;vertical-align:top"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;border:2px solid #666d7b;vertical-align:1px"></span></td><td style="padding:3px 0;font-size:15px;line-height:1.5;color:#374151"><strong style="color:#111827">In between</strong> &nbsp;An email as soon as an answer is right again, with the answer before and after.</td></tr><tr><td width="22" style="padding:6px 0;vertical-align:top"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;border:2px solid #666d7b;vertical-align:1px"></span></td><td style="padding:3px 0;font-size:15px;line-height:1.5;color:#374151"><strong style="color:#111827">Around 7 December 2026</strong> &nbsp;Your next monthly check.</td></tr></table>
+<p style="margin:8px 0 16px;font-size:16px;line-height:1.55;color:#374151">Best,<br>Vidalo</p></td></tr>
+<tr><td style="padding:16px 0 0;border-top:1.5px solid #e7e3dc;font-size:13px;line-height:1.5;color:#666d7b">Vidalo (part of A101 B.V.) · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · +31 85 109 1393 · Prices excl. VAT</td></tr>
+</table></td></tr></table></body></html>",
+  "subject": "Bakkerij De Vries in november 2026: green, 30 of 30 answers are right",
+  "text": "Hi,
+
+November 2026: 30 of 30 answers are right
+
+Dot: green. Right. Everything we checked is right.
+
+Check of 7 November 2026. We put 30 questions about Bakkerij De Vries to ChatGPT.
+
+0 fixed · 0 in progress
+
+There is nothing to fix. Good.
+
+See everything in your overview: https://vidalo.ai/app
+
+The coming weeks
+- In between: An email as soon as an answer is right again, with the answer before and after.
+- Around 7 December 2026: Your next monthly check.
+
+Best,
+Vidalo
+",
+}
+`;

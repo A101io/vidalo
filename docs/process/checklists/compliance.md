@@ -125,3 +125,7 @@ Tone, layout and feature value. Compliance blocks on law, and files P1s on the r
 - An automatic correction letter sent in the customer's name asserts only the customer's own confirmed fact. "Not in the customer's list" is not evidence that a third party is wrong, so it never triggers a letter (006, B1).
 - A country picker for questions or letters uses an allow-list, not every ISO code: all 249 codes include sanctioned countries (006, B5).
 - Mock URLs on a reserved TLD (`.example`) are outside hosts to `legal.test.ts`; they go into `NOT_RECIPIENTS` in the ticket that adds them (006, L-52).
+
+## Learned (Vidalo, 21 Nov 2026, 006 phase 4)
+- A letter about data we deliberately do not publish never cites the published page as its source; a shared letter template that always appends the facts-page URL has to drop it for the new data class (006, CMP-601).
+- A finding with its own wording ("niet in je lijst", not "fout") keeps that wording on every surface that reuses the generic finding renderer: page, monthly mail, resolution and unfixable notices. Check the mail lab, not only the page (006, CMP-602).

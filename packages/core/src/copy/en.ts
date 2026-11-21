@@ -2,6 +2,7 @@ import type { CopyShape } from "./index.js";
 import { PRICES } from "./prices.js";
 import { COMPANY, CONTACT } from "../shared/contact.js";
 import { ownerAreaEn } from "./owner-area.en.js";
+import { productLinesEn } from "./product-lines.en.js";
 import { accountSecurityEn } from "./account-security.en.js";
 
 /** "ChatGPT, Copilot and Gemini" */
@@ -744,7 +745,7 @@ export const en: CopyShape = {
   legal: {
     draft: false,
     draftNotice: "Draft. This text has not yet been legally reviewed and may change.",
-    updated: "Version of 17 November 2026",
+    updated: "Version of 21 November 2026",
     contact: "A101 B.V., trading as Vidalo · Factorij 80, 3071 AV Rotterdam, the Netherlands · KvK 42057858 · VAT NL869514192B01 · support@vidalo.ai · +31 85 109 1393",
     terms: {
       title: "Terms and conditions",
@@ -761,7 +762,7 @@ export const en: CopyShape = {
             "Plan: ‘Vidalo Scan’ (one-off) or ‘Vidalo Monthly’ (a monthly subscription), as described at vidalo.ai/en/pricing at the time you order.",
             "AI assistant: a service of another party that answers questions using artificial intelligence, such as ChatGPT, Google AI, Gemini or Perplexity.",
             "Source: a website, directory, profile or other public record from which an AI assistant takes its answer.",
-            "Details: the details of your business that you confirm to us, such as name, address, opening hours, phone number, services and prices.",
+            "Details: the details of your business that you confirm to us, such as name, address, opening hours, phone number, services and prices, and the details of your product lines, such as name, specifications, certificates and places to buy.",
             "Facts page: the page we publish with your confirmed Details, in a form that people and AI assistants can read.",
             "Account: your own area on vidalo.ai, which you sign in to with a link sent by email.",
             "Agreement: the arrangements between you and Vidalo about the Service, including these terms.",
@@ -1049,8 +1050,8 @@ export const en: CopyShape = {
           h: "A paid plan",
           p: [
             [
-              "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix, and the description of what your business offers and for whom, with your own correction of it.",
-              "What we do with it: we publish your confirmed details on your facts page, which anyone can see. We send them to sources containing an error to ask for a fix, and to your Google Business Profile if you connect it. AI assistants receive business details only, never your email address.",
+              "Data: the details of your business that you confirm, with every earlier version; these may contain personal data, such as a name or phone number. Also the product lines you enter, with every earlier version. Also the results of the checks, the errors we found, the correction requests we sent and the proof of a fix, and the description of what your business offers and for whom, with your own correction of it.",
+              "What we do with it: we publish the confirmed details of your business on your facts page, which anyone can see. We send them to sources containing an error to ask for a fix, and to your Google Business Profile if you connect it. We ask AI assistants questions about your product lines, per country you choose, in the language of that country (Dutch for the Netherlands, otherwise English). We do not publish product lines on your facts page; if there is an error, we may ask the source for a fix. AI assistants receive business and product details only, never your email address.",
               "If our description of your business is wrong, you correct it under your details in your account, once you have shown that you manage the business. The checks in your plan then use your version; an automatic check does not overwrite it.",
               "Names of other businesses that AI assistants name may also be used, in a check in your plan, in a question to AI assistants, such as ‘What is a good alternative to [name]?’.",
               "Basis: the performance of the agreement with you. For the names of other businesses: our legitimate interest, and yours, in seeing whom AI names when someone looks for an alternative (article 6(1)(f) GDPR).",
@@ -1140,7 +1141,7 @@ export const en: CopyShape = {
               "Meta (Facebook, Instagram): measuring our advertisements, only with your consent; EU and United States.",
               "Perplexity and SerpAPI (for the answers of Google AI), when we ask those AI assistants; United States.",
               "The KvK: we look up a business in the Trade Register by name and place.",
-              "Sources containing an error, such as a website or directory: they receive the confirmed details of your business when we ask for a fix.",
+              "Sources containing an error, such as a website or directory: they receive the confirmed details when we ask for a fix, also outside the Netherlands if your product line is sold there.",
             ],
             "Otherwise we give data to others only with your consent, or when the law requires us to.",
           ],
@@ -3345,6 +3346,17 @@ Keep everything after all? You can until ${date}, with one click: ${url}`,
       moreOpen: (n: number) => `And ${n} more open. For each one your overview shows what we do and when we look again.`,
       nothing: "There is nothing to fix. Good.",
       cta: "See everything in your overview",
+      /** Feature 006: one section per product line. No price, no score, no position: counts, the colour word and "named as a recommendation n of m times". */
+      lines: {
+        title: (name: string) => `Product line: ${name}`,
+        market: (marketName: string, stipWord: string, open: number, named: { named: number; answers: number } | null) =>
+          `${marketName}: ${stipWord}. ${open === 0 ? "No errors open." : open === 1 ? "1 error open." : `${open} errors open.`}${named ? ` Named as a recommendation: ${named.named} of ${named.answers} times.` : ""}`,
+        notChecked: (marketName: string) => `${marketName}: not checked yet.`,
+        notCheckedThisMonth: (marketName: string, lastDate: string) => `${marketName}: not checked this month. Last check: ${lastDate}.`,
+        askedTo: (names: string[]) => `Asked to ${names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0]}.`,
+        more: (n: number) => `And ${n} more open for this product line.`,
+        cta: "View the product line",
+      },
       weeks: { title: "The coming weeks", meanwhile: { when: "In between", what: "An email as soon as an answer is right again, with the answer before and after." } },
     },
     followUp: {
@@ -3389,6 +3401,8 @@ Keep everything after all? You can until ${date}, with one click: ${url}`,
       intro: (what: string, name: string) => `AI assistants take ${what} for ${name} from your own website, and it says something other than what you confirmed with us.`,
       onPage: (page: string, wrong: string) => `On page ${page} it says: ${wrong}`,
       shouldBe: (correct: string) => `It should be: ${correct}`,
+      /** Feature 006: the mail is about a product line, not the business. */
+      forLine: (line: string) => `This is about your product line ${line}.`,
       change: "Could you change this? We then check again in 14 days whether the answer is right. You do not need to let us know.",
       forward: "Does it not work, or do you need help from whoever built your website? Forward this email; this is all that needs to happen.",
       reminderSubject: (wrong: string) => `Still "${wrong}" on your website`,
@@ -3431,5 +3445,6 @@ Keep everything after all? You can until ${date}, with one click: ${url}`,
     },
   },
   ownerArea: ownerAreaEn,
+  productLines: productLinesEn,
   accountSecurity: accountSecurityEn,
 };

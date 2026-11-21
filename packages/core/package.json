@@ -18,6 +18,7 @@
     "./copy": "./src/copy/index.ts",
     "./shared": "./src/shared/index.ts",
     "./shared/gate": "./src/shared/gate.ts",
+    "./shared/product-lines": "./src/shared/product-lines.ts",
     "./billing": "./src/billing/index.ts",
     "./chat": "./src/chat/index.ts",
     "./support": "./src/support/index.ts"

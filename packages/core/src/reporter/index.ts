@@ -16,7 +16,10 @@ import { findingWords } from "../shared/facts-en.js";
 import { copyFor, type Lang } from "../copy/index.js";
 import { fixPathForFinding, daysBetween } from "../fixer/paths.js";
 import { cnameTarget, isFallbackHost } from "../publisher/host.js";
-import { baseUrl, confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, mailPath, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
+import { baseUrl, confirmFactsUrl, dashboardUrl, factsPageUrl, googleConnectUrl, mailPath, productLineUrl, resultUrl, unsubscribeOneClickUrl, unsubscribeUrl } from "./links.js";
+import { runSummaries } from "../db/owner-area.js";
+import { countryName } from "../shared/country.js";
+import { scannableLineMarkets } from "../shared/product-lines.js";
 import { orderLines, orderSubtotal, type OrderConfirmationJob } from "../billing/order-mail.js";
 import { canSignUnsubscribe } from "../shared/unsubscribe.js";
 import { mailAllowed } from "../shared/mail-prefs.js";
@@ -31,6 +34,7 @@ import {
   resolutionNoticeEmail,
   unfixableNoticeEmail,
   welcomeEmail,
+  type LineMailSection,
   type Mail,
   type OpenFindingLine,
   type ProofCard,
@@ -346,6 +350,45 @@ export async function sendUnfixableNotice(findingId: string, note: string): Prom
   return deliver(business, m, "unfixable", { findingId });
 }
 
+const amsterdamMonth = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit" }).format(d);
+
+/**
+ * One section per active product line (feature 006): per market the colour and the open errors of the month's line run,
+ * "nog niet gecontroleerd" when that run is missing or failed, and the line's open findings. Only the lines the cron would
+ * check (scannableLineMarkets); none when the business has no line.
+ */
+async function lineSections(business: BusinessRecord, lang: Lang, now: Date): Promise<LineMailSection[]> {
+  const db = getDb();
+  const lines = await db.listProductLines(business.id);
+  const wanted = scannableLineMarkets(lines);
+  const month = amsterdamMonth(now);
+  const out: LineMailSection[] = [];
+  for (const line of lines.filter((l) => wanted.some((w) => w.productLineId === l.id)).sort((a, b) => a.current.name.localeCompare(b.current.name, "nl") || a.id.localeCompare(b.id))) {
+    const markets: LineMailSection["markets"] = [];
+    for (const { market } of wanted.filter((w) => w.productLineId === line.id)) {
+      const done = (await db.listScanRuns(business.id, 20, { productLineId: line.id, market })).filter((r) => r.kind === "monthly" && r.status === "done");
+      const run = done.find((r) => amsterdamMonth(new Date(r.startedAt)) === month);
+      // Never "not checked yet" for a market that was checked in an earlier month (CMP-604): say when.
+      const earlier = run ? null : done[0] ?? null;
+      const summary = run ? (await runSummaries(db, business.id, 50, { productLineId: line.id, market })).find((r) => r.id === run.id)?.summary ?? null : null;
+      const open = await db.listFindings(business.id, ["open", "fixing", "recheck"], { productLineId: line.id, market });
+      markets.push({
+        market,
+        marketName: countryName(market, lang),
+        checked: Boolean(run),
+        lastChecked: earlier ? new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "nl-NL", { day: "numeric", month: "long", timeZone: "Europe/Amsterdam" }).format(new Date(earlier.startedAt)) : null,
+        engines: run?.engines ?? [],
+        stip: summary?.stip ?? null,
+        openErrors: open.filter((f) => f.verdict !== "not_found" && f.evidenceKind !== "recommendation").length,
+        named: summary?.recommend && summary.recommend.answers > 0 ? { named: summary.recommend.named, answers: summary.recommend.answers } : null,
+      });
+    }
+    const openFindings = (await db.listFindings(business.id, ["open", "fixing", "recheck"], { productLineId: line.id })).map((f) => ({ finding: f, nextStep: fixLabel(fixPathForFinding(f), lang), since: f.firstSeenAt }));
+    out.push({ name: line.current.name, detailUrl: productLineUrl(business, line.id), markets, openFindings });
+  }
+  return out;
+}
+
 export interface MonthlyReportOptions {
   /** the monthly scan run this report covers; when omitted the stats come from current findings */
   scanRunId?: string;
@@ -397,6 +440,7 @@ export async function sendMonthlyReport(businessId: string, opts: MonthlyReportO
     proofCards: cards,
     openFindings: open,
     engines,
+    lines: await lineSections(business, lang, new Date()),
     links: { dashboardUrl: dashboardUrl(business), factsPageUrl: factsPageUrl(business) },
   });
   return deliver(business, m, "report", { scanRunId: run?.id ?? null, open: openFindings.length, resolved: resolvedThisMonth.length, stip: nf?.stip ?? null });

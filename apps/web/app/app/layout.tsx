@@ -11,6 +11,8 @@ import { loadLastConfirmedFacts } from "@/lib/reads";
 import { dateShort } from "@/lib/format";
 import { reconfirmation } from "@vidalo/core/facts-history";
 import { reconfirmFacts } from "./gegevens/actions";
+import { productLineAccess, productLinesEnabled } from "@vidalo/core/shared";
+import { ready } from "@/lib/core";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +27,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // "Klopt dit nog?": a year after the last confirmation, on every /app page until the owner answers.
   const yearly = reconfirmation(await loadLastConfirmedFacts(business.id));
   const R = copy.reconfirm;
+  // "Productlijnen" shows when the business has lines or may add one. With the launch switch off nothing is read at all.
+  const showLines = productLinesEnabled() && (productLineAccess(business, session.userId).ok || (await (await ready()).listProductLines(business.id)).length > 0);
   const links = [
     { href: "/app", label: d.h1 },
     { href: "/controle", label: copy.checks.newNav },
     { href: "/app/voortgang", label: copy.progress.nav },
+    ...(showLines ? [{ href: "/app/productlijnen", label: copy.productLines.nav }] : []),
     { href: "/app/rapporten", label: copy.ownerArea.archive.nav },
     { href: "/app/gegevens", label: d.setupSteps.facts },
     { href: "/app/domein", label: d.setupSteps.domain },

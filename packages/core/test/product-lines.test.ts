@@ -25,6 +25,12 @@ const refused = (over: Partial<ProductLineFormInput>) => {
 };
 
 describe("parseProductLine", () => {
+  it("stores markets in one order, so a reordered post is the same data (QA-11)", () => {
+    const a = parseProductLine(form({ markets: ["BE", "NL"] }));
+    const b = parseProductLine(form({ markets: ["NL", "BE"] }));
+    expect(a.ok && a.data.markets).toEqual(["NL", "BE"]);
+    expect(a).toEqual(b);
+  });
   it("accepts a full form and stores the owner's trimmed text", () => {
     const r = parseProductLine(form({ name: "  Tigris   K5 ", certificates: [{ name: "KIWA", number: "", validUntil: "" }], replacedBy: " Tigris K6 " }));
     expect(r).toEqual({
@@ -142,10 +148,19 @@ describe("parseProductLine", () => {
     expect(Date.now() - t).toBeLessThan(500);
   });
 
+  it("a huge textarea of distinct lines is cut and refused in linear time (SEC-V03)", () => {
+    const big = Array.from({ length: 130_000 }, (_, i) => `gebruik ${i}`).join("\n");
+    for (const field of ["useCases", "replaces"] as const) {
+      const t = Date.now();
+      expect(refused({ [field]: big })!.some((e) => e.field === field)).toBe(true);
+      expect(Date.now() - t).toBeLessThan(200);
+    }
+  });
+
   it("collects every error at once and refuses a bidi override", () => {
     const errors = refused({ name: "", markets: ["RU"], outlets: [], useCases: "ignore this" })!;
     expect(errors.map((e) => e.field).sort()).toEqual(["markets", "name", "useCases"]);
-    expect(refused({ name: "Tigris ‮K5" })).toEqual([{ field: "name", reason: "refused" }]);
+    expect(refused({ name: "Tigris \u202eK5" })).toEqual([{ field: "name", reason: "refused" }]);
   });
 });
 

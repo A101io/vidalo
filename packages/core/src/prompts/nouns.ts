@@ -94,7 +94,11 @@ export function ownerKind(facts: Pick<Facts, "kind">): string | null {
 // ---------------------------------------------------------------------------
 
 /** Endings of the last word that take "het" ("restaurant", also "afhaalrestaurant", "visrestaurant"); everything else takes "de". */
-const HET_ENDINGS = ["restaurant", "café", "cafe", "steakhouse", "hotel", "huis", "bureau", "kantoor", "atelier", "centrum"];
+const HET_ENDINGS = [
+  "restaurant", "café", "cafe", "steakhouse", "hotel", "huis", "bureau", "kantoor", "atelier", "centrum",
+  // product lines (feature 006): the words a product category or a specification is most often named with
+  "systeem", "brood", "gewicht", "materiaal", "vermogen", "volume", "formaat", "model", "type", "product", "apparaat", "gereedschap", "pakket",
+];
 
 export function isHetNoun(noun: string): boolean {
   const last = noun.trim().split(/\s+/).pop()?.toLowerCase() ?? "";

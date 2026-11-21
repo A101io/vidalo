@@ -24,6 +24,7 @@ function tsx(dir: string, out: string[] = []): string[] {
 const STORED_CHOICE: Record<string, RegExp> = {
   "apps/web/app/app/gegevens/FactsForm.tsx": /\bchecked=\{r\.closed\}/, // the owner's own opening hours
   "apps/web/app/app/account/page.tsx": /defaultChecked=\{business\.mailPrefs\[/, // the stored mail preference
+  "apps/web/app/app/productlijnen/LineForm.tsx": /\bchecked=\{on\}/, // the markets of the line being edited; a new line starts with none
 };
 
 export function checkboxes(src: string): string[] {

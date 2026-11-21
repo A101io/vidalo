@@ -37,6 +37,9 @@ async function load(id: string, copy: CopyShape, viewerBusinessIds: readonly str
   // A scan-run id is unguessable and is the link we hand out. A business slug or id
   // ("sonable-rotterdam") is guessable: it only opens the latest report for the
   // signed-in owner of that business (security review, 11 Nov 2026).
+  // A product-line run has no public page (feature 006, security S-30): the same "niet gevonden" as an unknown link.
+  // Looked at before the report is built, so nothing of the line is read; only a uuid can be a run id (a slug is not).
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) && (await (await ready()).getScanRun(id))?.productLineId) return null;
   const byRun = await getScanReport(id);
   const report = byRun ?? (await latestScanReport(id));
   if (!report) return null;

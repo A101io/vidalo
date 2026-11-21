@@ -48,6 +48,7 @@ export async function POST(req: Request) {
   const business = await db.getBusiness(businessId);
   const run = business ? await db.getScanRun(scanRunId) : null;
   if (!business || run?.businessId !== business.id) return NextResponse.redirect(back, 303);
+  if (run.productLineId) return NextResponse.redirect(back, 303); // a product-line run has no public report to mail (006, S-30)
   // A business with an owner gets its mails there; this form must not become a way to fill that inbox.
   // Same "ok" either way, and once per (scan, address), so the answer says nothing about the business.
   const forThisScan = (await db.listEvents(business.id, 500)).filter((e) => e.type === REPORT_EMAIL_EVENT && e.payload.scanRunId === scanRunId);

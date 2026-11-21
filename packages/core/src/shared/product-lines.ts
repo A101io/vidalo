@@ -63,12 +63,16 @@ export function lineScanRefusal(line: ProductLine | null, businessId: string, ma
   return null;
 }
 
-/** Active lines × their current markets, in name order. The cron, the report wait and the mail use it. */
+/** Active lines × their current markets, in name order, within today's limits. The cron, the report wait and the mail use it. */
 export function scannableLineMarkets(lines: ProductLine[]): { productLineId: string; version: number; market: string }[] {
+  // Clamped to today's limits (S-23): lowering a limit stops the spend at once, not at the owner's next edit. The oldest
+  // active lines are the ones that stay; the stored backstop (10 markets) is wider than what is asked.
   return lines
     .filter((l) => l.status === "active")
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+    .slice(0, PRODUCT_LINE_LIMITS.lines)
     .sort((a, b) => a.current.name.localeCompare(b.current.name, "nl") || a.id.localeCompare(b.id))
-    .flatMap((l) => l.current.markets.map((market) => ({ productLineId: l.id, version: l.current.version, market })));
+    .flatMap((l) => l.current.markets.slice(0, PRODUCT_LINE_LIMITS.marketsPerLine).map((market) => ({ productLineId: l.id, version: l.current.version, market })));
 }
 
 /** The scope a finding's reads need: undefined for a business finding. */
@@ -136,12 +140,18 @@ function plainText(raw: unknown, max: number): Check {
   return { ok: true, text };
 }
 
+/** Linear time and cut to MAX_ROWS + 1 kept lines (SEC-V03): a 700 KB textarea must not cost minutes of CPU. */
 function lines(raw: string): string[] {
   const out: string[] = [];
+  const seen = new Set<string>();
   for (const part of String(raw ?? "").split(/\r\n|\r|\n/)) {
+    if (out.length > MAX_ROWS) break;
     const t = plain(part);
     if (t === null) out.push(part); // kept so the slot check refuses it with its index
-    else if (t && !out.some((x) => x.toLowerCase() === t.toLowerCase())) out.push(t);
+    else if (t && !seen.has(t.toLowerCase())) {
+      seen.add(t.toLowerCase());
+      out.push(t);
+    }
   }
   return out;
 }
@@ -201,6 +211,8 @@ export function parseProductLine(input: ProductLineFormInput): { ok: true; data:
       marketsBad = true;
     } else if (!markets.includes(code)) markets.push(code);
   }
+  // One order for the same set (QA-11): the allow-list's, so a reordered post is not a new version.
+  markets.sort((a, b) => LINE_MARKETS.indexOf(a as (typeof LINE_MARKETS)[number]) - LINE_MARKETS.indexOf(b as (typeof LINE_MARKETS)[number]));
   if (!markets.length && !marketsBad) err("markets", "required");
   if (markets.length > L.marketsPerLine) err("markets", "too_many");
 

@@ -42,12 +42,15 @@ export function questionFor(factKey: FactKey, subject: string | null, name: stri
     case "identity":
       if (subject === "kind") return q.identityKind(name);
       return subject ? q.identitySubject(who, subject) : q.identity(who);
-    // Product-line keys (feature 006): the asked text is the stored prompt; FE-04 words the card.
+    // Product-line keys (feature 006): `name` is the line's name and, for an outlet, `place` is the market's name.
     case "spec":
+      return subject ? copy.productLines.question.spec(name, subject) : copy.factKey.spec;
     case "certificate":
+      return subject ? copy.productLines.question.certificate(name, subject) : copy.factKey.certificate;
     case "outlet":
+      return copy.productLines.question.outlet(name, place);
     case "successor":
-      return subject ? `${copy.factKey[factKey]}: ${subject}` : copy.factKey[factKey];
+      return subject ? copy.productLines.question.successor(subject) : copy.factKey.successor;
   }
 }
 
@@ -112,6 +115,8 @@ export function humanValue(factKey: FactKey, value: string, subject: string | nu
       return value === "no" ? V.otherBusiness : value === "yes" ? V.sameBusiness : value;
     case "price":
       return `€ ${value.replace(".", ",")}`;
+    case "certificate":
+      return value === "yes" ? copy.productLines.value.certYes : value === "no" ? copy.productLines.value.certNo : value;
     default:
       return value;
   }

@@ -142,18 +142,57 @@ export const RECOMMENDATION_PATH: FixPath = {
   unfixableNoteEn: "After 60 days AI still does not name you for this question. Your details are right; we keep checking every month.",
 };
 
-export function fixPathFor(sourceType: SourceType, verdict?: Finding["verdict"], evidenceKind?: Finding["evidenceKind"]): FixPath {
+/**
+ * A product-line finding whose remedy is not ours (ADR-0014): no page of ours carries a product line, so there is no
+ * facts page to republish and no profile to sync. Nothing is claimed; the check goes on every month.
+ */
+export const LINE_KEEP_CHECKING_PATH: FixPath = {
+  sourceType: "none",
+  action: "none",
+  recheckDays: 30,
+  escalation: "model_release",
+  unfixableAfterDays: 60,
+  labelNl: "We hebben geen pagina waarmee we dit voor je productlijn kunnen verbeteren. We blijven elke maand controleren.",
+  unfixableNoteNl: "Hier kunnen we voor je productlijn niets aan veranderen. We blijven elke maand controleren.",
+  labelEn: "We have no page we can use to improve this for your product line. We keep checking every month.",
+  unfixableNoteEn: "There is nothing we can change for your product line here. We keep checking every month.",
+};
+
+/**
+ * An outlet the AI named that the owner did not list (compliance B1): never a letter to a third party, because the AI may
+ * well be right. The owner is asked whether the shop sells the product; if so, adding it to the list settles it.
+ */
+export const LINE_OUTLET_PATH: FixPath = {
+  ...LINE_KEEP_CHECKING_PATH,
+  labelNl: "Dit verkooppunt staat niet in je lijst. Verkoopt het je product wel? Voeg het dan toe aan je lijst. We blijven elke maand controleren.",
+  labelEn: "This shop is not in your list. Does it sell your product? Then add it to your list. We keep checking every month.",
+};
+
+type LineFields = { productLineId?: string | null; factKey?: Finding["factKey"] };
+
+export function fixPathFor(sourceType: SourceType, verdict?: Finding["verdict"], evidenceKind?: Finding["evidenceKind"], productLineId?: string | null, factKey?: Finding["factKey"]): FixPath {
+  if (productLineId) {
+    // Product line (ADR-0014): only the paths that need no page of ours. The owner's own website, or a correction request to
+    // a third party; everything else, an outlet "not in your list" always, is "keep checking".
+    if (factKey === "outlet") return LINE_OUTLET_PATH;
+    if (verdict === "not_found" || evidenceKind === "recommendation") return LINE_KEEP_CHECKING_PATH;
+    if (sourceType === "owned_website") return FIX_PATHS.owned_website;
+    if (sourceType === "third_party" || sourceType === "directory_api" || sourceType === "directory_form") return FIX_PATHS.third_party;
+    return LINE_KEEP_CHECKING_PATH;
+  }
   if (verdict === "not_found") return NOT_FOUND_PATH;
   if (evidenceKind === "recommendation" && sourceType === "none") return RECOMMENDATION_PATH;
   return FIX_PATHS[sourceType] ?? FIX_PATHS.none;
 }
 
-export function fixPathForFinding(finding: Pick<Finding, "sourceType" | "verdict"> & Partial<Pick<Finding, "evidenceKind">>): FixPath {
-  return fixPathFor(finding.sourceType, finding.verdict, finding.evidenceKind);
+export function fixPathForFinding(finding: Pick<Finding, "sourceType" | "verdict"> & Partial<Pick<Finding, "evidenceKind">> & LineFields): FixPath {
+  return fixPathFor(finding.sourceType, finding.verdict, finding.evidenceKind, finding.productLineId, finding.factKey);
 }
 
 /** Does this finding take the "make it findable" route (facts page + channels)? */
-export function isFindabilityFinding(finding: Pick<Finding, "sourceType" | "verdict"> & Partial<Pick<Finding, "evidenceKind">>): boolean {
+export function isFindabilityFinding(finding: Pick<Finding, "sourceType" | "verdict"> & Partial<Pick<Finding, "evidenceKind">> & LineFields): boolean {
+  // A product line has no facts page or channel to make findable (ADR-0014): never publish, sync or discover for one.
+  if (finding.productLineId) return false;
   return finding.verdict === "not_found" || (finding.evidenceKind === "recommendation" && finding.sourceType === "none");
 }
 

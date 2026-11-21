@@ -9,7 +9,7 @@
  * The demo owner's own businesses are older/newer on purpose: Haarlem stays the newest, so it is the
  * default active business and every existing page and test sees what it saw before.
  */
-import type { Db } from "@vidalo/core/db";
+import { runSummaries, saveRunSummary, type Db } from "@vidalo/core/db";
 import { backfillRunSummaries, prepareBusiness, runScan, createMockEngine } from "@vidalo/core/scanner";
 import { ENGINES } from "@vidalo/core/types";
 import { openFixesForScan } from "@vidalo/core/fixer";
@@ -94,5 +94,12 @@ export async function seedOwnerArea(db: Db): Promise<void> {
   }
 
   // The summaries the scanner stored were taken when the checks ran; the seed back-dates them, so redo them with the dates.
+  // The product-line runs keep the summaries seedDemoLines saved: their numbers (recommended n of m, the dots) are the
+  // demo's own table (02-architecture.md "Mock seed"), not what a rebuild from the few seeded sample texts would count.
+  const lineSummaries: [string, Awaited<ReturnType<typeof runSummaries>>[number]["summary"]][] = [];
+  for (const l of await db.listProductLines(main.id)) {
+    for (const r of await runSummaries(db, main.id, 200, { productLineId: l.id })) if (r.summary) lineSummaries.push([r.id, r.summary]);
+  }
   await backfillRunSummaries(db, { all: true });
+  for (const [runId, summary] of lineSummaries) await saveRunSummary(db, runId, summary!);
 }

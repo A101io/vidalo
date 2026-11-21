@@ -5,7 +5,7 @@
  * (`transform: postgres.camel`), Dates are converted to ISO strings here.
  */
 import postgres, { type Sql } from "postgres";
-import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProductLine, ProductLineVersion, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, LineScope, ProductLine, ProductLineData, ProductLineStatus, ProductLineVersion, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
@@ -36,7 +36,7 @@ import type {
   SignInEnd,
   SignInRow,
 } from "./types";
-import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
+import { FREE_SCAN_ESTIMATE_CENTS, LINE_RUN_ESTIMATE_CENTS } from "./types";
 import type { SaveLineResult } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
@@ -112,6 +112,8 @@ const mapPrompt = (r: Row): Prompt => ({
   pool: ((r.pool as string | null) ?? "core") as Prompt["pool"],
   season: (r.season as Prompt["season"]) ?? null,
   templateKey: (r.templateKey as string | null) ?? null,
+  productLineId: (r.productLineId as string | null) ?? null,
+  market: (r.market as string | null) ?? null,
 });
 
 const mapScanRun = (row: Row): ScanRun => {
@@ -127,6 +129,9 @@ const mapScanRun = (row: Row): ScanRun => {
     costCents: r.costCents as number,
     status: r.status as ScanRun["status"],
     profile: (r.profile as BusinessProfile | null) ?? null,
+    productLineId: (r.productLineId as string | null) ?? null,
+    productLineVersion: (r.productLineVersion as number | null) ?? null,
+    market: (r.market as string | null) ?? null,
   };
 };
 
@@ -141,6 +146,8 @@ const mapSample = (row: Row): Sample => {
     citations: (r.citations as string[]) ?? [],
     capturedAt: r.capturedAt as string,
     costCents: r.costCents as number,
+    productLineId: (r.productLineId as string | null) ?? null,
+    market: (r.market as string | null) ?? null,
   };
 };
 
@@ -177,6 +184,8 @@ const mapFinding = (row: Row): Finding => {
     evidenceAfter: (r.evidenceAfter as string | null) ?? null,
     evidenceKind: ((r.evidenceKind as string | null) ?? "about") as Finding["evidenceKind"],
     criterium: (r.criterium as Finding["criterium"]) ?? null,
+    productLineId: (r.productLineId as string | null) ?? null,
+    market: (r.market as string | null) ?? null,
   };
 };
 
@@ -427,7 +436,7 @@ export class PgDb implements Db {
     const provisional = opts.provisional ?? data.provisional ?? true;
     const verifiedAt = opts.verifiedAt ?? data.verifiedAt ?? null;
     // Strip the row-level fields from the jsonb payload; they live in columns.
-    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, profile: _pr, ...payload } = data as Facts;
+    const { businessId: _b, version: _v, provisional: _p, verifiedAt: _va, createdAt: _c, profile: _pr, productLine: _pl, ...payload } = data as Facts;
     const rows = await this.sql`
       insert into facts (business_id, version, provisional, verified_at, data)
       values (${businessId},
@@ -438,16 +447,25 @@ export class PgDb implements Db {
   }
 
   // --- prompts ---
-  async listPrompts(businessId: string, opts: { activeOnly?: boolean } = {}): Promise<Prompt[]> {
+  /** Feature 006: no line = the business itself (`product_line_id is null`); a line (and market) = only those rows. */
+  private lineClause(line: LineScope | undefined) {
+    if (!line) return this.sql`and product_line_id is null`;
+    if (line.market === undefined) return this.sql`and product_line_id = ${line.productLineId}::uuid`;
+    return this.sql`and product_line_id = ${line.productLineId}::uuid and market = ${line.market}`;
+  }
+
+  async listPrompts(businessId: string, opts: { activeOnly?: boolean; line?: LineScope } = {}): Promise<Prompt[]> {
+    if (opts.line && !UUID.test(opts.line.productLineId)) return [];
+    const scope = this.lineClause(opts.line);
     const rows = opts.activeOnly
-      ? await this.sql`select * from prompt where business_id = ${businessId} and active order by created_at, id`
-      : await this.sql`select * from prompt where business_id = ${businessId} order by created_at, id`;
+      ? await this.sql`select * from prompt where business_id = ${businessId} and active ${scope} order by created_at, id`
+      : await this.sql`select * from prompt where business_id = ${businessId} ${scope} order by created_at, id`;
     return rows.map(mapPrompt);
   }
 
-  async insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]> {
+  async insertPrompts(businessId: string, prompts: PromptInput[], line?: { productLineId: string; market: string }): Promise<Prompt[]> {
     if (!prompts.length) return [];
-    const rows = prompts.map((p) => ({ businessId, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null }));
+    const rows = prompts.map((p) => ({ businessId, productLineId: line?.productLineId ?? null, market: line?.market ?? null, category: p.category, textNl: p.textNl, probes: p.probes, active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null }));
     const out = await this.sql`insert into prompt ${this.sql(rows)} returning *`;
     return out.map(mapPrompt);
   }
@@ -459,9 +477,9 @@ export class PgDb implements Db {
   // --- scan runs ---
   async createScanRun(input: ScanRunCreate): Promise<ScanRun> {
     const rows = await this.sql`
-      insert into scan_run (business_id, kind, engines, samples_per_prompt, status, started_at, profile)
+      insert into scan_run (business_id, kind, engines, samples_per_prompt, status, started_at, profile, product_line_id, product_line_version, market)
       values (${input.businessId}, ${input.kind}, ${this.sql.array(input.engines)}::engine[], ${input.samplesPerPrompt}, ${input.status ?? "queued"}, now(),
-              ${input.profile ? this.sql.json(input.profile as never) : null})
+              ${input.profile ? this.sql.json(input.profile as never) : null}, ${input.productLineId ?? null}, ${input.productLineVersion ?? null}, ${input.market ?? null})
       returning *`;
     return mapScanRun(rows[0]!);
   }
@@ -481,12 +499,13 @@ export class PgDb implements Db {
   }
 
   async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
-    const [row] = await this.sql`select max(coalesce(started_at, created_at)) as at from scan_run where business_id = ${businessId} and kind = ${kind}`;
+    const [row] = await this.sql`select max(coalesce(started_at, created_at)) as at from scan_run where business_id = ${businessId} and kind = ${kind} and product_line_id is null`;
     return row?.at ? new Date(row.at as string).toISOString() : null;
   }
 
-  async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
-    const rows = await this.sql`select * from scan_run where business_id = ${businessId} order by created_at desc limit ${limit}`;
+  async listScanRuns(businessId: string, limit = 50, line?: LineScope): Promise<ScanRun[]> {
+    if (line && !UUID.test(line.productLineId)) return [];
+    const rows = await this.sql`select * from scan_run where business_id = ${businessId} ${this.lineClause(line)} order by created_at desc limit ${limit}`;
     return rows.map(mapScanRun);
   }
 
@@ -538,32 +557,110 @@ export class PgDb implements Db {
     return rows.map(mapClaim);
   }
 
-  // --- product lines (feature 006): SQL is BE-02 (migration 0020). Until then these refuse loudly. ---
-  async listProductLines(_businessId: string): Promise<ProductLine[]> {
-    throw new Error("BE-02: PgDb.listProductLines needs migration 0020");
+  // --- product lines (feature 006, migration 0020) ---
+  private mapLine(line: Row, v: Row): ProductLine {
+    const l = iso(line);
+    return { id: l.id as string, businessId: l.businessId as string, status: l.status as ProductLine["status"], createdAt: l.createdAt as string, updatedAt: l.updatedAt as string, current: this.mapVersion(v) };
   }
-  async getProductLine(_id: string): Promise<ProductLine | null> {
-    throw new Error("BE-02: PgDb.getProductLine needs migration 0020");
+
+  private mapVersion(v: Row): ProductLineVersion {
+    const r = iso(v);
+    return { ...(r.data as ProductLineData), productLineId: r.productLineId as string, version: r.version as number, confirmedAt: r.confirmedAt as string };
   }
-  async listProductLineVersions(_productLineId: string): Promise<ProductLineVersion[]> {
-    throw new Error("BE-02: PgDb.listProductLineVersions needs migration 0020");
+
+  async listProductLines(businessId: string): Promise<ProductLine[]> {
+    if (!UUID.test(businessId)) return [];
+    const rows = await this.sql`
+      select l.id, l.business_id, l.status, l.created_at, l.updated_at, v.product_line_id, v.version, v.data, v.confirmed_at
+      from product_line l
+      join lateral (select * from product_line_facts f where f.product_line_id = l.id order by f.version desc limit 1) v on true
+      where l.business_id = ${businessId}`;
+    return rows
+      .map((r) => this.mapLine(r, r))
+      .sort((a, b) => Number(b.status === "active") - Number(a.status === "active") || a.current.name.localeCompare(b.current.name, "nl") || a.id.localeCompare(b.id));
   }
-  async getProductLineVersion(_productLineId: string, _version: number): Promise<ProductLineVersion | null> {
-    throw new Error("BE-02: PgDb.getProductLineVersion needs migration 0020");
+
+  async getProductLine(id: string): Promise<ProductLine | null> {
+    if (!UUID.test(id)) return null;
+    const rows = await this.sql`
+      select l.id, l.business_id, l.status, l.created_at, l.updated_at, v.product_line_id, v.version, v.data, v.confirmed_at
+      from product_line l
+      join lateral (select * from product_line_facts f where f.product_line_id = l.id order by f.version desc limit 1) v on true
+      where l.id = ${id}`;
+    return rows[0] ? this.mapLine(rows[0], rows[0]) : null;
   }
-  async saveProductLine(_input: Parameters<Db["saveProductLine"]>[0]): Promise<SaveLineResult> {
-    throw new Error("BE-02: PgDb.saveProductLine needs migration 0020");
+
+  async listProductLineVersions(productLineId: string): Promise<ProductLineVersion[]> {
+    if (!UUID.test(productLineId)) return [];
+    const rows = await this.sql`select * from product_line_facts where product_line_id = ${productLineId} order by version`;
+    return rows.map((r) => this.mapVersion(r));
   }
-  async setProductLineStatus(_input: Parameters<Db["setProductLineStatus"]>[0]): Promise<SaveLineResult> {
-    throw new Error("BE-02: PgDb.setProductLineStatus needs migration 0020");
+
+  async getProductLineVersion(productLineId: string, version: number): Promise<ProductLineVersion | null> {
+    if (!UUID.test(productLineId) || !Number.isInteger(version)) return null;
+    const rows = await this.sql`select * from product_line_facts where product_line_id = ${productLineId} and version = ${version}`;
+    return rows[0] ? this.mapVersion(rows[0]) : null;
+  }
+
+  /** What is stored: exactly the ProductLineData fields, nothing a caller attached to the object. */
+  private lineData(d: ProductLineData): ProductLineData {
+    return { name: d.name, category: d.category, useCases: d.useCases, markets: d.markets, specs: d.specs, certificates: d.certificates, outlets: d.outlets, replaces: d.replaces, replacedBy: d.replacedBy };
+  }
+
+  async saveProductLine(input: { businessId: string; productLineId: string | null; data: ProductLineData; maxActive: number }): Promise<SaveLineResult> {
+    // The limit is read after the lock is held (withLock) and the writes commit before it is released (S-10).
+    return this.withLock(`product_line:${input.businessId}`, async () => {
+      const out = await this.sql.begin(async (tx): Promise<{ ok: true; id: string; created: boolean } | { ok: false; reason: "limit" | "not_found" }> => {
+        let id: string;
+        let created = false;
+        if (input.productLineId === null) {
+          const [c] = await tx`select count(*)::int as n from product_line where business_id = ${input.businessId} and status = 'active'`;
+          if ((c?.n as number) >= input.maxActive) return { ok: false, reason: "limit" };
+          const [row] = await tx`insert into product_line (business_id) values (${input.businessId}) returning id`;
+          id = row!.id as string;
+          created = true;
+        } else {
+          if (!UUID.test(input.productLineId)) return { ok: false, reason: "not_found" };
+          const [row] = await tx`select id from product_line where id = ${input.productLineId} and business_id = ${input.businessId} for update`;
+          if (!row) return { ok: false, reason: "not_found" };
+          id = row.id as string;
+          await tx`update product_line set updated_at = now() where id = ${id}`;
+        }
+        const [v] = await tx`select coalesce(max(version), 0) + 1 as next from product_line_facts where product_line_id = ${id}`;
+        await tx`insert into product_line_facts (product_line_id, version, data) values (${id}, ${v!.next as number}, ${tx.json(this.lineData(input.data) as never)})`;
+        return { ok: true, id, created };
+      });
+      if (!out.ok) return out;
+      return { ok: true, line: (await this.getProductLine(out.id))!, created: out.created };
+    });
+  }
+
+  async setProductLineStatus(input: { businessId: string; productLineId: string; status: ProductLineStatus; maxActive: number }): Promise<SaveLineResult> {
+    return this.withLock(`product_line:${input.businessId}`, async () => {
+      const out = await this.sql.begin(async (tx): Promise<{ ok: true } | { ok: false; reason: "limit" | "not_found" }> => {
+        if (!UUID.test(input.productLineId)) return { ok: false, reason: "not_found" };
+        const [row] = await tx`select status from product_line where id = ${input.productLineId} and business_id = ${input.businessId} for update`;
+        if (!row) return { ok: false, reason: "not_found" };
+        if (input.status === "active" && row.status !== "active") {
+          const [c] = await tx`select count(*)::int as n from product_line where business_id = ${input.businessId} and status = 'active' and id <> ${input.productLineId}`;
+          if ((c?.n as number) >= input.maxActive) return { ok: false, reason: "limit" };
+        }
+        await tx`update product_line set status = ${input.status}, updated_at = now() where id = ${input.productLineId}`;
+        return { ok: true };
+      });
+      if (!out.ok) return out;
+      return { ok: true, line: (await this.getProductLine(input.productLineId))!, created: false };
+    });
   }
 
   // --- findings ---
-  async listFindings(businessId: string, status?: FindingStatus | FindingStatus[]): Promise<Finding[]> {
+  async listFindings(businessId: string, status?: FindingStatus | FindingStatus[], line?: LineScope): Promise<Finding[]> {
+    if (line && !UUID.test(line.productLineId)) return [];
     const statuses = status == null ? null : Array.isArray(status) ? status : [status];
+    const scope = this.lineClause(line);
     const rows = statuses
-      ? await this.sql`select * from finding where business_id = ${businessId} and status in ${this.sql(statuses)} order by first_seen_at`
-      : await this.sql`select * from finding where business_id = ${businessId} order by first_seen_at`;
+      ? await this.sql`select * from finding where business_id = ${businessId} ${scope} and status in ${this.sql(statuses)} order by first_seen_at`
+      : await this.sql`select * from finding where business_id = ${businessId} ${scope} order by first_seen_at`;
     return rows.map(mapFinding);
   }
 
@@ -581,9 +678,19 @@ export class PgDb implements Db {
     const out: Finding[] = [];
     await this.sql.begin(async (tx) => {
       for (const f of inputs) {
+        // The line and market are the run's (trigger inherit_line_scope); the match key reads them from the run, and an
+        // input that names another scope is refused here the way the trigger would, before a row is touched.
+        const [run] = await tx`select product_line_id, market from scan_run where id = ${f.scanRunId}`;
+        const scopeLine = (run?.productLineId as string | null | undefined) ?? null;
+        const scopeMarket = (run?.market as string | null | undefined) ?? null;
+        if (run && f.productLineId !== undefined && ((f.productLineId ?? null) !== scopeLine || (f.market ?? null) !== scopeMarket)) {
+          throw new Error("a finding row cannot move to another product line or market");
+        }
         const existing = await tx`
           select * from finding
-          where business_id = ${f.businessId} and fact_key = ${f.factKey}
+          where business_id = ${f.businessId}
+            and product_line_id is not distinct from ${scopeLine}::uuid and market is not distinct from ${scopeMarket}
+            and fact_key = ${f.factKey}
             and subject is not distinct from ${f.subject} and engine = ${f.engine}
             and verdict = ${f.verdict ?? "wrong"}::verdict
             and evidence_kind = ${f.evidenceKind ?? "about"}
@@ -674,8 +781,10 @@ export class PgDb implements Db {
     return mapEvent(rows[0]!);
   }
 
-  async listEvents(businessId: string, limit = 100): Promise<EventRow[]> {
-    const rows = await this.sql`select * from event where business_id = ${businessId} order by at desc limit ${limit}`;
+  async listEvents(businessId: string, limit = 100, type?: string): Promise<EventRow[]> {
+    const rows = type === undefined
+      ? await this.sql`select * from event where business_id = ${businessId} order by at desc limit ${limit}`
+      : await this.sql`select * from event where business_id = ${businessId} and type = ${type} order by at desc limit ${limit}`;
     return rows.map(mapEvent);
   }
 
@@ -690,7 +799,7 @@ export class PgDb implements Db {
   }
 
   async paidScanCentsSince(since: Date): Promise<number> {
-    const [row] = await this.sql`select coalesce(sum(cost_cents), 0)::int as n from scan_run where kind <> 'free' and started_at >= ${since}`;
+    const [row] = await this.sql`select coalesce(sum(case when product_line_id is not null and status not in ('done', 'failed') then greatest(cost_cents, ${LINE_RUN_ESTIMATE_CENTS}) else cost_cents end), 0)::int as n from scan_run where kind <> 'free' and started_at >= ${since}`;
     return Number(row?.n ?? 0);
   }
 
@@ -958,10 +1067,13 @@ export class PgDb implements Db {
   async deleteScanRun(id: string, opts: { moveFindingsTo: string | null }): Promise<boolean> {
     if (!UUID.test(id) || (opts.moveFindingsTo !== null && !UUID.test(opts.moveFindingsTo))) return false;
     return this.sql.begin(async (tx) => {
-      const [run] = await tx`select id, business_id from scan_run where id = ${id} for update`;
+      const [run] = await tx`select id, business_id, product_line_id, market from scan_run where id = ${id} for update`;
       if (!run) return false;
       if (opts.moveFindingsTo) {
-        const [to] = await tx`select id from scan_run where id = ${opts.moveFindingsTo} and business_id = ${run.business_id} and id <> ${id}`;
+        // Findings move only to a run of the same business, line and market (inherit_line_scope would refuse the rest).
+        const [to] = await tx`
+          select id from scan_run where id = ${opts.moveFindingsTo} and business_id = ${run.businessId} and id <> ${id}
+            and product_line_id is not distinct from ${run.productLineId}::uuid and market is not distinct from ${run.market}`;
         if (!to) return false;
       }
       // Evidence points into this run's samples without a cascade: clear it before the samples go.

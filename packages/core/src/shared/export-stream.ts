@@ -25,10 +25,13 @@ async function* sections(db: Db, businessId: string, opts: { signedInAs: string;
   yield `{"exportedAt":${json(now.toISOString())},"signedInAs":${json(opts.signedInAs)},"business":${json(business)}`;
   yield `,"profiles":${json({ auto: business.profileAuto ?? null, owner: business.profileOwner ?? null })}`;
   yield `,"facts":${json(await db.listFacts(businessId))}`;
-  yield `,"prompts":${json(await db.listPrompts(businessId))}`;
+  // Every scope (art. 15 and 20): a reader without a line argument returns the business only, so each line is read by name.
+  const lines = await db.listProductLines(businessId);
+  yield `,"prompts":${json([...(await db.listPrompts(businessId)), ...(await Promise.all(lines.map((l) => db.listPrompts(businessId, { line: { productLineId: l.id } })))).flat()])}`;
+  yield `,"productLines":${json(await Promise.all(lines.map(async (l) => ({ ...l, versions: await db.listProductLineVersions(l.id) }))))}`;
 
   yield `,"scans":[`;
-  const runs = await db.listScanRuns(businessId, 10_000);
+  const runs = [...(await db.listScanRuns(businessId, 10_000)), ...(await Promise.all(lines.map((l) => db.listScanRuns(businessId, 10_000, { productLineId: l.id })))).flat()];
   let first = true;
   for (let i = 0; i < runs.length; i += EXPORT_RUN_PAGE) {
     const page = runs.slice(i, i + EXPORT_RUN_PAGE);
@@ -43,7 +46,7 @@ async function* sections(db: Db, businessId: string, opts: { signedInAs: string;
   }
   yield "]";
 
-  const findings = await db.listFindings(businessId);
+  const findings = [...(await db.listFindings(businessId)), ...(await Promise.all(lines.map((l) => db.listFindings(businessId, undefined, { productLineId: l.id })))).flat()];
   yield `,"findings":${json(findings)}`;
   const fixes = [];
   for (const f of findings) fixes.push(...(await db.listFixes(f.id)));

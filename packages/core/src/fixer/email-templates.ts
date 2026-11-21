@@ -30,6 +30,21 @@ export interface CorrectionContext {
   factsPageUrl: string;
   /** the person signing; defaults to "de eigenaar van {name}" */
   signer?: string;
+  /**
+   * Feature 006: the letter is about a product line. Only what the owner confirmed: its name, and for a certificate its
+   * number and end date (never asserted when the entry shows it expired). Letters to third parties stay Dutch.
+   */
+  line?: { name: string; certificate?: { number: string | null; validUntil: string | null; valid: boolean } | null };
+}
+
+/** The sentence that names the product line and, for a valid certificate, what the owner can show. */
+function lineLines(finding: Finding, ctx: CorrectionContext): string {
+  const l = ctx.line;
+  if (!l) return "";
+  const cert = finding.factKey === "certificate" && l.certificate?.valid ? l.certificate : null;
+  const proof = cert ? `\nCertificaat: ${[cert.number ? `nummer ${cert.number}` : null, cert.validUntil ? `geldig tot ${cert.validUntil}` : null].filter(Boolean).join(", ") || "door de eigenaar bevestigd"}` : "";
+  const successor = finding.factKey === "successor" && finding.subject ? `\n${l.name} is de opvolger van ${finding.subject}, een eerder product van ${ctx.business.name}.` : "";
+  return `\nHet gaat om het product ${l.name} van ${ctx.business.name}.${proof}${successor}`;
 }
 
 function signature(ctx: CorrectionContext): string {
@@ -47,7 +62,7 @@ export function correctionRequestEmail(finding: Finding, ctx: CorrectionContext)
   const subject = `Correctie gegevens ${ctx.business.name}, ${ctx.business.place}`;
   const text = `Geachte heer/mevrouw,
 
-Op ${site} staat een onjuist gegeven over ${ctx.business.name} in ${ctx.business.place}.${finding.sourceUrl ? `
+Op ${site} staat een onjuist gegeven over ${ctx.business.name} in ${ctx.business.place}.${lineLines(finding, ctx)}${finding.sourceUrl ? `
 
 Pagina: ${finding.sourceUrl}` : ""}
 
@@ -56,8 +71,8 @@ Wat het moet zijn: ${w.correct}
 
 Wilt u dit aanpassen? AI-assistenten zoals ChatGPT nemen dit gegeven van uw pagina over, waardoor klanten nu een verkeerd antwoord krijgen.
 
-De actuele gegevens staan op onze feitenpagina, bevestigd door de eigenaar:
-${ctx.factsPageUrl}
+${ctx.line ? "Dit gegeven is door de eigenaar aan ons bevestigd." : `De actuele gegevens staan op onze feitenpagina, bevestigd door de eigenaar:
+${ctx.factsPageUrl}`}
 
 Alvast bedankt.
 
@@ -75,14 +90,14 @@ export function correctionFollowUpEmail(finding: Finding, ctx: CorrectionContext
   const subject = `Herinnering: correctie gegevens ${ctx.business.name}, ${ctx.business.place}`;
   const text = `Geachte heer/mevrouw,
 
-Op ${date} vroegen wij u een gegeven over ${ctx.business.name} op ${site} aan te passen. Het staat er nog steeds.${finding.sourceUrl ? `
+Op ${date} vroegen wij u een gegeven over ${ctx.business.name} op ${site} aan te passen. Het staat er nog steeds.${lineLines(finding, ctx)}${finding.sourceUrl ? `
 
 Pagina: ${finding.sourceUrl}` : ""}
 
 Wat er staat (${w.what}): ${w.wrong}
 Wat het moet zijn: ${w.correct}
 
-Bron: ${ctx.factsPageUrl}
+${ctx.line ? "Dit gegeven is door de eigenaar aan ons bevestigd." : `Bron: ${ctx.factsPageUrl}`}
 
 Kunt u dit alsnog corrigeren, of ons laten weten als dat niet kan?
 
@@ -128,14 +143,14 @@ function fieldNl(field: string): string {
 }
 
 /** To the owner: what to change on their own website. */
-export function ownerWebsiteInstructionEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, lang: Lang = "nl"): Mail {
+export function ownerWebsiteInstructionEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, lang: Lang = "nl", lineName?: string | null): Mail {
   const M = copyFor(lang).mails;
   const O = M.ownWebsite;
   const w = findingWords(finding, lang);
   const page = finding.sourceUrl ?? O.yourWebsite;
   const text = `${M.hi}
 
-${O.intro(w.what, business.name)}
+${O.intro(w.what, business.name)}${lineName ? `\n${O.forLine(lineName)}` : ""}
 
 ${O.onPage(page, w.wrong)}
 ${O.shouldBe(w.correct)}
@@ -152,14 +167,14 @@ ${M.regards}
 }
 
 /** Reminder to the owner after 14 / 28 days when the website text is still wrong. */
-export function ownerWebsiteReminderEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, daysAgo: number, lang: Lang = "nl"): Mail {
+export function ownerWebsiteReminderEmail(finding: Finding, business: Pick<Business, "name">, dashboardUrl: string, daysAgo: number, lang: Lang = "nl", lineName?: string | null): Mail {
   const M = copyFor(lang).mails;
   const O = M.ownWebsite;
   const w = findingWords(finding, lang);
   const page = finding.sourceUrl ?? O.yourWebsite;
   const text = `${M.hi}
 
-${O.reminderIntro(daysAgo, w.what, page)}
+${O.reminderIntro(daysAgo, w.what, page)}${lineName ? `\n${O.forLine(lineName)}` : ""}
 
 ${O.onPage(page, w.wrong)}
 ${O.shouldBe(w.correct)}

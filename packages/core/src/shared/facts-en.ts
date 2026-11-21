@@ -6,6 +6,7 @@
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Finding } from "../types.js";
 import { findingWordsNl, type FindingWordsNl } from "./facts-nl.js";
 import { displayAddress } from "../scanner/normalize.js";
+import { countryName } from "./country.js";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -59,7 +60,7 @@ export function factLabelEn(factKey: FactKey, subject: string | null): string {
     case "certificate":
       return subject ? `whether ${subject} is (still) valid` : "the certificates";
     case "outlet":
-      return subject ? `where your product is sold in ${subject}` : "where your product is sold";
+      return subject ? `where your product is sold in ${countryName(subject, "en")}` : "where your product is sold";
     case "successor":
       return subject ? `the successor of ${subject}` : "the successor";
     default:

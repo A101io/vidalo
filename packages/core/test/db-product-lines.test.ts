@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { withMockDb, type Db } from "../src/db";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import postgres from "postgres";
+import { createDb, withMockDb, type Db } from "../src/db";
+import type { PgDb } from "../src/db/pg";
 import { runSummaries, saveRunSummary, summarizeRun } from "../src/db/owner-area";
 import { exportMyData } from "../src/shared/my-data";
 import { PRODUCT_LINE_LIMITS, lineScopeOf } from "../src/shared/product-lines";
@@ -7,10 +9,27 @@ import type { ProductLineData, ScanReport } from "../src/types";
 import { sampleFacts } from "./scanner-fixtures";
 
 /**
- * Feature 006 BE-01. Written in the shared db test style: BE-02 adds PgDb to `backends` (and the line tables to
- * TABLES) once migration 0020 exists; until then the PgDb methods throw "BE-02" and only MemDb runs.
+ * Feature 006 BE-01/BE-02. Runs on MemDb and, when TEST_DATABASE_URL points at a database carrying
+ * supabase/migrations (pnpm verify:pg), on PgDb too: the two must behave identically.
  */
+const PG_URL = process.env.TEST_DATABASE_URL;
+let pg: Db | undefined;
 const backends: [string, () => Promise<Db>][] = [["MemDb", async () => withMockDb()]];
+if (PG_URL) {
+  backends.push([
+    "PgDb",
+    async () => {
+      const raw = postgres(PG_URL, { max: 1, onnotice: () => {} });
+      await raw.unsafe("truncate claim, sample, fix, finding, channel, event, scan_run, prompt, facts, job, business, waitlist restart identity cascade");
+      await raw.end();
+      pg ??= createDb(PG_URL);
+      return pg;
+    },
+  ]);
+}
+afterAll(async () => {
+  await pg?.close();
+});
 
 const data = (name: string, over: Partial<ProductLineData> = {}): ProductLineData => ({
   name,
@@ -261,5 +280,104 @@ describe("summarizeRun recommend", () => {
     } as unknown as ScanReport;
     const s = summarizeRun(report, { scanRunId: "r", kind: "monthly", checkedAt: "", engines: [], stip: "oranje", engineStips: [], cells: [] });
     expect(s.recommend).toEqual({ named: 3, answers: 10, others: [{ name: "A", answers: 5 }, { name: "C", answers: 2 }, { name: "B", answers: 1 }, { name: "D", answers: 1 }, { name: "E", answers: 1 }] });
+  });
+});
+
+
+// Database-only guarantees (migration 0020): what the SQL itself refuses, whatever the caller does. Each one is shown to
+// fail when the constraint, trigger or policy it names is removed (see the BE-02 report).
+describe.skipIf(!PG_URL)("PgDb product-line constraints and triggers", () => {
+  let db: PgDb;
+  beforeEach(async () => {
+    db = (await backends[1]![1]()) as PgDb;
+  });
+  const line = async (businessId: string, name = "Tigris K5") => {
+    const r = await db.saveProductLine({ businessId, productLineId: null, data: data(name), maxActive: 5 });
+    if (!r.ok) throw new Error("setup");
+    return r.line;
+  };
+  const base = { kind: "monthly" as const, engines: ["chatgpt" as const], samplesPerPrompt: 1, status: "done" as const };
+
+  it("a finding cannot be moved to a run of another line or the business, and a business finding stays null", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle" });
+    const l = await line(b.id);
+    const bizRun = await db.createScanRun({ businessId: b.id, ...base });
+    const lineRun = await db.createScanRun({ businessId: b.id, ...base, productLineId: l.id, productLineVersion: 1, market: "NL" });
+    const [f] = await db.upsertFindings([{ businessId: b.id, scanRunId: lineRun.id, factKey: "spec", subject: "Drukklasse", engine: "chatgpt", wrongValue: "PN10", correctValue: "PN16", frequency: 3, sampleCount: 5, sourceUrl: null, sourceType: "none", evidenceBefore: null, criterium: 13 }]);
+    expect(f).toMatchObject({ productLineId: l.id, market: "NL" });
+    await expect(db.sql`update finding set scan_run_id = ${bizRun.id} where id = ${f!.id}`).rejects.toThrow(/cannot move/);
+    await db.sql`update finding set product_line_id = null, market = 'BE' where id = ${f!.id}`; // the trigger sets the run's scope back
+    const [row] = await db.sql`select product_line_id, market, scan_run_id from finding where id = ${f!.id}`;
+    expect(row).toMatchObject({ productLineId: l.id, market: "NL", scanRunId: lineRun.id });
+  });
+
+  it("a finding of one business cannot point at another business's run (S-03)", async () => {
+    const a = await db.upsertBusiness({ name: "Bedrijf A", place: "Zwolle" });
+    const b = await db.upsertBusiness({ name: "Bedrijf B", place: "Breda" });
+    const lb = await line(b.id, "Van B");
+    const runB = await db.createScanRun({ businessId: b.id, ...base, productLineId: lb.id, productLineVersion: 1, market: "NL" });
+    await expect(db.sql`
+      insert into finding (business_id, scan_run_id, fact_key, engine, wrong_value, correct_value, frequency, sample_count)
+      values (${a.id}, ${runB.id}, 'spec', 'chatgpt', 'x', 'y', 1, 1)`).rejects.toThrow(/business differs/);
+    // the line of B is not allowed on A's prompt or run either
+    await expect(db.insertPrompts(a.id, [{ category: "spec", textNl: "Wat is x?", probes: [], active: true }], { productLineId: lb.id, market: "NL" })).rejects.toThrow(/prompt_line_same_business/);
+  });
+
+  it("a stored version is never changed, by any role (S-05)", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle" });
+    const l = await line(b.id);
+    await expect(db.sql`update product_line_facts set data = '{}'::jsonb where product_line_id = ${l.id}`).rejects.toThrow(/never changed/);
+    await expect(db.sql`update product_line_facts set version = 9 where product_line_id = ${l.id}`).rejects.toThrow(/never changed/);
+    expect((await db.getProductLineVersion(l.id, 1))!.name).toBe("Tigris K5");
+  });
+
+  it("the line row and version 1 are written together: a version that fails leaves no line (S-05)", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle" });
+    const bad = { ...data("Te lang"), name: "x".repeat(81) }; // product_line_facts_shape: name <= 80
+    await expect(db.saveProductLine({ businessId: b.id, productLineId: null, data: bad, maxActive: 5 })).rejects.toThrow(/product_line_facts_shape/);
+    expect(await db.listProductLines(b.id)).toEqual([]);
+    const [{ n }] = await db.sql`select count(*)::int as n from product_line where business_id = ${b.id}`;
+    expect(n).toBe(0);
+  });
+
+  it("the backstop CHECK refuses an outlet url that is not http(s), a market that is not a code, and a huge version (S-07)", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle" });
+    const save = (d: ProductLineData) => db.saveProductLine({ businessId: b.id, productLineId: null, data: d, maxActive: 50 });
+    const outlet = (url: string | null) => data("Met winkel", { outlets: [{ market: "NL", name: "Winkel", url }] });
+    for (const url of ["javascript:alert(1)", "JaVaScRiPt:alert(1)", " javascript:alert(1)", "data:text/html,x", "//x.example", "ftp://x.example"]) {
+      await expect(save(outlet(url))).rejects.toThrow(/product_line_facts_shape/);
+    }
+    await expect(save(data("Slechte markt", { markets: ["nl"] }))).rejects.toThrow(/product_line_facts_shape/);
+    await expect(save(data("Slechte markt", { markets: [1 as never] }))).rejects.toThrow(/product_line_facts_shape/);
+    await expect(save(data("Te groot", { useCases: Array.from({ length: 10 }, () => "u".repeat(4000)) }))).rejects.toThrow(/product_line_facts_shape/);
+    expect((await save(outlet("https://x.example/winkel"))).ok).toBe(true);
+    expect((await save(outlet(null))).ok).toBe(true);
+    expect((await save(outlet("HTTPS://x.example"))).ok).toBe(true);
+  });
+
+  it("prompt/run/sample scope: markets are codes, line and market come together, samples cannot be written with another scope", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle" });
+    const l = await line(b.id);
+    await expect(db.sql`update prompt set market = 'NL' where id = ${(await db.insertPrompts(b.id, [{ category: "phone", textNl: "Nummer?", probes: [], active: true }]))[0]!.id}`).rejects.toThrow(/prompt_line_with_market/);
+    await expect(db.insertPrompts(b.id, [{ category: "spec", textNl: "Wat is x?", probes: [], active: true }], { productLineId: l.id, market: "nl" })).rejects.toThrow(/prompt_market_code/);
+    const [p] = await db.insertPrompts(b.id, [{ category: "spec", textNl: "Wat is x?", probes: [], active: true }], { productLineId: l.id, market: "NL" });
+    const run = await db.createScanRun({ businessId: b.id, ...base, productLineId: l.id, productLineVersion: 1, market: "NL" });
+    // an explicit scope on the insert is overwritten by the trigger: the run's wins
+    const [s] = await db.sql`insert into sample (scan_run_id, prompt_id, engine, answer_text, product_line_id, market) values (${run.id}, ${p!.id}, 'chatgpt', 'x', null, 'BE') returning *`;
+    expect(s).toMatchObject({ productLineId: l.id, market: "NL" });
+  });
+
+  it("purging a business leaves no line row behind (L-14)", async () => {
+    const b = await db.upsertBusiness({ name: "Installatiebedrijf Noord", place: "Zwolle", status: "churned", plan: "setup" });
+    const l = await line(b.id);
+    const [p] = await db.insertPrompts(b.id, [{ category: "spec", textNl: "Wat is x?", probes: [], active: true }], { productLineId: l.id, market: "NL" });
+    const run = await db.createScanRun({ businessId: b.id, ...base, productLineId: l.id, productLineVersion: 1, market: "NL" });
+    await db.insertSamples([{ scanRunId: run.id, promptId: p!.id, engine: "chatgpt", answerText: "x", citations: [], costCents: 0 }]);
+    await db.upsertFindings([{ businessId: b.id, scanRunId: run.id, factKey: "spec", subject: "x", engine: "chatgpt", wrongValue: "a", correctValue: "b", frequency: 1, sampleCount: 1, sourceUrl: null, sourceType: "none", evidenceBefore: null, criterium: 13 }]);
+    await db.deleteBusiness(b.id);
+    for (const t of ["product_line", "product_line_facts", "prompt", "scan_run", "sample", "finding"]) {
+      const [{ n }] = await db.sql.unsafe(`select count(*)::int as n from ${t}`);
+      expect(n, t).toBe(0);
+    }
   });
 });

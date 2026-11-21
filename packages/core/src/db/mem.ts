@@ -33,7 +33,7 @@ import type {
   SignInRow,
   SaveLineResult,
 } from "./types";
-import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
+import { FREE_SCAN_ESTIMATE_CENTS, LINE_RUN_ESTIMATE_CENTS } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 import type { PurgeGuard } from "./types";
 import { LOGIN_WITHOUT_BUSINESS_DAYS, purgeAllowed } from "../shared/deletion";
@@ -300,8 +300,8 @@ export class MemDb implements Db {
     const list = this.facts.get(businessId) ?? [];
     const version = (list[list.length - 1]?.version ?? 0) + 1;
     const provisional = opts.provisional ?? data.provisional ?? true;
-    // The profile is copied in by withProfile() and never stored with the facts (ADR-0001).
-    const { profile: _profile, ...stored } = data as Facts;
+    // The profile is copied in by withProfile() and never stored with the facts (ADR-0001); neither is a product-line view (lineFacts).
+    const { profile: _profile, productLine: _productLine, ...stored } = data as Facts;
     const row: Facts = { ...stored, businessId, version, provisional, verifiedAt: opts.verifiedAt ?? data.verifiedAt ?? null, createdAt: nowIso() };
     list.push(row);
     this.facts.set(businessId, list);
@@ -675,8 +675,8 @@ export class MemDb implements Db {
     return { ...row };
   }
 
-  async listEvents(businessId: string, limit = 100): Promise<EventRow[]> {
-    return this.events.filter((e) => e.businessId === businessId).slice(-limit).reverse();
+  async listEvents(businessId: string, limit = 100, type?: string): Promise<EventRow[]> {
+    return this.events.filter((e) => e.businessId === businessId && (type === undefined || e.type === type)).slice(-limit).reverse();
   }
 
   async listEventsByEmail(type: string, email: string, limit = 50): Promise<EventRow[]> {
@@ -693,7 +693,7 @@ export class MemDb implements Db {
   }
 
   async paidScanCentsSince(since: Date): Promise<number> {
-    return [...this.scanRuns.values()].filter((r) => r.kind !== "free" && new Date(r.startedAt).getTime() >= since.getTime()).reduce((n, r) => n + (r.costCents ?? 0), 0);
+    return [...this.scanRuns.values()].filter((r) => r.kind !== "free" && new Date(r.startedAt).getTime() >= since.getTime()).reduce((n, r) => n + (r.productLineId && r.status !== "done" && r.status !== "failed" ? Math.max(r.costCents ?? 0, LINE_RUN_ESTIMATE_CENTS) : (r.costCents ?? 0)), 0);
   }
 
   async freeScanCentsSince(since: Date): Promise<number> {

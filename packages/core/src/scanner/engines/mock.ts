@@ -13,8 +13,9 @@
  * Everything is seeded by business slug + prompt + engine + sampleIndex, so
  * the same inputs always give the same answer across runs and processes.
  */
-import type { Engine, FactKey, Facts, Hours } from "../../types";
-import { DAY_NAMES_NL, formatPhoneNl, normalizePhone, slugify } from "../normalize";
+import type { Engine, FactKey, Facts, Hours, LineFactsView } from "../../types";
+import { DAY_NAMES_NL, formatPhoneNl, normalizePhone, normalizeSpecValue, slugify } from "../normalize";
+import { scanLang } from "../../shared/country";
 import { seededRandom } from "../util";
 import type { EngineClient, AskContext, EngineAnswer } from "./types";
 
@@ -48,6 +49,11 @@ function inferProbe(promptNl: string): { category: FactKey; probe: string } {
   if (p.includes("komt ") || p.includes("werkt ")) return { category: "area", probe: `area:${promptNl.match(/in ([^?]+)\?/)?.[1] ?? ""}` };
   if (p.includes("erkend") || p.includes("aangesloten") || p.includes("registratie")) return { category: "credential", probe: `credential:${promptNl.match(/(?:voor|bij) ([^?]+)\?/)?.[1] ?? ""}` };
   if (p.includes("hetzelfde")) return { category: "identity", probe: `identity:${promptNl.match(/als (.+?)\?/)?.[1] ?? ""}` };
+  // Product-line questions (feature 006), for calls without a Prompt object.
+  if (p.includes("opvolger") || p.includes("successor")) return { category: "successor", probe: `successor:${promptNl.match(/(?:opvolger|successor) van (.+?)(?: van | by |\?)/i)?.[1] ?? ""}` };
+  if (p.includes("gecertificeerd") || p.includes(" certified")) return { category: "certificate", probe: `certificate:${promptNl.match(/ ([^ ]+?)(?:-gecertificeerd| certified)/i)?.[1] ?? ""}` };
+  if (p.startsWith("waar koop") || p.startsWith("where can i buy")) return { category: "outlet", probe: `outlet:${promptNl.match(/ in ([^?]+)\?/)?.[1] ?? ""}` };
+  if (/^(welke?|what) \S+ (heeft|does) /i.test(promptNl)) return { category: "spec", probe: `spec:${promptNl.match(/^(?:welke?|what) (\S+)/i)?.[1] ?? ""}` };
   return { category: "existence", probe: "existence" };
 }
 
@@ -201,6 +207,67 @@ function compose(category: FactKey, probe: string, facts: Facts, wrong: boolean,
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// Product lines (feature 006): deterministic answers, with the same wrong-pair rate as a business
+// ---------------------------------------------------------------------------
+
+/** Made-up products and shops the mock AI names instead (never a real retailer or brand). */
+const OTHER_PRODUCTS = ["Studio Alfa", "Merk Beta", "Gamma Producten", "Delta Huismerk"];
+const UNLISTED_OUTLETS = ["Voorbeeldmarkt Noord", "Winkel Zonder Naam", "Marktplaats Gamma"];
+const NEW_NAMES = ["Nieuwe Variant X", "Opvolger Y"];
+
+/** A numeric spec value moved by a quarter, or a text value replaced: the wrong value of a spec answer. */
+function wrongSpec(value: string): string {
+  const norm = normalizeSpecValue(value);
+  const m = /^(\d+(?:\.\d+)?)(?: (.+))?$/.exec(norm);
+  if (!m) return "onbekend";
+  const n = Math.round(Number(m[1]) * 1.25 * 100) / 100;
+  return m[2] ? `${n} ${m[2]}` : String(n);
+}
+
+function composeLine(category: FactKey, probe: string, facts: Facts, view: LineFactsView, wrong: boolean, rng: () => number, recommendation: boolean): Composed {
+  const nl = scanLang(view.market) === "nl";
+  const name = facts.name;
+  const subject = probe.includes(":") ? probe.slice(probe.indexOf(":") + 1) : "";
+  const named = `${name} (${view.brand})`;
+  if (recommendation) {
+    const others = [...OTHER_PRODUCTS].sort(() => rng() - 0.5).slice(0, 3);
+    const list = wrong ? others : [others[0]!, named, others[1]!];
+    return { text: `${nl ? "Een paar opties" : "A few options"}:\n${list.map((n, i) => `${i + 1}. ${n}`).join("\n")}`, injected: wrong ? "absent from recommendation" : undefined };
+  }
+  switch (category) {
+    case "spec": {
+      const spec = view.specs.find((s) => s.label.toLowerCase() === subject.toLowerCase());
+      if (!spec) return { text: nl ? `Ik kon geen ${subject} vinden voor ${name}.` : `I couldn't find the ${subject} of ${name}.` };
+      const value = wrong ? wrongSpec(spec.value) : spec.value;
+      return { text: nl ? `${name} heeft ${subject.toLowerCase()} ${value}.` : `${name} has a ${subject.toLowerCase()} of ${value}.`, injected: wrong ? `spec ${value}` : undefined };
+    }
+    case "certificate": {
+      const cert = view.certificates.find((c) => c.name.toLowerCase() === subject.toLowerCase());
+      const yes = cert ? cert.valid : false;
+      const says = wrong ? !yes : yes;
+      return says
+        ? { text: nl ? `Ja, ${name} is ${subject}-gecertificeerd.` : `Yes, ${name} is ${subject} certified.`, injected: wrong ? "certificate yes" : undefined }
+        : { text: nl ? `Nee, ${name} is niet ${subject}-gecertificeerd.` : `No, ${name} is not ${subject} certified.`, injected: wrong ? "certificate no" : undefined };
+    }
+    case "outlet": {
+      const listed = view.outlets.map((o) => o.name);
+      const names = wrong ? [...listed, UNLISTED_OUTLETS[Math.floor(rng() * UNLISTED_OUTLETS.length)]!] : listed;
+      return { text: `${nl ? `Je kunt ${name} kopen bij` : `You can buy ${name} at`}:\n${names.map((n, i) => `${i + 1}. **${n}**`).join("\n")}`, injected: wrong ? "outlet not in list" : undefined };
+    }
+    case "successor": {
+      if (!wrong) return { text: nl ? `De opvolger van ${subject} is ${name}.` : `The successor of ${subject} is ${name}.` };
+      const other = NEW_NAMES[Math.floor(rng() * NEW_NAMES.length)]!;
+      return rng() < 0.5
+        ? { text: nl ? `${subject} is nog steeds verkrijgbaar; er is geen opvolger.` : `${subject} is still sold; there is no successor.`, injected: "old name as current" }
+        : { text: nl ? `De opvolger van ${subject} is ${other}.` : `The successor of ${subject} is ${other}.`, injected: "other successor" };
+    }
+    default:
+      return { text: nl ? `Ik weet niet genoeg over ${name} om dit te beantwoorden.` : `I don't know enough about ${name} to answer that.` };
+  }
+}
+
 function minimalFacts(ctx: AskContext): Facts {
   return (
     ctx.facts ?? {
@@ -254,7 +321,7 @@ export function createMockEngine(engine: Engine, options: MockEngineOptions = {}
       const pairRng = seededRandom(seedBase);
       const wrongPair = pairRng() < wrongPairRate;
       const citeRoll = pairRng();
-      const otherEntityPair = !wrongPair && pairRng() < otherEntityRate;
+      const otherEntityPair = !wrongPair && pairRng() < otherEntityRate && !facts.productLine;
       const otherCity = OTHER_CITIES[Math.floor(pairRng() * OTHER_CITIES.length)]!;
 
       // Sample-level decisions.
@@ -262,13 +329,19 @@ export function createMockEngine(engine: Engine, options: MockEngineOptions = {}
       if (mockIsUnknownBusiness(slug, facts)) {
         const nfRng = seededRandom(`${seedBase}|${sampleIndex}|notfound`);
         if (nfRng() < NOT_FOUND_SAMPLE_RATE) {
+          const lineView = facts.productLine;
+          if (lineView) return { answerText: scanLang(lineView.market) === "nl" ? `Ik kan geen informatie vinden over ${facts.name}.` : `I couldn't find any information about ${facts.name}.`, citations: [], costCents: 0 };
           return { answerText: `Ik kan geen informatie vinden over ${facts.name} in ${facts.place}.`, citations: [], costCents: 0 };
         }
       }
       const wrong = wrongPair && rng() < WRONG_SAMPLE_RATE;
 
       const recommendation = ctx.prompt ? ctx.prompt.kind === "recommendation" : looksLikeRecommendation(promptNl);
-      let { text } = recommendation ? composeRecommendation(promptNl, facts, wrong, rng) : compose(category, probe, facts, wrong, rng, engine);
+      let { text } = facts.productLine
+        ? composeLine(category, probe, facts, facts.productLine, wrong, rng, recommendation)
+        : recommendation
+          ? composeRecommendation(promptNl, facts, wrong, rng)
+          : compose(category, probe, facts, wrong, rng, engine);
       if (otherEntityPair) {
         text = text.replaceAll(` in ${facts.place}`, ` in ${otherCity}`) + ` (Let op: dit gaat over ${facts.name} in ${otherCity}.)`;
       }
@@ -276,7 +349,9 @@ export function createMockEngine(engine: Engine, options: MockEngineOptions = {}
       const site = facts.website ?? (ctx.business.domain ? `https://${ctx.business.domain}` : null);
       const citations: string[] = [];
       if (wrong) {
-        if (citeRoll < 0.35) citations.push(`https://openingstijden.nl/${slug}`);
+        if (facts.productLine) {
+          if (citeRoll < 0.5) citations.push(`https://productgids.example/${slug}`);
+        } else if (citeRoll < 0.35) citations.push(`https://openingstijden.nl/${slug}`);
         else if (citeRoll < 0.6) citations.push(`https://www.telefoonboek.nl/${slug}`);
         else if (citeRoll < 0.75 && site) citations.push(`${site.replace(/\/$/, "")}/contact`);
         // else: no citation -> model memory

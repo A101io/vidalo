@@ -5,11 +5,11 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Vendor | Role | What it gets | Region | Transfer basis | DPA |
 |---|---|---|---|---|---|
 | Supabase | Processor: database, sign-in | Owner email, business facts, reports, events; sign-in records (time, browser and OS family; no IP); Supabase Auth itself logs IP address and browser per sign-in (audit log, deleted with the login) and hashed rate-limit keys (kept at most one day). Backups (read 12 Nov 2026, https://supabase.com/docs/guides/platform/backups): Free plan no automatic backups; Pro daily backups kept 7 days (Team 14, Enterprise up to 30); PITR is a separate add-on. A deletion leaves the backups within that many days | EU (eu-west-1, Ireland), project `bbynmqvaxpjdnkaasutd` | EU | open: accept in Supabase dashboard (Org → Legal) |
-| OpenAI | Processor: asks the questions, extracts claims, and works out what a business offers before a check (one classification call per check, no web search, ADR 0007; `scanner/understand.ts`) | Business facts and the text of the business's own homepage with e-mail addresses and phone numbers removed (`redactContacts`), at most 4,000 characters; never account e-mail addresses | US | DPF / SCCs | open |
-| Google (Gemini, Places, Business Profile, OAuth) | Processor; OAuth also sign-in | Business facts; for verification the owner's Google account id and their Business Profile locations; OAuth tokens revoked at Google on disconnect, at the end of a subscription and on deletion | US/EU | DPF / SCCs | open |
-| Perplexity | Processor: asks the questions | Business facts only | US | SCCs | open |
-| Anthropic (Claude) | Processor: asks the questions | Business facts only | US | DPF / SCCs | open |
-| SerpAPI | Processor: Google AI answers | Business facts only | US | SCCs | open |
+| OpenAI | Processor: asks the questions, extracts claims, and works out what a business offers before a check (one classification call per check, no web search, ADR 0007; `scanner/understand.ts`) | Business facts and product-line facts, and the text of the business's own homepage with e-mail addresses and phone numbers removed (`redactContacts`), at most 4,000 characters; never account e-mail addresses | US | DPF / SCCs | open |
+| Google (Gemini, Places, Business Profile, OAuth) | Processor; OAuth also sign-in | Business facts and product-line facts; for verification the owner's Google account id and their Business Profile locations; OAuth tokens revoked at Google on disconnect, at the end of a subscription and on deletion | US/EU | DPF / SCCs | open |
+| Perplexity | Processor: asks the questions | Business facts and product-line facts | US | SCCs | open |
+| Anthropic (Claude) | Processor: asks the questions | Business facts and product-line facts | US | DPF / SCCs | open |
+| SerpAPI | Processor: Google AI answers | Business facts and product-line facts | US | SCCs | open |
 | KvK | Source: business lookup | Business name and place | NL | EU | n/a (public register) |
 | Stripe | Independent controller for payments; processor for invoices | Name, email, payment details (Vidalo never sees card or bank numbers) | EU/US | DPF / SCCs | open: Stripe DPA is part of the Services Agreement |
 | Resend | Processor: email | Owner or report-requester email, report links; service mails about deleting an account (scheduled, reminder, done). Resend keeps sent mail and its logs 30 days on Free, Pro and Scale (read 12 Nov 2026, https://resend.com/pricing, "Data retention") | US | DPF / SCCs | open |
@@ -19,6 +19,6 @@ Every vendor that touches personal data. The privacy statement's recipient list 
 | Google Analytics 4 | Processor (Google Ads data sharing off): visitor statistics, only after "Statistieken" consent | Visitor IP (not stored by GA4), browser, pages, `_ga` id | EU/US | DPF | accepted 6 Nov 2026 (GA account A101) |
 | Meta (pixel) | Joint controller with Vidalo for collection and transmission; Meta independent controller afterwards. Only after "Advertenties" consent | Visitor IP, browser, pages, `_fbp` id, Facebook/Instagram login link | EU/US | DPF | Meta Business Tools Terms accepted 6 Nov 2026 on creating dataset Vidalo (1478191657494181) in portfolio A101 |
 | WhatsApp (Meta) | Contact channel on /contact | Messages people send us there | EU/US | WhatsApp's own terms | n/a: only if the visitor chooses WhatsApp |
-| Sources with an error (sites, directories) | Recipients of correction requests | The business's confirmed facts | NL/EU | n/a | n/a |
+| Sources with an error (sites, directories) | Recipients of correction requests | The business's confirmed facts | NL/EU; for product lines in other markets also outside the EU | n/a | n/a |
 
 Hosting is Cloudflare (decided 13 Oct 2026); Vercel and Fly/Railway were never used. The public list is the privacy statement's "Met wie we gegevens delen" (`copy.legal.privacy`, 26 Oct 2026).

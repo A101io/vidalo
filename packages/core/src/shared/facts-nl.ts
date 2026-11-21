@@ -4,6 +4,7 @@
  */
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, type FactKey, type Finding } from "../types.js";
 import { displayAddress } from "../scanner/normalize.js";
+import { countryName } from "./country.js";
 
 const DAYS = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
 
@@ -57,7 +58,7 @@ export function factLabelNl(factKey: FactKey, subject: string | null): string {
     case "certificate":
       return subject ? `of ${subject} (nog) geldig is` : "de certificaten";
     case "outlet":
-      return subject ? `waar je product te koop is in ${subject}` : "waar je product te koop is";
+      return subject ? `waar je product te koop is in ${countryName(subject, "nl")}` : "waar je product te koop is";
     case "successor":
       return subject ? `de opvolger van ${subject}` : "de opvolger";
     default:

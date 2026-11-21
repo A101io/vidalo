@@ -17,6 +17,9 @@ export interface ScanJob {
   then?: ("fixes" | "report" | "baseline_summary")[];
   /** set when the daily AI ceiling moved this baseline or monthly check once; it then runs (jobs/spend.ts) */
   deferredOnce?: boolean;
+  /** Feature 006: a product line's run in one market (both or neither). Only the cron enqueues these; no web path does. */
+  productLineId?: string;
+  market?: string;
 }
 
 export interface SetupJob {
@@ -75,6 +78,10 @@ export type EmailJob =
 export interface ReportJob {
   businessId: string;
   scanRunId?: string;
+  /** Feature 006: the month's line runs to wait for before the mail goes (set by the business's monthly scan). */
+  lines?: { productLineId: string; market: string }[];
+  /** How many times this report has waited (set by the handler, bounded by LINE_REPORT_MAX_WAITS). */
+  waited?: number;
 }
 
 export interface FollowUpJob {

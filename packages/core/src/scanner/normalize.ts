@@ -14,12 +14,17 @@
  *  - urgency: "yes" | "no"                   (spoed / beschikbaarheid)
  *  - credential (subject = name): "yes" | "no"
  *  - identity (subject = other business): "no" = a different business (the owner's position)
+ *  - spec (subject = label, product lines): "<number> <unit>" with the unit's canonical spelling, "pn16", or the lowercased text
+ *  - certificate (subject = name): "yes" | "no" (valid on the scan date)
+ *  - outlet (subject = market): the owner's outlet names for that market joined " · "; claims carry one outlet name or host
+ *  - successor (subject = old name): the line's name; claims carry PRESENT_VALUE, the product named, or ABSENT_VALUE
  *  - recommendation answers: PRESENT_VALUE | ABSENT_VALUE (is the business named)
  */
 import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, NOT_FOUND_VALUE, PRESENT_VALUE, isNeutralProfile, type FactKey, type Facts, type Hours } from "../types";
 
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import { HOME_COUNTRY } from "../shared/country";
+import { slotValue } from "../prompts/slots";
 
 export const DAY_NAMES_NL = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"] as const;
 
@@ -144,6 +149,69 @@ export function normalizePrice(raw: string | number): string | null {
   return String(Math.round(n * 100) / 100);
 }
 
+
+// ---------------------------------------------------------------------------
+// Product-line values (feature 006): specifications, outlets, successors
+// ---------------------------------------------------------------------------
+
+/** Spellings of units, by canonical unit. A unit not listed keeps its own spelling, lowercased. */
+const UNIT_ALIASES: Record<string, string> = {
+  mg: "mg", g: "g", gr: "g", gram: "g", grams: "g", gramm: "g", kg: "kg", kilo: "kg", kilos: "kg", kilogram: "kg", kilograms: "kg",
+  mm: "mm", millimeter: "mm", millimeters: "mm", cm: "cm", centimeter: "cm", centimeters: "cm", m: "m", meter: "m", meters: "m", metre: "m", metres: "m",
+  ml: "ml", milliliter: "ml", milliliters: "ml", cl: "cl", centiliter: "cl", l: "l", liter: "l", liters: "l", litre: "l", litres: "l",
+  bar: "bar", mbar: "mbar", w: "w", watt: "w", kw: "kw", v: "v", volt: "v", "%": "%", "°c": "°c",
+  dag: "dagen", dagen: "dagen", day: "dagen", days: "dagen", week: "weken", weken: "weken", weeks: "weken", maand: "maanden", maanden: "maanden", month: "maanden", months: "maanden",
+  jaar: "jaar", jaren: "jaar", year: "jaar", years: "jaar", uur: "uur", hour: "uur", hours: "uur", stuk: "stuks", stuks: "stuks", piece: "stuks", pieces: "stuks",
+};
+/** Units that convert into each other: [family, factor to the family's base unit]. */
+const UNIT_FAMILY: Record<string, [string, number]> = {
+  mg: ["mass", 0.001], g: ["mass", 1], kg: ["mass", 1000],
+  mm: ["length", 1], cm: ["length", 10], m: ["length", 1000],
+  ml: ["volume", 1], cl: ["volume", 10], l: ["volume", 1000],
+  bar: ["pressure", 1000], mbar: ["pressure", 1],
+};
+const SPEC_NUMBER = /^([-+]?\d{1,9}(?:[.,]\d{1,6})?)\s?([a-zµ°%]{1,12})?$/;
+
+/**
+ * A spec value in one spelling: "800 gram" and "800 g" are "800 g", "PN 16" is "pn16", "0,8 kg" is "0.8 kg"; any other
+ * text is lowercased with its spaces collapsed. Bounded input (60 characters are all an owner can enter).
+ */
+export function normalizeSpecValue(raw: string): string {
+  const s = raw.slice(0, 200).normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim().replace(/[.;,]+$/, "");
+  const num = SPEC_NUMBER.exec(s);
+  if (num) {
+    const n = Number(num[1]!.replace(",", "."));
+    if (Number.isFinite(n)) {
+      const unit = num[2] ? (UNIT_ALIASES[num[2]] ?? num[2]) : "";
+      return unit ? `${n} ${unit}` : String(n);
+    }
+  }
+  const code = /^([a-z]{1,4})[ -]?(\d{1,4})$/.exec(s);
+  return code ? `${code[1]}${code[2]}` : s;
+}
+
+/** A normalised spec value as a number in its family's base unit, or null when it is not a number with a convertible unit. */
+function specAmount(norm: string): { family: string; amount: number } | null {
+  const m = /^(-?\d+(?:\.\d+)?)(?: (\S+))?$/.exec(norm);
+  if (!m) return null;
+  const n = Number(m[1]);
+  const [family, factor] = m[2] ? (UNIT_FAMILY[m[2]] ?? [m[2], 1]) : ["", 1];
+  return Number.isFinite(n) ? { family, amount: n * factor } : null;
+}
+
+/** A label or name as the question slot made it, in comparable form ("Gewicht" and " gewicht " are the same label). */
+export function lineKey(raw: string, slot: "spec" | "certificate" | "name"): string {
+  return normalizeLabel(slotValue(raw, slot) ?? raw);
+}
+
+/** Letters and digits only, lowercased: "Versmarkt Haarlem" and "versmarkt-haarlem" are the same outlet. */
+export function outletKey(raw: string): string {
+  return raw.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+/** The separator between the owner's outlet names in an expected value. */
+export const OUTLET_SEPARATOR = " · ";
+
 /** Words that count as "pin / card payment" in paymentMethods or policies. */
 const PIN_WORDS = ["pin", "pinnen", "pinpas", "debitcard", "debit", "maestro", "kaart", "card", "contactloos", "ideal"];
 
@@ -234,12 +302,33 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
       if (subject === "kind") return kindIsGrounded(facts) ? "same" : null;
       // The owner's position is always: that is a different business.
       return facts.notConfusedWith.length || subject ? "no" : null;
-    // Product-line keys (feature 006): compared against Facts.productLine by the line scan (BE-04).
-    case "spec":
-    case "certificate":
-    case "outlet":
-    case "successor":
-      return null;
+    // Product-line keys (feature 006, ADR-0010): compared against the in-memory line view (scanner/line.ts).
+    case "spec": {
+      const pl = facts.productLine;
+      if (!pl || !subject) return null;
+      const key = lineKey(subject, "spec");
+      const spec = pl.specs.find((x) => lineKey(x.label, "spec") === key);
+      return spec ? normalizeSpecValue(spec.value) : null;
+    }
+    case "certificate": {
+      const pl = facts.productLine;
+      if (!pl || !subject) return null;
+      const key = lineKey(subject, "certificate");
+      const cert = pl.certificates.find((x) => lineKey(x.name, "certificate") === key);
+      return cert ? (cert.valid ? "yes" : "no") : null;
+    }
+    case "outlet": {
+      const pl = facts.productLine;
+      if (!pl || subject !== pl.market) return null;
+      const names = pl.outlets.filter((o) => o.market === pl.market).map((o) => o.name);
+      return names.length ? names.join(OUTLET_SEPARATOR) : null;
+    }
+    case "successor": {
+      const pl = facts.productLine;
+      if (!pl || !subject) return null;
+      const key = lineKey(subject, "name");
+      return pl.replaces.some((r) => lineKey(r, "name") === key) ? facts.name : null;
+    }
   }
 }
 
@@ -267,6 +356,19 @@ export function valuesMatch(factKey: FactKey, claimed: string, expected: string)
     }
     case "website":
       return a.replace(/^www\./, "") === b.replace(/^www\./, "");
+    case "spec": {
+      // "800 g" = "0.8 kg": the same number in the same family of units.
+      const x = specAmount(a);
+      const y = specAmount(b);
+      return x != null && y != null && x.family === y.family && Math.abs(x.amount - y.amount) <= Math.max(1e-9, Math.abs(y.amount) * 1e-6);
+    }
+    case "outlet": {
+      // The claim is one outlet's name (the extractor puts the owner's own spelling there when it recognised it).
+      const claimedKey = outletKey(claimed);
+      return claimedKey !== "" && expected.split(OUTLET_SEPARATOR).some((n) => outletKey(n) === claimedKey);
+    }
+    case "successor":
+      return a === PRESENT_VALUE || outletKey(claimed) === outletKey(expected);
     default:
       return false;
   }
@@ -292,6 +394,7 @@ export function describeValue(factKey: FactKey, value: string, subject: string |
     case "area":
     case "urgency":
     case "credential":
+    case "certificate":
       return value === "yes" ? "ja" : value === "no" ? "nee" : value;
     case "identity":
       return value === "no" ? "een ander bedrijf" : value === "yes" ? "hetzelfde bedrijf" : value === "other" ? "een ander soort bedrijf" : value === "same" ? "dit soort bedrijf" : value;

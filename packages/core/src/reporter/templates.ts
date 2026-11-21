@@ -18,6 +18,7 @@ import { findingWords } from "../shared/facts-en.js";
 import { FIX_PATHS, NOT_FOUND_PATH, RECOMMENDATION_PATH, fixPathForFinding, type FixPath } from "../fixer/paths.js";
 import { formatDateNl } from "../publisher/render.js";
 import { checkedAsParts, namesakeLine } from "../shared/checked-as.js";
+import type { Block } from "./layout.js";
 import { BRAND, renderMail } from "./layout.js";
 
 export interface Mail {
@@ -191,6 +192,10 @@ function findingLines(f: Finding, opts: { promptText?: string | null; lang?: Lan
   if (w.notFound) {
     // No wrong value and no source: the engine knows nothing about the business.
     return [opts.promptText ? F.question(opts.promptText) : F.about(w.what), `${engine} ${w.notFoundLine} (${w.frequency})`, F.notFound(w.correct)];
+  }
+  if (f.factKey === "outlet") {
+    // Feature 006 (CMP-602): an outlet the owner did not list is not a wrong fact; it is a question to the owner.
+    return [opts.promptText ? F.question(opts.promptText) : F.about(w.what), F.said(engine, w.wrong, w.frequency), C.productLines.detail.outletNote, F.from(sourceLine(f, lang))];
   }
   const other = f.sourceType === "other_entity";
   return [
@@ -626,8 +631,31 @@ export interface OpenFindingLine {
   since: string;
 }
 
+/** Feature 006: one product line in the monthly mail. Counts and words only; the link is the dashboard origin and the line's id. */
+export interface LineMailSection {
+  name: string;
+  detailUrl: string;
+  markets: {
+    market: string;
+    marketName: string;
+    /** this month's line run exists */
+    checked: boolean;
+    /** the date of the last finished run in an earlier month, already worded in the owner's language; null when the market was never checked */
+    lastChecked?: string | null;
+    /** the AI systems the line run asked */
+    engines?: Engine[];
+    stip: Stip | null;
+    openErrors: number;
+    named: { named: number; answers: number } | null;
+  }[];
+  /** max 3 shown, the rest as "en n meer" */
+  openFindings: OpenFindingLine[];
+}
+
 export interface MonthlyReportData {
   business: Pick<Business, "name" | "place">;
+  /** product lines, after the business blocks; nothing is rendered when empty or absent */
+  lines?: LineMailSection[];
   /** answers we could not check (no fact, or no usable claim): the status line counts only the checked ones */
   uncheckedAnswers?: number;
   uncheckedGrey?: boolean;
@@ -655,6 +683,28 @@ export interface MonthlyReportData {
   /** an online business: the not-found sentence names no Google, Bing, Apple or directories */
   online?: boolean;
   lang?: Lang;
+}
+
+/** The sections of the product lines, in the owner's language: a card per market, up to three finding cards, a link. */
+function lineBlocks(lines: LineMailSection[], lang: Lang): Block[] {
+  const C = copyFor(lang);
+  const L = C.mails.monthly.lines;
+  return lines.flatMap((s): Block[] => {
+    const markets = s.markets.map((m) => ({
+      title: m.checked && m.stip
+        ? `${L.market(m.marketName, C.stip[m.stip].toLowerCase(), m.openErrors, m.named)}${m.engines?.length ? ` ${L.askedTo(m.engines.map(engineName))}` : ""}`
+        : m.lastChecked ? L.notCheckedThisMonth(m.marketName, m.lastChecked) : L.notChecked(m.marketName),
+      lines: [] as string[],
+      tone: (m.checked && m.stip ? m.stip : "grijs") as Stip,
+    }));
+    const findings = exampleCards(s.openFindings.map((o) => o.finding), 3, lang);
+    const more = s.openFindings.length - findings.length;
+    return [
+      { kind: "cards", title: L.title(s.name), items: [...markets, ...findings] },
+      ...(more > 0 ? [{ kind: "p" as const, text: L.more(more) }] : []),
+      { kind: "p", text: `${L.cta}: ${s.detailUrl}` },
+    ];
+  });
 }
 
 export function monthlyReportEmail(d: MonthlyReportData): Mail {
@@ -692,6 +742,7 @@ export function monthlyReportEmail(d: MonthlyReportData): Mail {
       ...(open.length ? [{ kind: "cards" as const, title: R.openTitle, items: open }] : []),
       ...(moreOpen > 0 ? [{ kind: "p" as const, text: R.moreOpen(moreOpen) }] : []),
       ...(!proofs.length && !open.length ? [{ kind: "p" as const, text: R.nothing }] : []),
+      ...lineBlocks(d.lines ?? [], lang),
       { kind: "cta", label: R.cta, url: d.links.dashboardUrl },
       {
         kind: "steps",
