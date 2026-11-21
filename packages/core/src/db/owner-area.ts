@@ -9,7 +9,7 @@
 import type { MemDb } from "./mem";
 import type { PgDb } from "./pg";
 import type { BusinessRecord, Db, EventRow } from "./types";
-import type { Channel, Facts, Finding, Fix, ScanKind, ScanReport, ScanRun, Stip } from "../types";
+import type { Channel, Facts, Finding, Fix, LineScope, ScanKind, ScanReport, ScanRun, Stip } from "../types";
 import { reportCounts, type ScanSnapshot } from "../progress";
 
 // Not `instanceof`: `next dev` and OpenNext bundle core once per route, so the Db a request holds can come from
@@ -105,6 +105,11 @@ export interface RunSummary {
   /** Of those, the questions every AI system answered right. */
   correct: number;
   snapshot: ScanSnapshot;
+  /**
+   * Feature 006: how often the business or line was named over the recommendation questions of the run, out of how
+   * many answers, and the five others named most often (by answers; never a position). Absent on summaries saved earlier.
+   */
+  recommend?: { named: number; answers: number; others: { name: string; answers: number }[] };
 }
 
 export interface ArchiveRow {
@@ -117,7 +122,15 @@ export interface ArchiveRow {
 
 export function summarizeRun(report: ScanReport, snapshot: ScanSnapshot): RunSummary {
   const c = reportCounts(report);
-  return { v: 1, stip: report.stip, answered: c.questions, correct: c.correct, snapshot };
+  const recs = report.recommendations ?? [];
+  const others = new Map<string, number>();
+  for (const r of recs) for (const o of r.others) others.set(o.name, (others.get(o.name) ?? 0) + o.answers);
+  const recommend = {
+    named: recs.reduce((n, r) => n + r.named, 0),
+    answers: recs.reduce((n, r) => n + r.answers, 0),
+    others: [...others].map(([name, answers]) => ({ name, answers })).sort((a, b) => b.answers - a.answers || a.name.localeCompare(b.name)).slice(0, 5),
+  };
+  return { v: 1, stip: report.stip, answered: c.questions, correct: c.correct, snapshot, recommend };
 }
 
 // MemDb keeps summaries on the instance itself (a Symbol.for key), not in a module-level WeakMap: `next dev` and
@@ -177,7 +190,7 @@ export async function listReportArchive(db: Db, businessId: string, opts: { limi
   } else if (isMem(db)) {
     const sums = memSummaries(db);
     all = [...db.scanRuns.values()]
-      .filter((r) => r.businessId === businessId && r.kind !== "recheck")
+      .filter((r) => r.businessId === businessId && r.kind !== "recheck" && !r.productLineId)
       .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, cursorAt: r.startedAt, summary: sums.get(r.id) ?? null }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
       .filter((r) => !cursor || r.createdAt < cursor.at || (r.createdAt === cursor.at && r.id < cursor.id));
@@ -191,11 +204,15 @@ export async function listReportArchive(db: Db, businessId: string, opts: { limi
   };
 }
 
-/** Finished, non-recheck checks that have a summary, newest first (the progress view and the dashboard read these). */
-export async function runSummaries(db: Db, businessId: string, limit: number): Promise<ArchiveRow[]> {
+/**
+ * Finished, non-recheck checks that have a summary, newest first (the progress view and the dashboard read these).
+ * Without `line`: the business's own checks; with it, only that product line's (and market's when given).
+ */
+export async function runSummaries(db: Db, businessId: string, limit: number, line?: LineScope): Promise<ArchiveRow[]> {
   const n = Math.max(1, Math.min(200, Math.floor(limit)));
   if (isPg(db)) {
     if (!UUID.test(businessId)) return [];
+    if (line) throw new Error("BE-02: runSummaries with a line scope on PgDb needs migration 0020");
     const rows = await db.sql<{ id: string; kind: ScanKind; status: ScanRun["status"]; createdAt: Date; summary: RunSummary }[]>`
       select id, kind, status, created_at, summary from scan_run
       where business_id = ${businessId} and status = 'done' and kind <> 'recheck' and summary is not null
@@ -205,7 +222,7 @@ export async function runSummaries(db: Db, businessId: string, limit: number): P
   if (isMem(db)) {
     const sums = memSummaries(db);
     return [...db.scanRuns.values()]
-      .filter((r) => r.businessId === businessId && r.status === "done" && r.kind !== "recheck" && sums.has(r.id))
+      .filter((r) => r.businessId === businessId && r.status === "done" && r.kind !== "recheck" && sums.has(r.id) && (!line ? !r.productLineId : r.productLineId === line.productLineId && (line.market === undefined || r.market === line.market)))
       .map((r) => ({ id: r.id, kind: r.kind, status: r.status, createdAt: r.startedAt, summary: structuredClone(sums.get(r.id)!) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
       .slice(0, n);

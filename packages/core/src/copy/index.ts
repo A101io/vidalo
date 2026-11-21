@@ -2154,6 +2154,10 @@ export const copy = {
     urgency: "Spoed en beschikbaarheid",
     credential: "Erkenningen",
     identity: "Naamgenoot",
+    spec: "Specificaties",
+    certificate: "Certificaten",
+    outlet: "Waar te koop",
+    successor: "Opvolger en oude namen",
   },
 
   /** The twelve criteria (docs/CRITERIA.md), by id. */
@@ -2170,6 +2174,10 @@ export const copy = {
     10: "Afspraken en voorwaarden",
     11: "Identiteit en naamgenoot",
     12: "Erkenningen en kwalificaties",
+    13: "Specificaties",
+    14: "Certificaten",
+    15: "Waar te koop",
+    16: "Opvolger en oude namen",
   },
 
   /** Severity classes: one wrong answer and the customer does not come / comes for the wrong thing / confuses you with another. */

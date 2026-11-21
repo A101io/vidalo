@@ -192,6 +192,12 @@ function compose(category: FactKey, probe: string, facts: Facts, wrong: boolean,
         ? { text: `Ja, dat is hetzelfde bedrijf. ${name} heeft ook een vestiging daar.`, injected: "identity yes" }
         : { text: `Nee, ${name} in ${place} is een ander bedrijf dan ${other}.` };
     }
+    // Product-line keys (feature 006): the mock answers for them come with the line scan (BE-04).
+    case "spec":
+    case "certificate":
+    case "outlet":
+    case "successor":
+      return { text: `Ik weet niet genoeg over ${name} om dit te beantwoorden.` };
   }
 }
 

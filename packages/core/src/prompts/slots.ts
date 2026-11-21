@@ -3,9 +3,9 @@
  * (a model's lookup, an owner's form field) is cleaned here or refused; a template whose slot
  * is refused is skipped. Never throws.
  */
-export type SlotKind = "name" | "category" | "audience" | "offer" | "competitor";
+export type SlotKind = "name" | "category" | "audience" | "offer" | "competitor" | "use" | "spec" | "certificate";
 
-export const SLOT_LIMIT: Record<SlotKind, number> = { name: 80, category: 60, audience: 80, offer: 120, competitor: 60 };
+export const SLOT_LIMIT: Record<SlotKind, number> = { name: 80, category: 60, audience: 80, offer: 120, competitor: 60, use: 60, spec: 40, certificate: 60 };
 
 const INSTRUCTION_WORDS = [
   "negeer", "vergeet", "instructie", "systeem", "prompt", "opdracht",

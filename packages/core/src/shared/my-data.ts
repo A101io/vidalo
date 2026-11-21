@@ -31,14 +31,18 @@ export function exportChannel(c: Channel): Omit<Channel, "meta"> & { meta: Recor
 export async function exportMyData(db: Db, businessId: string, now: Date = new Date(), opts: { userId?: string } = {}) {
   const business = await db.getBusiness(businessId);
   if (!business) return null;
-  const scanRuns = await db.listScanRuns(businessId, 10_000);
+  // Every scope (art. 15 and 20): a reader without a line argument returns the business only, so the lines are read one by one.
+  const lines = await db.listProductLines(businessId);
+  const productLines = await Promise.all(lines.map(async (l) => ({ ...l, versions: await db.listProductLineVersions(l.id) })));
+  const scanRuns = [...(await db.listScanRuns(businessId, 10_000)), ...(await Promise.all(lines.map((l) => db.listScanRuns(businessId, 10_000, { productLineId: l.id })))).flat()];
   const scans = [];
   for (const run of scanRuns) {
     const samples = await db.listSamples(run.id);
     const claims = await db.listClaims(samples.map((s) => s.id));
     scans.push({ ...run, samples, claims });
   }
-  const findings = await db.listFindings(businessId);
+  const findings = [...(await db.listFindings(businessId)), ...(await Promise.all(lines.map((l) => db.listFindings(businessId, undefined, { productLineId: l.id })))).flat()];
+  const prompts = [...(await db.listPrompts(businessId)), ...(await Promise.all(lines.map((l) => db.listPrompts(businessId, { line: { productLineId: l.id } })))).flat()];
   const fixes = (await Promise.all(findings.map((f) => db.listFixes(f.id)))).flat();
   return {
     exportedAt: now.toISOString(),
@@ -46,7 +50,8 @@ export async function exportMyData(db: Db, businessId: string, now: Date = new D
     // What the understanding step decided and what the owner corrected (art. 15 and 20); each scan's own profile is on its run.
     profiles: { auto: business.profileAuto ?? null, owner: business.profileOwner ?? null },
     facts: await db.listFacts(businessId),
-    prompts: await db.listPrompts(businessId),
+    prompts,
+    productLines,
     scans,
     findings,
     fixes,

@@ -78,3 +78,9 @@ exploit path, not opinions about structure.
 
 ## Learned (Vidalo, 20 Nov 2026, facts hosts to vidalo.ai)
 - Hosts that serve owner-influenced pages under the main site's domain (`{slug}-feiten.vidalo.ai`) are same-site with the owner area: no cookie with a `Domain` attribute, no wildcard subdomain in any sign-in redirect allowlist (Supabase Redirect URLs, OAuth redirect URIs), an exact-list Origin check, and a strict CSP on the page (`default-src 'none'`).
+
+## Learned (Vidalo, 21 Nov 2026, 006 shape)
+- Store what was checked. When a sanitiser tests a normalised form (NFKC, control and format characters stripped, line breaks to spaces), the stored value is that normalised form too; storing the raw input keeps zero-width characters and CR/LF that every later reader (mails, letters, regexes, a second member's page) receives unchecked.
+- A limit that lives in code is applied again where the money is spent (the cron, the job), not only where the row is saved; otherwise lowering the limit changes nothing for rows saved under the old one, and the database backstop is usually looser.
+- A trigger that copies scope from a parent row (run → sample, finding) also asserts the tenant column matches the parent's; otherwise it copies another tenant's ids into a row the first tenant reads. `security definer` only when the writer lacks the rights, with the reason written down.
+- A URL a user typed is checked for scheme again at render time, and never becomes a link in our mails through an autolinker; a value typed as "plain text" refuses `://` and `www.` when it can reach a mail.

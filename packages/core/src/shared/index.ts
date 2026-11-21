@@ -37,3 +37,4 @@ export * from "./export-stream.js";
 export * from "./deletion.js";
 // Feature 002 (C-00): lane B
 export * from "./report-access.js";
+export * from "./product-lines.js";

@@ -21,8 +21,8 @@ export async function CriteriumCard({ severity, children }: { severity: Severity
       <div className="flex flex-col gap-2 text-[14px]">
         {rows.map((c) => (
           <div key={c.id} className="flex justify-between gap-3 border-t-[1.5px] border-panel pt-2">
-            <span className="font-semibold">{C.labels[c.id]}</span>
-            <span className="text-right text-muted">{C.questions[c.id]}</span>
+            <span className="font-semibold">{C.labels[c.id as keyof typeof C.labels]}</span>
+            <span className="text-right text-muted">{C.questions[c.id as keyof typeof C.questions]}</span>
           </div>
         ))}
       </div>

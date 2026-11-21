@@ -257,8 +257,8 @@ describe("facts page with the sector-layer fields", () => {
 });
 
 describe("customer copy for criteria, severity, stip and sectors", () => {
-  it("names all twelve criteria, three severities, four colours and eleven sectors, without jargon", () => {
-    expect(Object.keys(copy.criteria)).toHaveLength(12);
+  it("names all sixteen criteria (twelve public, four product-line), three severities, four colours and eleven sectors, without jargon", () => {
+    expect(Object.keys(copy.criteria)).toHaveLength(16);
     expect(Object.keys(copy.severity)).toEqual(["afhaker", "misleider", "verwarring"]);
     expect(Object.keys(copy.stip)).toEqual(["rood", "oranje", "groen", "grijs"]);
     expect(Object.keys(copy.sectors)).toHaveLength(11);

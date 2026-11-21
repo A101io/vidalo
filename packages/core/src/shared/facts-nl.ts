@@ -51,6 +51,15 @@ export function factLabelNl(factKey: FactKey, subject: string | null): string {
       return subject ? `de erkenning ${subject}` : "de erkenningen";
     case "identity":
       return subject ? `of dit hetzelfde bedrijf is als ${subject}` : "of dit hetzelfde bedrijf is";
+    // Product lines (feature 006). The subject is the spec label, the certificate name, the market code or the old name.
+    case "spec":
+      return subject ? `de specificatie ${subject}` : "de specificaties";
+    case "certificate":
+      return subject ? `of ${subject} (nog) geldig is` : "de certificaten";
+    case "outlet":
+      return subject ? `waar je product te koop is in ${subject}` : "waar je product te koop is";
+    case "successor":
+      return subject ? `de opvolger van ${subject}` : "de opvolger";
     default:
       return "de gegevens";
   }
@@ -88,6 +97,14 @@ export function factFieldNl(factKey: FactKey, subject: string | null): string {
       return subject ? `Erkenning: ${subject}` : "Erkenningen";
     case "identity":
       return "Naamgenoot";
+    case "spec":
+      return subject ? `Specificatie: ${subject}` : "Specificaties";
+    case "certificate":
+      return subject ? `Certificaat: ${subject}` : "Certificaten";
+    case "outlet":
+      return subject ? `Waar te koop: ${subject}` : "Waar te koop";
+    case "successor":
+      return subject ? `Opvolger van ${subject}` : "Opvolger";
     default:
       return "Gegevens";
   }
@@ -110,6 +127,10 @@ export function valueNl(factKey: FactKey, value: string): string {
     if (["temporarily_closed", "temporarily closed"].includes(lower)) return "tijdelijk gesloten";
     if (["open", "exists", "yes"].includes(lower)) return "open";
   }
+  if (factKey === "certificate") {
+    if (lower === "yes" || lower === "ja") return "wel gecertificeerd";
+    if (lower === "no" || lower === "nee") return "niet (meer) gecertificeerd";
+  }
   if (lower === "closed" || lower === "gesloten") return "gesloten";
   if (lower === "yes" || lower === "ja") return "ja";
   if (lower === "no" || lower === "nee") return "nee";
@@ -118,6 +139,12 @@ export function valueNl(factKey: FactKey, value: string): string {
   if (factKey === "price" && /^\d+(\.\d+)?$/.test(v)) return `€ ${Number(v).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}`;
   if (factKey === "address") return displayAddress(v);
   return v;
+}
+
+/** A shop the AI named that the owner did not list: "Delhaize, niet in je lijst". Never "fout verkooppunt" (the AI may be right). */
+function outletNotListedNl(value: string): string {
+  const v = value.trim();
+  return v ? `${v}, niet in je lijst` : "niet in je lijst";
 }
 
 export interface FindingWordsNl {
@@ -141,7 +168,7 @@ export function findingWordsNl(f: Pick<Finding, "factKey" | "subject" | "wrongVa
   return {
     what,
     field: factFieldNl(f.factKey, f.subject),
-    wrong: notFound ? NOT_FOUND_LABEL : recommendation ? ABSENT_LABEL : valueNl(f.factKey, f.wrongValue),
+    wrong: notFound ? NOT_FOUND_LABEL : recommendation ? ABSENT_LABEL : f.factKey === "outlet" ? outletNotListedNl(f.wrongValue) : valueNl(f.factKey, f.wrongValue),
     correct: recommendation && f.factKey === "existence" && f.subject && INTENT_LABEL[f.subject] ? (ONLINE_INTENT.has(f.subject) ? "je bent actief" : "je bent open en werkt in deze plaats") : valueNl(f.factKey, f.correctValue),
     frequency: `${f.frequency} van de ${f.sampleCount} keer`,
     notFound,

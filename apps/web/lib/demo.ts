@@ -9,8 +9,12 @@
  *     dashboard has content.
  */
 import type { Db } from "@vidalo/core/db";
-import type { CriteriumId, Engine, EngineStip, Finding, ScanReport } from "@vidalo/core/types";
-import { ABSENT_LABEL, NOT_FOUND_LABEL } from "@vidalo/core/types";
+import type { CriteriumId, Engine, EngineStip, FactKey, Finding, ProductLineData, ScanReport } from "@vidalo/core/types";
+import { ABSENT_LABEL, ABSENT_VALUE, NOT_FOUND_LABEL, PRESENT_VALUE } from "@vidalo/core/types";
+import { ENGINE_NL_USAGE, engineCounts, overallStip } from "@vidalo/core/criteria";
+import { PRODUCT_LINE_LIMITS } from "@vidalo/core/shared";
+import { saveRunSummary, type PromptInput, type RunSummary } from "@vidalo/core/db";
+import type { ProgressCell } from "@vidalo/core/progress";
 import { prepareBusiness, runScan, groupBySeverity, createMockEngine } from "@vidalo/core/scanner";
 import { ENGINES } from "@vidalo/core/types";
 import { openFixesForScan } from "@vidalo/core/fixer";
@@ -275,7 +279,212 @@ export async function seedDemo(db: Db): Promise<void> {
     // the republished facts page and a sync of every channel. The Google sync then holds its change for the owner.
     const latest = [...runDates.entries()].sort((a, b) => a[1].localeCompare(b[1])).pop()?.[0];
     if (latest) await openFixesForScan(latest);
+    await seedDemoLines(db, business.id);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Product lines (feature 006): two fictional lines of the demo bakery, three monthly runs per (line, market).
+// Written through the Db methods, so the pages show them without BE-03/BE-04. Every name here is made up.
+// ---------------------------------------------------------------------------
+
+type LineKey = "speltbrood" | "kerststol";
+interface LineSeed {
+  key: LineKey;
+  versions: ProductLineData[];
+}
+const SPELT_V2: ProductLineData = {
+  name: "Haarlems Speltbrood",
+  category: "speltbrood",
+  useCases: ["ontbijt", "lunch"],
+  markets: ["NL", "BE"],
+  specs: [{ label: "Gewicht", value: "800 g" }, { label: "Houdbaarheid", value: "4 dagen" }],
+  certificates: [{ name: "EKO", number: "EKO-0000", validUntil: "2027-06-30" }],
+  outlets: [{ market: "NL", name: "Versmarkt Haarlem", url: "https://versmarkt-haarlem.example" }, { market: "BE", name: "Broodhuys Gent", url: "https://broodhuys-gent.example" }],
+  replaces: ["Speltbrood Classic"],
+  replacedBy: null,
+};
+const DEMO_LINES: LineSeed[] = [
+  { key: "speltbrood", versions: [{ ...SPELT_V2, certificates: [{ name: "EKO", number: null, validUntil: "2027-06-30" }] }, SPELT_V2] },
+  {
+    key: "kerststol",
+    versions: [
+      {
+        name: "Grote Houtstraat Kerststol",
+        category: "kerststol",
+        useCases: ["kerstontbijt"],
+        markets: ["NL"],
+        specs: [{ label: "Gewicht", value: "1 kg" }],
+        certificates: [],
+        outlets: [{ market: "NL", name: "Bakkerij De Vries", url: "https://bakkerijdevries.nl" }],
+        replaces: [],
+        replacedBy: null,
+      },
+    ],
+  },
+];
+const LINE_ENGINES: Engine[] = ["chatgpt", "google_ai", "perplexity"];
+const LINE_SAMPLES: Record<string, number> = { chatgpt: 5, perplexity: 5, google_ai: 1 };
+/** Months back of the three runs, oldest first. */
+const LINE_MONTHS = [2, 1, 0] as const;
+/** Recommendation counts per (line|market) and month back (index 0 = 2 months ago): the contract numbers are the last entry. */
+const RECOMMEND: Record<string, { named: number; answers: number; others: { name: string; answers: number }[] }[]> = {
+  "speltbrood|NL": [1, 2, 3].map((named) => ({ named, answers: 10, others: [{ name: "Korenhoek Brood", answers: 4 }, { name: "Speltsmid", answers: 3 }] })),
+  "speltbrood|BE": [0, 0, 0].map((named) => ({ named, answers: 5, others: [{ name: "Gentse Speltbakkerij", answers: 3 }] })),
+  "kerststol|NL": [2, 3, 4].map((named) => ({ named, answers: 5, others: [{ name: "Stollenbakker Noord", answers: 1 }] })),
+};
+
+type PlannedPrompt = PromptInput & { spec?: string };
+function linePrompts(key: LineKey, market: string, v: ProductLineData, brand: string): PlannedPrompt[] {
+  const nl = market === "NL";
+  const named = v.name.toLowerCase().includes(brand.toLowerCase());
+  const of = named ? "" : nl ? ` van ${brand}` : ` by ${brand}`;
+  const country = nl ? "Nederland" : market === "BE" ? "Belgium" : market;
+  const out: PlannedPrompt[] = [];
+  for (const use of v.useCases) {
+    out.push({ category: "existence", textNl: nl ? `Welk ${v.category} is het beste voor ${use}?` : `Which ${v.category} is best for ${use}?`, probes: [`existence:${use}`], active: true, kind: "recommendation", criterium: 6, templateKey: "line.rec.use" });
+  }
+  for (const sp of v.specs) {
+    out.push({ category: "spec", textNl: nl ? `Welke ${sp.label.toLowerCase()} heeft ${v.name}${of}?` : `What ${sp.label.toLowerCase()} does ${v.name}${of} have?`, probes: [`spec:${sp.label}`], active: true, kind: "about", criterium: 13, templateKey: "line.spec", spec: sp.label });
+  }
+  for (const c of v.certificates) {
+    out.push({ category: "certificate", textNl: nl ? `Is ${v.name}${of} ${c.name}-gecertificeerd?` : `Is ${v.name}${of} ${c.name} certified?`, probes: [`certificate:${c.name}`], active: true, kind: "about", criterium: 14, templateKey: "line.cert" });
+  }
+  if (v.outlets.some((o) => o.market === market)) {
+    out.push({ category: "outlet", textNl: nl ? `Waar koop ik ${v.name}${of} in ${country}?` : `Where can I buy ${v.name}${of} in ${country}?`, probes: [`outlet:${market}`], active: true, kind: "about", criterium: 15, templateKey: "line.outlet" });
+  }
+  for (const old of v.replaces) {
+    out.push({ category: "successor", textNl: nl ? `Wat is de opvolger van ${old}${of}?` : `What is the successor of ${old}${of}?`, probes: [`successor:${old}`], active: true, kind: "about", criterium: 16, templateKey: "line.successor" });
+  }
+  void key;
+  return out;
+}
+
+export async function seedDemoLines(db: Db, businessId: string): Promise<void> {
+  const business = await db.getBusiness(businessId);
+  if (!business) return;
+  if ((await db.listProductLines(businessId)).length) return;
+  const monthAt = (n: number) => monthsBack(n);
+  const lineIds = new Map<LineKey, string>();
+  for (const l of DEMO_LINES) {
+    let id: string | null = null;
+    for (const data of l.versions) {
+      const r = await db.saveProductLine({ businessId, productLineId: id, data, maxActive: PRODUCT_LINE_LIMITS.lines });
+      if (!r.ok) throw new Error(`seedDemoLines: ${r.reason}`);
+      id = r.line.id;
+    }
+    lineIds.set(l.key, id!);
+  }
+  // Findings are made at the run that saw them; the plan says where a wrong answer sits (key|market|engine|prompt category:spec).
+  const wrongPlan: Record<string, { value: string; correct: string; wrongSamples: number[] }> = {
+    "speltbrood|NL|chatgpt|spec:Gewicht": { value: "500 g", correct: "800 g", wrongSamples: [3, 3, 4] },
+    "kerststol|NL|perplexity|spec:Gewicht": { value: "750 g", correct: "1 kg", wrongSamples: [3, 0, 0] },
+    "speltbrood|BE|google_ai|outlet:BE": { value: "Gentse Warenwinkel", correct: "Broodhuys Gent", wrongSamples: [0, 1, 1] },
+  };
+  const seen = new Map<string, string>(); // plan key -> finding id
+  const evidence = new Map<string, { before: string | null; after: string | null }>();
+  const runsOf = new Map<string, string[]>();
+  for (const l of DEMO_LINES) {
+    const id = lineIds.get(l.key)!;
+    const current = l.versions[l.versions.length - 1]!;
+    for (const market of current.markets) {
+      const promptsPlanned = linePrompts(l.key, market, current, business.name);
+      const prompts = await db.insertPrompts(businessId, promptsPlanned, { productLineId: id, market });
+      const pk = `${l.key}|${market}`;
+      for (const [mi, month] of LINE_MONTHS.entries()) {
+        // The first run of a line with two versions was asked with version 1 (same questions, the certificate had no number yet).
+        const version = l.versions.length > 1 && mi === 0 ? 1 : l.versions.length;
+        const at = monthAt(month);
+        const run = await db.createScanRun({ businessId, kind: "monthly", engines: LINE_ENGINES, samplesPerPrompt: 5, status: "done", productLineId: id, productLineVersion: version, market });
+        await db.updateScanRun(run.id, { startedAt: at, finishedAt: at, status: "done" });
+        runsOf.set(pk, [...(runsOf.get(pk) ?? []), run.id]);
+        const cells: ProgressCell[] = [];
+        const rec = RECOMMEND[pk]![mi]!;
+        for (const [pi, p] of prompts.entries()) {
+          const planned = promptsPlanned[pi]!;
+          for (const engine of LINE_ENGINES) {
+            const n = LINE_SAMPLES[engine]!;
+            const planKey = `${pk}|${engine}|${p.probes[0]}`;
+            const plan = wrongPlan[planKey];
+            const wrongN = Math.min(n, plan?.wrongSamples[mi] ?? 0);
+            const rows = Array.from({ length: n }, (_, i) => {
+              const wrong = i < wrongN;
+              const isRec = p.kind === "recommendation";
+              const named = isRec && rec.named > 0 && i % Math.max(1, Math.floor(n / Math.max(1, rec.named))) === 0;
+              const value = isRec ? (named ? PRESENT_VALUE : ABSENT_VALUE) : wrong ? plan!.value : (plan?.correct ?? valueFor(planned, current));
+              const factKey: FactKey = isRec ? "existence" : (p.category as FactKey);
+              const text = isRec ? (named ? `${business.name} wordt genoemd.` : `Genoemd worden onder meer ${rec.others[0]!.name}.`) : `${p.textNl.replace(/\?$/, "")}: ${value}.`;
+              return { wrong, value, factKey, text };
+            });
+            const stored = await db.insertSamples(
+              rows.map((r) => ({ scanRunId: run.id, promptId: p.id, engine, answerText: r.text, citations: r.wrong ? ["https://broodwiki.example/speltbrood"] : [], costCents: 1 })),
+            );
+            await db.insertClaims(stored.map((smp, i) => ({ sampleId: smp.id, factKey: rows[i]!.factKey, subject: p.probes[0]!.split(":")[1] ?? null, value: rows[i]!.value, confidence: 0.9, otherEntity: false, rawQuote: rows[i]!.text })));
+            const wrongCount = rows.filter((r) => (p.kind === "recommendation" ? r.value === ABSENT_VALUE : r.wrong)).length;
+            cells.push({ promptId: p.id, engine, criterium: (p.criterium ?? 6) as CriteriumId, kind: p.kind ?? "about", verdict: wrongCount * 2 >= n && wrongCount > 0 ? "wrong" : "correct" });
+            if (plan && wrongN > 0) {
+              const [f] = await db.upsertFindings([
+                {
+                  businessId,
+                  scanRunId: run.id,
+                  factKey: p.category as FactKey,
+                  subject: p.probes[0]!.split(":")[1] ?? null,
+                  engine,
+                  wrongValue: plan.value,
+                  correctValue: plan.correct,
+                  frequency: wrongN,
+                  sampleCount: n,
+                  sourceUrl: plan.value === "Gentse Warenwinkel" ? null : "https://broodwiki.example/speltbrood",
+                  sourceType: plan.value === "Gentse Warenwinkel" ? "none" : "third_party",
+                  evidenceBefore: evidence.get(planKey)?.before ?? stored[0]!.id,
+                  criterium: p.criterium as CriteriumId,
+                },
+              ]);
+              seen.set(planKey, f!.id);
+              evidence.set(planKey, { before: evidence.get(planKey)?.before ?? stored[0]!.id, after: null });
+            } else if (plan && seen.has(planKey) && wrongN === 0) {
+              evidence.set(planKey, { before: evidence.get(planKey)?.before ?? null, after: stored[0]!.id });
+            }
+          }
+        }
+        const engineStips: EngineStip[] = LINE_ENGINES.map((engine) => {
+          const mine = cells.filter((c) => c.engine === engine);
+          const bad = mine.some((c) => c.verdict === "wrong" && c.kind === "about");
+          const red = pk === "speltbrood|NL" && mi === 0 && engine === "chatgpt";
+          return { engine, stip: red ? "rood" : bad ? "oranje" : "groen", usage: ENGINE_NL_USAGE[engine], counts: engineCounts(engine) };
+        });
+        const stip = overallStip(engineStips);
+        const questions = prompts.filter((p) => p.kind !== "recommendation");
+        const correctQ = questions.filter((p) => cells.filter((c) => c.promptId === p.id).every((c) => c.verdict === "correct")).length;
+        const summary: RunSummary = { v: 1, stip, answered: questions.length, correct: correctQ, snapshot: { scanRunId: run.id, kind: "monthly", checkedAt: at, engines: LINE_ENGINES, stip, engineStips, cells }, recommend: structuredClone(rec) };
+        await saveRunSummary(db, run.id, summary);
+      }
+    }
+  }
+  // Dating, status and fixes of the three findings (MemDb hands out its own rows, as in seedDemo).
+  const all = await db.listFindings(businessId, undefined, { productLineId: lineIds.get("speltbrood")! });
+  const kerst = await db.listFindings(businessId, undefined, { productLineId: lineIds.get("kerststol")! });
+  const rows = new Map([...all, ...kerst].map((f) => [f.id, f]));
+  const held = rows.get(seen.get("speltbrood|NL|chatgpt|spec:Gewicht")!)!;
+  held.firstSeenAt = monthAt(2);
+  await db.updateFindingStatus(held.id, "fixing");
+  await db.insertFix({ findingId: held.id, action: "email", target: "redactie@broodwiki.example", scheduledAt: monthAt(0), recheckAt: new Date(Date.now() + 30 * 86_400_000).toISOString(), evidence: { sourceType: "third_party", verdict: "wrong", wrong: "500 g", correct: "800 g", path: "email" } });
+  const fixed = rows.get(seen.get("kerststol|NL|perplexity|spec:Gewicht")!)!;
+  fixed.firstSeenAt = monthAt(2);
+  const after = evidence.get("kerststol|NL|perplexity|spec:Gewicht")?.after ?? null;
+  await db.markFindingResolved(fixed.id, after);
+  fixed.resolvedAt = monthAt(1);
+  await db.insertFix({ findingId: fixed.id, action: "email", target: "info@broodwiki.example", scheduledAt: monthAt(2), sentAt: monthAt(2), resolvedAt: monthAt(1), evidence: { sourceType: "third_party", verdict: "wrong", wrong: "750 g", correct: "1 kg", path: "email" } });
+  const open = rows.get(seen.get("speltbrood|BE|google_ai|outlet:BE")!)!;
+  open.firstSeenAt = monthAt(1);
+}
+
+/** The owner's value a correct answer repeats. */
+function valueFor(p: PlannedPrompt, v: ProductLineData): string {
+  if (p.category === "spec") return v.specs.find((s) => s.label === p.spec)?.value ?? "";
+  if (p.category === "certificate") return "yes";
+  if (p.category === "outlet") return v.outlets.find((o) => p.probes[0]!.endsWith(`:${o.market}`))?.name ?? "";
+  return PRESENT_VALUE;
 }
 
 // ---------------------------------------------------------------------------

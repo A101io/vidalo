@@ -4,7 +4,7 @@
  * Semantics mirror PgDb (same matching rules for upserts, same job backoff).
  */
 import { randomUUID } from "node:crypto";
-import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, LineScope, ProductLine, ProductLineData, ProductLineStatus, ProductLineVersion, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
 import type {
@@ -31,6 +31,7 @@ import type {
   OsFamily,
   SignInEnd,
   SignInRow,
+  SaveLineResult,
 } from "./types";
 import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
@@ -79,11 +80,29 @@ function checkDeletion(b: BusinessRecord): void {
 }
 const OPEN_STATUSES: FindingStatus[] = ["open", "fixing", "recheck"];
 
+/** A reader without a line scope sees the business's own rows (product_line_id is null); with one, only that line (and market). */
+function inLine(row: { productLineId?: string | null; market?: string | null }, line?: LineScope): boolean {
+  if (!line) return !row.productLineId;
+  return row.productLineId === line.productLineId && (line.market === undefined || row.market === line.market);
+}
+
+/** The line identity row; what it is lives in its versions (product_line, migration 0020). */
+interface LineRow {
+  id: string;
+  businessId: string;
+  status: ProductLineStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class MemDb implements Db {
   readonly kind = "mem" as const;
   businesses = new Map<string, BusinessRecord>();
   facts = new Map<string, Facts[]>(); // businessId -> versions asc
   prompts = new Map<string, Prompt>();
+  /** product_line and product_line_facts (migration 0020); versions are append-only, oldest first. */
+  productLines = new Map<string, LineRow>();
+  productLineVersions = new Map<string, ProductLineVersion[]>();
   scanRuns = new Map<string, ScanRun>();
   samples = new Map<string, Sample>();
   claims: Claim[] = [];
@@ -112,6 +131,8 @@ export class MemDb implements Db {
     this.businesses.clear();
     this.facts.clear();
     this.prompts.clear();
+    this.productLines.clear();
+    this.productLineVersions.clear();
     this.scanRuns.clear();
     this.samples.clear();
     this.claims = [];
@@ -248,6 +269,11 @@ export class MemDb implements Db {
     this.businesses.delete(id);
     this.facts.delete(id);
     this.googleIndex.delete(id);
+    for (const [k, l] of this.productLines) {
+      if (l.businessId !== id) continue;
+      this.productLines.delete(k);
+      this.productLineVersions.delete(k);
+    }
     for (const [k, p] of this.prompts) if (p.businessId === id) this.prompts.delete(k);
     const runs = new Set([...this.scanRuns.values()].filter((r) => r.businessId === id).map((r) => r.id));
     for (const r of runs) this.scanRuns.delete(r);
@@ -283,13 +309,17 @@ export class MemDb implements Db {
   }
 
   // --- prompts ---
-  async listPrompts(businessId: string, opts: { activeOnly?: boolean } = {}): Promise<Prompt[]> {
-    return [...this.prompts.values()].filter((p) => p.businessId === businessId && (!opts.activeOnly || p.active));
+  async listPrompts(businessId: string, opts: { activeOnly?: boolean; line?: LineScope } = {}): Promise<Prompt[]> {
+    return [...this.prompts.values()].filter((p) => p.businessId === businessId && (!opts.activeOnly || p.active) && inLine(p, opts.line));
   }
 
-  async insertPrompts(businessId: string, prompts: PromptInput[]): Promise<Prompt[]> {
+  async insertPrompts(businessId: string, prompts: PromptInput[], line?: { productLineId: string; market: string }): Promise<Prompt[]> {
+    // prompt_line_same_business: a line's prompts belong to the line's own business.
+    if (line && this.productLines.get(line.productLineId)?.businessId !== businessId) throw new Error("violates foreign key constraint prompt_line_same_business");
     return prompts.map((p) => {
-      const row: Prompt = { id: randomUUID(), businessId, category: p.category, textNl: p.textNl, probes: [...p.probes], active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null };
+      const row: Prompt = {
+        productLineId: line?.productLineId ?? null,
+        market: line?.market ?? null, id: randomUUID(), businessId, category: p.category, textNl: p.textNl, probes: [...p.probes], active: p.active ?? true, criterium: p.criterium ?? null, kind: p.kind ?? "about", intent: p.intent ?? null, pool: p.pool ?? "core", season: p.season ?? null, templateKey: p.templateKey ?? null };
       this.prompts.set(row.id, row);
       return { ...row };
     });
@@ -302,6 +332,15 @@ export class MemDb implements Db {
 
   // --- scan runs ---
   async createScanRun(input: ScanRunCreate): Promise<ScanRun> {
+    const lineId = input.productLineId ?? null;
+    const lineVersion = input.productLineVersion ?? null;
+    const market = input.market ?? null;
+    // scan_run_line_all_or_none, scan_run_line_same_business and scan_run_line_version.
+    if ((lineId === null) !== (market === null) || (lineId === null) !== (lineVersion === null)) throw new Error("violates check constraint scan_run_line_all_or_none");
+    if (lineId !== null) {
+      if (this.productLines.get(lineId)?.businessId !== input.businessId) throw new Error("violates foreign key constraint scan_run_line_same_business");
+      if (!this.productLineVersions.get(lineId)?.some((v) => v.version === lineVersion)) throw new Error("violates foreign key constraint scan_run_line_version");
+    }
     const row: ScanRun = {
       id: randomUUID(),
       businessId: input.businessId,
@@ -313,6 +352,9 @@ export class MemDb implements Db {
       costCents: 0,
       status: input.status ?? "queued",
       profile: input.profile ?? null,
+      productLineId: lineId,
+      productLineVersion: lineVersion,
+      market,
     };
     this.scanRuns.set(row.id, row);
     return { ...row };
@@ -362,13 +404,13 @@ export class MemDb implements Db {
   }
 
   async lastScanRunStartedAt(businessId: string, kind: ScanRun["kind"]): Promise<string | null> {
-    const runs = [...this.scanRuns.values()].filter((r) => r.businessId === businessId && r.kind === kind).map((r) => r.startedAt).sort();
+    const runs = [...this.scanRuns.values()].filter((r) => r.businessId === businessId && r.kind === kind && !r.productLineId).map((r) => r.startedAt).sort();
     return runs.at(-1) ?? null;
   }
 
-  async listScanRuns(businessId: string, limit = 50): Promise<ScanRun[]> {
+  async listScanRuns(businessId: string, limit = 50, line?: LineScope): Promise<ScanRun[]> {
     return [...this.scanRuns.values()]
-      .filter((r) => r.businessId === businessId)
+      .filter((r) => r.businessId === businessId && inLine(r, line))
       .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
       .slice(0, limit)
       .map((r) => ({ ...r }));
@@ -381,7 +423,17 @@ export class MemDb implements Db {
 
   async insertSamples(samples: SampleInput[]): Promise<Sample[]> {
     return samples.map((s) => {
-      const row: Sample = { ...s, id: randomUUID(), citations: [...s.citations], capturedAt: s.capturedAt ?? nowIso() };
+      // inherit_line_scope (migration 0020): line and market are the run's, and the question must be of the same line and market.
+      const run = this.scanRuns.get(s.scanRunId);
+      const prompt = this.prompts.get(s.promptId);
+      // A sample answers a question of its own run's business (S-03).
+      if (run && prompt && prompt.businessId !== run.businessId) throw new Error("sample: prompt and scan run belong to different businesses");
+      const runLine = run?.productLineId ?? null;
+      const runMarket = run?.market ?? null;
+      if (prompt && ((prompt.productLineId ?? null) !== runLine || (prompt.market ?? null) !== runMarket)) {
+        throw new Error("sample: prompt and scan run belong to different product lines or markets");
+      }
+      const row: Sample = { ...s, id: randomUUID(), citations: [...s.citations], capturedAt: s.capturedAt ?? nowIso(), productLineId: runLine, market: runMarket };
       this.samples.set(row.id, row);
       return { ...row };
     });
@@ -402,11 +454,77 @@ export class MemDb implements Db {
     return this.claims.filter((c) => set.has(c.sampleId)).map((c) => ({ ...c }));
   }
 
+  // --- product lines (feature 006) ---
+  private lineOf(row: LineRow): ProductLine {
+    const versions = this.productLineVersions.get(row.id)!;
+    return structuredClone({ ...row, current: versions[versions.length - 1]! });
+  }
+
+  async listProductLines(businessId: string): Promise<ProductLine[]> {
+    return [...this.productLines.values()]
+      .filter((l) => l.businessId === businessId)
+      .map((l) => this.lineOf(l))
+      .sort((a, b) => Number(b.status === "active") - Number(a.status === "active") || a.current.name.localeCompare(b.current.name, "nl") || a.id.localeCompare(b.id));
+  }
+
+  async getProductLine(id: string): Promise<ProductLine | null> {
+    const row = this.productLines.get(id);
+    return row ? this.lineOf(row) : null;
+  }
+
+  async listProductLineVersions(productLineId: string): Promise<ProductLineVersion[]> {
+    return structuredClone(this.productLineVersions.get(productLineId) ?? []);
+  }
+
+  async getProductLineVersion(productLineId: string, version: number): Promise<ProductLineVersion | null> {
+    const v = this.productLineVersions.get(productLineId)?.find((x) => x.version === version);
+    return v ? structuredClone(v) : null;
+  }
+
+  private activeLines(businessId: string, exceptId?: string): number {
+    return [...this.productLines.values()].filter((l) => l.businessId === businessId && l.status === "active" && l.id !== exceptId).length;
+  }
+
+  async saveProductLine(input: { businessId: string; productLineId: string | null; data: ProductLineData; maxActive: number }): Promise<SaveLineResult> {
+    return this.withLock(`product_line:${input.businessId}`, async () => {
+      const at = nowIso();
+      let row: LineRow;
+      let created = false;
+      if (input.productLineId === null) {
+        if (this.activeLines(input.businessId) >= input.maxActive) return { ok: false, reason: "limit" } as const;
+        row = { id: randomUUID(), businessId: input.businessId, status: "active", createdAt: at, updatedAt: at };
+        this.productLines.set(row.id, row);
+        this.productLineVersions.set(row.id, []);
+        created = true;
+      } else {
+        const found = this.productLines.get(input.productLineId);
+        if (!found || found.businessId !== input.businessId) return { ok: false, reason: "not_found" } as const;
+        row = found;
+        row.updatedAt = at;
+      }
+      const versions = this.productLineVersions.get(row.id)!;
+      const version = (versions[versions.length - 1]?.version ?? 0) + 1;
+      versions.push(structuredClone({ ...input.data, productLineId: row.id, version, confirmedAt: at }));
+      return { ok: true, line: this.lineOf(row), created } as const;
+    });
+  }
+
+  async setProductLineStatus(input: { businessId: string; productLineId: string; status: ProductLineStatus; maxActive: number }): Promise<SaveLineResult> {
+    return this.withLock(`product_line:${input.businessId}`, async () => {
+      const row = this.productLines.get(input.productLineId);
+      if (!row || row.businessId !== input.businessId) return { ok: false, reason: "not_found" } as const;
+      if (input.status === "active" && row.status !== "active" && this.activeLines(input.businessId, row.id) >= input.maxActive) return { ok: false, reason: "limit" } as const;
+      row.status = input.status;
+      row.updatedAt = nowIso();
+      return { ok: true, line: this.lineOf(row), created: false } as const;
+    });
+  }
+
   // --- findings ---
-  async listFindings(businessId: string, status?: FindingStatus | FindingStatus[]): Promise<Finding[]> {
+  async listFindings(businessId: string, status?: FindingStatus | FindingStatus[], line?: LineScope): Promise<Finding[]> {
     const statuses = status == null ? null : Array.isArray(status) ? status : [status];
     return [...this.findings.values()]
-      .filter((f) => f.businessId === businessId && (!statuses || statuses.includes(f.status)))
+      .filter((f) => f.businessId === businessId && (!statuses || statuses.includes(f.status)) && inLine(f, line))
       .sort((a, b) => a.firstSeenAt.localeCompare(b.firstSeenAt));
   }
 
@@ -421,9 +539,20 @@ export class MemDb implements Db {
 
   async upsertFindings(inputs: FindingInput[]): Promise<Finding[]> {
     return inputs.map((f) => {
+      // inherit_line_scope: a finding's line and market are its run's, never another's.
+      const run = this.scanRuns.get(f.scanRunId);
+      // A finding belongs to the business of its run (S-03).
+      if (run && run.businessId !== f.businessId) throw new Error("finding: business differs from its scan run's business");
+      const scopeLine = run ? (run.productLineId ?? null) : (f.productLineId ?? null);
+      const scopeMarket = run ? (run.market ?? null) : (f.market ?? null);
+      if (run && f.productLineId !== undefined && ((f.productLineId ?? null) !== scopeLine || (f.market ?? null) !== scopeMarket)) {
+        throw new Error("a finding row cannot move to another product line or market");
+      }
       const existing = [...this.findings.values()].find(
         (x) =>
           x.businessId === f.businessId &&
+          (x.productLineId ?? null) === scopeLine &&
+          (x.market ?? null) === scopeMarket &&
           x.factKey === f.factKey &&
           (x.subject ?? null) === (f.subject ?? null) &&
           x.engine === f.engine &&
@@ -449,6 +578,8 @@ export class MemDb implements Db {
       const row: Finding = {
         id: randomUUID(),
         ...f,
+        productLineId: scopeLine,
+        market: scopeMarket,
         verdict: f.verdict ?? "wrong",
         evidenceKind: f.evidenceKind ?? "about",
         criterium: f.criterium ?? null,
@@ -802,6 +933,8 @@ export class MemDb implements Db {
     if (opts.moveFindingsTo) {
       const to = this.scanRuns.get(opts.moveFindingsTo);
       if (!to || to.businessId !== run.businessId || to.id === id) return false;
+      // A finding never moves to a run of another line or market (inherit_line_scope).
+      if ((to.productLineId ?? null) !== (run.productLineId ?? null) || (to.market ?? null) !== (run.market ?? null)) return false;
     }
     const samples = new Set([...this.samples.values()].filter((s) => s.scanRunId === id).map((s) => s.id));
     for (const f of this.findings.values()) {

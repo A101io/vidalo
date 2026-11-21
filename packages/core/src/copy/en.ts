@@ -2099,6 +2099,10 @@ export const en: CopyShape = {
     urgency: "Urgent work and availability",
     credential: "Accreditations",
     identity: "Same name",
+    spec: "Specifications",
+    certificate: "Certificates",
+    outlet: "Where to buy",
+    successor: "Successor and old names",
   },
 
   /** The twelve criteria (docs/CRITERIA.md), by id. */
@@ -2115,6 +2119,10 @@ export const en: CopyShape = {
     10: "Terms and conditions",
     11: "Identity and same name",
     12: "Accreditations and qualifications",
+    13: "Specifications",
+    14: "Certificates",
+    15: "Where to buy",
+    16: "Successor and old names",
   },
 
   /** Severity classes: one wrong answer and the customer does not come / comes for the wrong thing / confuses you with another. */

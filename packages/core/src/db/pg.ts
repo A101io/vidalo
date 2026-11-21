@@ -5,7 +5,7 @@
  * (`transform: postgres.camel`), Dates are converted to ISO strings here.
  */
 import postgres, { type Sql } from "postgres";
-import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
+import type { BusinessProfile, BusinessStatus, Channel, Claim, Facts, Finding, FindingStatus, Fix, ProductLine, ProductLineVersion, ProfileMode, Prompt, PromptPool, Sample, ScanRun } from "../types";
 import { slugify } from "../scanner/normalize";
 import { backoffMs } from "./mem";
 import { normalizeMailPrefs } from "../shared/mail-prefs";
@@ -37,6 +37,7 @@ import type {
   SignInRow,
 } from "./types";
 import { FREE_SCAN_ESTIMATE_CENTS } from "./types";
+import type { SaveLineResult } from "./types";
 import type { RelayCounters, SupportLogRow } from "../support/kit-support";
 
 type Row = Record<string, unknown>;
@@ -535,6 +536,26 @@ export class PgDb implements Db {
     if (!sampleIds.length) return [];
     const rows = await this.sql`select * from claim where sample_id in ${this.sql(sampleIds)} order by id`;
     return rows.map(mapClaim);
+  }
+
+  // --- product lines (feature 006): SQL is BE-02 (migration 0020). Until then these refuse loudly. ---
+  async listProductLines(_businessId: string): Promise<ProductLine[]> {
+    throw new Error("BE-02: PgDb.listProductLines needs migration 0020");
+  }
+  async getProductLine(_id: string): Promise<ProductLine | null> {
+    throw new Error("BE-02: PgDb.getProductLine needs migration 0020");
+  }
+  async listProductLineVersions(_productLineId: string): Promise<ProductLineVersion[]> {
+    throw new Error("BE-02: PgDb.listProductLineVersions needs migration 0020");
+  }
+  async getProductLineVersion(_productLineId: string, _version: number): Promise<ProductLineVersion | null> {
+    throw new Error("BE-02: PgDb.getProductLineVersion needs migration 0020");
+  }
+  async saveProductLine(_input: Parameters<Db["saveProductLine"]>[0]): Promise<SaveLineResult> {
+    throw new Error("BE-02: PgDb.saveProductLine needs migration 0020");
+  }
+  async setProductLineStatus(_input: Parameters<Db["setProductLineStatus"]>[0]): Promise<SaveLineResult> {
+    throw new Error("BE-02: PgDb.setProductLineStatus needs migration 0020");
   }
 
   // --- findings ---

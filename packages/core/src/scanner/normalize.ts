@@ -234,6 +234,12 @@ export function factValue(facts: Facts, factKey: FactKey, subject: string | null
       if (subject === "kind") return kindIsGrounded(facts) ? "same" : null;
       // The owner's position is always: that is a different business.
       return facts.notConfusedWith.length || subject ? "no" : null;
+    // Product-line keys (feature 006): compared against Facts.productLine by the line scan (BE-04).
+    case "spec":
+    case "certificate":
+    case "outlet":
+    case "successor":
+      return null;
   }
 }
 
@@ -328,6 +334,14 @@ export function describeFact(factKey: FactKey, subject: string | null): string {
       return subject ? `erkenning: ${subject}` : "erkenningen";
     case "identity":
       return subject === "kind" ? "wat het bedrijf doet" : subject ? `naamgenoot: ${subject}` : "naamgenoot";
+    case "spec":
+      return subject ? `specificatie: ${subject}` : "specificaties";
+    case "certificate":
+      return subject ? `certificaat: ${subject}` : "certificaten";
+    case "outlet":
+      return subject ? `waar te koop: ${subject}` : "waar te koop";
+    case "successor":
+      return subject ? `opvolger van ${subject}` : "opvolger";
   }
 }
 

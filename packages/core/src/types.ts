@@ -129,6 +129,8 @@ export interface Facts {
    * (prompts/nouns.ts). Empty: derived from the name, Google's type and the sector.
    */
   kind?: string | null;
+  /** A product line presented as facts to compare() and computeStip() (scanner/line.ts); in memory only, insertFacts strips it. */
+  productLine?: LineFactsView | null;
 }
 
 export const EMPTY_SERVICE_AREA: ServiceArea = { places: [], radiusKm: null };
@@ -147,14 +149,19 @@ export type FactKey =
   | "area" // werkgebied (criterium 4)
   | "urgency" // spoed / beschikbaarheid (criterium 5)
   | "credential" // erkenningen en kwalificaties (criterium 12)
-  | "identity"; // naamgenoot (criterium 11); also fed by otherEntity claims
+  | "identity" // naamgenoot (criterium 11); also fed by otherEntity claims
+  // Product lines (feature 006, ADR-0013): criteria 13-16.
+  | "spec" // specificaties (13)
+  | "certificate" // certificaten (14)
+  | "outlet" // verkooppunten (15)
+  | "successor"; // opvolger en oude namen (16)
 
-export const FACT_KEYS: FactKey[] = ["existence", "hours", "phone", "address", "website", "service", "price", "policy", "payment", "area", "urgency", "credential", "identity"];
+export const FACT_KEYS: FactKey[] = ["existence", "hours", "phone", "address", "website", "service", "price", "policy", "payment", "area", "urgency", "credential", "identity", "spec", "certificate", "outlet", "successor"];
 
 export type PromptCategory = FactKey;
 
-/** Criterium ids 1..12 from docs/CRITERIA.md. */
-export type CriteriumId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+/** Criterium ids 1..12 from docs/CRITERIA.md; 13..16 are the product-line criteria (ADR-0013). */
+export type CriteriumId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
 
 export type Severity = "afhaker" | "misleider" | "verwarring";
 
@@ -245,6 +252,9 @@ export interface Prompt {
   season?: Season | null;
   /** Online-template questions: the template this text came from (prompts/online.ts). */
   templateKey?: string | null;
+  /** Feature 006: the product line this question belongs to, and its market; both null = the business itself. */
+  productLineId?: string | null;
+  market?: string | null;
 }
 
 export type Season = "winter" | "lente" | "zomer" | "herfst";
@@ -277,6 +287,9 @@ export interface Sample {
   citations: string[]; // URLs the engine cited, if any
   capturedAt: string;
   costCents: number;
+  /** Feature 006: the line and market of the scan run; read-only, set by the database. */
+  productLineId?: string | null;
+  market?: string | null;
 }
 
 export interface Claim {
@@ -382,6 +395,9 @@ export interface Finding {
   evidenceKind?: PromptKind;
   /** Criterium 1..12 this finding belongs to. */
   criterium?: CriteriumId | null;
+  /** Feature 006: the line and market this finding belongs to (its scan run's); null = the business. */
+  productLineId?: string | null;
+  market?: string | null;
 }
 
 /**
@@ -404,6 +420,10 @@ export interface ScanRun {
   status: "queued" | "running" | "done" | "failed";
   /** The profile this scan was asked with; null/absent on scans before feature 001 (read as door). */
   profile?: BusinessProfile | null;
+  /** Feature 006: a line run is asked with one exact version of one line in one market (all three or none). */
+  productLineId?: string | null;
+  productLineVersion?: number | null;
+  market?: string | null;
 }
 
 export type FixAction = "republish" | "sync" | "form" | "email" | "manual" | "none";
@@ -509,5 +529,56 @@ export interface ScanReport {
    * Every question key asked per engine: how many answers, and whether a fact existed to check them
    * against. The report counts questions and answers from this (absent on reports before 11 Nov 2026).
    */
+  /** Feature 006: set on the report of a product-line run. */
+  productLine?: { id: string; name: string; version: number; market: string } | null;
   asked?: { factKey: FactKey; subject: string | null; engine: Engine; kind: "about" | "recommendation"; samples: number; checked: boolean; unknown?: { value: string; n: number }[] }[];
+}
+
+// ---------------------------------------------------------------------------
+// Product lines (feature 006, ADR-0010..0014)
+// ---------------------------------------------------------------------------
+
+export type ProductLineStatus = "active" | "discontinued";
+export interface ProductLineSpec { label: string; value: string }
+export interface ProductLineCertificate { name: string; number: string | null; /** YYYY-MM-DD; null = no end date */ validUntil: string | null }
+export interface ProductLineOutlet { /** ISO alpha-2, one of the line's markets */ market: string; name: string; /** http(s) only */ url: string | null }
+
+/** What the owner confirms. Stored as product_line_facts.data. */
+export interface ProductLineData {
+  name: string;
+  category: string;
+  useCases: string[];
+  markets: string[];
+  specs: ProductLineSpec[];
+  certificates: ProductLineCertificate[];
+  outlets: ProductLineOutlet[];
+  replaces: string[];
+  replacedBy: string | null;
+}
+export interface ProductLineVersion extends ProductLineData { productLineId: string; version: number; confirmedAt: string }
+export interface ProductLine {
+  id: string;
+  businessId: string;
+  status: ProductLineStatus;
+  createdAt: string;
+  updatedAt: string;
+  /** The latest confirmed version. Every line has one: the row and version 1 are written together. */
+  current: ProductLineVersion;
+}
+
+/** Which line and market a read is about. Absent = the business itself (product_line_id is null). */
+export interface LineScope { productLineId: string; market?: string }
+
+/** In memory only (lineFacts in scanner/line.ts); never stored in business facts. */
+export interface LineFactsView {
+  productLineId: string;
+  version: number;
+  market: string;
+  brand: string;
+  category: string;
+  useCases: string[];
+  specs: ProductLineSpec[];
+  certificates: (ProductLineCertificate & { valid: boolean })[];
+  outlets: ProductLineOutlet[];
+  replaces: string[];
 }

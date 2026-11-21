@@ -42,6 +42,12 @@ export function questionFor(factKey: FactKey, subject: string | null, name: stri
     case "identity":
       if (subject === "kind") return q.identityKind(name);
       return subject ? q.identitySubject(who, subject) : q.identity(who);
+    // Product-line keys (feature 006): the asked text is the stored prompt; FE-04 words the card.
+    case "spec":
+    case "certificate":
+    case "outlet":
+    case "successor":
+      return subject ? `${copy.factKey[factKey]}: ${subject}` : copy.factKey[factKey];
   }
 }
 
